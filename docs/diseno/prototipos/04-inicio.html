@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Panel de inicio — Plano pastel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F2F9}
+a{color:#24243A}a:hover{color:#000000}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.hours{background-image:linear-gradient(#EEEDF5 1px, transparent 1px);background-size:100% 24px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F2F9; color: #24243A; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 0 40px; min-height: 68px; background: #FFFFFF; border-bottom: 1px solid #E2E0EE">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #E3DEFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #3F3A8C">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+    </div>
+    <nav aria-label="Principal" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; background: #E3DEFF; text-decoration: none; font-weight: 600; color: #2E2A6E">Inicio</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Mapa</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76; display: flex; align-items: center; gap: 6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        Plan
+      </a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76; display: flex; align-items: center; gap: 8px">Reseñas <span class="num" style="font-size: 12px; font-weight: 600; background: #FFE3D3; color: #8A3A18; padding: 1px 8px; border-radius: 999px">3</span></a>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button aria-label="Cambiar a modo oscuro" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E2E0EE; background: #FFFFFF; color: #5D5E76; display: grid; place-items: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </button>
+      <button aria-label="Mi perfil" style="width: 40px; height: 40px; border-radius: 999px; border: none; background: #D6F1E3; color: #1F5A3D; font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer">SR</button>
+    </div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 36px 40px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px">
+      <div>
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">INGENIERÍA INDUSTRIAL · PLAN 2023</div>
+        <h1 style="margin: 6px 0 0; font-size: 36px; font-weight: 600; letter-spacing: -0.01em">Hola, Sofía</h1>
+      </div>
+      <div style="font-size: 13px; color: #5D5E76">Último cambio: 2 dic 2026</div>
+    </div>
+
+    <section aria-label="Reseñas pendientes" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 16px 20px; background: #FFE3D3; border-radius: 14px">
+      <div class="num" style="font-size: 30px; font-weight: 600; color: #A3461F; line-height: 1">3</div>
+      <div style="flex: 1 1 360px">
+        <div style="font-weight: 600">Reseñas pendientes de la cursada 2C 2026</div>
+        <div style="color: #5B4239">Completalas para desbloquear el plan del 1C 2027. Solo estrellas: menos de un minuto.</div>
+      </div>
+      <a href="#" style="padding: 12px 20px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; text-decoration: none; font-weight: 600">Reseñar ahora</a>
+    </section>
+
+    <div style="display: flex; gap: 22px; flex-wrap: wrap">
+      <section aria-label="Avance de carrera" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 20px">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">AVANCE DE CARRERA</div>
+        <div style="display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap">
+          <div class="num" style="font-size: 104px; font-weight: 600; line-height: 0.9; letter-spacing: -0.04em">58<span style="font-size: 48px; color: #5D5E76">%</span></div>
+          <div style="color: #5D5E76"><span class="num">138 de 236 créditos</span><br><span class="num">faltan 98</span></div>
+        </div>
+        <div style="display: flex; height: 12px; border-radius: 12px; overflow: hidden; background: #ECEBF4" aria-hidden="true">
+          <div style="width: 16.1%; background: #9EC3EE"></div>
+          <div style="width: 42.4%; background: {{accent}}"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; border-top: 1px solid #ECEBF4; padding-top: 18px">
+          <div><div style="font-size: 13px; color: #5D5E76; display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 99px; background: #9EC3EE"></span>CBC</div><div class="num" style="font-size: 20px; font-weight: 600">38<span style="color: #5D5E76; font-weight: 400">/38</span></div></div>
+          <div><div style="font-size: 13px; color: #5D5E76; display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 99px; background: {{accent}}"></span>Obligatorias</div><div class="num" style="font-size: 20px; font-weight: 600">100<span style="color: #5D5E76; font-weight: 400">/162</span></div></div>
+          <div><div style="font-size: 13px; color: #5D5E76">Electivas</div><div class="num" style="font-size: 20px; font-weight: 600">0<span style="color: #5D5E76; font-weight: 400">/24</span></div></div>
+          <div><div style="font-size: 13px; color: #5D5E76">Trabajo final</div><div class="num" style="font-size: 20px; font-weight: 600">0<span style="color: #5D5E76; font-weight: 400">/12</span></div></div>
+        </div>
+      </section>
+
+      <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 22px">
+        <section aria-label="Promedio" style="background: #E3DEFF; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #4F4B78">PROMEDIO</div>
+          <div class="num" style="font-size: 64px; font-weight: 600; line-height: 1; color: #2E2A6E">7,76</div>
+          <div style="color: #4F4B78">Sin aplazos · 21 materias con nota (incluye CBC)</div>
+        </section>
+        <section aria-label="Materias" style="flex: 1 1 auto; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; gap: 16px">
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">MATERIAS</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+            <div><div style="font-size: 17px; font-weight: 500">Materias aprobadas</div><div class="num" style="font-size: 13px; color: #5D5E76">15 obligatorias · 6 del CBC</div></div>
+            <span class="num" style="font-size: 36px; font-weight: 600; line-height: 1">21</span>
+          </div>
+          <div style="border-top: 1px solid #ECEBF4"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 17px; font-weight: 500">Prueba de inglés</span><span style="font-size: 14px; font-weight: 600; background: #FFE3D3; color: #8A3A18; padding: 4px 12px; border-radius: 999px">Pendiente</span></div>
+        </section>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 22px; flex-wrap: wrap">
+      <section aria-label="Cursada 2C 2026" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px">
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">CURSADA 2C 2026 · 16 CRÉDITOS</div>
+          <div style="font-size: 12px; color: #5D5E76">PC Paseo Colón · LH Las Heras</div>
+        </div>
+        <div style="overflow-x: auto">
+          <div style="display: grid; grid-template-columns: 34px repeat(6, minmax(84px, 1fr)); gap: 0 4px; min-width: 580px">
+            <div></div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">LUN</div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">MAR</div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">MIÉ</div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">JUE</div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">VIE</div>
+            <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">SÁB</div>
+            <div class="num" style="display: flex; flex-direction: column; font-size: 11px; color: #5D5E76; line-height: 1">
+              <div style="height: 24px">7</div><div style="height: 24px">8</div><div style="height: 24px">9</div><div style="height: 24px">10</div><div style="height: 24px">11</div><div style="height: 24px">12</div><div style="height: 24px">13</div><div style="height: 24px">14</div><div style="height: 24px">15</div><div style="height: 24px">16</div><div style="height: 24px">17</div><div style="height: 24px">18</div><div style="height: 24px">19</div><div style="height: 24px">20</div><div style="height: 24px">21</div><div style="height: 24px">22</div>
+            </div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px">
+              <div style="position: absolute; top: 289px; left: 3px; right: 3px; height: 94px; border-radius: 8px; background: #E3DEFF; padding: 8px; box-sizing: border-box; font-size: 12px; line-height: 1.3">
+                <div style="font-weight: 600; color: #2E2A6E">Industrias Digitales</div>
+                <div style="color: #4F4B78">C01 · LH · 19–23</div>
+              </div>
+            </div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px"></div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px">
+              <div style="position: absolute; top: 265px; left: 3px; right: 3px; height: 94px; border-radius: 8px; background: #D6F1E3; padding: 8px; box-sizing: border-box; font-size: 12px; line-height: 1.3">
+                <div style="font-weight: 600; color: #1F4D36">Investigación Operativa</div>
+                <div style="color: #2F5A44">C02 · LH · 18–22</div>
+              </div>
+            </div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px">
+              <div style="position: absolute; top: 265px; left: 3px; right: 3px; height: 94px; border-radius: 8px; background: #D6F1E3; padding: 8px; box-sizing: border-box; font-size: 12px; line-height: 1.3">
+                <div style="font-weight: 600; color: #1F4D36">Investigación Operativa</div>
+                <div style="color: #2F5A44">C02 · LH · 18–22</div>
+              </div>
+            </div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px">
+              <div style="position: absolute; top: 265px; left: 3px; right: 3px; height: 94px; border-radius: 8px; background: #FFF1C7; padding: 8px; box-sizing: border-box; font-size: 12px; line-height: 1.3">
+                <div style="font-weight: 600; color: #5A4310">Sistemas Contables y Gestión de Costos</div>
+                <div style="color: #6B5420">C02 · LH · 18–22</div>
+              </div>
+            </div>
+            <div class="hours" style="position: relative; height: 384px; background-color: #FAFAFD; border-radius: 8px"></div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Finales pendientes" style="flex: 1 1 300px; align-self: flex-start; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">FINALES PENDIENTES</div>
+          <span class="num" style="font-size: 13px; color: #5D5E76">2 · 12 C en juego</span>
+        </div>
+        <a href="#" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 12px; background: #FFF1C7; border: 1px solid #F0DC9C; color: #5A4310; text-decoration: none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+          <div style="flex: 1 1 auto"><div style="font-size: 15px; font-weight: 600; color: #3E2E08">Investigación Operativa</div><div style="font-size: 13px">Destraba 2 electivas</div></div>
+          <span class="num" style="font-size: 12px; font-weight: 500; opacity: 0.8; white-space: nowrap">8 C</span>
+        </a>
+        <a href="#" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 12px; background: #FFF1C7; border: 1px solid #F0DC9C; color: #5A4310; text-decoration: none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+          <div style="flex: 1 1 auto"><div style="font-size: 15px; font-weight: 600; color: #3E2E08">Desarrollo Económico</div><div style="font-size: 13px">Destraba 1 electiva</div></div>
+          <span class="num" style="font-size: 12px; font-weight: 500; opacity: 0.8; white-space: nowrap">4 C</span>
+        </a>
+        <a href="#" style="margin-top: 4px; font-weight: 600; color: {{accent}}; text-decoration: none">Ver en el mapa →</a>
+      </section>
+    </div>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#5B5BD6' };
+  }
+}
+</script>
+</body>
+</html>

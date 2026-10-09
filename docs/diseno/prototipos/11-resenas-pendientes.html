@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reseñas pendientes — Modo día</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F2F9}
+a{color:#24243A}a:hover{color:#000000}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.star{width:40px;height:40px;border:none;background:transparent;padding:0;display:grid;place-items:center;cursor:pointer;border-radius:8px}
+.star:hover{background:#F6F5FB}
+textarea{font-family:'IBM Plex Sans',sans-serif}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F2F9; color: #24243A; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 0 32px; min-height: 68px; background: #FFFFFF; border-bottom: 1px solid #E2E0EE">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #E3DEFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #3F3A8C">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+    </div>
+    <nav aria-label="Principal" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Inicio</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Mapa</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76; display: flex; align-items: center; gap: 6px">
+        <sc-if value="{{bloqueado}}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+        Plan
+      </a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; background: #E3DEFF; text-decoration: none; font-weight: 600; color: #2E2A6E; display: flex; align-items: center; gap: 8px">Reseñas <sc-if value="{{bloqueado}}" hint-placeholder-val="{{ true }}"><span class="num" style="font-size: 12px; font-weight: 600; background: #FFE3D3; color: #8A3A18; padding: 1px 8px; border-radius: 999px">{{faltan}}</span></sc-if></a>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button aria-label="Cambiar a modo oscuro" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E2E0EE; background: #FFFFFF; color: #5D5E76; display: grid; place-items: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </button>
+      <button aria-label="Mi perfil" style="width: 40px; height: 40px; border-radius: 999px; border: none; background: #D6F1E3; color: #1F5A3D; font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer">SR</button>
+    </div>
+  </header>
+
+  <main style="max-width: 860px; margin: 0 auto; padding: 36px 24px 56px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+    <div>
+      <h1 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.01em">Reseñas de tu cursada 2C 2026</h1>
+      <div style="color: #5D5E76; margin-top: 4px">Puntuá cada curso que hiciste. Las estrellas son obligatorias; el comentario, opcional. Tu reseña es anónima.</div>
+    </div>
+
+    <sc-if value="{{bloqueado}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 20px; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 14px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5D5E76" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <div style="flex: 1 1 260px; font-size: 14px">El plan del 1C 2027 se desbloquea cuando completes las tres.</div>
+        <div style="display: flex; align-items: center; gap: 10px; flex: 0 1 240px">
+          <div style="flex: 1 1 auto; height: 8px; border-radius: 8px; background: #ECEBF4; overflow: hidden" aria-hidden="true"><div style="height: 8px; width: {{pct}}%; background: {{accent}}"></div></div>
+          <span class="num" style="font-size: 14px; font-weight: 600; white-space: nowrap">{{hechas}} de 3</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{listo}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 20px 22px; background: #D6F1E3; border: 1px solid #BFE3CF; border-radius: 14px; color: #1F4D36">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6L9 17l-5-5"></path></svg>
+        <div style="flex: 1 1 260px"><div style="font-size: 17px; font-weight: 600">¡Listo! Desbloqueaste el plan del 1C 2027</div><div style="font-size: 14px">Gracias por sumar tus reseñas.</div></div>
+        <a href="Armador.dc.html" style="padding: 12px 20px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; text-decoration: none; font-weight: 600">Ir al plan</a>
+      </div>
+    </sc-if>
+
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="3">
+      <section aria-label="{{c.materia}}" style="background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap">
+          <div style="display: flex; gap: 12px; align-items: flex-start">
+            <span style="flex: none; width: 14px; height: 14px; margin-top: 5px; border-radius: 99px; background: {{c.bg}}; border: 2px solid {{c.border}}"></span>
+            <div>
+              <div style="font-size: 18px; font-weight: 600; line-height: 1.3">{{c.materia}}</div>
+              <div style="font-size: 14px; color: #5D5E76">{{c.curso}} · {{c.docentes}}</div>
+            </div>
+          </div>
+          <sc-if value="{{c.enviada}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: #D6F1E3; color: #1F4D36; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Enviada · {{c.valor}} de 5</span>
+              <button onClick="{{c.editar}}" style="border: none; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; color: {{accent}}; cursor: pointer">Editar</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{c.abierta}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 14px; padding-left: 26px">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap">
+              <div role="radiogroup" aria-label="Puntaje de 1 a 5 estrellas" style="display: flex; gap: 2px" onMouseLeave="{{c.salir}}">
+                <sc-for list="{{c.estrellas}}" as="e" hint-placeholder-count="5">
+                  <button class="star" role="radio" aria-checked="{{e.on}}" aria-label="{{e.n}} estrellas" onClick="{{e.pick}}" onMouseEnter="{{e.over}}">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="{{e.fill}}" stroke="{{e.stroke}}" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"></path></svg>
+                  </button>
+                </sc-for>
+              </div>
+              <span style="font-size: 15px; font-weight: 600; color: {{c.etiquetaColor}}">{{c.etiqueta}}</span>
+            </div>
+
+            <sc-if value="{{c.conComentario}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <label for="{{c.taId}}" style="font-size: 13px; font-weight: 600; color: #5D5E76">Comentario (opcional)</label>
+                <textarea id="{{c.taId}}" maxlength="500" rows="3" placeholder="¿Qué le dirías a alguien que está por elegir este curso?" onChange="{{c.escribir}}" style="resize: vertical; padding: 10px 12px; border-radius: 10px; border: 1px solid {{c.taBorder}}; font-size: 14px; color: #24243A; line-height: 1.4"></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+                  <sc-if value="{{c.hayProblema}}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: 13px; font-weight: 600; color: #8A3A18">{{c.problema}}</span></sc-if>
+                  <sc-if value="{{c.sinProblema}}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+                  <span class="num" style="flex: none; font-size: 12px; color: #5D5E76">{{c.largo}} / 500</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+              <sc-if value="{{c.sinComentario}}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{c.abrirComentario}}" style="border: none; background: transparent; padding: 0; font-family: inherit; font-size: 14px; font-weight: 600; color: {{accent}}; cursor: pointer">+ Agregar un comentario</button>
+              </sc-if>
+              <sc-if value="{{c.conComentario}}" hint-placeholder-val="{{ false }}"><span></span></sc-if>
+              <button onClick="{{c.enviar}}" aria-disabled="{{c.deshabilitado}}" style="height: 42px; padding: 0 20px; border-radius: 10px; border: none; background: {{c.btnBg}}; color: {{c.btnColor}}; font-family: inherit; font-size: 14px; font-weight: 600; cursor: {{c.cursor}}">Enviar reseña</button>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+    </sc-for>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1060}}'>
+const CURSOS = [
+  { id: 'INDDIG', materia: 'Industrias Digitales', curso: 'Curso 1', docentes: 'Rinaldi, Cuello', bg: '#E3DEFF', border: '#B9AEF5' },
+  { id: 'INVOP', materia: 'Investigación Operativa', curso: 'Curso 2', docentes: 'Ortega, Lucero, Paredes', bg: '#D6F1E3', border: '#9FD8B8' },
+  { id: 'SCGC', materia: 'Sistemas Contables y Gestión de Costos', curso: 'Curso 2', docentes: 'Zárate, Molina', bg: '#FFF1C7', border: '#EED58A' }
+];
+const ETIQUETAS = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+// Filtro automático: lista corta de ejemplo; la real se arma con insultos y variantes rioplatenses
+const PROHIBIDAS = ['boludo', 'boluda', 'pelotudo', 'pelotuda', 'forro', 'forra', 'idiota', 'imbecil', 'estupido', 'estupida', 'mierda', 'puta', 'puto', 'carajo', 'conchudo', 'conchuda', 'hdp', 'tarado', 'tarada', 'garca', 'chanta'];
+const normalizar = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const problemaDe = (texto) => {
+  const t = normalizar(texto || '');
+  const palabras = t.split(/[^a-z0-9]+/);
+  if (palabras.some((w) => PROHIBIDAS.indexOf(w) >= 0)) return 'Tu comentario tiene palabras ofensivas. Sacalas para poder enviar la reseña.';
+  if (/\d[\d\s.-]{6,}\d/.test(t) || /https?:|www\.|\.com|@[a-z]/.test(t)) return 'Las reseñas no pueden tener teléfonos, mails, links ni usuarios de redes.';
+  return '';
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { valor: {}, hover: {}, texto: {}, comentario: {}, enviada: {} };
+  }
+  renderVals() {
+    const acc = this.props.accent ?? '#5B5BD6';
+    const s = this.state;
+    const set = (k, id, v) => this.setState({ [k]: Object.assign({}, this.state[k], { [id]: v }) });
+    const hechas = CURSOS.filter((c) => s.enviada[c.id]).length;
+    const cards = CURSOS.map((c) => {
+      const valor = s.valor[c.id] || 0;
+      const vista = s.hover[c.id] || valor;
+      const enviada = !!s.enviada[c.id];
+      const conComentario = !!s.comentario[c.id];
+      const problema = conComentario ? problemaDe(s.texto[c.id]) : '';
+      const puede = !!valor && !problema;
+      return Object.assign({}, c, {
+        valor: valor,
+        enviada: enviada,
+        abierta: !enviada,
+        etiqueta: vista ? ETIQUETAS[vista] : 'Elegí de 1 a 5 estrellas',
+        etiquetaColor: vista ? '#24243A' : '#5D5E76',
+        estrellas: [1, 2, 3, 4, 5].map((n) => ({
+          n: n, on: valor === n,
+          fill: n <= vista ? '#E8B23A' : 'none',
+          stroke: n <= vista ? '#C9951F' : '#B9B7CC',
+          pick: () => set('valor', c.id, n),
+          over: () => set('hover', c.id, n)
+        })),
+        salir: () => set('hover', c.id, 0),
+        conComentario: conComentario,
+        sinComentario: !conComentario,
+        abrirComentario: () => set('comentario', c.id, true),
+        taId: 'coment-' + c.id,
+        largo: (s.texto[c.id] || '').length,
+        escribir: (e) => set('texto', c.id, e.target.value),
+        problema: problema,
+        hayProblema: !!problema,
+        sinProblema: !problema,
+        taBorder: problema ? '#E9A27E' : '#D4D2E3',
+        deshabilitado: !puede,
+        btnBg: puede ? acc : '#ECEBF4',
+        btnColor: puede ? '#FFFFFF' : '#8A8AA0',
+        cursor: puede ? 'pointer' : 'not-allowed',
+        enviar: () => { if (puede) set('enviada', c.id, true); },
+        editar: () => set('enviada', c.id, false)
+      });
+    });
+    return {
+      accent: acc,
+      cards: cards,
+      hechas: hechas,
+      faltan: 3 - hechas,
+      pct: Math.round((hechas / 3) * 100),
+      bloqueado: hechas < 3,
+      listo: hechas === 3
+    };
+  }
+}
+</script>
+</body>
+</html>
