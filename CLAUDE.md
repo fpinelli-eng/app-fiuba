@@ -12,6 +12,7 @@ Antes de tocar algo, leé:
 
 - `PRODUCTO.md`: qué hace la app, decisiones tomadas y modelo de datos. **Es la fuente de verdad del producto.** Si una tarea contradice este documento, preguntá antes de implementar.
 - `docs/DISENO.md`: colores, tipografía, componentes y comportamiento de cada pantalla.
+- `docs/diseno/prototipos/`: el código de cada pantalla del diseño. **Antes de programar una pantalla, leé su prototipo.**
 - `docs/COLABORACION.md`: cómo trabajamos de a dos con ramas y pull requests.
 
 ## Stack

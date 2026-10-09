@@ -4,6 +4,8 @@ El diseño completo está en el lienzo de Claude Design **"App FIUBA — Diseño
 
 Este documento resume lo necesario para programar sin tener el lienzo abierto.
 
+El código fuente de cada pantalla está en [`docs/diseno/prototipos/`](diseno/prototipos/): es la referencia exacta de medidas, textos y comportamiento.
+
 ## Colores
 
 Definirlos una sola vez como variables de tema. Nunca usar un hexadecimal suelto en un componente.

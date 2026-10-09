@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Perfil — Modo día</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.h2{margin:0;font-size:19px;font-weight:600}
+.b{height:40px;padding:0 16px;border-radius:10px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.seg{display:flex;border-radius:10px;padding:3px;gap:2px}
+.sb{height:34px;padding:0 16px;border:none;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;cursor:pointer}
+.sel{height:42px;padding:0 12px;border-radius:10px;font-family:'IBM Plex Sans',sans-serif;font-size:14px}
+.st{width:30px;height:30px;padding:0;border:none;background:none;display:grid;place-items:center;cursor:pointer;border-radius:6px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: {{t.bg}}; color: {{t.ink}}; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 0 32px; min-height: 68px; background: {{t.head}}; border-bottom: 1px solid {{t.line}}">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: {{t.lav}}; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: {{t.lavInk}}">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+    </div>
+    <nav aria-label="Principal" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <a href="Main.dc.html" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: {{t.muted}}">Inicio</a>
+      <a href="Mapa.dc.html" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: {{t.muted}}">Mapa</a>
+      <a href="Armador.dc.html" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: {{t.muted}}; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Plan</a>
+      <a href="Explorar.dc.html" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: {{t.muted}}; display: flex; align-items: center; gap: 8px">Reseñas <span class="num" style="font-size: 12px; font-weight: 600; background: {{t.peach}}; color: {{t.peachInk}}; padding: 1px 8px; border-radius: 999px">3</span></a>
+    </nav>
+    <div aria-label="Mi perfil" style="width: 40px; height: 40px; border-radius: 999px; background: {{avBg}}; background-size: cover; background-position: center; color: {{t.mintInk}}; display: grid; place-items: center; font-weight: 700; font-size: 13px; box-shadow: 0 0 0 2px {{t.bg}}, 0 0 0 4px {{accent}}">{{iniciales}}</div>
+  </header>
+
+  <main style="max-width: 860px; margin: 0 auto; padding: 36px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+
+    <section style="display: flex; align-items: center; gap: 18px; padding: 4px 0 8px">
+      <div style="position: relative; flex: none">
+        <div style="width: 84px; height: 84px; border-radius: 999px; background: {{avBg}}; background-size: cover; background-position: center; color: {{t.mintInk}}; display: grid; place-items: center; font-weight: 700; font-size: 28px">{{iniciales}}</div>
+        <label title="{{fotoTitulo}}" style="position: absolute; right: -2px; bottom: -2px; width: 32px; height: 32px; border-radius: 999px; background: {{accent}}; color: {{t.onAcc}}; display: grid; place-items: center; cursor: pointer; box-shadow: 0 0 0 3px {{t.bg}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+          <input type="file" accept="image/*" aria-label="{{fotoTitulo}}" onChange="{{onFoto}}" style="position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden">
+        </label>
+      </div>
+      <div style="flex: 1 1 auto; min-width: 0">
+        <h1 style="margin: 0; font-size: 30px; font-weight: 600; line-height: 1.15">Sofía Ramírez</h1>
+        <div style="color: {{t.muted}}">sramirez@fi.uba.ar</div>
+        <sc-if value="{{hayFoto}}" hint-placeholder-val="{{ false }}"><button onClick="{{quitarFoto}}" style="margin-top: 2px; border: none; background: none; padding: 0; font-family: inherit; font-size: 13px; color: {{t.muted}}; text-decoration: underline; cursor: pointer">Quitar foto</button></sc-if>
+      </div>
+      <button class="b" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Cerrar sesión</button>
+    </section>
+
+    <section aria-label="Carrera" style="background: {{t.card}}; border: 1px solid {{t.line}}; border-radius: 18px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px">
+        <div>
+          <h2 class="h2">Carrera</h2>
+          <div style="color: {{t.muted}}; margin-top: 2px">{{carreraTxt}}</div>
+        </div>
+        <sc-if value="{{noEditCarrera}}" hint-placeholder-val="{{ true }}">
+          <button class="b" onClick="{{abrirCarrera}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Cambiar</button>
+        </sc-if>
+      </div>
+      <sc-if value="{{editCarrera}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid {{t.line}}; padding-top: 16px">
+          <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: {{t.muted}}">Carrera
+              <select class="sel" onChange="{{onCarrera}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">
+                <sc-for list="{{carreras}}" as="c" hint-placeholder-count="13"><sc-if value="{{c.on}}" hint-placeholder-val="{{ false }}"><option value="{{c.v}}" selected>{{c.v}}</option></sc-if><sc-if value="{{c.off}}" hint-placeholder-val="{{ true }}"><option value="{{c.v}}">{{c.v}}</option></sc-if></sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: {{t.muted}}">Plan
+              <select class="sel" onChange="{{onPlan}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">
+                <sc-for list="{{planes}}" as="p" hint-placeholder-count="2"><sc-if value="{{p.on}}" hint-placeholder-val="{{ false }}"><option value="{{p.v}}" selected>{{p.label}}</option></sc-if><sc-if value="{{p.off}}" hint-placeholder-val="{{ true }}"><option value="{{p.v}}">{{p.label}}</option></sc-if></sc-for>
+              </select>
+            </label>
+          </div>
+          <sc-if value="{{cambia}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 12px 14px; border-radius: 12px; background: {{t.butter}}; color: {{t.butterInk}}; font-size: 14px">Tus materias pasan al plan nuevo según las equivalencias oficiales. Las que no tengan equivalencia quedan afuera.</div>
+          </sc-if>
+          <div style="display: flex; justify-content: flex-end; gap: 8px">
+            <button class="b" onClick="{{cancelarCarrera}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Cancelar</button>
+            <button class="b" onClick="{{guardarCarrera}}" style="background: {{accent}}; color: {{t.onAcc}}; border: none">Guardar</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <section aria-label="Apariencia" style="background: {{t.card}}; border: 1px solid {{t.line}}; border-radius: 18px; padding: 22px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+      <h2 class="h2">Apariencia</h2>
+      <div class="seg" role="radiogroup" aria-label="Tema" style="background: {{t.soft}}">
+        <sc-for list="{{temas}}" as="o" hint-placeholder-count="3">
+          <button class="sb" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="background: {{o.bg}}; color: {{o.fg}}; font-weight: {{o.fw}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-label="Mis reseñas" style="background: {{t.card}}; border: 1px solid {{t.line}}; border-radius: 18px; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 24px 14px">
+        <div>
+          <h2 class="h2">Mis reseñas</h2>
+          <div style="color: {{t.muted}}; font-size: 14px; margin-top: 2px">Se publican sin tu nombre.</div>
+        </div>
+        <a href="Resenas.dc.html" style="padding: 6px 12px; border-radius: 999px; background: {{t.peach}}; color: {{t.peachInk}}; font-size: 13px; font-weight: 600; text-decoration: none">3 pendientes →</a>
+      </div>
+      <sc-for list="{{resenas}}" as="r" hint-placeholder-count="4">
+        <div style="padding: 16px 24px; border-top: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px">
+            <div style="min-width: 0">
+              <div style="font-weight: 600">{{r.materia}}</div>
+              <div style="font-size: 13px; color: {{t.muted}}">{{r.sub}}</div>
+            </div>
+            <sc-if value="{{r.noEdit}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; gap: 10px; flex: none">
+                <span aria-label="{{r.estrellas}} de 5" style="display: flex; gap: 1px">
+                  <sc-for list="{{r.stars}}" as="s" hint-placeholder-count="5"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{s.fill}}" stroke="{{s.stroke}}" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></sc-for>
+                </span>
+                <button onClick="{{r.editar}}" style="border: none; background: none; padding: 4px 2px; font-family: inherit; font-size: 14px; font-weight: 600; color: {{accent}}; cursor: pointer">Editar</button>
+              </div>
+            </sc-if>
+          </div>
+          <sc-if value="{{r.noEdit}}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{r.hayComentario}}" hint-placeholder-val="{{ true }}"><div style="font-size: 14px; color: {{t.ink2}}">{{r.comentario}}</div></sc-if>
+          </sc-if>
+          <sc-if value="{{r.enEdit}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div role="radiogroup" aria-label="Puntaje" style="display: flex; gap: 2px">
+                <sc-for list="{{r.starBtns}}" as="s" hint-placeholder-count="5"><button class="st" role="radio" aria-checked="{{s.on}}" aria-label="{{s.n}} estrellas" onClick="{{s.pick}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="{{s.fill}}" stroke="{{s.stroke}}" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button></sc-for>
+              </div>
+              <textarea aria-label="Comentario" maxlength="500" onChange="{{r.onTexto}}" rows="3" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid {{t.line2}}; background: {{t.card}}; color: {{t.ink}}; font-family: inherit; font-size: 14px; resize: vertical">{{r.borrador}}</textarea>
+              <div style="display: flex; justify-content: flex-end; gap: 8px">
+                <button class="b" onClick="{{r.cancelar}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Cancelar</button>
+                <button class="b" onClick="{{r.guardar}}" style="background: {{accent}}; color: {{t.onAcc}}; border: none">Guardar</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-label="Tus datos" style="background: {{t.card}}; border: 1px solid {{t.line}}; border-radius: 18px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+        <h2 class="h2">Tus datos</h2>
+        <div style="display: flex; gap: 8px">
+          <button class="b" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Descargar mis datos</button>
+          <sc-if value="{{noBorrar}}" hint-placeholder-val="{{ true }}">
+            <button class="b" onClick="{{abrirBorrar}}" style="background: {{t.card}}; color: {{t.danger}}; border: 1px solid {{t.dangerLine}}">Borrar mi cuenta</button>
+          </sc-if>
+        </div>
+      </div>
+      <sc-if value="{{borrar}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 16px; border-radius: 12px; background: {{t.dangerBg}}; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+          <div style="color: {{t.dangerInk}}; font-size: 14px; max-width: 460px">Se borran tu cuenta, tus materias y tus planes. Tus reseñas siguen publicadas, sin tu nombre. No se puede deshacer.</div>
+          <div style="display: flex; gap: 8px">
+            <button class="b" onClick="{{cancelarBorrar}}" style="background: {{t.card}}; color: {{t.ink}}; border: 1px solid {{t.line2}}">Cancelar</button>
+            <button class="b" style="background: {{t.danger}}; color: #FFFFFF; border: none">Borrar todo</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <footer style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 8px 4px 0; font-size: 13px; color: {{t.muted}}">
+      <span>Hecho por estudiantes. No es un sitio oficial de la universidad.</span>
+    </footer>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1300}}'>
+const CARRERAS = [
+  ['Bioingeniería', ['2024']], ['Ing. Civil', ['2023', '2009']], ['Ing. Electrónica', ['2023', '2009']],
+  ['Ing. en Agrimensura', ['2023', '2006']], ['Ing. en Alimentos', ['2024', '2001']], ['Ing. en Energía Eléctrica', ['2024', '2009']],
+  ['Ing. en Informática', ['2023', '1986']], ['Ing. en Petróleo', ['2023', '2015']], ['Ing. Industrial', ['2023', '2011']],
+  ['Ing. Mecánica', ['2024', '1986']], ['Ing. Naval', ['2024', '1986']], ['Ing. Química', ['2023', '1986']],
+  ['Lic. en Análisis de Sistemas', ['1986']]
+];
+const RESENAS = [
+  { id: 'GICV', materia: 'Gestión Integral de la Cadena de Valor', sub: 'Curso 3 · Bermúdez, Campos, Prieto · 1C 2026', estrellas: 5, comentario: 'Muy buena cursada. Los casos prácticos están muy bien elegidos y los docentes responden rápido por el campus.' },
+  { id: 'EA', materia: 'Estadística Aplicada', sub: 'Curso 1 · Campos, Gallo, Bustos · 1C 2026', estrellas: 4, comentario: 'Las clases prácticas ayudan mucho. El TP lleva bastante más tiempo del que parece.' },
+  { id: 'EYM', materia: 'Electricidad y Magnetismo', sub: 'Curso 4 · Salinas, Herrera · 1C 2026', estrellas: 4, comentario: '' },
+  { id: 'EMIE', materia: 'Electrotecnia, Máquinas e Instalaciones Eléctricas', sub: 'Curso 2 · Moreno, Juárez, Lucero · 1C 2026', estrellas: 3, comentario: 'Mucho contenido para el tiempo que hay. Los laboratorios valen la pena.' }
+];
+const CLARO = {
+  bg: '#F3F2F9', head: '#FFFFFF', card: '#FFFFFF', soft: '#F3F2F9', line: '#E2E0EE', line2: '#D4D2E3',
+  ink: '#24243A', ink2: '#3A3A52', muted: '#5D5E76', onAcc: '#FFFFFF', segOn: '#FFFFFF',
+  lav: '#E3DEFF', lavInk: '#3F3A8C', mint: '#D6F1E3', mintInk: '#1F5A3D', peach: '#FFE3D3', peachInk: '#8A3A18',
+  butter: '#FFF1C7', butterInk: '#5A4310', starOff: '#C9C7D9',
+  danger: '#B3261E', dangerLine: '#EBC3BF', dangerBg: '#FDECEA', dangerInk: '#7A1D17'
+};
+const OSCURO = {
+  bg: '#111117', head: '#17171F', card: '#1A1A23', soft: '#111117', line: '#2A2A37', line2: '#363645',
+  ink: '#ECECF3', ink2: '#CFCFDC', muted: '#A3A3B8', onAcc: '#111117', segOn: '#2E2E3C',
+  lav: '#2B2850', lavInk: '#C9C4FF', mint: '#1D3A2C', mintInk: '#BDEBD2', peach: '#3D2A20', peachInk: '#FFC9A8',
+  butter: '#3A3220', butterInk: '#F3DDA0', starOff: '#4A4A5C',
+  danger: '#F2867D', dangerLine: '#5A2B28', dangerBg: '#2E1A19', dangerInk: '#F7C2BC'
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tema: 'claro', carrera: 'Ing. Industrial', plan: '2023', editCarrera: false, tmpCarrera: null, tmpPlan: null,
+      foto: null, borrar: false, editando: null, borradorEstrellas: 0, borradorTexto: '', resenas: RESENAS
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const oscuro = s.tema === 'oscuro';
+    const t = oscuro ? OSCURO : CLARO;
+    const acc = oscuro ? '#A3A1FA' : (this.props.accent ?? '#5B5BD6');
+    const tmpC = s.tmpCarrera || s.carrera;
+    const planesDe = (c) => CARRERAS.find((x) => x[0] === c)[1];
+    const tmpP = s.tmpPlan || s.plan;
+    const estrellas = (n, big) => [1, 2, 3, 4, 5].map((k) => ({
+      n: k, on: k === n, fill: k <= n ? '#E8B23A' : 'none', stroke: k <= n ? '#E8B23A' : t.starOff,
+      pick: big ? () => this.setState({ borradorEstrellas: k }) : null
+    }));
+
+    return {
+      t: t,
+      accent: acc,
+      hayFoto: !!s.foto,
+      iniciales: s.foto ? '' : 'SR',
+      avBg: s.foto ? 'url(' + s.foto + ')' : t.mint,
+      fotoTitulo: s.foto ? 'Cambiar foto' : 'Agregar foto',
+      onFoto: (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const lector = new FileReader();
+        lector.onload = () => this.setState({ foto: lector.result });
+        lector.readAsDataURL(f);
+      },
+      quitarFoto: () => this.setState({ foto: null }),
+      carreraTxt: s.carrera + ' · Plan ' + s.plan,
+      editCarrera: s.editCarrera,
+      noEditCarrera: !s.editCarrera,
+      abrirCarrera: () => this.setState({ editCarrera: true, tmpCarrera: s.carrera, tmpPlan: s.plan }),
+      cancelarCarrera: () => this.setState({ editCarrera: false, tmpCarrera: null, tmpPlan: null }),
+      guardarCarrera: () => this.setState({ editCarrera: false, carrera: tmpC, plan: tmpP, tmpCarrera: null, tmpPlan: null }),
+      carreras: CARRERAS.map((c) => ({ v: c[0], on: c[0] === tmpC, off: c[0] !== tmpC })),
+      planes: planesDe(tmpC).map((p, i) => ({ v: p, on: p === tmpP, off: p !== tmpP, label: 'Plan ' + p + (i === 0 ? ' (vigente)' : '') })),
+      onCarrera: (e) => this.setState({ tmpCarrera: e.target.value, tmpPlan: planesDe(e.target.value)[0] }),
+      onPlan: (e) => this.setState({ tmpPlan: e.target.value }),
+      cambia: tmpC !== s.carrera || tmpP !== s.plan,
+      temas: [['claro', 'Claro'], ['oscuro', 'Oscuro'], ['sistema', 'Según el sistema']].map((o) => {
+        const on = s.tema === o[0];
+        return { label: o[1], on: on, bg: on ? t.segOn : 'transparent', fg: on ? t.ink : t.muted, fw: on ? 600 : 400, pick: () => this.setState({ tema: o[0] }) };
+      }),
+      resenas: s.resenas.map((r) => {
+        const ed = s.editando === r.id;
+        return {
+          materia: r.materia, sub: r.sub, estrellas: r.estrellas, comentario: r.comentario, hayComentario: !!r.comentario,
+          stars: estrellas(r.estrellas, false),
+          enEdit: ed, noEdit: !ed,
+          starBtns: estrellas(s.borradorEstrellas, true),
+          borrador: s.borradorTexto,
+          editar: () => this.setState({ editando: r.id, borradorEstrellas: r.estrellas, borradorTexto: r.comentario }),
+          cancelar: () => this.setState({ editando: null }),
+          onTexto: (e) => this.setState({ borradorTexto: e.target.value }),
+          guardar: () => this.setState({
+            editando: null,
+            resenas: this.state.resenas.map((x) => (x.id === r.id ? Object.assign({}, x, { estrellas: this.state.borradorEstrellas, comentario: this.state.borradorTexto.trim() }) : x))
+          })
+        };
+      }),
+      borrar: s.borrar,
+      noBorrar: !s.borrar,
+      abrirBorrar: () => this.setState({ borrar: true }),
+      cancelarBorrar: () => this.setState({ borrar: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

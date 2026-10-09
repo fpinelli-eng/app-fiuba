@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Plan de cuatrimestre — Modo día</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F2F9}
+a{color:#24243A}a:hover{color:#000000}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.ghead{margin:16px 4px 6px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#5D5E76}
+.mhead{width:100%;display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;border:none;border-radius:10px;background:transparent;text-align:left;font-family:'IBM Plex Sans',sans-serif;color:#24243A;cursor:pointer}
+.mhead:hover{background:#F6F5FB}
+.dot{flex:none;width:20px;height:20px;border-radius:99px;box-sizing:border-box;display:grid;place-items:center}
+.mname{flex:1 1 auto;font-size:13.5px;font-weight:600;line-height:1.25}
+.msub{display:block;font-size:12px;font-weight:400;color:#5D5E76;margin-top:1px}
+.cred{font-size:11px;font-weight:500;color:#5D5E76;white-space:nowrap}
+.crow{display:flex;align-items:center;gap:10px;margin:0 0 6px 34px;padding:8px 10px;border-radius:10px;box-sizing:border-box}
+.ctitle{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:14px;font-weight:700}
+.cprof{font-size:12.5px;font-weight:500;color:#3A3A52;line-height:1.3;margin-top:1px}
+.ctime{font-size:12px;color:#5D5E76;line-height:1.3;margin-top:1px}
+.stars{display:flex;align-items:center;gap:3px;font-size:12.5px;font-weight:600;color:#24243A;white-space:nowrap}
+.stars span{font-weight:400;color:#5D5E76}
+.cbtn{flex:none;height:30px;padding:0 12px;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer}
+.hours{background-image:linear-gradient(#EEEDF5 1px, transparent 1px);background-size:100% 38px}
+.blk{position:absolute;box-sizing:border-box;border-radius:8px;padding:6px 8px;overflow:hidden;font-size:12px;line-height:1.3}
+.warn{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:10px;font-size:13px;line-height:1.35}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F2F9; color: #24243A; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 0 32px; min-height: 68px; background: #FFFFFF; border-bottom: 1px solid #E2E0EE">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #E3DEFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #3F3A8C">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+    </div>
+    <nav aria-label="Principal" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Inicio</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Mapa</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; background: #E3DEFF; text-decoration: none; font-weight: 600; color: #2E2A6E">Plan</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Reseñas</a>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button aria-label="Cambiar a modo oscuro" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E2E0EE; background: #FFFFFF; color: #5D5E76; display: grid; place-items: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </button>
+      <button aria-label="Mi perfil" style="width: 40px; height: 40px; border-radius: 999px; border: none; background: #D6F1E3; color: #1F5A3D; font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer">SR</button>
+    </div>
+  </header>
+
+  <main style="padding: 24px 24px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px">
+      <div>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.01em">Armá tu 1C 2027</h1>
+        <div style="color: #5D5E76; font-size: 14px">Ejemplo con los horarios reales del 2C 2026 · docentes, puntajes y la clase asincrónica de Uso Eficiente de la Energía son ficticios</div>
+      </div>
+      <div role="tablist" aria-label="Opciones" style="display: flex; gap: 6px; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 12px; padding: 4px">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+          <button role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="height: 36px; padding: 0 16px; border: none; border-radius: 9px; background: {{t.bg}}; color: {{t.color}}; font-family: inherit; font-size: 14px; font-weight: {{t.fw}}; cursor: pointer">{{t.label}} <span class="num" style="font-weight: 400; opacity: 0.8">· {{t.n}}</span></button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <span class="num" style="padding: 7px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E2E0EE; font-size: 14px"><b>{{nMat}}</b> materias</span>
+        <span class="num" style="padding: 7px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E2E0EE; font-size: 14px"><b>{{cred}}</b> créditos</span>
+        <span class="num" style="padding: 7px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E2E0EE; font-size: 14px"><b>{{horas}}</b> h por semana{{asincTxt}}</span>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button onClick="{{vaciar}}" style="height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid #E2E0EE; background: #FFFFFF; font-family: inherit; font-size: 13.5px; color: #5D5E76; cursor: pointer">Vaciar plan</button>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 16px; align-items: stretch">
+
+      <aside aria-label="Materias que podés cursar" style="flex: 0 0 390px; height: 760px; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; display: flex; flex-direction: column">
+        <div style="padding: 16px 16px 10px; border-bottom: 1px solid #ECEBF4; display: flex; flex-direction: column; gap: 6px">
+          <h2 style="margin: 0; font-size: 17px; font-weight: 600">Materias que podés cursar</h2>
+          <label for="buscarm" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar materia</label>
+          <input id="buscarm" type="search" placeholder="Buscar materia" onChange="{{onSearch}}" style="height: 38px; box-sizing: border-box; padding: 0 12px; border-radius: 9px; border: 1px solid #D4D2E3; background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; color: #24243A">
+        </div>
+        <div style="flex: 1 1 auto; overflow-y: auto; padding: 0 8px 12px">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+            <sc-if value="{{g.visible}}" hint-placeholder-val="{{ true }}">
+              <div class="ghead">{{g.title}}</div>
+              <sc-for list="{{g.mats}}" as="m" hint-placeholder-count="4">
+                <div>
+                  <button class="mhead" aria-expanded="{{m.open}}" onClick="{{m.toggle}}" style="background: {{m.headBg}}">
+                    <span class="dot" style="background: {{m.dotBg}}; border: {{m.dotBorder}}"><sc-if value="{{m.inPlan}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{m.checkColor}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>
+                    <span class="mname">{{m.n}}<span class="msub">{{m.sub}}</span></span>
+                    <span class="cred num">{{m.c}} C</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5D5E76" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; transform: {{m.chev}}"><path d="M6 9l6 6 6-6"></path></svg>
+                  </button>
+                  <sc-if value="{{m.open}}" hint-placeholder-val="{{ false }}">
+                    <div>
+                      <sc-if value="{{m.noOffer}}" hint-placeholder-val="{{ false }}"><div style="margin: 0 0 8px 34px; font-size: 12.5px; color: #5D5E76">No se dicta este cuatrimestre</div></sc-if>
+                      <sc-for list="{{m.cursos}}" as="k" hint-placeholder-count="2">
+                        <div class="crow" onMouseEnter="{{k.hover}}" onMouseLeave="{{k.unhover}}" style="background: {{k.bg}}; border: {{k.border}}">
+                          <div style="flex: 1 1 auto; min-width: 0">
+                            <div class="ctitle">{{k.label}}<sc-if value="{{k.sel}}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: {{k.chipFg}}; background: {{k.chipBg}}; padding: 1px 8px; border-radius: 99px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>En tu plan</span></sc-if><sc-if value="{{k.choca}}" hint-placeholder-val="{{ false }}"><span style="font-size: 11px; font-weight: 600; color: #8A3A18; background: #FDE4DA; padding: 1px 7px; border-radius: 99px">Se superpone</span></sc-if></div>
+                            <div class="cprof">{{k.profs}}</div>
+                            <div class="ctime num">{{k.when}}</div>
+                          </div>
+                          <div class="stars num"><svg width="13" height="13" viewBox="0 0 24 24" fill="#E8B23A" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"></path></svg>{{k.rating}} <span>({{k.count}})</span></div>
+                          <button class="cbtn" aria-pressed="{{k.sel}}" onClick="{{k.pick}}" style="border: {{k.btnBorder}}; background: {{k.btnBg}}; color: {{k.btnColor}}">{{k.btn}}</button>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </sc-if>
+          </sc-for>
+        </div>
+      </aside>
+
+      <section aria-label="Calendario semanal" style="flex: 1 1 auto; min-width: 0; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <sc-if value="{{sinAvisos}}" hint-placeholder-val="{{ false }}">
+            <div class="warn" style="background: #E4F5EC; color: #1F4D36"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M20 6L9 17l-5-5"></path></svg>Sin superposiciones ni traslados apurados entre sedes</div>
+          </sc-if>
+          <sc-for list="{{warns}}" as="w" hint-placeholder-count="1">
+            <div class="warn" style="background: {{w.bg}}; color: {{w.fg}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M12 9v4M12 17h.01M10.3 3.9L2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>{{w.text}}</div>
+          </sc-for>
+        </div>
+
+        <div style="overflow-x: auto">
+          <div style="display: grid; grid-template-columns: 44px repeat(6, minmax(110px, 1fr)); gap: 0 6px; min-width: 720px">
+            <div></div>
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="6">
+              <div style="font-size: 12px; font-weight: 600; color: #5D5E76; padding-bottom: 8px">{{d.label}}</div>
+            </sc-for>
+            <div class="num" style="display: flex; flex-direction: column; font-size: 11px; color: #5D5E76; line-height: 1">
+              <sc-for list="{{horasLbl}}" as="h" hint-placeholder-count="16"><div style="height: 38px">{{h}} hs</div></sc-for>
+            </div>
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="6">
+              <div class="hours" style="position: relative; height: 608px; background-color: #FAFAFD; border-radius: 8px">
+                <sc-for list="{{d.blocks}}" as="b" hint-placeholder-count="1">
+                  <div class="blk" style="top: {{b.top}}px; height: {{b.height}}px; left: {{b.left}}; width: {{b.width}}; background: {{b.bg}}; border: {{b.border}}; color: {{b.fg}}">
+                    <div style="font-weight: 600">{{b.title}}</div>
+                    <div class="num" style="opacity: 0.9">{{b.sub}}</div>
+                    <div class="num" style="opacity: 0.9">{{b.time}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{hayAsinc}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid #ECEBF4">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">ASINCRÓNICAS</span>
+            <sc-for list="{{asinc}}" as="a" hint-placeholder-count="1">
+              <span style="display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 12px; border-radius: 999px; background: {{a.bg}}; border: {{a.border}}; color: {{a.fg}}; font-size: 12.5px"><b>{{a.name}}</b><span>{{a.text}}</span></span>
+            </sc-for>
+          </div>
+        </sc-if>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1030}}'>
+const PAL = [
+  ['#E3DEFF', '#2E2A6E', '#B9AEF5'], ['#D6F1E3', '#1F4D36', '#9FD8B8'], ['#FFF1C7', '#5A4310', '#EED58A'],
+  ['#DCEBFB', '#2F4F73', '#A9CBEE'], ['#FFE3D3', '#7A3416', '#F2B89A'], ['#F9DDEB', '#6E2348', '#E9A9C8'], ['#D3F0EE', '#1E5450', '#98D6D1']
+];
+const SEDE = { PC: 'Paseo Colón', LH: 'Las Heras', '?': 'sede a confirmar' };
+const SEDE_C = { PC: 'PC', LH: 'LH', '?': 'sede a conf.' };
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS_L = { Lun: 'lunes', Mar: 'martes', 'Mié': 'miércoles', Jue: 'jueves', Vie: 'viernes', 'Sáb': 'sábado' };
+const HORA = (h) => Math.floor(h) + (h % 1 ? ':' + String(Math.round((h % 1) * 60)).padStart(2, '0') : '');
+const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const hash = (str) => { let x = 7; for (let i = 0; i < str.length; i++) x = (x * 31 + str.charCodeAt(i)) % 1000003; return x; };
+const rate = (id) => { const x = hash(id); return { r: (3.2 + (x % 17) / 10).toFixed(1).replace('.', ','), n: 4 + (x % 37) }; };
+
+const GROUPS = [
+  { title: 'OBLIGATORIAS HABILITADAS', mats: [
+    { id: 'TDM', n: 'Transformación de Materiales', c: 8, cursos: [{ k: '01', h: [['Mié', 18, 22, 'LH'], ['Jue', 18, 22, 'LH']] }, { k: '02', h: [['Lun', 19, 23, 'LH'], ['Mar', 19, 23, 'LH']] }] },
+    { id: 'ESAI', n: 'Equipos y Sist. para Automatización Industrial', ns: 'Automatización Industrial', c: 6, cursos: [{ k: '01', h: [['Lun', 18, 21, 'LH'], ['Jue', 17, 20, 'LH']] }, { k: '02', h: [['Mar', 18, 21, 'LH'], ['Jue', 17, 20, 'LH']] }, { k: '03', h: [['Mar', 18, 21, 'LH'], ['Jue', 17, 20, 'LH']] }] },
+    { id: 'IASCP', n: 'Ing. Ambiental, Sustentabilidad y Cuidado del Planeta', ns: 'Ing. Ambiental', c: 4, cursos: [{ k: '02', h: [['Mar', 17, 21, 'PC']] }, { k: '01A', label: 'Curso 01 · práctica A', h: [['Mar', 15, 19, '?']] }, { k: '01B', label: 'Curso 01 · práctica B', h: [['Mar', 17, 21, '?']] }] },
+    { id: 'INDQUI', n: 'Industrias Químicas', c: 4, cursos: [{ k: '01', h: [['Mar', 17, 23, 'LH']] }] },
+    { id: 'INDEXT', n: 'Industrias Extractivas', c: 4, cursos: [{ k: '01', h: [['Jue', 19, 23, 'LH']] }, { k: '02', h: [['Mié', 19, 23, 'LH']] }] },
+    { id: 'HYS', n: 'Higiene y Seguridad', c: 2, cursos: [{ k: '01', h: [['Lun', 16, 18, 'PC']] }, { k: '02', h: [['Lun', 18, 20, 'PC']] }, { k: '03', h: [['Mié', 14, 16, 'PC']] }, { k: '04', h: [['Mié', 16, 18, 'PC']] }, { k: '05', h: [['Mié', 16, 18, 'PC']] }, { k: '06', h: [['Jue', 16, 18, 'PC']] }] },
+    { id: 'EJPROF', n: 'Legislación y Ejercicio Profesional', ns: 'Legislación', c: 2, cursos: [{ k: '01', h: [['Mié', 19, 21, 'LH']] }, { k: '02', h: [['Mar', 19, 21, 'LH']] }, { k: '03', h: [['Mié', 17, 19, 'LH']] }, { k: '04', h: [['Jue', 17, 19, 'LH']] }, { k: '05', h: [['Lun', 16, 18, 'LH']] }, { k: '06', h: [['Lun', 19, 21, 'LH']] }] }
+  ] },
+  { title: 'ELECTIVAS · GESTIÓN Y NEGOCIOS', mats: [
+    { id: 'CHCO', n: 'Capital Humano y Comportamiento Organizacional', ns: 'Capital Humano', c: 4, cursos: [{ k: '01', h: [['Jue', 19, 23, 'LH']] }] },
+    { id: 'CPS', n: 'Comercialización de Productos y Servicios', ns: 'Comercialización', c: 4, cursos: [{ k: '01', h: [['Mié', 19, 23, 'LH']] }] },
+    { id: 'EEING', n: 'Emprendimientos en Ingeniería', ns: 'Emprendimientos', c: 4, cursos: [{ k: '01', h: [['Mié', 15, 19, 'LH']] }] }
+  ] },
+  { title: 'ELECTIVAS · DATOS Y OPERACIONES', mats: [
+    { id: 'CDTD', n: 'Ciencia de Datos para la Toma de Decisiones', c: 4, cursos: [] },
+    { id: 'EAS', n: 'Estadística Aplicada Superior', c: 4, cursos: [{ k: '01', h: [['Mié', 15, 19, 'LH']] }] },
+    { id: 'GDC', n: 'Gerenciamiento de la Calidad', ns: 'Gerenc. de la Calidad', c: 4, cursos: [{ k: '01', h: [['Vie', 18.5, 22.5, 'LH']] }] },
+    { id: 'LSC', n: 'Logística y Supply Chain', ns: 'Logística', c: 4, cursos: [{ k: '01', h: [['Lun', 19, 23, 'LH']] }] }
+  ] },
+  { title: 'ELECTIVAS · PRODUCTO Y MANUFACTURA', mats: [
+    { id: 'MAII', n: 'Materiales y Aplicaciones II', c: 4, cursos: [{ k: '01', h: [['Lun', 19, 22, '?']] }] },
+    { id: 'TALL', n: 'Taller de Manufactura', c: 3, cursos: [{ k: '01', h: [['Mié', 9, 13, '?']] }, { k: '02', h: [['Mar', 18, 22, '?']] }, { k: '03', h: [['Mié', 18, 22, 'PC']] }, { k: '04', h: [['Jue', 18, 22, '?']] }, { k: '05', h: [['Vie', 18, 22, '?']] }, { k: '06', h: [['Sáb', 8, 12, '?']] }] },
+    { id: 'DDP', n: 'Diseño de Producto', c: 4, cursos: [{ k: '01', h: [['Mar', 19, 23, 'LH']] }] },
+    { id: 'IDEE', n: 'Ing. y Desarrollo de Envases y Embalajes', ns: 'Envases y Embalajes', c: 4, cursos: [{ k: '01', h: [['Vie', 18, 22, 'LH']] }] },
+    { id: 'MEIP', n: 'Mantenimiento e Ingeniería de Planta', c: 4, cursos: [] }
+  ] },
+  { title: 'ELECTIVAS · INDUSTRIAS', mats: [
+    { id: 'AGROBIO', n: 'Agroindustria y Bioeconomía', ns: 'Agroindustria', c: 4, cursos: [{ k: '01', h: [['Jue', 17, 19, 'LH']] }] },
+    { id: 'INDAUTO', n: 'Industria Automotriz', c: 4, cursos: [{ k: '01', h: [['Vie', 19, 22, 'LH']] }] },
+    { id: 'INDTEXT', n: 'Industrias Textiles', c: 4, cursos: [{ k: '01', h: [['Vie', 19, 23, 'LH']] }] }
+  ] },
+  { title: 'ELECTIVAS · ENERGÍA', mats: [
+    { id: 'INTROTE', n: 'Introducción a la Transición Energética', ns: 'Transición Energética', c: 4, cursos: [{ k: '01', h: [['Mié', 18, 22, '?']] }] },
+    { id: 'ENEGRENO', n: 'Energías Renovables', c: 4, cursos: [{ k: '01', h: [['Lun', 15, 19, '?']] }] },
+    { id: 'UEDE', n: 'Uso Eficiente de la Energía', c: 4, cursos: [{ k: '01', h: [['Mar', 15, 19, 'PC'], ['Vie', 20, 22, '?', 'A']] }] },
+    { id: 'FCTE', n: 'Fuentes Convencionales en la Transición Energética', c: 4, cursos: [] },
+    { id: 'TETE', n: 'Tecnologías Emergentes en la Transición Energética', ns: 'Tecnologías Emergentes', c: 4, cursos: [{ k: '01', h: [['Vie', 18, 22, '?']] }] }
+  ] }
+];
+const H = 38;
+const PROF = {
+  TDM01: ['Ferreyra', 'Ocampo', 'Iturri'], TDM02: ['Ferreyra', 'Lagos'],
+  ESAI01: ['Quiroga', 'Benítez', 'Sosa', 'Arce'], ESAI02: ['Quiroga', 'Benítez', 'Sosa', 'Arce'], ESAI03: ['Quiroga', 'Benítez', 'Sosa', 'Prieto'],
+  IASCP02: ['Molina', 'Aguirre'], IASCP01A: ['Paz', 'Medina'], IASCP01B: ['Paz', 'Ledesma'],
+  INDQUI01: ['Acosta', 'Salinas'], INDEXT01: ['Navarro'], INDEXT02: ['Herrera', 'Ojeda'],
+  HYS01: ['Ríos', 'Chávez'], HYS02: ['Domínguez', 'Bustos'], HYS03: ['Castro', 'Vega', 'Rojas', 'Luna'], HYS04: ['Vega'], HYS05: ['Rojas'], HYS06: ['Peralta', 'Bustos', 'Domínguez'],
+  EJPROF01: ['Giménez'], EJPROF02: ['Moreno'], EJPROF03: ['Suárez'], EJPROF04: ['Romero'], EJPROF05: ['Luna'], EJPROF06: ['Luna'],
+  CHCO01: ['Ibarra', 'Mansilla'], CPS01: ['Cabrera', 'Ruiz'], EEING01: ['Funes'], EAS01: ['Ortiz', 'Pereyra'], GDC01: ['Villalba', 'Correa'], LSC01: ['Correa'], MAII01: ['Arias'],
+  TALL01: ['Ledesma'], TALL02: ['Sánchez'], TALL03: ['Medina'], TALL04: ['Toledo'], TALL05: ['Sánchez'], TALL06: ['Godoy'],
+  DDP01: ['Bravo', 'Quintana'], IDEE01: ['Ponce'], AGROBIO01: ['Acosta', 'Salinas'], INDAUTO01: ['Vera'], INDTEXT01: ['Maidana'],
+  INTROTE01: ['Rivas'], ENEGRENO01: ['Campos', 'Olmos'], UEDE01: ['Figueroa', 'Ibáñez'], TETE01: ['Benítez']
+};
+// Máximo 3 nombres; si hay más, se indica cuántos faltan
+const DOCENTES = (lista) => {
+  if (!lista || !lista.length) return '[docentes]';
+  const vis = lista.slice(0, 3).join(', ');
+  return lista.length > 3 ? vis + ' +' + (lista.length - 3) : vis;
+};
+const NUM = (k) => 'Curso ' + String(parseInt(k, 10)) + (/[A-Z]$/.test(k) ? ' · práctica ' + k.slice(-1) : '');
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      active: 'A',
+      plans: { A: { TDM: '01', HYS: '01', EJPROF: '06', UEDE: '01' }, B: { HYS: '01', ESAI: '01', IASCP: '02', INDQUI: '01' } },
+      open: { TDM: true, HYS: true },
+      hover: null, trabajo: false, q: ''
+    };
+  }
+  renderVals() {
+    const acc = this.props.accent ?? '#5B5BD6';
+    const s = this.state;
+    const plan = s.plans[s.active];
+    const all = [];
+    GROUPS.forEach((g) => g.mats.forEach((m) => all.push(m)));
+    const byId = {};
+    all.forEach((m) => { byId[m.id] = m; });
+    const ids = Object.keys(plan).filter((id) => byId[id]);
+    const color = {};
+    ids.forEach((id, i) => { color[id] = PAL[i % PAL.length]; });
+    const setPlan = (np) => this.setState({ plans: Object.assign({}, this.state.plans, { [this.state.active]: np }) });
+
+    const blocks = [];
+    const asinc = [];
+    let horas = 0; let horasAsinc = 0; let cred = 0;
+    const PRES = (cu) => cu.h.filter((h) => h[4] !== 'A');
+    ids.forEach((id) => {
+      const m = byId[id];
+      const cu = m.cursos.find((c) => c.k === plan[id]);
+      if (!cu) return;
+      cred += m.c;
+      cu.h.forEach((h) => {
+        if (h[4] === 'A') {
+          horasAsinc += h[2] - h[1];
+          asinc.push({ name: m.n, text: 'Teórica asincrónica · ' + (h[2] - h[1]) + ' hs por semana', bg: color[id][0], fg: color[id][1], border: '1px solid ' + color[id][2] });
+          return;
+        }
+        horas += h[2] - h[1];
+        blocks.push({ day: h[0], s: h[1], e: h[2], sede: h[3], id: id, name: m.ns || m.n, curso: cu.k, kind: 'mat' });
+      });
+    });
+    if (s.trabajo) ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'].forEach((d) => blocks.push({ day: d, s: 9, e: 14, sede: null, id: 'TRAB', name: 'Trabajo', kind: 'trab' }));
+    let ghost = [];
+    if (s.hover && byId[s.hover.m]) {
+      const m = byId[s.hover.m];
+      const cu = m.cursos.find((c) => c.k === s.hover.k);
+      if (cu && plan[m.id] !== cu.k) ghost = PRES(cu).map((h) => ({ day: h[0], s: h[1], e: h[2], sede: h[3], id: m.id, name: m.ns || m.n, curso: cu.k, kind: 'ghost' }));
+    }
+
+    const warns = [];
+    const choque = new Set();
+    DIAS.forEach((d) => {
+      const b = blocks.filter((x) => x.day === d).sort((x, y) => x.s - y.s);
+      for (let i = 0; i < b.length; i++) {
+        for (let j = i + 1; j < b.length; j++) {
+          const a1 = b[i]; const a2 = b[j];
+          if (a1.s < a2.e && a2.s < a1.e) {
+            choque.add(a1); choque.add(a2);
+            warns.push({ text: 'Superposición el ' + DIAS_L[d] + ' de ' + HORA(Math.max(a1.s, a2.s)) + ' a ' + HORA(Math.min(a1.e, a2.e)) + ' hs: ' + a1.name + ' y ' + a2.name, bg: '#FDE7E1', fg: '#7A2E1B' });
+          }
+        }
+      }
+      const mats = b.filter((x) => x.kind === 'mat');
+      for (let i = 0; i + 1 < mats.length; i++) {
+        const a1 = mats[i]; const a2 = mats[i + 1];
+        const gap = a2.s - a1.e;
+        if (gap >= 0 && gap < 1 && a1.sede !== '?' && a2.sede !== '?' && a1.sede !== a2.sede) {
+          warns.push({ text: 'Traslado apurado el ' + DIAS_L[d] + ': salís de ' + SEDE[a1.sede] + ' a las ' + HORA(a1.e) + ' hs y entrás en ' + SEDE[a2.sede] + ' a las ' + HORA(a2.s) + ' hs', bg: '#FFF1C7', fg: '#5A4310' });
+        }
+      }
+    });
+
+    const days = DIAS.map((d) => {
+      const list = blocks.filter((x) => x.day === d).concat(ghost.filter((x) => x.day === d)).sort((x, y) => x.s - y.s);
+      const lanesEnd = [];
+      list.forEach((x) => {
+        let lane = lanesEnd.findIndex((end) => end <= x.s);
+        if (lane < 0) { lane = lanesEnd.length; lanesEnd.push(x.e); } else lanesEnd[lane] = x.e;
+        x.lane = lane;
+      });
+      const n = Math.max(1, lanesEnd.length);
+      const w = 100 / n;
+      return {
+        label: { Lun: 'LUNES', Mar: 'MARTES', 'Mié': 'MIÉRCOLES', Jue: 'JUEVES', Vie: 'VIERNES', 'Sáb': 'SÁBADO' }[d],
+        blocks: list.map((x) => {
+          const col = x.kind === 'mat' ? color[x.id] : null;
+          const bad = choque.has(x);
+          return {
+            top: (x.s - 7) * H + 1,
+            height: (x.e - x.s) * H - 3,
+            left: 'calc(' + (x.lane * w) + '% + 2px)',
+            width: 'calc(' + w + '% - 4px)',
+            bg: x.kind === 'mat' ? col[0] : x.kind === 'trab' ? '#EEEDF3' : 'rgba(91, 91, 214, 0.08)',
+            fg: x.kind === 'mat' ? col[1] : x.kind === 'trab' ? '#5F5F75' : '#2E2A6E',
+            border: bad ? '2px solid #E07A5F' : x.kind === 'mat' ? '1px solid ' + col[2] : x.kind === 'trab' ? '1px dashed #B9B7CC' : '1.5px dashed ' + acc,
+            title: x.name,
+            sub: x.kind === 'trab' ? '' : NUM(x.curso).replace(' · práctica ', ' ') + ' · ' + SEDE_C[x.sede],
+            time: HORA(x.s) + '–' + HORA(x.e) + ' hs'
+          };
+        })
+      };
+    });
+
+    const q = sinAcentos(s.q.trim());
+    const groups = GROUPS.map((g) => {
+      const mats = g.mats.filter((m) => !q || sinAcentos(m.n).indexOf(q) >= 0).map((m) => {
+        const inPlan = plan[m.id];
+        const open = !!s.open[m.id] || (!!q);
+        const cursos = m.cursos.map((cu) => {
+          const sel = inPlan === cu.k;
+          const r = rate(m.id + cu.k);
+          const otros = blocks.filter((b) => b.id !== m.id);
+          const choca = !sel && PRES(cu).some((h) => otros.some((b) => b.day === h[0] && b.s < h[2] && h[1] < b.e));
+          const dias = PRES(cu).map((h) => h[0] + ' ' + HORA(h[1]) + '–' + HORA(h[2]) + ' hs').join(' y ');
+          const sedes = Array.from(new Set(PRES(cu).map((h) => SEDE[h[3]])));
+          const tieneAsinc = cu.h.some((h) => h[4] === 'A');
+          return {
+            label: NUM(cu.k),
+            profs: DOCENTES(PROF[m.id + cu.k]),
+            chipFg: sel ? color[m.id][1] : '#24243A',
+            when: dias + ' · ' + sedes.join(' / ') + (tieneAsinc ? ' · + teórica asincrónica' : ''),
+            rating: r.r, count: r.n, sel: sel, choca: choca,
+            bg: sel ? '#FFFFFF' : '#F8F7FC',
+            border: sel ? '2px solid ' + color[m.id][2] : '2px solid transparent',
+            chipBg: sel ? color[m.id][0] : '#FFFFFF',
+            btn: sel ? 'Quitar' : inPlan ? 'Cambiar' : 'Agregar',
+            btnBg: sel ? '#FFFFFF' : acc,
+            btnColor: sel ? '#24243A' : '#FFFFFF',
+            btnBorder: sel ? '1px solid #D4D2E3' : '1px solid ' + acc,
+            hover: () => this.setState({ hover: { m: m.id, k: cu.k } }),
+            unhover: () => this.setState({ hover: null }),
+            pick: () => {
+              const np = Object.assign({}, this.state.plans[this.state.active]);
+              if (np[m.id] === cu.k) delete np[m.id]; else np[m.id] = cu.k;
+              this.setState({ hover: null });
+              setPlan(np);
+            }
+          };
+        });
+        const cuSel = m.cursos.find((c) => c.k === inPlan);
+        return {
+          n: m.n, c: m.c, open: open, noOffer: m.cursos.length === 0, cursos: cursos,
+          sub: inPlan && cuSel ? 'En tu plan · ' + NUM(cuSel.k) + ' · ' + DOCENTES(PROF[m.id + cuSel.k]) : m.cursos.length ? m.cursos.length + (m.cursos.length === 1 ? ' curso' : ' cursos') : 'No se dicta este cuatrimestre',
+          inPlan: !!inPlan,
+          headBg: 'transparent',
+          checkColor: inPlan ? color[m.id][1] : 'none',
+          dotBg: inPlan ? color[m.id][0] : 'transparent',
+          dotBorder: inPlan ? '2px solid ' + color[m.id][2] : '1.5px solid #CFCDE0',
+          chev: open ? 'rotate(180deg)' : 'none',
+          toggle: () => this.setState({ open: Object.assign({}, this.state.open, { [m.id]: !this.state.open[m.id] }) })
+        };
+      });
+      return { title: g.title, mats: mats, visible: mats.length > 0 };
+    });
+
+    const tabs = ['A', 'B'].map((k) => {
+      const on = s.active === k;
+      return { label: 'Opción ' + k, n: Object.keys(s.plans[k]).length + ' mat.', on: on, bg: on ? '#E3DEFF' : 'transparent', color: on ? '#2E2A6E' : '#5D5E76', fw: on ? 600 : 400, pick: () => this.setState({ active: k, hover: null }) };
+    });
+    const horasLbl = [];
+    for (let h = 7; h < 23; h++) horasLbl.push(String(h));
+
+    return {
+      accent: acc,
+      tabs: tabs,
+      nMat: ids.length,
+      cred: cred,
+      horas: String(horas).replace('.', ','),
+      asinc: asinc,
+      hayAsinc: asinc.length > 0,
+      asincTxt: horasAsinc ? ' + ' + String(horasAsinc).replace('.', ',') + ' h asincrónicas' : '',
+      trabajo: s.trabajo,
+      trabBg: s.trabajo ? '#EFEDFF' : '#FFFFFF',
+      trabBorder: s.trabajo ? '1px solid ' + acc : '1px solid #E2E0EE',
+      trabTrack: s.trabajo ? acc : '#CFCDE0',
+      trabKnob: s.trabajo ? '14px' : '2px',
+      toggleTrabajo: () => this.setState({ trabajo: !this.state.trabajo }),
+      vaciar: () => setPlan({}),
+      onSearch: (e) => this.setState({ q: e.target.value }),
+      groups: groups,
+      days: days,
+      horasLbl: horasLbl,
+      warns: warns,
+      sinAvisos: warns.length === 0 && ids.length > 0
+    };
+  }
+}
+</script>
+</body>
+</html>

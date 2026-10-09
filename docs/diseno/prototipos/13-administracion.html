@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Administración — Modo día</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F2F9}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.card{background:#FFFFFF;border:1px solid #E2E0EE;border-radius:18px}
+.h2{margin:0;font-size:19px;font-weight:600}
+.b{height:40px;padding:0 16px;border-radius:10px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.gh{background:#FFFFFF;color:#24243A;border:1px solid #D4D2E3}
+.lnk{border:none;background:none;padding:0;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.ch{min-height:34px;padding:6px 12px;border-radius:9px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;cursor:pointer;text-align:left;color:#24243A}
+.pl{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:10px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;text-align:left;cursor:pointer;color:#24243A}
+.inp{height:42px;box-sizing:border-box;padding:0 14px;border-radius:10px;border:1px solid #D4D2E3;background:#FFFFFF;font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:#24243A}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F2F9; color: #24243A; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 32px; min-height: 68px; background: #FFFFFF; border-bottom: 1px solid #E2E0EE">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #E3DEFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #3F3A8C">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+      <span style="padding: 3px 10px; border-radius: 999px; background: #24243A; color: #FFFFFF; font-size: 12px; font-weight: 600">Administración</span>
+    </div>
+    <nav aria-label="Secciones" style="display: flex; gap: 6px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+        <button onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="height: 40px; padding: 0 16px; border: none; border-radius: 10px; background: {{t.bg}}; color: {{t.fg}}; font-family: inherit; font-size: 15px; font-weight: {{t.fw}}; cursor: pointer">{{t.label}}</button>
+      </sc-for>
+    </nav>
+    <a href="Main.dc.html" style="font-size: 14px; color: #5D5E76">Volver a la app</a>
+  </header>
+
+  <sc-if value="{{enOferta}}" hint-placeholder-val="{{ true }}">
+    <main style="max-width: 1240px; margin: 0 auto; padding: 32px 24px 56px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 600">Oferta del 1C 2027</h1>
+          <div class="num" style="color: #5D5E76">{{progresoTxt}}</div>
+        </div>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #5D5E76">Reseñas pendientes desde
+          <input class="inp" type="date" value="{{fecha}}" onChange="{{onFecha}}">
+        </label>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start">
+        <aside class="card" aria-label="Planes" style="padding: 10px; display: flex; flex-direction: column; gap: 2px">
+          <sc-for list="{{planes}}" as="p" hint-placeholder-count="23">
+            <button class="pl" aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="background: {{p.bg}}; font-weight: {{p.fw}}">
+              <span style="min-width: 0">{{p.carrera}} <span style="color: #5D5E76; font-weight: 400">{{p.plan}}</span></span>
+              <span style="flex: none; width: 10px; height: 10px; border-radius: 99px; background: {{p.dot}}; border: {{p.dotBorder}}" title="{{p.estadoTxt}}"></span>
+            </button>
+          </sc-for>
+        </aside>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+
+          <sc-if value="{{vacio}}" hint-placeholder-val="{{ true }}">
+            <section class="card" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 12px">
+              <h2 class="h2">{{selTxt}}</h2>
+              <textarea aria-label="Texto copiado del SIU" onChange="{{onTexto}}" rows="16" placeholder="Pegá acá el texto de la página de horarios del SIU para esta carrera y plan" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid #D4D2E3; background: #FBFAFE; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; line-height: 1.5; color: #24243A; resize: vertical">{{texto}}</textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+                <button class="lnk" onClick="{{ejemplo}}" style="font-weight: 400; color: #5D5E76; text-decoration: underline">Pegar un ejemplo</button>
+                <button class="b" onClick="{{procesar}}" aria-disabled="{{sinTexto}}" style="border: none; background: {{procBg}}; color: {{procFg}}; cursor: {{procCursor}}">Procesar</button>
+              </div>
+            </section>
+          </sc-if>
+
+          <sc-if value="{{procesada}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px">
+              <section class="card" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px">
+                  <h2 class="h2">{{selTxt}}</h2>
+                  <button class="b gh" onClick="{{descartar}}">Descartar</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+                  <sc-for list="{{stats}}" as="k" hint-placeholder-count="3">
+                    <div style="padding: 14px 16px; border-radius: 12px; background: #F6F5FB"><div class="num" style="font-size: 28px; font-weight: 600; line-height: 1.1">{{k.v}}</div><div style="font-size: 13px; color: #5D5E76">{{k.l}}</div></div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section class="card" style="overflow: hidden">
+                <div style="padding: 22px 24px 12px">
+                  <h2 class="h2">Cursos con cambios</h2>
+                  <div style="font-size: 14px; color: #5D5E76">Elegí qué hacer con cada uno. Ya viene marcada la opción sugerida.</div>
+                </div>
+                <sc-for list="{{revisar}}" as="r" hint-placeholder-count="3">
+                  <div style="padding: 16px 24px; border-top: 1px solid #F0EFF6; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: center">
+                    <div style="min-width: 0">
+                      <div style="font-weight: 600">{{r.materia}} · {{r.curso}}</div>
+                      <div style="font-size: 13px; color: #5D5E76">{{r.docentes}}</div>
+                      <div style="font-size: 13px; color: #5D5E76; margin-top: 4px">{{r.motivo}}</div>
+                    </div>
+                    <div role="radiogroup" aria-label="{{r.materia}} {{r.curso}}" style="display: flex; flex-direction: column; gap: 6px">
+                      <sc-for list="{{r.ops}}" as="o" hint-placeholder-count="3">
+                        <button class="ch" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}" style="background: {{o.bg}}; border: {{o.border}}; font-weight: {{o.fw}}">{{o.label}}<sc-if value="{{o.sug}}" hint-placeholder-val="{{ false }}"><span style="margin-left: 8px; font-size: 11.5px; font-weight: 600; color: #5D5E76">SUGERIDO</span></sc-if></button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </section>
+
+              <section class="card" style="overflow: hidden">
+                <div style="padding: 22px 24px 12px"><h2 class="h2">Materias que no están en el plan</h2></div>
+                <sc-for list="{{fuera}}" as="f" hint-placeholder-count="2">
+                  <div style="padding: 14px 24px; border-top: 1px solid #F0EFF6; display: flex; justify-content: space-between; align-items: center; gap: 16px">
+                    <div><div style="font-weight: 600">{{f.n}}</div><div class="num" style="font-size: 13px; color: #5D5E76">{{f.sub}}</div></div>
+                    <span style="font-size: 13px; color: #5D5E76">No se muestra</span>
+                  </div>
+                </sc-for>
+              </section>
+
+              <div style="display: flex; justify-content: flex-end">
+                <button class="b" onClick="{{publicar}}" style="height: 46px; padding: 0 22px; font-size: 15px; border: none; background: {{accent}}; color: #FFFFFF">Publicar</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{publicada}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px">
+              <section class="card" style="padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 10px"><h2 class="h2">{{selTxt}}</h2><span style="padding: 2px 10px; border-radius: 999px; background: #D6F1E3; color: #1F4D36; font-size: 12.5px; font-weight: 600">Publicada</span></div>
+                  <div class="num" style="font-size: 14px; color: #5D5E76">{{pubResumen}}</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <input class="inp" type="search" placeholder="Buscar materia o docente" onChange="{{onBuscar}}" style="width: 240px">
+                  <button class="b gh" onClick="{{reemplazar}}">Reemplazar con otro texto</button>
+                </div>
+              </section>
+              <section class="card" style="overflow: hidden">
+                <sc-for list="{{mats}}" as="m" hint-placeholder-count="6">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 24px; background: #E3DEFF; color: #2E2A6E">
+                      <span style="font-weight: 600">{{m.n}}</span><span class="num" style="font-size: 13px; color: #4F4B78">{{m.cod}} · {{m.resumen}}</span>
+                    </div>
+                    <sc-for list="{{m.cursos}}" as="c" hint-placeholder-count="3">
+                      <div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 280px 150px; gap: 14px; align-items: center; padding: 10px 24px; border-top: 1px solid #F0EFF6; opacity: {{c.op}}">
+                        <span style="font-weight: 600; font-size: 14px">Curso {{c.k}}</span>
+                        <span style="font-size: 14px; color: #3A3A52; min-width: 0">{{c.d}}<sc-if value="{{c.nuevo}}" hint-placeholder-val="{{ false }}"><span style="margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #DCEBFB; color: #2F4F73; font-size: 11.5px; font-weight: 600">Nuevo</span></sc-if></span>
+                        <span class="num" style="font-size: 13px; color: #5D5E76">{{c.h}}</span>
+                        <span style="text-align: right"><button class="lnk" onClick="{{c.toggle}}" style="font-size: 13px; color: {{c.btnColor}}">{{c.btnTxt}}</button></span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <sc-if value="{{sinResultados}}" hint-placeholder-val="{{ false }}"><div style="padding: 20px 24px; color: #5D5E76">No hay materias ni docentes con ese nombre.</div></sc-if>
+              </section>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{enResenas}}" hint-placeholder-val="{{ false }}">
+    <main style="max-width: 1000px; margin: 0 auto; padding: 32px 24px 56px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 600">Reseñas</h1>
+          <div class="num" style="color: #5D5E76">{{resTotalTxt}}</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <div style="display: flex; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 10px; padding: 3px">
+            <sc-for list="{{filtros}}" as="f" hint-placeholder-count="2">
+              <button onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="height: 34px; padding: 0 14px; border: none; border-radius: 8px; background: {{f.bg}}; color: {{f.fg}}; font-family: inherit; font-size: 14px; font-weight: {{f.fw}}; cursor: pointer">{{f.label}}</button>
+            </sc-for>
+          </div>
+          <input class="inp" type="search" placeholder="Buscar materia, docente o texto" onChange="{{onBuscarRes}}" style="width: 280px">
+        </div>
+      </div>
+      <section class="card" style="overflow: hidden">
+        <sc-for list="{{resenas}}" as="r" hint-placeholder-count="8">
+          <div style="border-top: 1px solid #F0EFF6">
+            <sc-if value="{{r.viva}}" hint-placeholder-val="{{ true }}">
+              <div style="padding: 16px 24px; display: flex; flex-direction: column; gap: 8px; background: {{r.bg}}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px">
+                  <div style="min-width: 0">
+                    <div style="font-weight: 600">{{r.materia}} · {{r.curso}}</div>
+                    <div class="num" style="font-size: 13px; color: #5D5E76"><span style="color: #C9951F; letter-spacing: 1px">{{r.llenas}}</span><span style="color: #CFCDE0; letter-spacing: 1px">{{r.vacias}}</span> · {{r.docentes}} · {{r.cuat}}</div>
+                  </div>
+                  <div style="display: flex; gap: 16px; align-items: center; flex: none">
+                    <button class="lnk" onClick="{{r.fijar}}" aria-pressed="{{r.fijada}}" style="display: flex; align-items: center; gap: 6px; color: {{r.pinColor}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="{{r.pinFill}}" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M15 3l6 6-3 1-4 4 1 5-2 1-4-5-5 5-1-1 5-5-5-4 1-2 5 1 4-4z"></path></svg>{{r.pinTxt}}</button>
+                    <button class="lnk" onClick="{{r.eliminar}}" style="color: #B3261E">Eliminar</button>
+                  </div>
+                </div>
+                <div style="font-size: 14.5px; color: #3A3A52">{{r.texto}}</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{r.borrada}}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; background: #FBFAFE">
+                <span style="font-size: 14px; color: #5D5E76">Reseña eliminada · {{r.materia}} · {{r.curso}}</span>
+                <button class="lnk" onClick="{{r.restaurar}}" style="color: #5D5E76; text-decoration: underline; font-weight: 400">Deshacer</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{resVacio}}" hint-placeholder-val="{{ false }}"><div style="padding: 20px 24px; color: #5D5E76">No hay reseñas con ese filtro.</div></sc-if>
+      </section>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1500}}'>
+const PLANES = [
+  ['Bioingeniería', '2024'], ['Ing. Civil', '2023'], ['Ing. Civil', '2009'], ['Ing. Electrónica', '2023'], ['Ing. Electrónica', '2009'],
+  ['Ing. en Agrimensura', '2023'], ['Ing. en Agrimensura', '2006'], ['Ing. en Alimentos', '2024'], ['Ing. en Alimentos', '2001'],
+  ['Ing. en Energía Eléctrica', '2024'], ['Ing. en Energía Eléctrica', '2009'], ['Ing. en Informática', '2023'], ['Ing. en Informática', '1986'],
+  ['Ing. en Petróleo', '2023'], ['Ing. en Petróleo', '2015'], ['Ing. Industrial', '2023'], ['Ing. Industrial', '2011'],
+  ['Ing. Mecánica', '2024'], ['Ing. Mecánica', '1986'], ['Ing. Naval', '2024'], ['Ing. Naval', '1986'], ['Ing. Química', '2023'], ['Ing. Química', '1986'],
+  ['Lic. en Análisis de Sistemas', '1986']
+];
+// Datos de ejemplo: materias de Ing. Industrial con horarios reales del 2C 2026 y docentes ficticios
+const MATS = [{"id": "INVOP", "n": "Investigación Operativa", "cod": "TA012", "cursos": [{"k": "1", "d": "Navarro, Peña", "h": "Mié 19–23 / Jue 19–23 · LH"}, {"k": "2", "d": "Ortega, Lucero, Paredes", "h": "Mié 18–22 · LH / Jue 18–22 · LH"}, {"k": "3", "d": "Iriarte", "h": "Mié 19–23 · LH / Jue 19–23 · LH"}, {"k": "4", "d": "Iriarte, Benítez", "h": "Mar 18–21 · LH", "rev": "r1"}]}, {"id": "ECO", "n": "Economía", "cod": "TC010", "cursos": [{"k": "1", "d": "Peralta", "h": "Lun 19–21 · LH / Mié 19–23 · LH"}, {"k": "2", "d": "Ocampo, Correa", "h": "Vie 17–23 · LH", "rev": "r2"}, {"k": "3", "d": "Villalba", "h": "Mar 19–22 · LH / Vie 19–22 · LH"}, {"k": "4", "d": "Escobar, Quiroga", "h": "Mar 17–23 · LH"}]}, {"id": "GICV", "n": "Gestión Integral de la Cadena de Valor", "cod": "TA011", "cursos": [{"k": "1", "d": "Bustos, Juárez, Peralta", "h": "Sin horario en el SIU"}, {"k": "2", "d": "Lagos", "h": "Mar 19–23 · LH / Mié 19–23 · LH"}, {"k": "3", "d": "Bermúdez, Campos, Prieto", "h": "Lun 19:30–22:30 · LH / Mié 17–22 · LH"}]}, {"id": "LSC", "n": "Logística y Supply Chain", "cod": "TA025", "cursos": [{"k": "1", "d": "Correa", "h": "Lun 19–23 · LH"}, {"k": "2", "d": "Rossi, Medina", "h": "Jue 19–23 · LH", "rev": "r3"}]}, {"id": "EA", "n": "Estadística Aplicada", "cod": "TB014", "cursos": [{"k": "1", "d": "Campos, Gallo, Bustos", "h": "Sin horario en el SIU"}]}, {"id": "PROBA", "n": "Probabilidad", "cod": "CB004", "cursos": [{"k": "10", "d": "Chávez", "h": "Mar 9–13 · PC / Jue 11–13 · PC"}, {"k": "11", "d": "Ramírez, Olmos, Quiroga", "h": "Mar 14–16 · PC / Jue 14–18 · PC"}, {"k": "12", "d": "Blanco, Chávez", "h": "Lun 19–21 · PC / Mié 18–22 · PC"}]}];
+const EJEMPLO = 'Período lectivo: 2027 - 1er Cuatrimestre\nActividad: INVESTIGACIÓN OPERATIVA (TA012)\nComisión: CURSO 01 - NAVARRO\nTurno: Noche\nCupo / insc.: 60 / 0\nInstancias: Regularidad\nUbicación: Sede Unica\nDocentes: NAVARRO LUCIA (Profesor/a Adjunto/a), PEÑA MARTIN (Jefe/a de Trabajos Prácticos)\nTipo de clase\tDía\tHorario\tAula\nTeórico Práctica Obligatoria\tMiércoles\t19:00 a 23:00\tVirtual\nTeórico Práctica Obligatoria\tJueves\t19:00 a 23:00\t305-LH\nComisión: CURSO 04 - IRIARTE\nTurno: Noche\nCupo / insc.: 50 / 0\nInstancias: Regularidad\nUbicación: Sede Unica\nDocentes: IRIARTE PABLO (Profesor/a Adjunto/a), BENITEZ CAROLINA (Ayudante 1ro/a)\nTipo de clase\tDía\tHorario\tAula\nTeórico Práctica Obligatoria\tMartes\t18:00 a 21:00\t305-LH\n…';
+const REVISAR = [
+  { id: 'r1', materia: 'Investigación Operativa', curso: 'Curso 4', docentes: 'Iriarte, Benítez', motivo: 'Curso nuevo. Comparte un docente con el Curso 3 del 2C 2026.', sug: 'igual', ops: [['igual', 'Mismo curso que el Curso 3 del 2C 2026'], ['nuevo', 'Curso nuevo'], ['ocultar', 'No mostrar este curso']] },
+  { id: 'r2', materia: 'Economía', curso: 'Curso 2', docentes: 'Ocampo, Correa', motivo: 'En el 2C 2026 tenía 4 docentes; ahora tiene 2.', sug: 'igual', ops: [['igual', 'Mismo curso que el Curso 2 del 2C 2026'], ['nuevo', 'Curso nuevo'], ['ocultar', 'No mostrar este curso']] },
+  { id: 'r3', materia: 'Logística y Supply Chain', curso: 'Curso 2', docentes: 'Rossi, Medina', motivo: 'Curso nuevo. Ningún docente coincide con cursos anteriores.', sug: 'nuevo', ops: [['nuevo', 'Curso nuevo'], ['igual', 'Mismo curso que el Curso 1 del 2C 2026'], ['ocultar', 'No mostrar este curso']] }
+];
+const FUERA = [
+  { n: 'Seminario de Formación Docente', sub: 'TA099 · 1 curso' },
+  { n: 'Taller de Escritura Técnica', sub: 'TB012 · 2 cursos' }
+];
+const RESENAS = [
+  { id: 'a1', materia: 'Investigación Operativa', curso: 'Curso 2', docentes: 'Ortega, Lucero, Paredes', cuat: '1C 2026', e: 5, texto: 'Muy buena predisposición del equipo docente. Se nota que les interesa que aprendas los modelos y no solo que apruebes.', pin: true },
+  { id: 'a2', materia: 'Investigación Operativa', curso: 'Curso 2', docentes: 'Ortega, Lucero, Paredes', cuat: '2C 2026', e: 5, texto: 'Las clases prácticas son muy claras y los TPs están bien pensados. Exigente pero justo.' },
+  { id: 'a3', materia: 'Química Básica', curso: 'Curso 5', docentes: 'Ibarra, Sosa', cuat: '2C 2026', e: 4, texto: 'Doy clases particulares de toda la materia, pregunten por mí en el grupo de Telegram de la carrera.' },
+  { id: 'a4', materia: 'Economía', curso: 'Curso 1', docentes: 'Peralta', cuat: '2C 2026', e: 2, texto: 'Las clases son una lectura de diapositivas. Para el parcial sirve más el libro que ir a clase.' },
+  { id: 'a5', materia: 'Gestión Integral de la Cadena de Valor', curso: 'Curso 3', docentes: 'Bermúdez, Campos, Prieto', cuat: '1C 2026', e: 5, texto: 'Muy buena cursada. Los casos prácticos están muy bien elegidos y los docentes responden rápido por el campus.' },
+  { id: 'a6', materia: 'Álgebra Lineal', curso: 'Curso 3', docentes: 'Acuña, Navarro', cuat: '1C 2026', e: 1, texto: 'asdasd no sé qué poner jaja' },
+  { id: 'a7', materia: 'Probabilidad', curso: 'Curso 11', docentes: 'Ramírez, Olmos, Quiroga', cuat: '2C 2026', e: 4, texto: 'Buen ritmo y buenos apuntes. El coloquio es corto si llevás los TPs al día.' },
+  { id: 'a8', materia: 'Estadística Aplicada', curso: 'Curso 1', docentes: 'Campos, Gallo, Bustos', cuat: '1C 2026', e: 4, texto: 'Las clases prácticas ayudan mucho. El TP lleva bastante más tiempo del que parece.' }
+];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const clave = (p) => p[0] + ' · ' + p[1];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const pins = {};
+    RESENAS.forEach((r) => { if (r.pin) pins[r.id] = true; });
+    this.state = {
+      tab: 'oferta', sel: 'Ing. Industrial · 2023', fecha: '2027-07-05',
+      estado: {}, texto: {}, elec: {}, quitados: {}, q: '',
+      filtro: 'todas', qRes: '', pins: pins, borradas: {}
+    };
+  }
+  renderVals() {
+    const acc = this.props.accent ?? '#5B5BD6';
+    const s = this.state;
+    const est = (k) => s.estado[k] || 'vacio';
+    const k = s.sel;
+    const set = (campo, id, v) => this.setState({ [campo]: Object.assign({}, this.state[campo], { [id]: v }) });
+    const elec = (id) => (s.elec[k] && s.elec[k][id]) || REVISAR.find((r) => r.id === id).sug;
+    const publicados = PLANES.filter((p) => est(clave(p)) === 'publicada').length;
+    const texto = s.texto[k] || '';
+    const sinTexto = texto.trim().length === 0;
+
+    // vista de la oferta publicada
+    const q = sinAcentos(s.q.trim());
+    const quit = s.quitados[k] || {};
+    let nOcultos = 0;
+    const mats = MATS.map((m) => {
+      const cursos = m.cursos.map((c) => {
+        const ocultoRev = c.rev && elec(c.rev) === 'ocultar';
+        const idc = m.id + '-' + c.k;
+        const oculto = quit[idc] !== undefined ? quit[idc] : !!ocultoRev;
+        if (oculto) nOcultos += 1;
+        return {
+          k: c.k, d: c.d, h: c.h, nuevo: !!c.rev && elec(c.rev) !== 'igual',
+          op: oculto ? 0.45 : 1,
+          btnTxt: oculto ? 'Volver a mostrar' : 'Quitar',
+          btnColor: oculto ? acc : '#B3261E',
+          toggle: () => set('quitados', k, Object.assign({}, quit, { [idc]: !oculto }))
+        };
+      });
+      const visibles = cursos.filter((c) => c.op === 1).length;
+      return { n: m.n, cod: m.cod, cursos: cursos, resumen: visibles + (visibles === 1 ? ' curso' : ' cursos'), match: !q || sinAcentos(m.n + ' ' + m.cursos.map((c) => c.d).join(' ')).indexOf(q) >= 0 };
+    });
+    const matsVis = mats.filter((m) => m.match);
+
+    // reseñas
+    const qr = sinAcentos(s.qRes.trim());
+    const resenas = RESENAS.filter((r) => (s.filtro === 'todas' || s.pins[r.id]) && (!qr || sinAcentos(r.materia + ' ' + r.docentes + ' ' + r.texto).indexOf(qr) >= 0)).map((r) => {
+      const fijada = !!s.pins[r.id];
+      return {
+        materia: r.materia, curso: r.curso, docentes: r.docentes, cuat: r.cuat, texto: r.texto,
+        llenas: '★'.repeat(r.e), vacias: '★'.repeat(5 - r.e),
+        viva: !s.borradas[r.id], borrada: !!s.borradas[r.id],
+        fijada: fijada, pinTxt: fijada ? 'Fijada' : 'Fijar', pinColor: fijada ? acc : '#5D5E76', pinFill: fijada ? 'currentColor' : 'none',
+        bg: fijada ? '#F7F5FF' : '#FFFFFF',
+        fijar: () => set('pins', r.id, !fijada),
+        eliminar: () => set('borradas', r.id, true),
+        restaurar: () => set('borradas', r.id, false)
+      };
+    });
+    const vivas = RESENAS.filter((r) => !s.borradas[r.id]).length;
+    const nPins = RESENAS.filter((r) => s.pins[r.id] && !s.borradas[r.id]).length;
+    const f = s.fecha.split('-');
+
+    return {
+      accent: acc,
+      tabs: [['oferta', 'Oferta del cuatrimestre'], ['resenas', 'Reseñas']].map((t) => {
+        const on = s.tab === t[0];
+        return { label: t[1], on: on, bg: on ? '#E3DEFF' : 'transparent', fg: on ? '#2E2A6E' : '#5D5E76', fw: on ? 600 : 400, pick: () => this.setState({ tab: t[0] }) };
+      }),
+      enOferta: s.tab === 'oferta',
+      enResenas: s.tab === 'resenas',
+      progresoTxt: publicados + ' de ' + PLANES.length + ' planes publicados',
+      fecha: s.fecha,
+      onFecha: (e) => this.setState({ fecha: e.target.value }),
+      planes: PLANES.map((p) => {
+        const kk = clave(p); const on = kk === k; const e = est(kk);
+        return {
+          carrera: p[0], plan: p[1], on: on, bg: on ? '#EFEDFF' : 'transparent', fw: on ? 600 : 400,
+          dot: e === 'publicada' ? '#3FA36B' : e === 'procesada' ? '#E8B23A' : 'transparent',
+          dotBorder: e === 'vacio' ? '1.5px solid #B9B7CC' : 'none',
+          estadoTxt: e === 'publicada' ? 'Publicada' : e === 'procesada' ? 'Sin publicar' : 'Sin cargar',
+          pick: () => this.setState({ sel: kk, q: '' })
+        };
+      }),
+      selTxt: k.replace(' · ', ' · Plan '),
+      vacio: est(k) === 'vacio', procesada: est(k) === 'procesada', publicada: est(k) === 'publicada',
+      texto: texto,
+      onTexto: (e) => set('texto', k, e.target.value),
+      ejemplo: () => set('texto', k, EJEMPLO),
+      sinTexto: sinTexto,
+      procBg: sinTexto ? '#ECEBF4' : acc, procFg: sinTexto ? '#8A8AA0' : '#FFFFFF', procCursor: sinTexto ? 'not-allowed' : 'pointer',
+      procesar: () => { if (!sinTexto) set('estado', k, 'procesada'); },
+      descartar: () => this.setState({ estado: Object.assign({}, this.state.estado, { [k]: 'vacio' }), texto: Object.assign({}, this.state.texto, { [k]: '' }), elec: Object.assign({}, this.state.elec, { [k]: {} }) }),
+      stats: [['61', 'materias'], ['201', 'cursos'], ['442', 'horarios']].map((x) => ({ v: x[0], l: x[1] })),
+      revisar: REVISAR.map((r) => ({
+        materia: r.materia, curso: r.curso, docentes: r.docentes, motivo: r.motivo,
+        ops: r.ops.map((o) => {
+          const on = elec(r.id) === o[0];
+          return {
+            label: o[1], on: on, sug: o[0] === r.sug,
+            bg: on ? '#EFEDFF' : '#FFFFFF', border: on ? '1.5px solid ' + acc : '1px solid #E2E0EE', fw: on ? 600 : 400,
+            pick: () => set('elec', k, Object.assign({}, this.state.elec[k] || {}, { [r.id]: o[0] }))
+          };
+        })
+      })),
+      fuera: FUERA,
+      publicar: () => set('estado', k, 'publicada'),
+      pubResumen: 'Publicada hoy · 61 materias · ' + (201 - nOcultos) + ' cursos visibles · reseñas pendientes desde el ' + (f.length === 3 ? parseInt(f[2], 10) + ' de ' + MESES[parseInt(f[1], 10) - 1] : s.fecha),
+      onBuscar: (e) => this.setState({ q: e.target.value }),
+      reemplazar: () => set('estado', k, 'vacio'),
+      mats: matsVis,
+      sinResultados: matsVis.length === 0,
+      filtros: [['todas', 'Todas'], ['fijadas', 'Fijadas']].map((x) => {
+        const on = s.filtro === x[0];
+        return { label: x[1], on: on, bg: on ? '#E3DEFF' : 'transparent', fg: on ? '#2E2A6E' : '#5D5E76', fw: on ? 600 : 400, pick: () => this.setState({ filtro: x[0] }) };
+      }),
+      onBuscarRes: (e) => this.setState({ qRes: e.target.value }),
+      resTotalTxt: vivas + ' reseñas · ' + nPins + (nPins === 1 ? ' fijada' : ' fijadas') + ' · más recientes primero',
+      resenas: resenas,
+      resVacio: resenas.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

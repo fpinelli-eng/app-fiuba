@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mapa — primera carga</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F2F9}
+a{color:#24243A}a:hover{color:#000000}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.wrap{position:absolute;transition:opacity .15s ease}
+.node{position:relative;width:112px;height:92px;box-sizing:border-box;margin:0;padding:7px 8px;border-radius:10px;text-align:left;font-family:'IBM Plex Sans',sans-serif;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer}
+.nm{font-size:12px;font-weight:600;line-height:1.2;hyphens:auto;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ft{display:flex;justify-content:space-between;align-items:center;font-size:11px;width:100%}
+.st{display:flex;align-items:center;gap:4px;font-weight:500}
+.cred{font-size:10.5px;font-weight:500;opacity:0.75;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cred i{font-style:normal;margin-left:2px}
+.nota{font-size:16px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.apr{background:#D6F1E3;border:1px solid #BFE3CF;color:#1F4D36}
+.fin{background:#FFF1C7;border:1px solid #F0DC9C;color:#5A4310}
+.cur{background:#DCEBFB;border:1px solid #BCD6F2;color:#2F4F73}
+.hab{background:#FFFFFF;border:1.5px solid #8F8DAE;color:#24243A}
+.blo{background:#EEEDF3;border:1px dashed #B9B7CC;color:#5F5F75}
+.col{position:absolute;top:0;bottom:0;width:122px;border-radius:12px}
+.colh{position:absolute;top:6px;width:112px;font-size:12px;font-weight:600;color:#5D5E76;text-align:center}
+.erow{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;margin:0;padding:8px 10px;border-radius:8px;text-align:left;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;line-height:1.25;cursor:pointer;transition:opacity .15s ease}
+.erow .en{flex:1 1 auto;font-weight:500}
+.ehead{display:flex;justify-content:space-between;align-items:baseline;margin:14px 2px 6px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#5D5E76}
+.pop{position:absolute;width:240px;box-sizing:border-box;padding:14px 14px 12px;background:#FFFFFF;border:1px solid #E2E0EE;border-radius:14px;box-shadow:0 12px 32px rgba(36,36,58,0.16);display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.3;color:#24243A;text-align:left;z-index:40}
+.poph{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#5D5E76}
+.poprow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tag{flex:none;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px}
+.muted{color:#5D5E76}
+.sbtn{height:32px;border-radius:8px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:#24243A;cursor:pointer}
+.nbtn{flex:1 1 0;height:30px;border-radius:7px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:0}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F2F9; color: #24243A; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 0 32px; min-height: 68px; background: #FFFFFF; border-bottom: 1px solid #E2E0EE">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #E3DEFF; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #3F3A8C">F</div>
+      <span style="font-weight: 700; letter-spacing: 0.02em">[NOMBRE]</span>
+    </div>
+    <nav aria-label="Principal" style="display: flex; gap: 6px; flex-wrap: wrap">
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Inicio</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; background: #E3DEFF; text-decoration: none; font-weight: 600; color: #2E2A6E">Mapa</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76">Plan</a>
+      <a href="#" style="padding: 9px 16px; border-radius: 10px; text-decoration: none; color: #5D5E76; ">Reseñas</a>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <button aria-label="Cambiar a modo oscuro" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E2E0EE; background: #FFFFFF; color: #5D5E76; display: grid; place-items: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </button>
+      <button aria-label="Mi perfil" style="width: 40px; height: 40px; border-radius: 999px; border: none; background: #D6F1E3; color: #1F5A3D; font-family: 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer">SR</button>
+    </div>
+  </header>
+
+  <main style="padding: 26px 24px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px">
+      <div>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.01em">Cargá tus materias</h1>
+        <div style="color: #5D5E76">Ingeniería Industrial · Plan 2023 · <span class="num" style="color: #24243A; font-weight: 600">{{cred}}</span> de 236 C · Promedio <span class="num" style="color: #24243A; font-weight: 600">{{prom}}</span></div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-end"><div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="buscar" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: #5D5E76">BUSCAR MATERIA</label>
+        <input id="buscar" type="search" placeholder="Ej.: Logística" onChange="{{onSearch}}" style="width: 280px; height: 42px; box-sizing: border-box; padding: 0 14px; border-radius: 10px; border: 1px solid #D4D2E3; background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; color: #24243A">
+      </div>
+      <a href="Main.dc.html" style="height: 42px; padding: 0 22px; border-radius: 10px; background: {{accent}}; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center">Listo</a></div>
+    </div>
+
+    <div aria-label="Referencias" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <span class="apr" style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Aprobada</span>
+      <span class="fin" style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Final pendiente</span>
+      <span class="cur" style="display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path></svg>Cursando</span>
+      <span class="hab" style="display: flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>Habilitada</span>
+      <span class="blo" style="display: flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Bloqueada</span>
+            <span style="padding: 4px 6px; font-size: 13px; color: #5D5E76">C = créditos</span>
+    </div>
+
+    <section aria-label="Plan de estudios" style="position: relative; display: flex; background: #FFFFFF; border: 1px solid #E2E0EE; border-radius: 16px">
+
+      <div style="flex: 1 1 auto; min-width: 0; overflow-x: auto; padding: 16px 12px">
+        <div style="position: relative; width: {{ganttW}}px; height: 632px">
+
+          <sc-for list="{{cols}}" as="k" hint-placeholder-count="9">
+            <div class="col" style="left: {{k.left}}px; width: {{k.w}}px; background: {{k.bg}}"></div>
+          </sc-for>
+          <sc-for list="{{heads}}" as="h" hint-placeholder-count="8">
+            <div class="colh" style="left: {{h.left}}px">{{h.label}}</div>
+          </sc-for>
+
+          <sc-if value="{{cbcOpen}}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{toggleCbc}}" aria-expanded="true" title="Compactar el CBC en un solo módulo" style="position: absolute; left: 0; top: 2px; width: 112px; height: 26px; border: none; border-radius: 7px; background: transparent; font-family: inherit; font-size: 12px; font-weight: 600; color: #2F5A44; display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer">CBC <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7l5 5-5 5M20 7l-5 5 5 5"></path></svg><span style="font-weight: 500">Compactar</span></button>
+          </sc-if>
+          <sc-if value="{{cbcClosed}}" hint-placeholder-val="{{ true }}">
+            <div class="wrap" style="left: 0; top: 34px; opacity: {{cbcOp}}">
+              <button class="node {{cbcD}}" onClick="{{toggleCbc}}" aria-expanded="false" aria-label="CBC compactado, 6 materias. Tocá para ver las materias" style="width: 64px; height: 592px; padding: 10px 4px; align-items: center; justify-content: center; gap: 14px; text-align: center; outline: {{cbcOutline}}; outline-offset: 2px">
+                <span class="nm" style="font-size: 14px">CBC</span>
+                <span style="font-size: 11px; line-height: 1.3">{{cbcLabel}}</span>
+                <span class="cred">38<i>C</i></span>
+                <span style="display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"></path></svg>Ver</span>
+              </button>
+            </div>
+          </sc-if>
+
+          <sc-for list="{{obs}}" as="m" hint-placeholder-count="35">
+            <div class="wrap" style="left: {{m.x}}px; top: {{m.y}}px; z-index: {{m.z}}; opacity: {{m.op}}">
+              <button class="node {{m.d}}" aria-expanded="{{m.open}}" onClick="{{m.pick}}" style="box-shadow: {{m.shadow}}; outline: {{m.outline}}; outline-offset: 2px">
+                <span class="nm">{{m.ns}}</span>
+                <span class="ft"><span class="st"><sc-if value="{{m.isApr}}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg></sc-if><sc-if value="{{m.isFin}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><sc-if value="{{m.isCur}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path></svg></sc-if><sc-if value="{{m.isHab}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></sc-if><sc-if value="{{m.isBlo}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>{{m.short}}<sc-if value="{{m.hasNota}}" hint-placeholder-val="{{ true }}"><span class="nota">{{m.nota}}</span></sc-if></span><span class="cred">{{m.credTxt}}</span></span>
+              </button>
+              <sc-if value="{{m.open}}" hint-placeholder-val="{{ false }}">
+                <div class="pop" role="dialog" aria-label="{{m.n}}" style="left: {{m.popX}}px; top: {{m.popTop}}">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+                    <div><div style="font-size: 15px; font-weight: 600; line-height: 1.25">{{m.n}}</div><div class="muted num" style="font-size: 12px; margin-top: 2px">{{m.subTxt}}</div></div>
+                    <button aria-label="Cerrar" onClick="{{m.close}}" style="flex: none; width: 28px; height: 28px; border-radius: 8px; border: none; background: #F3F2F9; color: #5D5E76; display: grid; place-items: center; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                  </div>
+                  <sc-if value="{{m.conNota}}" hint-placeholder-val="{{ true }}">
+                    <div class="poph">APROBADA CON</div>
+                    <div style="display: flex; gap: 4px">
+                      <sc-for list="{{m.notaBtns}}" as="k" hint-placeholder-count="7">
+                        <button class="nbtn num" aria-pressed="{{k.on}}" aria-label="Nota {{k.v}}" onClick="{{k.pick}}" style="height: 36px; font-size: 14px; background: {{k.bg}}; color: {{k.color}}; border: {{k.border}}">{{k.v}}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="display: grid; grid-template-columns: repeat({{m.qCols}}, minmax(0, 1fr)); gap: 6px; margin-top: 6px">
+                    <sc-for list="{{m.qBtns}}" as="b" hint-placeholder-count="3">
+                      <button class="sbtn" aria-pressed="{{b.on}}" onClick="{{b.pick}}" style="padding: 0 4px; border: {{b.border}}; background: {{b.bg}}; font-weight: {{b.fw}}">{{b.label}}</button>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{m.enSecuencia}}" hint-placeholder-val="{{ true }}">
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px; padding-top: 8px; border-top: 1px solid #F0EFF6; font-size: 12.5px">
+                      <button onClick="{{m.prev}}" style="border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 12.5px; color: #5D5E76; cursor: pointer">← Anterior</button>
+                      <button onClick="{{m.next}}" style="border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 12.5px; font-weight: 600; color: {{accent}}; cursor: pointer">Siguiente →</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <aside aria-label="Electivas" style="flex: 0 0 276px; height: 664px; background: #F1EEFD; border-left: 1px solid #E2DCF7; border-radius: 0 16px 16px 0; display: flex; flex-direction: column">
+        <div style="padding: 16px 16px 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid #E2DCF7">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 600">Electivas</h2>
+            <span class="num" style="font-size: 13px; font-weight: 600">{{eCred}} de 24 C</span>
+          </div>
+          <div style="height: 8px; border-radius: 8px; background: #FFFFFF; overflow: hidden" aria-hidden="true"><div style="height: 8px; width: {{ePct}}%; background: {{accent}}"></div></div>
+          <div role="group" aria-label="Filtrar electivas" style="display: flex; background: #FFFFFF; border-radius: 9px; padding: 3px; height: 34px; box-sizing: border-box">
+            <sc-for list="{{filtros}}" as="f" hint-placeholder-count="3">
+              <button aria-pressed="{{f.on}}" onClick="{{f.pick}}" style="flex: 1 1 auto; border: none; border-radius: 6px; padding: 0 6px; background: {{f.bg}}; color: {{f.color}}; font-family: inherit; font-size: 12px; font-weight: {{f.fw}}; cursor: pointer; white-space: nowrap">{{f.label}} <span class="num">{{f.count}}</span></button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex: 1 1 auto; overflow-y: auto; padding: 0 12px 12px">
+          <sc-for list="{{lanes}}" as="lane" hint-placeholder-count="5">
+            <div>
+              <div class="ehead"><span>{{lane.areaU}}</span><span class="num" style="letter-spacing: 0">{{lane.hab}} hab. de {{lane.total}}</span></div>
+              <sc-if value="{{lane.empty}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #5D5E76; padding: 2px 2px 6px">Ninguna en este filtro</div></sc-if>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <sc-for list="{{lane.items}}" as="m" hint-placeholder-count="5">
+                  <button class="erow {{m.d}}" aria-expanded="{{m.sel}}" onClick="{{m.pick}}" style="opacity: {{m.op}}; box-shadow: {{m.shadow}}; outline: {{m.outline}}; outline-offset: -3px">
+                    <sc-if value="{{m.isApr}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6L9 17l-5-5"></path></svg></sc-if><sc-if value="{{m.isFin}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><sc-if value="{{m.isCur}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path></svg></sc-if><sc-if value="{{m.isHab}}" hint-placeholder-val="{{ true }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></sc-if><sc-if value="{{m.isBlo}}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+                    <span class="en">{{m.n}}</span>
+                    <sc-if value="{{m.hasNota}}" hint-placeholder-val="{{ false }}"><span class="nota">{{m.nota}}</span></sc-if>
+                    <span class="cred">{{m.credTxt}}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </aside>
+
+      <sc-if value="{{hasEsel}}" hint-placeholder-val="{{ false }}">
+        <div class="pop" role="dialog" aria-label="{{esel.n}}" style="right: 288px; bottom: 16px">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+                    <div><div style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #5D5E76">ELECTIVA · {{esel.areaU}}</div><div style="font-size: 15px; font-weight: 600; line-height: 1.25; margin-top: 2px">{{esel.n}}</div><div class="muted num" style="font-size: 12px; margin-top: 2px">{{esel.subTxt}}</div></div>
+                    <button aria-label="Cerrar" onClick="{{esel.close}}" style="flex: none; width: 28px; height: 28px; border-radius: 8px; border: none; background: #F3F2F9; color: #5D5E76; display: grid; place-items: center; cursor: pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                  </div>
+                  <sc-if value="{{esel.conNota}}" hint-placeholder-val="{{ true }}">
+                    <div class="poph">APROBADA CON</div>
+                    <div style="display: flex; gap: 4px">
+                      <sc-for list="{{esel.notaBtns}}" as="k" hint-placeholder-count="7">
+                        <button class="nbtn num" aria-pressed="{{k.on}}" aria-label="Nota {{k.v}}" onClick="{{k.pick}}" style="height: 36px; font-size: 14px; background: {{k.bg}}; color: {{k.color}}; border: {{k.border}}">{{k.v}}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="display: grid; grid-template-columns: repeat({{esel.qCols}}, minmax(0, 1fr)); gap: 6px; margin-top: 6px">
+                    <sc-for list="{{esel.qBtns}}" as="b" hint-placeholder-count="3">
+                      <button class="sbtn" aria-pressed="{{b.on}}" onClick="{{b.pick}}" style="padding: 0 4px; border: {{b.border}}; background: {{b.bg}}; font-weight: {{b.fw}}">{{b.label}}</button>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{esel.enSecuencia}}" hint-placeholder-val="{{ true }}">
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px; padding-top: 8px; border-top: 1px solid #F0EFF6; font-size: 12.5px">
+                      <button onClick="{{esel.prev}}" style="border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 12.5px; color: #5D5E76; cursor: pointer">← Anterior</button>
+                      <button onClick="{{esel.next}}" style="border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 12.5px; font-weight: 600; color: {{accent}}; cursor: pointer">Siguiente →</button>
+                    </div>
+                  </sc-if>
+                </div>
+      </sc-if>
+    </section>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B5BD6","options":["#5B5BD6","#2F7F76","#B54D73","#B85A2E"]},"$preview":{"width":1440,"height":1030}}'>
+const X = (k) => k * 122;
+const Y = (r) => 34 + r * 100;
+const CBCS = [
+  { id: 'AMA', n: 'Análisis Matemático A', ns: 'Análisis Matemático A', c: 9, x: X(0), y: Y(0), req: [], cbc: true },
+  { id: 'ALGA', n: 'Álgebra A', ns: 'Álgebra A', c: 9, x: X(0), y: Y(1), req: [], cbc: true },
+  { id: 'FIS', n: 'Física', ns: 'Física', c: 6, x: X(0), y: Y(2), req: [], cbc: true },
+  { id: 'PC', n: 'Pensamiento Computacional', ns: 'Pensamiento Computacional', c: 6, x: X(0), y: Y(3), req: [], cbc: true },
+  { id: 'ICSE', n: 'Introducción al Conocimiento de la Sociedad y el Estado', ns: 'Sociedad y Estado (ICSE)', c: 4, x: X(0), y: Y(4), req: [], cbc: true },
+  { id: 'IPC', n: 'Introducción al Pensamiento Científico', ns: 'Pensamiento Científico (IPC)', c: 4, x: X(0), y: Y(5), req: [], cbc: true }
+];
+const OB = [
+  { id: 'AMII', n: 'Análisis Matemático II', ns: 'Análisis Matemático II', c: 8, x: X(1), y: Y(0), req: ['CBC'] },
+  { id: 'FSP', n: 'Física de los Sistemas de Partículas', ns: 'Física de los Sist. de Partículas', c: 6, x: X(1), y: Y(1), req: ['CBC'] },
+  { id: 'PII', n: 'Principios de Ingeniería Industrial', ns: 'Principios de Ing. Industrial', c: 6, x: X(1), y: Y(2), req: ['CBC'] },
+  { id: 'AL', n: 'Álgebra Lineal', ns: 'Álgebra Lineal', c: 8, x: X(2), y: Y(0), req: ['CBC'] },
+  { id: 'ERM', n: 'Estática y Resistencia de Materiales', ns: 'Estática y Resist. de Materiales', c: 6, x: X(2), y: Y(1), req: ['AMII', 'FSP'] },
+  { id: 'QB', n: 'Química Básica', ns: 'Química Básica', c: 6, x: X(2), y: Y(2), req: ['CBC'] },
+  { id: 'ODE', n: 'Organización y Dirección Empresaria', ns: 'Organización y Dir. Empresaria', c: 6, x: X(2), y: Y(3), req: ['PII'] },
+  { id: 'PROBA', n: 'Probabilidad', ns: 'Probabilidad', c: 6, x: X(3), y: Y(0), req: ['AMII'] },
+  { id: 'TDE', n: 'Transformación de la Energía', ns: 'Transformación de la Energía', c: 8, x: X(3), y: Y(1), req: ['AMII', 'FSP', 'QB'] },
+  { id: 'MAI', n: 'Materiales y Aplicaciones I', ns: 'Materiales y Aplicaciones I', c: 6, x: X(3), y: Y(2), req: ['QB', 'ERM', 'PII'] },
+  { id: 'ECO', n: 'Economía', ns: 'Economía', c: 6, x: X(3), y: Y(3), req: ['AMII', 'PII'] },
+  { id: 'EA', n: 'Estadística Aplicada', ns: 'Estadística Aplicada', c: 8, x: X(4), y: Y(0), req: ['PROBA'] },
+  { id: 'EYM', n: 'Electricidad y Magnetismo', ns: 'Electricidad y Magnetismo', c: 6, x: X(4), y: Y(1), req: ['AMII', 'FSP'] },
+  { id: 'GICV', n: 'Gestión Integral de la Cadena de Valor', ns: 'Gestión de la Cadena de Valor', c: 8, x: X(4), y: Y(2), req: ['ODE'] },
+  { id: 'DE', n: 'Desarrollo Económico', ns: 'Desarrollo Económico', c: 4, x: X(4), y: Y(3), req: ['ECO'] },
+  { id: 'INVOP', n: 'Investigación Operativa', ns: 'Investigación Operativa', c: 8, x: X(5), y: Y(0), req: ['AL', 'PROBA'] },
+  { id: 'INDDIG', n: 'Industrias Digitales', ns: 'Industrias Digitales', c: 4, x: X(5), y: Y(1), req: ['EA'] },
+  { id: 'EMIE', n: 'Electrotecnia, Máquinas e Instalaciones Eléctricas', ns: 'Electrotecnia y Máq. Eléctricas', c: 6, x: X(5), y: Y(2), req: ['EYM'] },
+  { id: 'SCGC', n: 'Sistemas Contables y Gestión de Costos', ns: 'Sist. Contables y Costos', c: 4, x: X(5), y: Y(3), req: ['ECO', 'GICV'] },
+  { id: 'IASCP', n: 'Ingeniería Ambiental, Sustentabilidad y Cuidado del Planeta', ns: 'Ing. Ambiental y Sustentabilidad', c: 4, x: X(5), y: Y(4), req: [], rc: 100 },
+  { id: 'INDQUI', n: 'Industrias Químicas', ns: 'Industrias Químicas', c: 4, x: X(6), y: Y(0), req: ['TDE', 'MAI'] },
+  { id: 'ESAI', n: 'Equipos y Sistemas para Automatización Industrial', ns: 'Automatización Industrial', c: 6, x: X(6), y: Y(1), req: ['EMIE', 'MAI'] },
+  { id: 'TDM', n: 'Transformación de Materiales', ns: 'Transformación de Materiales', c: 8, x: X(6), y: Y(2), req: ['MAI'] },
+  { id: 'INGECO', n: 'Ingeniería Económica', ns: 'Ingeniería Económica', c: 4, x: X(6), y: Y(3), req: ['DE', 'SCGC'] },
+  { id: 'HYS', n: 'Higiene y Seguridad', ns: 'Higiene y Seguridad', c: 2, x: X(6), y: Y(4), req: [], rc: 100 },
+  { id: 'INDEXT', n: 'Industrias Extractivas', ns: 'Industrias Extractivas', c: 4, x: X(7), y: Y(0), req: ['TDE', 'MAI'] },
+  { id: 'PROYIND', n: 'Proyecto Industrial', ns: 'Proyecto Industrial', c: 8, x: X(7), y: Y(2), req: ['EMIE', 'TDE', 'MAI', 'HYS', 'IASCP'] },
+  { id: 'EJPROF', n: 'Legislación y Ejercicio Profesional', ns: 'Legislación y Ej. Profesional', c: 2, x: X(8), y: Y(0), req: [], rc: 100 },
+  { id: 'TIF', n: 'Trabajo final (Tesis o Trabajo Profesional)', ns: 'Trabajo final', c: 12, x: X(8), y: Y(2), req: [], rc: 140 },
+  { id: 'ING', n: 'Prueba de nivel de idioma inglés', ns: 'Prueba de inglés', c: 0, x: X(8), y: Y(4), req: [], reqOnly: true }
+];
+const EL = [
+  { area: 'Gestión y negocios', items: [
+    { id: 'CHCO', n: 'Capital Humano y Comportamiento Organizacional', c: 4, req: ['ODE'] },
+    { id: 'CPS', n: 'Comercialización de Productos y Servicios', c: 4, req: ['GICV'] },
+    { id: 'IGP', n: 'Innovación y Gestión de Proyectos', c: 4, req: ['DE', 'GICV'] },
+    { id: 'EEING', n: 'Emprendimientos en Ingeniería', c: 4, req: [], rc: 100 },
+    { id: 'GFP', n: 'Gestión Financiera y Presupuestaria', c: 4, req: ['SCGC'] } ] },
+  { area: 'Datos y operaciones', items: [
+    { id: 'CDTD', n: 'Ciencia de Datos para la Toma de Decisiones', c: 4, req: ['EA'] },
+    { id: 'EAS', n: 'Estadística Aplicada Superior', c: 4, req: ['EA'] },
+    { id: 'GDC', n: 'Gerenciamiento de la Calidad', c: 4, req: ['GICV'] },
+    { id: 'LSC', n: 'Logística y Supply Chain', c: 4, req: ['GICV'] },
+    { id: 'ADC', n: 'Análisis de Casos', c: 4, req: ['INVOP'] },
+    { id: 'INVOPS', n: 'Investigación Operativa Superior', c: 4, req: ['INVOP'] },
+    { id: 'IPGE', n: 'Informática para la Gestión de Empresas', c: 4, req: ['INDDIG'] } ] },
+  { area: 'Producto y manufactura', items: [
+    { id: 'MAII', n: 'Materiales y Aplicaciones II', c: 4, req: ['MAI'] },
+    { id: 'TALL', n: 'Taller de Manufactura', c: 3, req: ['PII', 'MAI'] },
+    { id: 'DDP', n: 'Diseño de Producto', c: 4, req: ['GICV', 'MAI'] },
+    { id: 'IDEE', n: 'Ingeniería y Desarrollo de Envases y Embalajes', c: 4, req: [], rc: 100 },
+    { id: 'MEIP', n: 'Mantenimiento e Ingeniería de Planta', c: 4, req: ['GICV'] },
+    { id: 'DDPD', n: 'Diseño de Producto Digital', c: 4, req: ['INDDIG'] } ] },
+  { area: 'Industrias', items: [
+    { id: 'AGROBIO', n: 'Agroindustria y Bioeconomía', c: 4, req: [], rc: 100 },
+    { id: 'INDAUTO', n: 'Industria Automotriz', c: 4, req: ['GICV'] },
+    { id: 'INDTEXT', n: 'Industrias Textiles', c: 4, req: ['GICV'] },
+    { id: 'BEIP', n: 'Biopolímeros e Industrias Plásticas', c: 4, req: ['INDQUI'] },
+    { id: 'INDCP', n: 'Industrias de Celulosa y Papel', c: 4, req: ['INDQUI'] },
+    { id: 'INDALIM', n: 'Industrias de la Alimentación', c: 4, req: ['INDQUI'] },
+    { id: 'INDPETRO', n: 'Industrias Petrolíferas', c: 4, req: ['INDQUI'] } ] },
+  { area: 'Energía', items: [
+    { id: 'INTROTE', n: 'Introducción a la Transición Energética', c: 4, req: [], rc: 120 },
+    { id: 'ENEGRENO', n: 'Energías Renovables', c: 4, req: [], rc: 120 },
+    { id: 'UEDE', n: 'Uso Eficiente de la Energía', c: 4, req: [], rc: 120 },
+    { id: 'FCTE', n: 'Fuentes Convencionales en la Transición Energética', c: 4, req: [], rc: 120 },
+    { id: 'TETE', n: 'Tecnologías Emergentes en la Transición Energética', c: 4, req: [], rc: 120 } ] }
+];
+const LBL = { apr: 'Aprobada', fin: 'Final pendiente', cur: 'Cursando', hab: 'Habilitada', blo: 'Bloqueada' };
+const ST_BTNS = [['apr', 'Aprobada'], ['fin', 'Final pendiente'], ['cur', 'Cursando'], ['none', 'Sin cursar']];
+// Orden de carga: CBC y después las obligatorias columna por columna
+const SEQ = CBCS.concat(OB).map((m) => m.id);
+const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'AMA', q: '', filtro: 'todas', status: {}, notas: {}, cbcOpen: true };
+  }
+  renderVals() {
+    const acc = this.props.accent ?? '#5B5BD6';
+    const s = this.state;
+    const elect = [];
+    EL.forEach((a) => a.items.forEach((m) => elect.push(Object.assign({}, m, { area: a.area }))));
+    const all = CBCS.concat(OB, elect);
+    const byId = {};
+    all.forEach((m) => { byId[m.id] = m; });
+
+    const stat = (id) => {
+      if (id === 'CBC') return CBCS.every((c) => stat(c.id) === 'apr') ? 'apr' : 'none';
+      return s.status[id] || byId[id].st || 'none';
+    };
+    const notaOf = (id) => (s.notas[id] !== undefined ? s.notas[id] : byId[id].nota);
+    let cred = 0; let sumN = 0; let nN = 0;
+    all.forEach((m) => {
+      if (stat(m.id) === 'apr') {
+        cred += m.c;
+        const n = notaOf(m.id);
+        if (n) { sumN += n; nN += 1; }
+      }
+    });
+    const prom = nN ? (sumN / nN).toFixed(2).replace('.', ',') : '—';
+    const disp = (id) => {
+      if (id === 'CBC') return stat('CBC') === 'apr' ? 'apr' : 'blo';
+      const st = stat(id);
+      if (st !== 'none') return st;
+      const m = byId[id];
+      return m.req.every((r) => stat(r) === 'apr') && cred >= (m.rc || 0) ? 'hab' : 'blo';
+    };
+    const expand = (ids) => {
+      const out = [];
+      ids.forEach((r) => { if (r === 'CBC') CBCS.forEach((c) => out.push(c.id)); else out.push(r); });
+      return out;
+    };
+    const selM = s.sel ? byId[s.sel] : null;
+    const reqSet = new Set(selM ? expand(selM.req) : []);
+    const unlockSet = new Set(s.sel ? all.filter((m) => expand(m.req).indexOf(s.sel) >= 0).map((m) => m.id) : []);
+    const q = sinAcentos(s.q.trim());
+
+    const mk = (m) => {
+      const d = disp(m.id);
+      const st = stat(m.id);
+      const isSel = s.sel === m.id;
+      const related = isSel || reqSet.has(m.id) || unlockSet.has(m.id);
+      let op = 1;
+      if (q && sinAcentos(m.n + ' ' + (m.ns || '')).indexOf(q) < 0) op = Math.min(op, 0.2);
+      const nota = notaOf(m.id);
+      const short = m.reqOnly ? (d === 'apr' ? 'Aprobada' : 'Pendiente') : d === 'fin' ? 'Final' : '';
+      const reqList = m.req.map((r) => (r === 'CBC'
+        ? { name: 'Ciclo Básico Común (6 materias)', st: disp('CBC'), label: disp('CBC') === 'apr' ? 'Completo' : 'Incompleto' }
+        : { name: byId[r].n, st: disp(r), label: LBL[disp(r)] }));
+      const mUnl = all.filter((x) => expand(x.req).indexOf(m.id) >= 0);
+      const obl = mUnl.filter((x) => !x.area).map((x) => x.ns || x.n);
+      const nEl = mUnl.filter((x) => x.area).length;
+      const parts = obl.slice();
+      if (nEl) parts.push(nEl + (nEl === 1 ? ' electiva' : ' electivas'));
+      let unlockText = m.reqOnly ? 'Es requisito para recibirte (no da créditos)' : parts.length ? parts.join(' · ') : 'No es correlativa de ninguna materia';
+      if (m.cbc && parts.length) unlockText = 'Con el CBC completo: ' + unlockText;
+      const iSeq = SEQ.indexOf(m.id);
+      const irA = (j) => (j >= 0 && j < SEQ.length ? SEQ[j] : null);
+      const avanzar = (patch) => this.setState(Object.assign(patch, { sel: m.area ? null : irA(iSeq + 1) }));
+      const alto = (m.reqOnly ? 120 : 176) + (iSeq >= 0 ? 34 : 0) + (m.n.length > 30 ? 17 : 0);
+      const y = m.y || 0;
+      const topAbs = Math.max(6, Math.min(y, 626 - alto));
+      return {
+        id: m.id, n: m.n, ns: m.ns || m.n, c: m.c, x: m.x, y: m.y, d: d, short: short,
+        hasNota: d === 'apr' && !!nota, nota: nota,
+        areaU: m.area ? m.area.toUpperCase() : '',
+        isApr: d === 'apr', isFin: d === 'fin', isCur: d === 'cur', isHab: d === 'hab', isBlo: d === 'blo',
+        op: op, z: isSel ? 30 : 1, sel: isSel, open: isSel && !m.area,
+        shadow: isSel ? '0 0 0 3px ' + acc + ', 0 8px 20px rgba(60, 56, 140, 0.22)' : 'none',
+        outline: 'none',
+        pick: () => this.setState({ sel: this.state.sel === m.id ? null : m.id }),
+        close: () => this.setState({ sel: null }),
+        popX: (m.x || 0) >= 700 ? -252 : 124,
+        popTop: (topAbs - y) + 'px',
+        stateText: d === 'apr' && nota ? 'Aprobada con ' + nota : LBL[d],
+        credTxt: m.reqOnly ? '' : m.c + ' C',
+        subTxt: m.reqOnly ? 'Requisito · ' + (d === 'apr' ? 'Aprobada' : 'Pendiente') : m.c + ' créditos · ' + (d === 'apr' && nota ? 'Aprobada con ' + nota : LBL[d]),
+        noReq: m.req.length === 0 && !m.rc,
+        reqList: reqList,
+        hasCredReq: !!m.rc,
+        credReqText: (m.rc || 0) + ' créditos aprobados',
+        credSt: cred >= (m.rc || 0) ? 'apr' : 'blo',
+        credLabel: 'Tenés ' + cred,
+        unlockText: unlockText,
+        conNota: !m.reqOnly,
+        enSecuencia: iSeq >= 0,
+        prev: () => this.setState({ sel: irA(iSeq - 1) || m.id }),
+        next: () => this.setState({ sel: irA(iSeq + 1) }),
+        qCols: m.reqOnly ? 2 : 3,
+        qBtns: (m.reqOnly ? [['apr', 'Aprobada'], ['none', 'Pendiente']] : [['fin', 'Final pend.'], ['cur', 'Cursando'], ['none', 'Sin cursar']]).map((p) => {
+          const on = s.status[m.id] !== undefined && st === p[0];
+          return {
+            label: p[1], on: on,
+            bg: on ? '#EFEDFF' : '#FFFFFF', border: on ? '1.5px solid ' + acc : '1px solid #E2E0EE', fw: on ? 600 : 400,
+            pick: () => avanzar({ status: Object.assign({}, this.state.status, { [m.id]: p[0] }) })
+          };
+        }),
+        notaBtns: [4, 5, 6, 7, 8, 9, 10].map((v) => {
+          const on = st === 'apr' && nota === v;
+          return {
+            v: v, on: on,
+            bg: on ? acc : '#FFFFFF', color: on ? '#FFFFFF' : '#24243A', border: on ? '1px solid ' + acc : '1px solid #E2E0EE',
+            pick: () => avanzar({
+              notas: Object.assign({}, this.state.notas, { [m.id]: v }),
+              status: Object.assign({}, this.state.status, { [m.id]: 'apr' })
+            })
+          };
+        })
+      };
+    };
+
+    // CBC compactado: por defecto se compacta si ya está completo; el alumno puede abrirlo o cerrarlo
+    const cbcCompleto = stat('CBC') === 'apr';
+    const cbcOpen = s.cbcOpen === null ? !cbcCompleto : s.cbcOpen;
+    const off = cbcOpen ? 0 : 48;
+    const cbcIds = CBCS.map((c) => c.id);
+    const toggleCbc = () => this.setState({
+      cbcOpen: !cbcOpen,
+      sel: cbcIds.indexOf(this.state.sel) >= 0 ? null : this.state.sel
+    });
+    const obs = (cbcOpen ? CBCS : []).concat(OB).map((m) => mk(m.cbc ? m : Object.assign({}, m, { x: m.x - off })));
+    const cols = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => (k === 0
+      ? { left: 0, w: cbcOpen ? 117 : 69, bg: '#F4FAF6' }
+      : { left: X(k) - 5 - off, w: 122, bg: k % 2 ? '#FFFFFF' : '#FAF9FD' }));
+    const heads = [1, 2, 3, 4, 5, 6, 7, 8].map((k) => ({ left: X(k) - off, label: k + '.º cuatr.' }));
+    const cbcRel = selM ? expand(selM.req).some((id) => cbcIds.indexOf(id) >= 0) : false;
+    const algunoCursando = CBCS.some((c) => stat(c.id) === 'cur');
+    const aprobadasCbc = CBCS.filter((c) => stat(c.id) === 'apr').length;
+    const pasa = (d) => s.filtro === 'todas' || (s.filtro === 'hab' && d === 'hab') || (s.filtro === 'blo' && d === 'blo');
+    const lanes = EL.map((a) => {
+      const items = a.items.filter((m) => pasa(disp(m.id))).map((m) => mk(Object.assign({}, m, { area: a.area })));
+      return {
+        areaU: a.area.toUpperCase(), items: items, empty: items.length === 0,
+        hab: a.items.filter((m) => disp(m.id) === 'hab').length, total: a.items.length
+      };
+    });
+    let eCred = 0; let eHab = 0; let eBlo = 0;
+    elect.forEach((m) => {
+      if (stat(m.id) === 'apr') eCred += m.c;
+      const d = disp(m.id);
+      if (d === 'hab') eHab += 1;
+      if (d === 'blo') eBlo += 1;
+    });
+    const filtros = [['todas', 'Todas', elect.length], ['hab', 'Habilitadas', eHab], ['blo', 'Bloqueadas', eBlo]].map((f) => {
+      const on = s.filtro === f[0];
+      return { label: f[1], count: f[2], on: on, bg: on ? '#E3DEFF' : 'transparent', color: on ? '#2E2A6E' : '#5D5E76', fw: on ? 600 : 400, pick: () => this.setState({ filtro: f[0] }) };
+    });
+    const eselM = selM && selM.area ? selM : null;
+    const esel = mk(eselM || elect[0]);
+
+    return {
+      accent: acc,
+      cred: cred,
+      prom: prom,
+      obs: obs,
+      lanes: lanes,
+      filtros: filtros,
+      eCred: eCred,
+      ePct: Math.min(100, Math.round((eCred / 24) * 100)),
+      hasEsel: !!eselM,
+      esel: esel,
+      ganttW: 1088 - off,
+      cols: cols,
+      heads: heads,
+      cbcOpen: cbcOpen,
+      cbcClosed: !cbcOpen,
+      toggleCbc: toggleCbc,
+      cbcD: cbcCompleto ? 'apr' : algunoCursando ? 'cur' : 'hab',
+      cbcLabel: cbcCompleto ? 'Completo' : aprobadasCbc + ' de 6',
+      cbcOp: s.sel && !cbcRel ? 0.3 : 1,
+      cbcOutline: cbcRel ? '2px solid ' + acc : 'none',
+      onSearch: (e) => this.setState({ q: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>
