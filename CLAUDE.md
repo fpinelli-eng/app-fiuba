@@ -34,8 +34,11 @@ Antes de tocar algo, leé:
 - `src/app/`: una carpeta por sección (`mapa`, `plan`, `resenas`, `perfil`); `page.tsx` es la página.
 - `src/components/`: componentes compartidos (barra superior, contenedor de página, botón de tema).
 - `src/lib/app.ts`: nombre de la app y menú. El nombre se cambia solo ahí.
-- `src/app/globals.css`: **el único lugar con colores.** Variables para claro (`[data-theme="light"]`) y oscuro (`[data-theme="dark"]`) que Tailwind expone como clases: `bg-bg`, `bg-surface`, `bg-header`, `border-line`, `border-line-strong`, `text-ink`, `text-ink-2`, `text-muted`, `bg-accent`, `text-on-accent`, `bg-accent-soft`, `bg-lavender`/`text-lavender-ink`, `bg-mint`/`text-mint-ink`, `bg-butter`/`text-butter-ink`, `bg-sky`/`text-sky-ink`, `bg-peach`/`text-peach-ink`, `text-star`, `text-danger`, `bg-disabled`/`text-disabled-ink`.
+- `src/app/globals.css`: **el único lugar con colores.** Variables para claro (`[data-theme="light"]`) y oscuro (`[data-theme="dark"]`) que Tailwind expone como clases: `bg-bg`, `bg-surface`, `bg-header`, `border-line`, `border-line-strong`, `text-ink`, `text-ink-2`, `text-muted`, `bg-accent`, `text-on-accent`, `bg-accent-soft`, `bg-lavender`/`text-lavender-ink`, `bg-mint`/`text-mint-ink`, `bg-butter`/`text-butter-ink`, `bg-sky`/`text-sky-ink`, `bg-peach`/`text-peach-ink`, `text-star`, `text-danger`, `bg-disabled`/`text-disabled-ink`, y para el mapa `border-enabled-line`, `bg-blocked`/`border-blocked-line`/`text-blocked-ink`.
 - Tema: `src/lib/theme.ts`. Se guarda en `localStorage` ("claro" | "oscuro" | "sistema") y un script en `<head>` lo aplica antes de pintar.
+- Sesión: `src/lib/session.ts` (`requireProfile()`, la verificación definitiva en el servidor, usada por el layout de `src/app/(app)/`), `src/lib/auth.ts` (dominio permitido y datos del perfil), `src/lib/supabase/` (clientes de navegador, servidor y proxy) y `src/proxy.ts` (refresca la sesión y manda a `/ingresar` a quien no la tiene).
+- `src/app/(app)/`: las secciones que exigen sesión. `src/app/ingresar/` y `src/app/auth/` son públicas.
+- Variables de entorno: ver `.env.example`. Para probar en tu computadora, copialo como `.env.local` y completalo.
 - Tipografía: IBM Plex Sans servida desde el propio proyecto (`@fontsource/ibm-plex-sans`), sin depender de Google Fonts.
 
 ## Reglas que no se negocian

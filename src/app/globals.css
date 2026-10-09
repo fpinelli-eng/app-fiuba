@@ -35,6 +35,12 @@
   --sky-ink: #2f4f73;
   --peach: #ffe3d3;
   --peach-ink: #8a3a18;
+
+  /* Estados del mapa que no son pasteles */
+  --enabled-line: #8f8dae;
+  --blocked: #eeedf3;
+  --blocked-line: #b9b7cc;
+  --blocked-ink: #5f5f75;
 }
 
 [data-theme="dark"] {
@@ -65,6 +71,11 @@
   --sky-ink: #b9d6f5;
   --peach: #3d2a20;
   --peach-ink: #ffc9a8;
+
+  --enabled-line: #6c6a8f;
+  --blocked: #20202a;
+  --blocked-line: #3d3d4e;
+  --blocked-ink: #8e8ea3;
 }
 
 @theme inline {
@@ -94,6 +105,10 @@
   --color-sky-ink: var(--sky-ink);
   --color-peach: var(--peach);
   --color-peach-ink: var(--peach-ink);
+  --color-enabled-line: var(--enabled-line);
+  --color-blocked: var(--blocked);
+  --color-blocked-line: var(--blocked-line);
+  --color-blocked-ink: var(--blocked-ink);
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
