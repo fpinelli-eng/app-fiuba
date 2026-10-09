@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+@AGENTS.md
+
 Instrucciones para Claude Code en este repositorio. Las leen las sesiones de todos los que trabajan en el proyecto, así que todos arrancan con el mismo contexto.
 
 ## Qué es
@@ -19,7 +21,21 @@ Antes de tocar algo, leé:
 - Supabase: PostgreSQL + login con Google.
 - Vercel para el hosting, con vista previa por pull request.
 
-(Los comandos de instalación, desarrollo y tests se agregan acá cuando exista el proyecto base.)
+### Comandos
+
+- `npm install`: instala las dependencias (la primera vez y cuando cambia `package.json`).
+- `npm run dev`: levanta la web en http://localhost:3000 para probar mientras se programa.
+- `npm run build`: compila como en producción. **Tiene que pasar sin errores antes de abrir un pull request.**
+- `npm run lint`: revisa el estilo del código.
+
+### Estructura
+
+- `src/app/`: una carpeta por sección (`mapa`, `plan`, `resenas`, `perfil`); `page.tsx` es la página.
+- `src/components/`: componentes compartidos (barra superior, contenedor de página, botón de tema).
+- `src/lib/app.ts`: nombre de la app y menú. El nombre se cambia solo ahí.
+- `src/app/globals.css`: **el único lugar con colores.** Variables para claro (`[data-theme="light"]`) y oscuro (`[data-theme="dark"]`) que Tailwind expone como clases: `bg-bg`, `bg-surface`, `bg-header`, `border-line`, `border-line-strong`, `text-ink`, `text-ink-2`, `text-muted`, `bg-accent`, `text-on-accent`, `bg-accent-soft`, `bg-lavender`/`text-lavender-ink`, `bg-mint`/`text-mint-ink`, `bg-butter`/`text-butter-ink`, `bg-sky`/`text-sky-ink`, `bg-peach`/`text-peach-ink`, `text-star`, `text-danger`, `bg-disabled`/`text-disabled-ink`.
+- Tema: `src/lib/theme.ts`. Se guarda en `localStorage` ("claro" | "oscuro" | "sistema") y un script en `<head>` lo aplica antes de pintar.
+- Tipografía: IBM Plex Sans servida desde el propio proyecto (`@fontsource/ibm-plex-sans`), sin depender de Google Fonts.
 
 ## Reglas que no se negocian
 

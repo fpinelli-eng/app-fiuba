@@ -13,7 +13,18 @@ Web para estudiantes de FIUBA que reúne en una sola cuenta el avance de la carr
 
 ## Estado
 
-Diseño terminado. Próximo paso: proyecto base (Next.js + Supabase + Vercel).
+Diseño terminado. En construcción: proyecto base (Next.js + Supabase + Vercel).
+
+## Probar en tu computadora
+
+Con [Node.js](https://nodejs.org) 20 o más nuevo instalado:
+
+```
+npm install
+npm run dev
+```
+
+y abrí http://localhost:3000.
 
 ## Créditos
 

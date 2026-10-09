@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/*
+ * Colores del diseño (docs/DISENO.md). Se definen UNA sola vez acá.
+ * En los componentes se usan solo las clases de Tailwind que salen de estos tokens
+ * (bg-bg, bg-surface, text-ink, text-muted, border-line, bg-accent, bg-mint…),
+ * nunca un color hexadecimal suelto.
+ */
+:root,
+[data-theme="light"] {
+  --bg: #f3f2f9;
+  --surface: #ffffff;
+  --header: #ffffff;
+  --line: #e2e0ee;
+  --line-strong: #d4d2e3;
+  --ink: #24243a;
+  --ink-2: #3a3a52;
+  --muted: #5d5e76;
+  --accent: #5b5bd6;
+  --on-accent: #ffffff;
+  --accent-soft: #efedff;
+  --disabled: #ecebf4;
+  --disabled-ink: #8a8aa0;
+  --star: #e8b23a;
+  --danger: #b3261e;
+
+  --lavender: #e3deff;
+  --lavender-ink: #2e2a6e;
+  --lavender-panel: #f1eefd;
+  --mint: #d6f1e3;
+  --mint-ink: #1f4d36;
+  --butter: #fff1c7;
+  --butter-ink: #5a4310;
+  --sky: #dcebfb;
+  --sky-ink: #2f4f73;
+  --peach: #ffe3d3;
+  --peach-ink: #8a3a18;
+}
+
+[data-theme="dark"] {
+  --bg: #111117;
+  --surface: #1a1a23;
+  --header: #17171f;
+  --line: #2a2a37;
+  --line-strong: #363645;
+  --ink: #ececf3;
+  --ink-2: #cfcfdc;
+  --muted: #a3a3b8;
+  --accent: #a3a1fa;
+  --on-accent: #111117;
+  --accent-soft: #24223f;
+  --disabled: #23232e;
+  --disabled-ink: #6c6c80;
+  --star: #e8b23a;
+  --danger: #f2867d;
+
+  --lavender: #2b2850;
+  --lavender-ink: #c9c4ff;
+  --lavender-panel: #1d1b33;
+  --mint: #1d3a2c;
+  --mint-ink: #bdebd2;
+  --butter: #3a3220;
+  --butter-ink: #f3dda0;
+  --sky: #1e2e42;
+  --sky-ink: #b9d6f5;
+  --peach: #3d2a20;
+  --peach-ink: #ffc9a8;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-header: var(--header);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-disabled: var(--disabled);
+  --color-disabled-ink: var(--disabled-ink);
+  --color-star: var(--star);
+  --color-danger: var(--danger);
+  --color-lavender: var(--lavender);
+  --color-lavender-ink: var(--lavender-ink);
+  --color-lavender-panel: var(--lavender-panel);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
+  --color-butter: var(--butter);
+  --color-butter-ink: var(--butter-ink);
+  --color-sky: var(--sky);
+  --color-sky-ink: var(--sky-ink);
+  --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  /* Números de ancho fijo en toda la app */
+  font-variant-numeric: tabular-nums lining-nums;
+}
