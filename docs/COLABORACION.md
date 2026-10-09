@@ -11,13 +11,15 @@ Somos dos, cada uno desde su casa y con su propio Claude Code. Estas reglas evit
 5. **El otro lo revisa** (o le pide a Claude Code que lo revise) y lo aprueba. Recién ahí se integra a `main`.
 6. Se borra la rama y se cierra el Issue.
 
-`main` está protegida: no se puede subir nada directo sin un pull request aprobado.
+`main` está protegida: no se puede subir nada directo, todo entra por pull request.
+
+El repositorio es público: Vercel solo publica vistas previas de varios colaboradores gratis en repos públicos. Por eso es todavía más importante que no haya claves en el repo.
 
 ## Para no pisarnos
 
 - **Dividir por áreas, no por archivos.** Cada uno tiene sus pantallas:
   - Francisco: mapa, carga de materias, planes de estudio.
-  - Segundo desarrollador: plan del cuatrimestre, intérprete del SIU.
+  - Segundo desarrollador: plan del cuatrimestre, intérprete del SIU (su primera tarea puede arrancar ya: no depende del login ni de la base de datos).
   - Reseñas y administración: se reparten cuando lleguemos.
 - **La base común la hace uno solo y antes de dividirse:** estructura de Next.js, login, esquema de base de datos, colores y componentes compartidos (botones, tarjetas, barra superior).
 - **Si tenés que tocar algo compartido** (un componente común, el esquema de la base), avisá antes y hacelo en un pull request separado y chico.
