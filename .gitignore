@@ -1,0 +1,17 @@
+# dependencias y build
+node_modules/
+.next/
+out/
+dist/
+# variables de entorno (nunca se suben)
+.env
+.env.local
+.env.*.local
+# sistema
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+# vercel / supabase locales
+.vercel
+supabase/.temp/
