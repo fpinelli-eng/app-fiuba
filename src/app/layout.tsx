@@ -4,7 +4,6 @@ import "@fontsource/ibm-plex-sans/500.css";
 import "@fontsource/ibm-plex-sans/600.css";
 import "@fontsource/ibm-plex-sans/700.css";
 import "./globals.css";
-import { Header } from "@/components/Header";
 import { APP_NAME } from "@/lib/app";
 import { themeScript } from "@/lib/theme";
 
@@ -19,10 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen antialiased">
-        <Header />
-        {children}
-      </body>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }
