@@ -21,15 +21,16 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | En `main` (#5, PR #10) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
 | Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | En `main` (PR #14) |
-| Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | PR #15 abierto (#3) |
-| Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015140000_member_only_reads.sql` | PR abierto |
+| Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
+| Mapa de la carrera y primera carga de materias, guardando en la base | `src/lib/map/`, `src/app/(app)/mapa/` | En `main` (#17, PR #18) |
+| Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | PR #20 abierto |
 
 ## Qué falta, en orden
 
-1. **#3 · Base de datos (PR #15):** las migraciones ya están aplicadas en Supabase (se corrió el workflow a mano sobre la rama). GitHub entra con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* de Supabase (IPv4), sin token. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
+1. **#3 · Base de datos (PR #15):** las migraciones ya están aplicadas en Supabase (se corrió el workflow a mano sobre la rama). GitHub entra con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* de Supabase (IPv4), sin token. Después, Francisco se marca como administrador a él y al segundo desarrollador desde el editor SQL de Supabase (es un dato, no un cambio de estructura; cada uno tiene que haber entrado a la web al menos una vez): `update profiles set is_admin = true where id in (select id from auth.users where email in ('<mail 1>', '<mail 2>'));`
 2. **Colores del calendario del plan:** sumar los 2 pasteles que faltan en `globals.css` (segundo desarrollador, PR chico aparte).
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
-   - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
+   - **Francisco:** inicio (avance, promedio, materias, calendario, finales pendientes). El mapa y la primera carga están en el PR de la #17.
    - **Segundo desarrollador:** conectar la pantalla del plan a la base (hoy usa `src/lib/plan/sample-offer.ts`), filtrar por materias habilitadas y guardar Opción A / B en su propia migración.
    - **Después, a repartir:** reseñas (buscador, ficha, pendientes, filtro de comentarios), administración (carga de la oferta del SIU por plan, moderación), perfil completo.
 4. **#8 · Política de privacidad** y publicación de la app en Google (antes del lanzamiento).

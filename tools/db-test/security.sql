@@ -60,6 +60,10 @@ select test.ok(
    join public.subjects r on r.id = sp.prerequisite_id
    where s.plan_id <> r.plan_id) = 0,
   'prerequisites stay inside their plan');
+select test.ok((select count(*) from public.subject_areas where plan_id = 'industrial-2023') = 5, 'Industrial 2023 has 5 elective areas');
+select test.ok(
+  (select count(*) from public.subjects where plan_id = 'industrial-2023' and kind = 'elective' and area_id is null) = 0,
+  'every Industrial 2023 elective has an area');
 
 -- Visitors without a session ------------------------------------------------------
 
@@ -79,6 +83,7 @@ select test.fails($$insert into public.user_subjects values ('cccccccc-0000-0000
 -- A session is not enough to read: it takes a FIUBA account (a profile).
 select test.ok((select count(*) from public.careers) = 0, 'gmail account reads careers');
 select test.ok((select count(*) from public.subjects) = 0, 'gmail account reads subjects');
+select test.ok((select count(*) from public.subject_areas) = 0, 'gmail account reads elective areas');
 select test.ok((select count(*) from public.terms) = 0, 'gmail account reads terms');
 select test.ok((select count(*) from public.offerings) = 0, 'gmail account reads offerings');
 select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account reads schedules');
@@ -120,6 +125,8 @@ insert into public.user_requirements (user_id, requirement_id)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.plan_requirements where plan_id = 'industrial-2023'));
 
 select test.fails($$insert into public.careers values ('x', 'x', 'x', 0)$$, 'student edits the catalog');
+select test.fails($$insert into public.subject_areas (plan_id, name) values ('industrial-2023', 'x')$$, 'student adds an elective area');
+select test.ok((select count(*) from public.subject_areas) > 0, 'students read the elective areas');
 -- RLS turns a forbidden update into "0 rows".
 update public.subjects set credits = 99 where code = 'AL';
 select test.ok((select count(*) from public.subjects where credits = 99) = 0, 'student edits a subject');

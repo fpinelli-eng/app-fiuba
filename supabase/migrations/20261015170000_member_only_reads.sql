@@ -19,14 +19,14 @@ $$;
 revoke execute on function public.is_member() from public;
 grant execute on function public.is_member() to authenticated;
 
--- Catalog and offer (same tables as the loop in the initial schema).
+-- Catalog and offer (the loop of the initial schema, plus subject_areas).
 do $$
 declare
   t text;
 begin
   foreach t in array array[
     'careers', 'plans', 'plan_requirements', 'subjects', 'subject_prerequisites',
-    'subject_siu_codes', 'terms', 'courses'
+    'subject_siu_codes', 'terms', 'courses', 'subject_areas'
   ] loop
     execute format('drop policy "Signed-in users read" on public.%I', t);
     execute format('create policy "Members read" on public.%I for select to authenticated using ((select public.is_member()))', t);

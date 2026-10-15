@@ -21,3 +21,6 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 /coverage
+
+# Supabase local para pruebas
+tools/local-supabase/.bin/
