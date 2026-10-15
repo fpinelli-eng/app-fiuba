@@ -24,7 +24,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 ## Qué falta, en orden
 
-1. **Revisar e integrar los PR #10 y #12.**
+1. **Revisar e integrar el PR de la pantalla del plan.**
 2. **#3 · Base de datos:** esquema inicial con migraciones, reglas de seguridad (RLS), carga de los 24 planes y el paso de elegir carrera y plan. Lo hace Francisco. **Bloquea casi todo lo demás:** hasta que esté, nadie crea tablas.
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
