@@ -76,7 +76,12 @@ jobs:
         # If it fails, the last lines go into an annotation, readable from the PR without opening the log.
         run: |
           set +e
-          supabase db push --yes --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee /tmp/push.log
+          # GitHub runners have no IPv6, so the database is reached through Supabase's
+          # IPv4 pooler, which `supabase link` sets up.
+          {
+            supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD" &&
+            supabase db push --yes --linked --password "$SUPABASE_DB_PASSWORD"
+          } 2>&1 | tee /tmp/push.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error title=supabase db push::$(tail -n 8 /tmp/push.log | tr '\n' ' ' | cut -c1-900)"
