@@ -10,6 +10,7 @@ Web gratuita para estudiantes de FIUBA que integra en una sola cuenta lo que hoy
 
 Antes de tocar algo, leé:
 
+- `docs/ESTADO.md`: **en qué punto está el proyecto**, qué falta, quién hace qué y quién tiene acceso a cada servicio. Leelo primero.
 - `PRODUCTO.md`: qué hace la app, decisiones tomadas y modelo de datos. **Es la fuente de verdad del producto.** Si una tarea contradice este documento, preguntá antes de implementar.
 - `docs/DISENO.md`: colores, tipografía, componentes y comportamiento de cada pantalla.
 - `docs/diseno/prototipos/`: el código de cada pantalla del diseño. **Antes de programar una pantalla, leé su prototipo.**
