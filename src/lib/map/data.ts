@@ -9,6 +9,8 @@ export interface MapData {
   creditRules: unknown;
   subjects: Subject[];
   requirements: Requirement[];
+  /** Last time the student changed a subject (ISO date), or null. */
+  lastChange: string | null;
   /** Serializable progress (server → client). */
   progress: {
     subjects: { subjectId: number; status: SubjectStatus; grade: number | null }[];
@@ -41,7 +43,7 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
   const ids = subjects.data.map((s) => s.id as number);
   const [prerequisites, userSubjects] = await Promise.all([
     supabase.from("subject_prerequisites").select("subject_id, prerequisite_id").in("subject_id", ids),
-    supabase.from("user_subjects").select("subject_id, status, grade").eq("user_id", userId).in("subject_id", ids),
+    supabase.from("user_subjects").select("subject_id, status, grade, updated_at").eq("user_id", userId).in("subject_id", ids),
   ]);
   if (prerequisites.error) throw new Error(`subject_prerequisites: ${prerequisites.error.message}`);
   if (userSubjects.error) throw new Error(`user_subjects: ${userSubjects.error.message}`);
@@ -81,6 +83,10 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
       name: r.name as string,
       shortName: r.short_name as string,
     })),
+    lastChange: userSubjects.data.reduce<string | null>((max, u) => {
+      const t = u.updated_at as string;
+      return !max || t > max ? t : max;
+    }, null),
     progress: {
       subjects: userSubjects.data.map((u) => ({
         subjectId: u.subject_id as number,

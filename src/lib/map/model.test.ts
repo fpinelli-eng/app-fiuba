@@ -100,6 +100,25 @@ describe("credits and average", () => {
   });
 });
 
+describe("home", () => {
+  it("adds credits by category", () => {
+    const p = progress([...CBC, ["AMII", "approved", 8], ["AL", "final_pending"]]);
+    const c = map.creditsByCategory(p, { total: 236, electivas: 24 });
+    expect(c.cbc).toEqual({ done: 38, total: 38 });
+    expect(c.required.done).toBe(8);
+    expect(c.electives).toEqual({ done: 0, total: 24 });
+    expect(c.final).toEqual({ done: 0, total: 12 });
+    expect(c.cbc.total + c.required.total + 24 + c.final.total).toBe(236);
+  });
+
+  it("says what a pending final unlocks, leaving out what is already loaded", () => {
+    const p = progress([...CBC, ["AL", "final_pending"], ["PROBA", "approved", 7]]);
+    expect(map.unlockSummary(p, id("AL"))).toBe("Destraba Investigación Operativa");
+    const p2 = progress([...CBC, ["AL", "final_pending"], ["INVOP", "in_progress"]]);
+    expect(map.unlockSummary(p2, id("AL"))).toBe("No destraba otras materias");
+  });
+});
+
 describe("relations", () => {
   it("expands the CBC node into its subjects", () => {
     expect(map.expandedPrerequisites(id("AMII")).sort()).toEqual(CBC.map(([c]) => id(c)).sort());
