@@ -29,6 +29,7 @@ Antes de tocar algo, leé:
 - `npm run dev`: levanta la web en http://localhost:3000 para probar mientras se programa.
 - `npm run build`: compila como en producción. **Tiene que pasar sin errores antes de abrir un pull request.**
 - `npm run lint`: revisa el estilo del código.
+- `npm test`: corre las pruebas automáticas (Vitest). **Tienen que pasar antes de abrir un pull request.** Los archivos de prueba van al lado del código que prueban, con el nombre `*.test.ts`.
 
 ### Estructura
 
@@ -64,7 +65,8 @@ Antes de tocar algo, leé:
 
 - `data/planes/`: los 25 planes de FIUBA Map (24 se usan). Formato y correspondencias en su README.
 - `data/siu/`: oferta real de Ing. Industrial 2C 2026 (texto copiado del SIU y su versión interpretada), para tests del intérprete.
-- `tools/siu-parser/`: prototipo en Python del intérprete del SIU. La versión de producción se escribe en TypeScript dentro de la app, usando este prototipo y sus datos como referencia y como casos de prueba.
+- `src/lib/siu/`: intérprete del SIU. `parseSiuOffer(texto)` devuelve la oferta (materias → comisiones → subcomisiones → horarios) y una lista de avisos para el administrador. Sus pruebas comparan el resultado con `data/siu/`.
+- `tools/siu-parser/`: prototipo original en Python del intérprete. Ya no se usa en la app; queda como referencia. Si cambian las reglas, se cambian en `src/lib/siu/`.
 
 ## Licencias
 
