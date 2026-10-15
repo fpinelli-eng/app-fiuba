@@ -20,6 +20,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | PR #10 abierto (#5) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | PR #12 abierto (#11), va encima del #10 |
+| Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | PR abierto, va encima del #12 |
 
 ## Qué falta, en orden
 
@@ -27,7 +28,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 2. **#3 · Base de datos:** esquema inicial con migraciones, reglas de seguridad (RLS), carga de los 24 planes y el paso de elegir carrera y plan. Lo hace Francisco. **Bloquea casi todo lo demás:** hasta que esté, nadie crea tablas.
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
-   - **Segundo desarrollador:** pantalla del plan del cuatrimestre (usa `src/lib/plan/`), guardado de Opción A / B.
+   - **Segundo desarrollador:** conectar la pantalla del plan a la base (hoy usa `src/lib/plan/sample-offer.ts`), filtrar por materias habilitadas y guardar Opción A / B en su propia migración.
    - **Después, a repartir:** reseñas (buscador, ficha, pendientes, filtro de comentarios), administración (carga de la oferta del SIU por plan, moderación), perfil completo.
 4. **#8 · Política de privacidad** y publicación de la app en Google (antes del lanzamiento).
 5. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, equivalencias entre planes.
