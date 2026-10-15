@@ -41,6 +41,13 @@
   --blocked: #eeedf3;
   --blocked-line: #b9b7cc;
   --blocked-ink: #5f5f75;
+  --mint-line: #bfe3cf;
+  --butter-line: #f0dc9c;
+  --sky-line: #bcd6f2;
+  --lavender-line: #e2dcf7;
+  --map-cbc-col: #f4faf6;
+  --map-col-alt: #faf9fd;
+  --pop-shadow: rgb(36 36 58 / 0.16);
 }
 
 [data-theme="dark"] {
@@ -76,6 +83,13 @@
   --blocked: #20202a;
   --blocked-line: #3d3d4e;
   --blocked-ink: #8e8ea3;
+  --mint-line: #2f5a45;
+  --butter-line: #5c4d2b;
+  --sky-line: #33506f;
+  --lavender-line: #2f2b52;
+  --map-cbc-col: #172119;
+  --map-col-alt: #1e1e28;
+  --pop-shadow: rgb(0 0 0 / 0.5);
 }
 
 @theme inline {
@@ -109,6 +123,13 @@
   --color-blocked: var(--blocked);
   --color-blocked-line: var(--blocked-line);
   --color-blocked-ink: var(--blocked-ink);
+  --color-mint-line: var(--mint-line);
+  --color-butter-line: var(--butter-line);
+  --color-sky-line: var(--sky-line);
+  --color-lavender-line: var(--lavender-line);
+  --color-map-cbc-col: var(--map-cbc-col);
+  --color-map-col-alt: var(--map-col-alt);
+  --color-pop-shadow: var(--pop-shadow);
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
