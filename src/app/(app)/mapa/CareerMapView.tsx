@@ -774,8 +774,7 @@ function SubjectCard(props: {
               )}
             </>
           )}
-          <SectionTitle line="dashed">HABILITA</SectionTitle>
-          <div className="text-muted">{isReq ? "Es requisito para recibirte (no da créditos)" : map.unlockText(subject!.id)}</div>
+          {/* Lo que habilita no se lista: en el mapa ya se marca con contorno punteado. */}
           <SectionTitle>TU ESTADO</SectionTitle>
           <div className="grid grid-cols-2 gap-1.5">
             {buttons.map(([s, label]) => (
