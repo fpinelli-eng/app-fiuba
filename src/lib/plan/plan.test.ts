@@ -24,7 +24,7 @@ describe("courseOptions with the real Industrial 2C 2026 offer", () => {
 
   it("combines the shared lectures with each practice group", () => {
     const o = byId("CB002-01A");
-    expect(o.label).toBe("Curso 01 · práctica A");
+    expect(o.label).toBe("Curso 1 · práctica A");
     expect(o.modality).toBe("Promoción");
     expect(o.quota).toBe(63);
     expect(o.teachers.map((t) => t.nombre)).toEqual([

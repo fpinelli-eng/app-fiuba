@@ -26,7 +26,7 @@ export interface CourseOption {
   id: string;
   subjectCode: string;
   subjectName: string;
-  /** "Curso 01" or "Curso 01 · práctica A" */
+  /** "Curso 1" or "Curso 1 · práctica A", as in the design */
   label: string;
   courseNumber: string | null;
   practice: string | null;
@@ -97,7 +97,7 @@ export function courseOptions(subject: Subject): CourseOption[] {
       courseNumber: number,
       modality: c.modalidad ?? null,
     };
-    const label = number ? `Curso ${number}` : c.nombre;
+    const label = number ? `Curso ${Number(number)}` : c.nombre;
     const practices = c.subcomisiones.filter((s) => practiceLetter(s.nombre) !== "");
     const shared = c.subcomisiones.filter((s) => practiceLetter(s.nombre) === "");
     const sharedBlocks = [...c.horarios, ...shared.flatMap((s) => s.horarios)];
