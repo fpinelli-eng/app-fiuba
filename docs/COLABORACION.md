@@ -28,7 +28,8 @@ El repositorio es público: Vercel solo publica vistas previas de varios colabor
 ## Base de datos
 
 - Un proyecto de Supabase compartido para desarrollo.
-- Todo cambio de estructura es una migración en `supabase/migrations`, dentro del pull request que la necesita.
+- Todo cambio de estructura es una migración en `supabase/migrations`, dentro del pull request que la necesita. En el pull request, GitHub la prueba sola contra una base vacía (incluidas las pruebas de seguridad); al integrarse a `main`, la aplica en Supabase.
+- Si los dos tenemos migraciones abiertas a la vez, la que se integra segunda tiene que tener fecha posterior: si no, se le cambia el nombre antes de integrarla.
 - Las claves van en `.env.local` (no se sube). Se pasan por mensaje privado, nunca por el repo ni por un Issue.
 
 ## Decisiones de producto

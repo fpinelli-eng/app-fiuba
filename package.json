@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:test": "tools/db-test/run.sh",
+    "db:seed": "node tools/plans-seed/build.mjs > supabase/migrations/20261015120100_seed_plans.sql"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.3.0",

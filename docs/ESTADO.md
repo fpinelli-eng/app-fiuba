@@ -20,12 +20,13 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | En `main` (#5, PR #10) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
-| Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | PR #14 abierto |
+| Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | En `main` (PR #14) |
+| Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | PR #15 abierto (#3) |
 
 ## Qué falta, en orden
 
-1. **Revisar e integrar el PR #14** (pantalla del plan).
-2. **#3 · Base de datos:** esquema inicial con migraciones, reglas de seguridad (RLS), carga de los 24 planes y el paso de elegir carrera y plan. Lo hace Francisco. **Bloquea casi todo lo demás:** hasta que esté, nadie crea tablas.
+1. **#3 · Base de datos (PR #15):** las migraciones ya están aplicadas en Supabase (se corrió el workflow a mano sobre la rama). GitHub entra con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* de Supabase (IPv4), sin token. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
+2. **Colores del calendario del plan:** sumar los 2 pasteles que faltan en `globals.css` (segundo desarrollador, PR chico aparte).
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
    - **Segundo desarrollador:** conectar la pantalla del plan a la base (hoy usa `src/lib/plan/sample-offer.ts`), filtrar por materias habilitadas y guardar Opción A / B en su propia migración.
@@ -48,7 +49,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 |---|---|---|---|
 | GitHub | Código | Francisco | Colaborador con escritura |
 | Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Las vistas previas piden iniciar sesión en Vercel; si hace falta que las vea, Francisco desactiva *Deployment Protection* |
-| Supabase | Base de datos y login | Francisco | Ninguno por ahora. Las migraciones van en el repo; Francisco las aplica |
+| Supabase | Base de datos y login (plan gratuito: el proyecto se pausa tras una semana sin uso; se reactiva con *Restore project*) | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
 | Google Cloud | Credenciales de "Ingresar con Google" | Francisco | Ninguno. Para entrar a la app mientras está en modo prueba, su mail @fi.uba.ar tiene que estar en *Test users* |
 
 **Variables de entorno:** las dos de `.env.example` (URL y publishable key de Supabase) son públicas por diseño, pero no se suben al repo: Francisco las pasa por mensaje privado. La contraseña de la base, el *client secret* de Google y la *secret key* de Supabase **nunca** se comparten ni se suben.

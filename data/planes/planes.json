@@ -1,0 +1,589 @@
+{
+  "_comment": "Metadatos de los planes. Créditos y requisitos tomados de FIUBA Map (src/carreras.ts, commit b549897). Nombres y años oficiales según fi.uba.ar (octubre 2026).",
+  "careers": [
+    {
+      "id": "bioingenieria",
+      "name": "Bioingeniería",
+      "short_name": "Bioingeniería"
+    },
+    {
+      "id": "civil",
+      "name": "Ingeniería Civil",
+      "short_name": "Ing. Civil"
+    },
+    {
+      "id": "electronica",
+      "name": "Ingeniería Electrónica",
+      "short_name": "Ing. Electrónica"
+    },
+    {
+      "id": "agrimensura",
+      "name": "Ingeniería en Agrimensura",
+      "short_name": "Ing. en Agrimensura"
+    },
+    {
+      "id": "alimentos",
+      "name": "Ingeniería en Alimentos",
+      "short_name": "Ing. en Alimentos"
+    },
+    {
+      "id": "energia-electrica",
+      "name": "Ingeniería en Energía Eléctrica",
+      "short_name": "Ing. en Energía Eléctrica"
+    },
+    {
+      "id": "informatica",
+      "name": "Ingeniería en Informática",
+      "short_name": "Ing. en Informática"
+    },
+    {
+      "id": "petroleo",
+      "name": "Ingeniería en Petróleo",
+      "short_name": "Ing. en Petróleo"
+    },
+    {
+      "id": "industrial",
+      "name": "Ingeniería Industrial",
+      "short_name": "Ing. Industrial"
+    },
+    {
+      "id": "mecanica",
+      "name": "Ingeniería Mecánica",
+      "short_name": "Ing. Mecánica"
+    },
+    {
+      "id": "naval",
+      "name": "Ingeniería Naval",
+      "short_name": "Ing. Naval"
+    },
+    {
+      "id": "quimica",
+      "name": "Ingeniería Química",
+      "short_name": "Ing. Química"
+    },
+    {
+      "id": "sistemas",
+      "name": "Licenciatura en Análisis de Sistemas",
+      "short_name": "Lic. en Análisis de Sistemas"
+    }
+  ],
+  "plans": [
+    {
+      "id": "bioingenieria-2024",
+      "career": "bioingenieria",
+      "year": 2024,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "bioingenieria-2020.json",
+      "credit_rules": {
+        "total": 250,
+        "electivas": 16,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "civil-2023",
+      "career": "civil",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "civil-2020.json",
+      "credit_rules": {
+        "total": 251,
+        "electivas": 24,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "civil-2009",
+      "career": "civil",
+      "year": 2009,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "civil-2009.json",
+      "credit_rules": {
+        "total": 295,
+        "electivas": 34,
+        "materias": [
+          "84.99"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Estadía Supervisada de al menos 200 horas",
+          "short_name": "Estadía"
+        },
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "electronica-2023",
+      "career": "electronica",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "electronica-2020.json",
+      "credit_rules": {
+        "total": 228,
+        "electivas": 24,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "electronica-2009",
+      "career": "electronica",
+      "year": 2009,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "electronica-2009.json",
+      "credit_rules": {
+        "total": 278,
+        "electivas": 56
+      },
+      "requirements": [
+        {
+          "name": "Práctica Profesional",
+          "short_name": "PP"
+        },
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "agrimensura-2023",
+      "career": "agrimensura",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "agrimensura-2020.json",
+      "credit_rules": {
+        "total": 227,
+        "electivas": 16,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "agrimensura-2006",
+      "career": "agrimensura",
+      "year": 2006,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "agrimensura-2006.json",
+      "credit_rules": {
+        "total": 246,
+        "electivas": {
+          "tesis": 12,
+          "tpp": 18
+        }
+      },
+      "requirements": [
+        {
+          "name": "Estadía Supervisada de al menos 200 horas",
+          "short_name": "Estadía"
+        }
+      ]
+    },
+    {
+      "id": "alimentos-2024",
+      "career": "alimentos",
+      "year": 2024,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "alimentos-2020.json",
+      "credit_rules": {
+        "total": 243,
+        "electivas": 12,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "alimentos-2001",
+      "career": "alimentos",
+      "year": 2001,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "alimentos-2000.json",
+      "credit_rules": {
+        "total": 272,
+        "materias": [
+          "76.44",
+          "76.90"
+        ],
+        "electivas": 10
+      },
+      "requirements": []
+    },
+    {
+      "id": "energia-electrica-2024",
+      "career": "energia-electrica",
+      "year": 2024,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "energia-electrica-2020.json",
+      "credit_rules": {
+        "total": 250,
+        "electivas": 18,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "energia-electrica-2009",
+      "career": "energia-electrica",
+      "year": 2009,
+      "current": false,
+      "legacy_name": "Ingeniería Electricista",
+      "fiuba_map_file": "electricista-2009.json",
+      "credit_rules": {
+        "total": 280,
+        "electivas": {
+          "tesis": 16,
+          "tpp": 22
+        }
+      },
+      "requirements": [
+        {
+          "name": "Estadía Supervisada de al menos 200 horas",
+          "short_name": "Estadía"
+        },
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "informatica-2023",
+      "career": "informatica",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "informatica-2020.json",
+      "credit_rules": {
+        "total": 226,
+        "electivas": 24,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "informatica-1986",
+      "career": "informatica",
+      "year": 1986,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "informatica-1986.json",
+      "credit_rules": {
+        "total": 286,
+        "orientacion": {
+          "Gestión Industrial de Sistemas": {
+            "orientacion": 24,
+            "electivas": {
+              "tesis": 78,
+              "tpp": 90
+            }
+          },
+          "Sistemas de Producción": {
+            "orientacion": 22,
+            "electivas": {
+              "tesis": 80,
+              "tpp": 92
+            }
+          },
+          "Sistemas Distribuidos": {
+            "orientacion": 18,
+            "electivas": {
+              "tesis": 84,
+              "tpp": 96
+            }
+          }
+        }
+      },
+      "requirements": []
+    },
+    {
+      "id": "petroleo-2023",
+      "career": "petroleo",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "petroleo-2020.json",
+      "credit_rules": {
+        "total": 241,
+        "electivas": 14,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "petroleo-2015",
+      "career": "petroleo",
+      "year": 2015,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "petroleo-2015.json",
+      "credit_rules": {
+        "total": 284,
+        "electivas": {
+          "tesis": 12,
+          "tpp": 16
+        }
+      },
+      "requirements": [
+        {
+          "name": "Práctica Supervisada",
+          "short_name": "PS"
+        },
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "industrial-2023",
+      "career": "industrial",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "industrial-2020.json",
+      "credit_rules": {
+        "total": 236,
+        "electivas": 24,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "industrial-2011",
+      "career": "industrial",
+      "year": 2011,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "industrial-2011.json",
+      "credit_rules": {
+        "total": 283,
+        "electivas": 36
+      },
+      "requirements": [
+        {
+          "name": "Práctica Profesional de al menos 200 horas",
+          "short_name": "PP"
+        },
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "mecanica-2024",
+      "career": "mecanica",
+      "year": 2024,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "mecanica-2020.json",
+      "credit_rules": {
+        "total": 250,
+        "electivas": 14,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "mecanica-1986",
+      "career": "mecanica",
+      "year": 1986,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "mecanica-1986.json",
+      "credit_rules": {
+        "total": 298,
+        "orientacion": {
+          "Diseño Mecánico": {
+            "orientacion": 28,
+            "electivas": {
+              "tesis": 24,
+              "tpp": 28
+            }
+          },
+          "Termomecánica": {
+            "orientacion": 28,
+            "electivas": {
+              "tesis": 24,
+              "tpp": 28
+            }
+          }
+        }
+      },
+      "requirements": []
+    },
+    {
+      "id": "naval-2024",
+      "career": "naval",
+      "year": 2024,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "naval-2020.json",
+      "credit_rules": {
+        "total": 260,
+        "electivas": 18,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "naval-1986",
+      "career": "naval",
+      "year": 1986,
+      "current": false,
+      "legacy_name": "Ingeniería Naval y Mecánica",
+      "fiuba_map_file": "naval-1986.json",
+      "credit_rules": {
+        "total": 302,
+        "electivas": {
+          "tesis": 20,
+          "tpp": 38
+        }
+      },
+      "requirements": []
+    },
+    {
+      "id": "quimica-2023",
+      "career": "quimica",
+      "year": 2023,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "quimica-2020.json",
+      "credit_rules": {
+        "total": 231,
+        "electivas": 14,
+        "materias": [
+          "TIF"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
+    },
+    {
+      "id": "quimica-1986",
+      "career": "quimica",
+      "year": 1986,
+      "current": false,
+      "legacy_name": null,
+      "fiuba_map_file": "quimica-1986.json",
+      "credit_rules": {
+        "total": 290,
+        "electivas": {
+          "tesis": 18,
+          "tpp": 24
+        }
+      },
+      "requirements": []
+    },
+    {
+      "id": "sistemas-1986",
+      "career": "sistemas",
+      "year": 1986,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "sistemas-1986.json",
+      "credit_rules": {
+        "total": 208,
+        "electivas": 40
+      },
+      "requirements": []
+    }
+  ]
+}
