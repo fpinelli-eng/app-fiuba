@@ -48,7 +48,7 @@ Antes de tocar algo, leé:
 ## Base de datos
 
 - Esquema en `supabase/migrations/` (Postgres de Supabase). Modelo y reglas de seguridad comentados en `20261015120000_initial_schema.sql`: leelo antes de agregar tablas.
-- **Toda tabla nueva lleva RLS y `grant` explícitos.** La primera migración saca los permisos automáticos de Supabase: si no hacés `grant`, la app no ve la tabla. Nada se le da a `anon`.
+- **Toda tabla nueva lleva RLS y `grant` explícitos.** La primera migración saca los permisos automáticos de Supabase: si no hacés `grant`, la app no ve la tabla. Nada se le da a `anon`. **Para leer, las políticas piden `(select public.is_member())`** (tener fila en `profiles`, o sea cuenta @fi.uba.ar): una sesión sola no alcanza, porque cualquier cuenta de Google puede conseguir una.
 - **El autor de una reseña está en `review_authors`, que ningún usuario puede leer.** Las reseñas se escriben con `submit_review()` y cada uno ve las suyas con `my_reviews()`.
 - Los alumnos solo leen y escriben sus propias filas. Los administradores (`profiles.is_admin`, que nadie puede cambiarse desde la app) escriben el catálogo y la oferta y moderan reseñas.
 - Un administrador es un alumno más con permisos extra. Ojo: la base le deja ver reseñas ocultas (`hidden_at`) y cursos quitados (`visible = false`). Las pantallas de alumno tienen que filtrarlos siempre (`hidden_at is null`, `visible = true`), así el administrador ve lo mismo que cualquiera.
