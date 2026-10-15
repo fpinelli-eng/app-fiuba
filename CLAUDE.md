@@ -41,6 +41,7 @@ Antes de tocar algo, leé:
 - Sesión: `src/lib/session.ts` (`requireAccount()`: la verificación definitiva en el servidor, que además crea la fila del alumno en `profiles` la primera vez; `requireProfile()`: lo mismo y además exige haber elegido carrera y plan, si no manda a `/carrera`; la usa el layout de `src/app/(app)/`), `src/lib/auth.ts` (dominio permitido y datos del perfil), `src/lib/supabase/` (clientes de navegador, servidor y proxy) y `src/proxy.ts` (refresca la sesión y manda a `/ingresar` a quien no la tiene).
 - `src/app/(app)/`: las secciones que exigen sesión y plan elegido. `src/app/carrera/` es el paso 2 del ingreso (elegir carrera y plan; exige sesión). `src/app/ingresar/` y `src/app/auth/` son públicas.
 - Carreras y planes: `src/lib/careers.ts` (consulta, solo servidor) y `src/lib/plans.ts` (tipos y textos, sirve en cliente y servidor).
+- Mapa: `src/lib/map/model.ts` (lógica pura: estados, créditos, promedio, columnas, orden de la primera carga; la puede reusar el inicio), `src/lib/map/data.ts` (consulta del plan y el avance del alumno) y `src/app/(app)/mapa/` (pantalla; con `?carga=1` es la primera carga).
 - Variables de entorno: ver `.env.example`. Para probar en tu computadora, copialo como `.env.local` y completalo.
 - Tipografía: IBM Plex Sans servida desde el propio proyecto (`@fontsource/ibm-plex-sans`), sin depender de Google Fonts.
 
@@ -53,6 +54,7 @@ Antes de tocar algo, leé:
 - Un administrador es un alumno más con permisos extra. Ojo: la base le deja ver reseñas ocultas (`hidden_at`) y cursos quitados (`visible = false`). Las pantallas de alumno tienen que filtrarlos siempre (`hidden_at is null`, `visible = true`), así el administrador ve lo mismo que cualquiera.
 - Planes: `20261015120100_seed_plans.sql` se genera con `npm run db:seed` desde `data/planes/` y `data/planes/planes.json`. No se edita a mano; una migración ya aplicada nunca se cambia: los arreglos van en una migración nueva.
 - **Pruebas:** `npm run db:test` aplica todas las migraciones a un Postgres vacío y corre `tools/db-test/security.sql` (quién puede leer y escribir qué). Necesita un Postgres local (variables `PGHOST`, `PGUSER`…). En cada pull request corren solas en GitHub (workflow "Base de datos").
+- **Probar de punta a punta sin el Supabase real:** `tools/local-supabase/` levanta una copia local de la base con su API y un usuario de prueba (ver su README). Sirve para probar pantallas con Playwright antes de abrir el pull request.
 - **Cómo llegan a Supabase:** al integrarse a `main`, el workflow "Base de datos" aplica las migraciones nuevas. Para probar una vista previa antes, se puede correr a mano desde GitHub → Actions → Base de datos → Run workflow, eligiendo la rama (aplica en la base compartida: solo si la migración está lista).
 - Nombres de migración: `AAAAMMDDHHMMSS_descripcion.sql`, siempre con fecha posterior a la última.
 

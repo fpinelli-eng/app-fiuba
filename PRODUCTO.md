@@ -265,6 +265,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 4. **Google Workspace:** confirmar que las cuentas @fi.uba.ar entregan nombre y foto al iniciar sesión con Google.
 5. **Equivalencias entre planes:** conseguir las tablas oficiales para el cambio de plan desde el perfil.
 6. **Cursos con sufijo "i":** significado desconocido; mientras tanto se tratan como el mismo curso.
+7. **Áreas de las electivas:** el diseño agrupa el panel de electivas por área ("Gestión y negocios", "Energía"…), pero FIUBA Map no trae esas áreas. Por ahora el panel muestra las electivas en una sola lista (y las de orientación agrupadas por orientación). Falta decidir si se cargan áreas a mano por plan.
 
 ### Decisiones cerradas
 
