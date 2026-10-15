@@ -78,6 +78,7 @@ Antes de tocar algo, leé:
 - `data/planes/`: los 25 planes de FIUBA Map (24 se usan). Formato y correspondencias en su README. `planes.json` tiene las carreras, los nombres oficiales, los créditos y requisitos de cada plan.
 - `data/siu/`: oferta real de Ing. Industrial 2C 2026 (texto copiado del SIU y su versión interpretada), para tests del intérprete.
 - `src/lib/siu/`: intérprete del SIU. `parseSiuOffer(texto)` devuelve la oferta (materias → comisiones → subcomisiones → horarios) y una lista de avisos para el administrador. Sus pruebas comparan el resultado con `data/siu/`.
+- `src/app/(app)/plan/`: pantalla del plan (`PlanBuilder.tsx`). Recibe una lista de `PlanSubject`; hoy la arma `src/lib/plan/sample-offer.ts` con la oferta de Industrial y el plan de FIUBA Map. Cuando la oferta esté en la base, se reemplaza esa función por una consulta que devuelva lo mismo.
 - `src/lib/plan/`: lógica del plan del cuatrimestre. `courseOptions(materia)` arma los cursos elegibles (uno por práctica cuando hay prácticas; sin CONDICIONALES ni cursos "i") y `analyzePlan(cursos)` devuelve superposiciones, traslados apurados entre sedes (menos de 60 minutos), asincrónicas y totales.
 - `tools/siu-parser/`: prototipo original en Python del intérprete. Ya no se usa en la app; queda como referencia. Si cambian las reglas, se cambian en `src/lib/siu/`.
 
