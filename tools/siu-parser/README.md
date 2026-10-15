@@ -8,4 +8,4 @@ python3 parser_siu.py ../../data/siu/industrial-2023_2C2026.txt salida.json
 
 Validado con la oferta de Ing. Industrial del 2C 2026: 61 materias, 201 cursos y 442 bloques de horario.
 
-Es un prototipo para entender el formato. La versión de producción va en TypeScript dentro de la app; los archivos de `data/siu/` sirven como casos de prueba.
+Es un prototipo para entender el formato. La versión de producción está en TypeScript en `src/lib/siu/` y da exactamente el mismo resultado (lo verifica `npm test` con los archivos de `data/siu/`).
