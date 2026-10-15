@@ -49,7 +49,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Servicio | Para qué | Cuenta | Acceso del segundo desarrollador |
 |---|---|---|---|
 | GitHub | Código | Francisco | Colaborador con escritura |
-| Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Las vistas previas piden iniciar sesión en Vercel; si hace falta que las vea, Francisco desactiva *Deployment Protection* |
+| Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Desde el 15 de octubre las vistas previas no piden sesión de Vercel (*Deployment Protection* desactivada): las protege el login de la app. **Antes del lanzamiento (#8), revisar:** las vistas previas usan la misma base que producción |
 | Supabase | Base de datos y login (plan gratuito: el proyecto se pausa tras una semana sin uso; se reactiva con *Restore project*) | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
 | Google Cloud | Credenciales de "Ingresar con Google" | Francisco | Ninguno. Para entrar a la app mientras está en modo prueba, su mail @fi.uba.ar tiene que estar en *Test users* |
 
