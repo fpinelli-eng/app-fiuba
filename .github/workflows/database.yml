@@ -45,10 +45,12 @@ jobs:
       PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
-      - name: Plans seed is up to date
+      - name: Plans seed and areas are up to date
         run: |
           node tools/plans-seed/build.mjs > /tmp/seed.sql
           diff -q /tmp/seed.sql supabase/migrations/20261015120100_seed_plans.sql
+          node tools/plans-seed/areas.mjs > /tmp/areas.sql
+          diff -q /tmp/areas.sql supabase/migrations/20261015160100_elective_areas_data.sql
       - name: Apply migrations and run security checks
         run: tools/db-test/run.sh
 
