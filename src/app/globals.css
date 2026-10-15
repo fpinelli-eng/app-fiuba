@@ -46,6 +46,7 @@
   --blocked: #eeedf3;
   --blocked-line: #b9b7cc;
   --blocked-ink: #5f5f75;
+  --progress-cbc: #9ec3ee;
   --mint-line: #bfe3cf;
   --butter-line: #f0dc9c;
   --sky-line: #bcd6f2;
@@ -92,6 +93,7 @@
   --blocked: #20202a;
   --blocked-line: #3d3d4e;
   --blocked-ink: #8e8ea3;
+  --progress-cbc: #6f9bd1;
   --mint-line: #2f5a45;
   --butter-line: #5c4d2b;
   --sky-line: #33506f;
@@ -136,6 +138,7 @@
   --color-blocked: var(--blocked);
   --color-blocked-line: var(--blocked-line);
   --color-blocked-ink: var(--blocked-ink);
+  --color-progress-cbc: var(--progress-cbc);
   --color-mint-line: var(--mint-line);
   --color-butter-line: var(--butter-line);
   --color-sky-line: var(--sky-line);

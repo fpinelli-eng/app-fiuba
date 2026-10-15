@@ -137,6 +137,42 @@ export class CareerMap {
     return prereqsOk && creditsOk && cbcOk ? "enabled" : "blocked";
   }
 
+  /**
+   * Credits by category for the home screen: done / total. Electives use the plan's target
+   * (the highest one when it depends on the final work); final work, the credits of the
+   * mandatory final project or, without one, of the shortest final option.
+   */
+  creditsByCategory(progress: Progress, rules: unknown) {
+    const sum = (list: Subject[]) => list.reduce((a, s) => a + s.credits, 0);
+    const done = (list: Subject[]) => sum(list.filter((s) => progress.subjects.get(s.id)?.status === "approved"));
+    const of = (kind: SubjectKind) => this.subjects.filter((s) => s.kind === kind);
+    const finalProject = of("final_project");
+    const finalOptions = of("final_option");
+    const finals = finalProject.length ? finalProject : finalOptions;
+    const target = electiveTarget(rules);
+    return {
+      cbc: { done: done(of("cbc_subject")), total: sum(of("cbc_subject")) },
+      required: { done: done(of("required")), total: sum(of("required")) },
+      electives: { done: done([...of("elective"), ...of("orientation")]), total: target ? Number(target.split("–").pop()) : null },
+      final: {
+        done: done(finals),
+        total: finalProject.length ? sum(finalProject) : finalOptions.length ? Math.min(...finalOptions.map((s) => s.credits)) : 0,
+      },
+    };
+  }
+
+  /** "Destraba Proyecto Industrial y 2 electivas": what approving this final would open, among what is not done yet. */
+  unlockSummary(progress: Progress, id: number): string {
+    const pending = this.unlocks(id).filter((s) => !progress.subjects.has(s.id));
+    const main = pending.filter((s) => !isElectiveKind(s.kind)).map((s) => s.name);
+    const electives = pending.filter((s) => isElectiveKind(s.kind)).length;
+    const parts = [...main];
+    if (electives) parts.push(`${electives} ${electives === 1 ? "electiva" : "electivas"}`);
+    if (!parts.length) return "No destraba otras materias";
+    const text = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
+    return `Destraba ${text}`;
+  }
+
   // Relations --------------------------------------------------------------
 
   /** Prerequisites with the CBC node replaced by its subjects (for highlighting). */
