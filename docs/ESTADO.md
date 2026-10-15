@@ -25,7 +25,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 ## Qué falta, en orden
 
-1. **#3 · Base de datos (PR #15):** antes de integrarlo, Francisco carga en GitHub los secretos `SUPABASE_ACCESS_TOKEN` y `SUPABASE_DB_PASSWORD` (Settings → Secrets and variables → Actions), así las migraciones se aplican solas. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
+1. **#3 · Base de datos (PR #15):** las migraciones ya están aplicadas en Supabase (se corrió el workflow a mano sobre la rama). GitHub entra con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* de Supabase (IPv4), sin token. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
 2. **Colores del calendario del plan:** sumar los 2 pasteles que faltan en `globals.css` (segundo desarrollador, PR chico aparte).
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
@@ -49,7 +49,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 |---|---|---|---|
 | GitHub | Código | Francisco | Colaborador con escritura |
 | Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Las vistas previas piden iniciar sesión en Vercel; si hace falta que las vea, Francisco desactiva *Deployment Protection* |
-| Supabase | Base de datos y login | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
+| Supabase | Base de datos y login (plan gratuito: el proyecto se pausa tras una semana sin uso; se reactiva con *Restore project*) | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
 | Google Cloud | Credenciales de "Ingresar con Google" | Francisco | Ninguno. Para entrar a la app mientras está en modo prueba, su mail @fi.uba.ar tiene que estar en *Test users* |
 
 **Variables de entorno:** las dos de `.env.example` (URL y publishable key de Supabase) son públicas por diseño, pero no se suben al repo: Francisco las pasa por mensaje privado. La contraseña de la base, el *client secret* de Google y la *secret key* de Supabase **nunca** se comparten ni se suben.
