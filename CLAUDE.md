@@ -38,10 +38,22 @@ Antes de tocar algo, leé:
 - `src/lib/app.ts`: nombre de la app y menú. El nombre se cambia solo ahí.
 - `src/app/globals.css`: **el único lugar con colores.** Variables para claro (`[data-theme="light"]`) y oscuro (`[data-theme="dark"]`) que Tailwind expone como clases: `bg-bg`, `bg-surface`, `bg-header`, `border-line`, `border-line-strong`, `text-ink`, `text-ink-2`, `text-muted`, `bg-accent`, `text-on-accent`, `bg-accent-soft`, `bg-lavender`/`text-lavender-ink`, `bg-mint`/`text-mint-ink`, `bg-butter`/`text-butter-ink`, `bg-sky`/`text-sky-ink`, `bg-peach`/`text-peach-ink`, `text-star`, `text-danger`, `bg-disabled`/`text-disabled-ink`, y para el mapa `border-enabled-line`, `bg-blocked`/`border-blocked-line`/`text-blocked-ink`.
 - Tema: `src/lib/theme.ts`. Se guarda en `localStorage` ("claro" | "oscuro" | "sistema") y un script en `<head>` lo aplica antes de pintar.
-- Sesión: `src/lib/session.ts` (`requireProfile()`, la verificación definitiva en el servidor, usada por el layout de `src/app/(app)/`), `src/lib/auth.ts` (dominio permitido y datos del perfil), `src/lib/supabase/` (clientes de navegador, servidor y proxy) y `src/proxy.ts` (refresca la sesión y manda a `/ingresar` a quien no la tiene).
-- `src/app/(app)/`: las secciones que exigen sesión. `src/app/ingresar/` y `src/app/auth/` son públicas.
+- Sesión: `src/lib/session.ts` (`requireAccount()`: la verificación definitiva en el servidor, que además crea la fila del alumno en `profiles` la primera vez; `requireProfile()`: lo mismo y además exige haber elegido carrera y plan, si no manda a `/carrera`; la usa el layout de `src/app/(app)/`), `src/lib/auth.ts` (dominio permitido y datos del perfil), `src/lib/supabase/` (clientes de navegador, servidor y proxy) y `src/proxy.ts` (refresca la sesión y manda a `/ingresar` a quien no la tiene).
+- `src/app/(app)/`: las secciones que exigen sesión y plan elegido. `src/app/carrera/` es el paso 2 del ingreso (elegir carrera y plan; exige sesión). `src/app/ingresar/` y `src/app/auth/` son públicas.
+- Carreras y planes: `src/lib/careers.ts` (consulta, solo servidor) y `src/lib/plans.ts` (tipos y textos, sirve en cliente y servidor).
 - Variables de entorno: ver `.env.example`. Para probar en tu computadora, copialo como `.env.local` y completalo.
 - Tipografía: IBM Plex Sans servida desde el propio proyecto (`@fontsource/ibm-plex-sans`), sin depender de Google Fonts.
+
+## Base de datos
+
+- Esquema en `supabase/migrations/` (Postgres de Supabase). Modelo y reglas de seguridad comentados en `20261015120000_initial_schema.sql`: leelo antes de agregar tablas.
+- **Toda tabla nueva lleva RLS y `grant` explícitos.** La primera migración saca los permisos automáticos de Supabase: si no hacés `grant`, la app no ve la tabla. Nada se le da a `anon`.
+- **El autor de una reseña está en `review_authors`, que ningún usuario puede leer.** Las reseñas se escriben con `submit_review()` y cada uno ve las suyas con `my_reviews()`.
+- Los alumnos solo leen y escriben sus propias filas. Los administradores (`profiles.is_admin`, que nadie puede cambiarse desde la app) escriben el catálogo y la oferta y moderan reseñas.
+- Planes: `20261015120100_seed_plans.sql` se genera con `npm run db:seed` desde `data/planes/` y `data/planes/planes.json`. No se edita a mano; una migración ya aplicada nunca se cambia: los arreglos van en una migración nueva.
+- **Pruebas:** `npm run db:test` aplica todas las migraciones a un Postgres vacío y corre `tools/db-test/security.sql` (quién puede leer y escribir qué). Necesita un Postgres local (variables `PGHOST`, `PGUSER`…). En cada pull request corren solas en GitHub (workflow "Base de datos").
+- **Cómo llegan a Supabase:** al integrarse a `main`, el workflow "Base de datos" aplica las migraciones nuevas. Para probar una vista previa antes, se puede correr a mano desde GitHub → Actions → Base de datos → Run workflow, eligiendo la rama (aplica en la base compartida: solo si la migración está lista).
+- Nombres de migración: `AAAAMMDDHHMMSS_descripcion.sql`, siempre con fecha posterior a la última.
 
 ## Reglas que no se negocian
 
@@ -63,7 +75,7 @@ Antes de tocar algo, leé:
 
 ## Datos
 
-- `data/planes/`: los 25 planes de FIUBA Map (24 se usan). Formato y correspondencias en su README.
+- `data/planes/`: los 25 planes de FIUBA Map (24 se usan). Formato y correspondencias en su README. `planes.json` tiene las carreras, los nombres oficiales, los créditos y requisitos de cada plan.
 - `data/siu/`: oferta real de Ing. Industrial 2C 2026 (texto copiado del SIU y su versión interpretada), para tests del intérprete.
 - `src/lib/siu/`: intérprete del SIU. `parseSiuOffer(texto)` devuelve la oferta (materias → comisiones → subcomisiones → horarios) y una lista de avisos para el administrador. Sus pruebas comparan el resultado con `data/siu/`.
 - `src/lib/plan/`: lógica del plan del cuatrimestre. `courseOptions(materia)` arma los cursos elegibles (uno por práctica cuando hay prácticas; sin CONDICIONALES ni cursos "i") y `analyzePlan(cursos)` devuelve superposiciones, traslados apurados entre sedes (menos de 60 minutos), asincrónicas y totales.

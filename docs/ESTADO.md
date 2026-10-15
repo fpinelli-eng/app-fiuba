@@ -20,11 +20,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | PR #10 abierto (#5) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | PR #12 abierto (#11), va encima del #10 |
+| Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | PR abierto (#3) |
 
 ## Qué falta, en orden
 
 1. **Revisar e integrar los PR #10 y #12.**
-2. **#3 · Base de datos:** esquema inicial con migraciones, reglas de seguridad (RLS), carga de los 24 planes y el paso de elegir carrera y plan. Lo hace Francisco. **Bloquea casi todo lo demás:** hasta que esté, nadie crea tablas.
+2. **#3 · Base de datos:** PR abierto. Antes de integrarlo, Francisco carga en GitHub los secretos `SUPABASE_ACCESS_TOKEN` y `SUPABASE_DB_PASSWORD` (Settings → Secrets and variables → Actions), así las migraciones se aplican solas. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
    - **Segundo desarrollador:** pantalla del plan del cuatrimestre (usa `src/lib/plan/`), guardado de Opción A / B.
@@ -47,7 +48,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 |---|---|---|---|
 | GitHub | Código | Francisco | Colaborador con escritura |
 | Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Las vistas previas piden iniciar sesión en Vercel; si hace falta que las vea, Francisco desactiva *Deployment Protection* |
-| Supabase | Base de datos y login | Francisco | Ninguno por ahora. Las migraciones van en el repo; Francisco las aplica |
+| Supabase | Base de datos y login | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
 | Google Cloud | Credenciales de "Ingresar con Google" | Francisco | Ninguno. Para entrar a la app mientras está en modo prueba, su mail @fi.uba.ar tiene que estar en *Test users* |
 
 **Variables de entorno:** las dos de `.env.example` (URL y publishable key de Supabase) son públicas por diseño, pero no se suben al repo: Francisco las pasa por mensaje privado. La contraseña de la base, el *client secret* de Google y la *secret key* de Supabase **nunca** se comparten ni se suben.
