@@ -69,22 +69,29 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const eTargetMax = eTarget ? Number(eTarget.split("–").pop()) : null;
   const eCredits = map.electiveCredits(progress);
 
-  const stateOf = useCallback(
-    (item: MapItem): DisplayState =>
-      item.type === "requirement"
-        ? progress.requirements.has(item.requirement.id)
-          ? "approved"
-          : "enabled"
-        : map.displayState(progress, item.subject.id, credits),
-    [map, progress, credits],
-  );
-
   const items = useMemo(() => {
     const all = new Map<string, MapItem>();
     for (const s of map.subjects) all.set(subjectKey(s.id), { key: subjectKey(s.id), type: "subject", subject: s });
     for (const r of map.requirements) all.set(requirementKey(r.id), { key: requirementKey(r.id), type: "requirement", requirement: r });
     return all;
   }, [map]);
+
+  // El estado de cada materia se calcula una vez por cambio de avance, no en cada dibujo.
+  const states = useMemo(() => {
+    const out = new Map<string, DisplayState>();
+    for (const [key, item] of items) {
+      out.set(
+        key,
+        item.type === "requirement"
+          ? progress.requirements.has(item.requirement.id)
+            ? "approved"
+            : "enabled"
+          : map.displayState(progress, item.subject.id, credits),
+      );
+    }
+    return out;
+  }, [items, map, progress, credits]);
+  const stateOf = useCallback((item: MapItem): DisplayState => states.get(item.key) ?? "blocked", [states]);
 
   const selItem = sel ? (items.get(sel) ?? null) : null;
   const selSubject = selItem?.type === "subject" ? selItem.subject : null;
@@ -241,12 +248,9 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const selIsElective = selSubject ? selSubject.kind === "elective" || selSubject.kind === "orientation" : false;
 
   // Electivas
-  const passes = (s: Subject) => {
-    if (filter === "all") return true;
-    return map.displayState(progress, s.id, credits) === filter;
-  };
+  const passes = (s: Subject) => filter === "all" || states.get(subjectKey(s.id)) === filter;
   const allElectives = groups.flatMap((g) => g.items);
-  const count = (f: Filter) => allElectives.filter((s) => f === "all" || map.displayState(progress, s.id, credits) === f).length;
+  const count = (f: Filter) => allElectives.filter((s) => f === "all" || states.get(subjectKey(s.id)) === f).length;
 
   return (
     <main className="flex flex-col gap-4 px-6 pt-[26px] pb-10">
@@ -444,7 +448,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             <div className="flex-auto overflow-y-auto px-3 pb-3">
               {groups.map((g) => {
                 const shown = g.items.filter(passes);
-                const enabled = g.items.filter((s) => map.displayState(progress, s.id, credits) === "enabled").length;
+                const enabled = g.items.filter((s) => states.get(subjectKey(s.id)) === "enabled").length;
                 const showHead = groups.length > 1 || g.name !== null;
                 return (
                   <div key={g.name ?? ""}>
