@@ -2,7 +2,7 @@
 # - In every pull request that touches them: applies them to an empty database and runs
 #   the security checks (tools/db-test).
 # - When they reach main: applies the new ones to the Supabase project.
-#   Needs two repository secrets: SUPABASE_ACCESS_TOKEN and SUPABASE_DB_PASSWORD.
+#   Needs one repository secret: SUPABASE_DB_PASSWORD.
 name: Base de datos
 
 on:
@@ -59,29 +59,42 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_REGION: sa-east-1
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - name: Check secrets
         run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::error::Faltan los secretos SUPABASE_ACCESS_TOKEN y SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
             exit 1
           fi
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
       - name: Push migrations
-        # If it fails, the last lines go into an annotation, readable from the PR without opening the log.
+        # GitHub runners have no IPv6, so the database is reached through Supabase's IPv4
+        # session pooler. Its host is aws-0 or aws-1 depending on when the project was created.
+        # If it fails, the last lines go into an annotation, readable without opening the log.
         run: |
           set +e
-          # GitHub runners have no IPv6, so the database is reached through Supabase's
-          # IPv4 pooler, which `supabase link` sets up.
-          {
-            supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD" &&
-            supabase db push --yes --linked --password "$SUPABASE_DB_PASSWORD"
-          } 2>&1 | tee /tmp/push.log
+          encoded=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["SUPABASE_DB_PASSWORD"], safe=""))')
+          echo "::add-mask::$encoded"
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          user="postgres.$SUPABASE_PROJECT_ID"
+          host=""
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=10" -Atc "select 1" > /tmp/probe.log 2>&1; then
+              host="$candidate"
+              break
+            fi
+          done
+          if [ -z "$host" ]; then
+            echo "::error title=No se pudo conectar a Supabase::$(tr '\n' ' ' < /tmp/probe.log | cut -c1-600)"
+            exit 1
+          fi
+          echo "Using $host"
+          supabase db push --yes --db-url "postgresql://$user:$encoded@$host:5432/postgres" 2>&1 | tee /tmp/push.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error title=supabase db push::$(tail -n 8 /tmp/push.log | tr '\n' ' ' | cut -c1-900)"
