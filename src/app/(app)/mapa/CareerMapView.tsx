@@ -277,6 +277,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               className="h-[42px] w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
             />
           </div>
+          {!firstLoad && (
+            <Link
+              href="/mapa?carga=1"
+              className="inline-flex h-[42px] items-center rounded-[10px] border border-line-strong bg-surface px-[18px] text-[15px] font-semibold"
+            >
+              Carga rápida
+            </Link>
+          )}
           {firstLoad && (
             <Link
               href="/"

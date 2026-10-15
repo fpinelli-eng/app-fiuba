@@ -14,5 +14,6 @@ export default async function MapaPage({ searchParams }: PageProps<"/mapa">) {
   const data = await getMapData(account.id, account.planId!);
   // Si todavía no cargó nada (por ejemplo, salió antes de terminar la primera carga), arranca en ese modo.
   const empty = data.progress.subjects.length === 0 && data.progress.requirements.length === 0;
-  return <CareerMapView userId={account.id} data={data} firstLoad={params.carga === "1" || empty} />;
+  // La key hace que al entrar o salir de la carga se arranque de cero (ficha en la primera materia).
+  return <CareerMapView userId={account.id} data={data} firstLoad={params.carga === "1" || empty} key={params.carga === "1" || empty ? "carga" : "mapa"} />;
 }
