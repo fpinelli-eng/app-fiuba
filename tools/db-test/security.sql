@@ -43,7 +43,10 @@ insert into public.courses (siu_subject_code) values ('CB002');
 insert into public.offerings (term_id, plan_id, course_id, siu_subject_code, siu_subject_name, course_number, label, visible)
 values
   ('2026-1C', 'industrial-2023', 1, 'CB002', 'Álgebra Lineal', '01', 'Curso 1', true),
-  ('2026-1C', 'industrial-2023', 1, 'CB002', 'Álgebra Lineal', '02', 'Curso 2', false);
+  ('2026-1C', 'industrial-2023', 1, 'CB002', 'Álgebra Lineal', '02', 'Curso 2', false),
+  ('2026-1C', 'civil-2023', 1, 'CB002', 'Álgebra Lineal', '03', 'Curso 3', true);
+insert into public.offering_blocks (offering_id, weekday, starts_at, ends_at, campus)
+values (1, 1, 540, 660, 'PC'), (2, 2, 540, 660, 'PC');
 
 -- Seed ------------------------------------------------------------------------------
 
@@ -73,6 +76,12 @@ select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-0000000
 select test.fails('select public.ensure_profile()', 'gmail account gets a profile');
 select test.fails($$insert into public.user_subjects values ('cccccccc-0000-0000-0000-000000000003', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'in_progress', null)$$,
   'gmail account saves a subject');
+-- A session is not enough to read: it takes a FIUBA account (a profile).
+select test.ok((select count(*) from public.careers) = 0, 'gmail account reads careers');
+select test.ok((select count(*) from public.subjects) = 0, 'gmail account reads subjects');
+select test.ok((select count(*) from public.terms) = 0, 'gmail account reads terms');
+select test.ok((select count(*) from public.offerings) = 0, 'gmail account reads offerings');
+select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account reads schedules');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -116,9 +125,11 @@ update public.subjects set credits = 99 where code = 'AL';
 select test.ok((select count(*) from public.subjects where credits = 99) = 0, 'student edits a subject');
 select test.ok((select count(*) from public.offer_imports) = 0, 'student reads SIU imports');
 
-select test.ok((select count(*) from public.offerings) = 1, 'student sees only visible offerings');
+select test.ok((select count(*) from public.offerings) = 2, 'student sees only visible offerings');
+select test.ok((select count(*) from public.offering_blocks) = 1, 'student sees only schedules of visible offerings');
 insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 1);
 select test.fails($$insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 2)$$, 'student adds a hidden offering');
+select test.fails($$insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 3)$$, 'student adds an offering of another plan');
 
 -- Reviews ---------------------------------------------------------------------------
 
@@ -146,6 +157,11 @@ select test.ok((select not pinned from public.reviews), 'student pins a review')
 select test.ok((select count(*) from public.my_reviews()) = 1, 'student sees their review in my_reviews');
 reset role;
 
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select test.ok((select count(*) from public.reviews) = 0, 'gmail account reads reviews');
+reset role;
+
 -- Another student, admin ------------------------------------------------------------
 
 insert into public.profiles (id, is_admin) values ('bbbbbbbb-0000-0000-0000-000000000002', true);
@@ -160,7 +176,8 @@ select test.fails('select 1 from public.review_authors', 'admin reads review_aut
 update public.reviews set pinned = true, hidden_at = now();
 select test.ok((select pinned and hidden_at is not null from public.reviews), 'admin pins and hides a review');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
-select test.ok((select count(*) from public.offerings) = 2, 'admin sees hidden offerings');
+select test.ok((select count(*) from public.offerings) = 3, 'admin sees hidden offerings');
+select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
 reset role;
