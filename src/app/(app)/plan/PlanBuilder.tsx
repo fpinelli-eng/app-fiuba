@@ -26,6 +26,8 @@ const PALETTE = [
   { bg: "bg-butter", ink: "text-butter-ink", border: "border-butter-ink/25" },
   { bg: "bg-sky", ink: "text-sky-ink", border: "border-sky-ink/25" },
   { bg: "bg-peach", ink: "text-peach-ink", border: "border-peach-ink/25" },
+  { bg: "bg-pink", ink: "text-pink-ink", border: "border-pink-ink/25" },
+  { bg: "bg-teal", ink: "text-teal-ink", border: "border-teal-ink/25" },
 ] as const;
 type Color = (typeof PALETTE)[number];
 

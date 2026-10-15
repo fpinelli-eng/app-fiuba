@@ -34,6 +34,8 @@ Pasteles (fondo / texto). En oscuro se usan versiones apagadas.
 | Manteca | #FFF1C7 / #5A4310 | #3A3220 / #F3DDA0 | Final pendiente, advertencias suaves |
 | Celeste | #DCEBFB / #2F4F73 | — | Cursando, "Nuevo" |
 | Durazno | #FFE3D3 / #8A3A18 | #3D2A20 / #FFC9A8 | Pendientes, errores de validación, contador de reseñas |
+| Rosa | #F9DDEB / #6E2348 | #3D2333 / #F5C3DB | Solo calendario del plan (6.ª materia) |
+| Verde agua | #D3F0EE / #1E5450 | #1B3634 / #B2E6E1 | Solo calendario del plan (7.ª materia) |
 
 Estados del mapa:
 

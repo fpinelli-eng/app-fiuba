@@ -35,6 +35,11 @@
   --sky-ink: #2f4f73;
   --peach: #ffe3d3;
   --peach-ink: #8a3a18;
+  /* Solo para el calendario del plan: 7 colores para que las materias no se repitan */
+  --pink: #f9ddeb;
+  --pink-ink: #6e2348;
+  --teal: #d3f0ee;
+  --teal-ink: #1e5450;
 
   /* Estados del mapa que no son pasteles */
   --enabled-line: #8f8dae;
@@ -71,6 +76,10 @@
   --sky-ink: #b9d6f5;
   --peach: #3d2a20;
   --peach-ink: #ffc9a8;
+  --pink: #3d2333;
+  --pink-ink: #f5c3db;
+  --teal: #1b3634;
+  --teal-ink: #b2e6e1;
 
   --enabled-line: #6c6a8f;
   --blocked: #20202a;
@@ -105,6 +114,10 @@
   --color-sky-ink: var(--sky-ink);
   --color-peach: var(--peach);
   --color-peach-ink: var(--peach-ink);
+  --color-pink: var(--pink);
+  --color-pink-ink: var(--pink-ink);
+  --color-teal: var(--teal);
+  --color-teal-ink: var(--teal-ink);
   --color-enabled-line: var(--enabled-line);
   --color-blocked: var(--blocked);
   --color-blocked-line: var(--blocked-line);

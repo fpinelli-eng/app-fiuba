@@ -26,13 +26,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 ## Qué falta, en orden
 
 1. **#3 · Base de datos (PR #15):** las migraciones ya están aplicadas en Supabase (se corrió el workflow a mano sobre la rama). GitHub entra con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* de Supabase (IPv4), sin token. Después, Francisco se marca como administrador desde el editor SQL de Supabase (es un dato, no un cambio de estructura): `update profiles set is_admin = true where id = (select id from auth.users where email = '<su mail>');`
-2. **Colores del calendario del plan:** sumar los 2 pasteles que faltan en `globals.css` (segundo desarrollador, PR chico aparte).
-3. Después de la #3, por área (ver `docs/COLABORACION.md`):
+2. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
    - **Segundo desarrollador:** conectar la pantalla del plan a la base (hoy usa `src/lib/plan/sample-offer.ts`), filtrar por materias habilitadas y guardar Opción A / B en su propia migración.
    - **Después, a repartir:** reseñas (buscador, ficha, pendientes, filtro de comentarios), administración (carga de la oferta del SIU por plan, moderación), perfil completo.
-4. **#8 · Política de privacidad** y publicación de la app en Google (antes del lanzamiento).
-5. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, equivalencias entre planes.
+3. **#8 · Política de privacidad** y publicación de la app en Google (antes del lanzamiento).
+4. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, equivalencias entre planes.
 
 ## Cómo está armado GitHub
 
