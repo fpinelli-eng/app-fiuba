@@ -20,11 +20,11 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | En `main` (#5, PR #10) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
-| Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | PR abierto |
+| Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | PR #14 abierto |
 
 ## Qué falta, en orden
 
-1. **Revisar e integrar el PR de la pantalla del plan.**
+1. **Revisar e integrar el PR #14** (pantalla del plan).
 2. **#3 · Base de datos:** esquema inicial con migraciones, reglas de seguridad (RLS), carga de los 24 planes y el paso de elegir carrera y plan. Lo hace Francisco. **Bloquea casi todo lo demás:** hasta que esté, nadie crea tablas.
 3. Después de la #3, por área (ver `docs/COLABORACION.md`):
    - **Francisco:** mapa de la carrera, primera carga de materias, inicio (avance, promedio, finales pendientes).
