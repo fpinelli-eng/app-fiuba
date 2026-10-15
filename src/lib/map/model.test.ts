@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import plan from "../../../data/planes/industrial-2020.json";
+import areasFile from "../../../data/planes/areas.json";
 import {
   CareerMap,
   electiveTarget,
@@ -37,6 +38,7 @@ const subjects: Subject[] = rows.map((r, i) => ({
   requiresCbc: r.requiereCBC === true,
   prerequisites: (r.correlativas ?? "").split("-").filter(Boolean).map((c) => idOf.get(c)!),
   sort: i,
+  area: null,
 }));
 const english = { id: 1, name: "Prueba de nivel de idioma inglés", shortName: "Inglés" };
 const map = new CareerMap(subjects, [english]);
@@ -122,6 +124,18 @@ describe("layout", () => {
   it("puts the final work and the English test in the last column", () => {
     const last = terms[terms.length - 1].items.map((i) => i.key);
     expect(last).toEqual([subjectKey(id("EJPROF")), subjectKey(id("TIF")), requirementKey(1)]);
+  });
+
+  it("groups electives by the plan's areas, in order", () => {
+    const areas = (areasFile as unknown as Record<string, Record<string, string[]>>)["industrial-2023"];
+    const names = Object.keys(areas);
+    const withAreas = subjects.map((s) => {
+      const i = names.findIndex((n) => areas[n].includes(s.code));
+      return i >= 0 ? { ...s, area: { name: names[i], sort: i } } : s;
+    });
+    const groups = new CareerMap(withAreas, []).electiveGroups();
+    expect(groups.map((g) => g.name)).toEqual(names);
+    expect(groups[names.indexOf("Energía")].items).toHaveLength(5);
   });
 
   it("keeps electives out of the map, in the panel", () => {

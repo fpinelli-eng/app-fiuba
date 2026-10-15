@@ -500,7 +500,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               firstLoad={firstLoad}
               pending={pending === selItem.key}
               inSequence={false}
-              electiveGroup={selSubject?.kind === "orientation" ? selSubject.category : null}
+              electiveGroup={selSubject?.kind === "orientation" ? selSubject.category : (selSubject?.area?.name ?? null)}
               onGrade={(g) => pickGrade(selItem, g)}
               onState={(s) => pickState(selItem, s)}
               onPrev={() => {}}

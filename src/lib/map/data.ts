@@ -20,20 +20,23 @@ export interface MapData {
 export async function getMapData(userId: string, planId: string): Promise<MapData> {
   const supabase = await createClient();
 
-  const [plan, subjects, requirements, userRequirements] = await Promise.all([
+  const [plan, subjects, requirements, userRequirements, areas] = await Promise.all([
     supabase.from("plans").select("id, year, credit_rules, careers(name)").eq("id", planId).single(),
     supabase
       .from("subjects")
-      .select("id, code, name, credits, kind, category, level, required_credits, requires_cbc, sort")
+      .select("id, code, name, credits, kind, category, level, required_credits, requires_cbc, sort, area_id")
       .eq("plan_id", planId)
       .order("sort"),
     supabase.from("plan_requirements").select("id, name, short_name").eq("plan_id", planId).order("sort"),
     supabase.from("user_requirements").select("requirement_id").eq("user_id", userId),
+    supabase.from("subject_areas").select("id, name, sort").eq("plan_id", planId),
   ]);
   if (plan.error) throw new Error(`plans: ${plan.error.message}`);
   if (subjects.error) throw new Error(`subjects: ${subjects.error.message}`);
   if (requirements.error) throw new Error(`plan_requirements: ${requirements.error.message}`);
   if (userRequirements.error) throw new Error(`user_requirements: ${userRequirements.error.message}`);
+  if (areas.error) throw new Error(`subject_areas: ${areas.error.message}`);
+  const areaById = new Map(areas.data.map((a) => [a.id as number, { name: a.name as string, sort: a.sort as number }]));
 
   const ids = subjects.data.map((s) => s.id as number);
   const [prerequisites, userSubjects] = await Promise.all([
@@ -71,6 +74,7 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
       requiresCbc: s.requires_cbc === true,
       prerequisites: prereqsOf.get(s.id as number) ?? [],
       sort: s.sort as number,
+      area: s.area_id ? (areaById.get(s.area_id as number) ?? null) : null,
     })),
     requirements: requirements.data.map((r) => ({
       id: r.id as number,

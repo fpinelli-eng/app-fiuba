@@ -265,7 +265,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 4. **Google Workspace:** confirmar que las cuentas @fi.uba.ar entregan nombre y foto al iniciar sesión con Google.
 5. **Equivalencias entre planes:** conseguir las tablas oficiales para el cambio de plan desde el perfil.
 6. **Cursos con sufijo "i":** significado desconocido; mientras tanto se tratan como el mismo curso.
-7. **Áreas de las electivas:** el diseño agrupa el panel de electivas por área ("Gestión y negocios", "Energía"…), pero FIUBA Map no trae esas áreas. Por ahora el panel muestra las electivas en una sola lista (y las de orientación agrupadas por orientación). Falta decidir si se cargan áreas a mano por plan.
+7. **Áreas de las electivas en los demás planes:** el panel del mapa agrupa las electivas por área, definidas a mano por plan en `data/planes/areas.json` (FIUBA Map no las trae). Industrial 2023 usa las del diseño; los demás planes muestran sus electivas en una sola lista hasta que alguien defina sus áreas.
 
 ### Decisiones cerradas
 
@@ -278,6 +278,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 - **Moderación (7 de octubre):** sin reportes de usuarios.
 - **Doble carrera (9 de octubre):** no se contempla.
 - **Reseñas al borrar la cuenta (9 de octubre):** quedan publicadas, anónimas.
+- **Electivas por área (15 de octubre):** se mantienen las áreas del diseño ("Gestión y negocios", "Energía"…).
 
 ## 14. Próximos pasos
 

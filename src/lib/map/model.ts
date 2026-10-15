@@ -29,6 +29,8 @@ export interface Subject {
   requiresCbc: boolean;
   prerequisites: number[];
   sort: number;
+  /** Elective area ("Energía"), when the plan defines them (data/planes/areas.json). */
+  area?: { name: string; sort: number } | null;
 }
 
 export interface Requirement {
@@ -180,15 +182,36 @@ export class CareerMap {
     return { cbc, terms };
   }
 
-  /** Electives grouped by category; orientation subjects get one group per orientation. */
+  /**
+   * Electives for the side panel: by area when the plan defines them (in their order),
+   * then one group per orientation. Without areas, plain electives go in a single list.
+   */
   electiveGroups(): { name: string | null; items: Subject[] }[] {
-    const groups = new Map<string, Subject[]>();
-    for (const s of this.subjects) {
-      if (!isElectiveKind(s.kind)) continue;
-      const name = s.kind === "elective" ? "" : s.category;
-      groups.set(name, [...(groups.get(name) ?? []), s]);
+    const electives = this.subjects.filter((s) => s.kind === "elective");
+    const hasAreas = electives.some((s) => s.area);
+    const byArea = new Map<string, { sort: number; items: Subject[] }>();
+    const noArea: Subject[] = [];
+    for (const s of electives) {
+      if (!s.area) {
+        noArea.push(s);
+        continue;
+      }
+      const g = byArea.get(s.area.name) ?? { sort: s.area.sort, items: [] };
+      g.items.push(s);
+      byArea.set(s.area.name, g);
     }
-    return [...groups.entries()].map(([name, items]) => ({ name: name || null, items }));
+    const groups: { name: string | null; items: Subject[] }[] = [...byArea.entries()]
+      .sort((a, b) => a[1].sort - b[1].sort)
+      .map(([name, g]) => ({ name, items: g.items }));
+    if (noArea.length) groups.push({ name: hasAreas ? "Otras electivas" : null, items: noArea });
+
+    const orientations = new Map<string, Subject[]>();
+    for (const s of this.subjects) {
+      if (s.kind !== "orientation") continue;
+      orientations.set(s.category, [...(orientations.get(s.category) ?? []), s]);
+    }
+    groups.push(...[...orientations.entries()].map(([name, items]) => ({ name, items })));
+    return groups;
   }
 
   /** Order of the guided first load: the CBC, then the map column by column. */

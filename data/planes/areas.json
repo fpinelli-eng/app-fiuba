@@ -1,0 +1,45 @@
+{
+  "_comment": "Áreas de las electivas por plan, para agruparlas en el panel del mapa. Códigos de FIUBA Map. Las de Industrial 2023 salen del diseño (prototipo 06-mapa). Un plan que no figura acá muestra sus electivas en una sola lista.",
+  "industrial-2023": {
+    "Gestión y negocios": [
+      "CHCO",
+      "CPS",
+      "IGP",
+      "EEING",
+      "GFP"
+    ],
+    "Datos y operaciones": [
+      "CDTD",
+      "EAS",
+      "GDC",
+      "LSC",
+      "ADC",
+      "INVOPS",
+      "IPGE"
+    ],
+    "Producto y manufactura": [
+      "MAII",
+      "TALL",
+      "DDP",
+      "IDEE",
+      "MEIP",
+      "DDPD"
+    ],
+    "Industrias": [
+      "AGROBIO",
+      "INDAUTO",
+      "INDTEXT",
+      "BEIP",
+      "INDCP",
+      "INDALIM",
+      "INDPETRO"
+    ],
+    "Energía": [
+      "INTROTE",
+      "ENEGRENO",
+      "UEDE",
+      "FCTE",
+      "TETE"
+    ]
+  }
+}
