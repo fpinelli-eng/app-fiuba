@@ -96,7 +96,8 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 | Diagrama por cuatrimestres con estados: aprobada, final pendiente, cursando, habilitada, bloqueada | MVP |
 | Clic en una materia: ficha con correlativas, lo que habilita, estado y nota | MVP |
 | Buscador de materias | MVP |
-| Primera carga guiada: la ficha recorre las materias en orden y cada toque de nota avanza a la siguiente | MVP |
+| Carga rápida al primer ingreso: pantalla aparte, cuatrimestre por cuatrimestre, una fila por materia con la nota a un toque (o una tecla); también accesible desde el mapa | MVP |
+| Primera carga guiada en el mapa: la ficha recorre las materias en orden y cada toque de nota avanza a la siguiente | MVP |
 | Resaltar el camino crítico | Después |
 
 ### 5.3 Plan del cuatrimestre
@@ -145,7 +146,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 
 1. **Entra** a la web y toca "Ingresar con tu cuenta @fi.uba.ar". Si la cuenta no es de FIUBA, ve un aviso y puede probar con otra.
 2. **Elige carrera y plan.**
-3. **Carga sus materias en el mapa:** la ficha arranca en la primera materia del CBC; elige la nota (o Final pendiente / Cursando / Sin cursar) y pasa sola a la siguiente. Toca "Listo" cuando termina.
+3. **Carga sus materias** en la pantalla de carga rápida: cuatrimestre por cuatrimestre, la nota de cada materia con un toque (o Final / Cursando / Sin cursar). "Terminar" o "Ver mi mapa" lo lleva al mapa.
 4. **Ve su panel:** avance, promedio, materias, calendario y finales pendientes.
 5. **Arma su cuatrimestre** en el Plan, con horarios y puntajes, y guarda dos opciones.
 6. **Al terminar la cursada** (julio o diciembre) le aparecen las reseñas pendientes, que desbloquean el plan del cuatrimestre siguiente.
@@ -158,7 +159,7 @@ Lienzo de Claude Design "App FIUBA — Diseño". Las marcadas "(se puede usar)" 
 
 1. **Ingreso:** login y elección de carrera y plan.
 2. **Cuenta rechazada:** aviso al ingresar con un mail que no es @fi.uba.ar.
-3. **Primera carga de materias:** el mapa vacío con la carga guiada.
+3. **Primera carga de materias:** el mapa vacío con la carga guiada. Se sumó después la pantalla de carga rápida (sin prototipo en el lienzo; está programada en `src/app/cargar/`).
 4. **Inicio:** modo día y modo oscuro.
 5. **Mapa de la carrera.**
 6. **Plan del cuatrimestre** y **Plan bloqueado** (con reseñas pendientes).
@@ -274,7 +275,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 - **Materias históricas:** las aprobadas antes de usar la app quedan exentas de reseña.
 - **Fin de carrera (Tesis / Trabajo Profesional):** cuenta como requisito para el avance; fuera del desarrollo inicial en lo demás.
 - **Sedes:** sufijo "PC" = Paseo Colón, "LH" = Las Heras.
-- **Primer ingreso (7 de octubre):** sin pantalla aparte de carga de materias; la carga se hace en el mapa.
+- **Primer ingreso (7 de octubre, cambiada el 15 de octubre):** después de elegir la carrera hay una pantalla aparte de carga rápida, cuatrimestre por cuatrimestre (`/cargar`). La carga guiada dentro del mapa queda como alternativa (`/mapa?carga=1`).
 - **Moderación (7 de octubre):** sin reportes de usuarios.
 - **Doble carrera (9 de octubre):** no se contempla.
 - **Reseñas al borrar la cuenta (9 de octubre):** quedan publicadas, anónimas.

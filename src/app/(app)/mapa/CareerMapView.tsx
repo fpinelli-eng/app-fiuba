@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useProgress } from "@/lib/map/useProgress";
 import {
   CareerMap,
   GRADES,
@@ -20,7 +20,7 @@ import {
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
-import { CloseIcon, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
+import { CloseIcon, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "@/components/MapState";
 
 // Mapa de la carrera (prototipo 06-mapa) y primera carga de materias (prototipo 03-primera-carga).
 // Cada cambio se guarda en la base apenas se toca; si falla, se vuelve atrás y se avisa.
@@ -44,18 +44,13 @@ interface Props {
 
 export function CareerMapView({ userId, data, firstLoad }: Props) {
   const map = useMemo(() => new CareerMap(data.subjects, data.requirements), [data]);
-  const [progress, setProgress] = useState<Progress>(() => ({
-    subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
-    requirements: new Set(data.progress.requirements),
-  }));
+  const { progress, saveSubject, saveRequirement, saveError } = useProgress(userId, data.progress);
   const sequence = useMemo(() => map.loadSequence(), [map]);
   const [sel, setSel] = useState<string | null>(firstLoad ? (sequence[0] ?? null) : null);
   const [pending, setPending] = useState<string | null>(null); // "Aprobada" elegida, falta la nota
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [cbcOpenChoice, setCbcOpenChoice] = useState<boolean | null>(firstLoad ? true : null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const supabase = useMemo(() => createClient(), []);
 
   // Cálculos ------------------------------------------------------------------
 
@@ -122,54 +117,6 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
           : "";
     return { opacity, outline, isSel };
   };
-
-  // Guardado -------------------------------------------------------------------
-
-  const fail = () => setSaveError("No pudimos guardar el cambio. Probá de nuevo.");
-
-  async function saveSubject(id: number, next: { status: SubjectStatus; grade: number | null } | null) {
-    const before = progress.subjects.get(id) ?? null;
-    setSaveError(null);
-    setProgress((p) => {
-      const subjects = new Map(p.subjects);
-      if (next) subjects.set(id, next);
-      else subjects.delete(id);
-      return { ...p, subjects };
-    });
-    const { error } = next
-      ? await supabase
-          .from("user_subjects")
-          .upsert({ user_id: userId, subject_id: id, status: next.status, grade: next.grade }, { onConflict: "user_id,subject_id" })
-      : await supabase.from("user_subjects").delete().eq("user_id", userId).eq("subject_id", id);
-    if (error) {
-      setProgress((p) => {
-        const subjects = new Map(p.subjects);
-        if (before) subjects.set(id, before);
-        else subjects.delete(id);
-        return { ...p, subjects };
-      });
-      fail();
-    }
-  }
-
-  async function saveRequirement(id: number, approved: boolean) {
-    setSaveError(null);
-    const apply = (on: boolean) =>
-      setProgress((p) => {
-        const requirements = new Set(p.requirements);
-        if (on) requirements.add(id);
-        else requirements.delete(id);
-        return { ...p, requirements };
-      });
-    apply(approved);
-    const { error } = approved
-      ? await supabase.from("user_requirements").upsert({ user_id: userId, requirement_id: id }, { onConflict: "user_id,requirement_id" })
-      : await supabase.from("user_requirements").delete().eq("user_id", userId).eq("requirement_id", id);
-    if (error) {
-      apply(!approved);
-      fail();
-    }
-  }
 
   // Acciones de la ficha ---------------------------------------------------------
 
@@ -277,6 +224,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               className="h-[42px] w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
             />
           </div>
+          {!firstLoad && (
+            <Link
+              href="/cargar"
+              className="inline-flex h-[42px] items-center rounded-[10px] border border-line-strong bg-surface px-[18px] text-[15px] font-semibold"
+            >
+              Carga rápida
+            </Link>
+          )}
           {firstLoad && (
             <Link
               href="/"

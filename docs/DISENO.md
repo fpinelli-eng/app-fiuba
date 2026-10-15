@@ -64,7 +64,15 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Cuenta rechazada: debajo del botón, recuadro durazno con "<mail> no es una cuenta de FIUBA" + "Ingresá con tu mail @fi.uba.ar"; el botón pasa a "Probar con otra cuenta".
 - Pantalla 2: "¿Qué carrera estudiás?", las 13 carreras en grilla de dos columnas y, si la carrera tiene más de un plan, los planes (el vigente marcado y con la etiqueta "Vigente"; los viejos de carreras que cambiaron de nombre muestran el nombre anterior). "Continuar" lleva al mapa en modo de primera carga.
 
-### Primera carga de materias
+### Carga rápida de materias (primer ingreso)
+- Se agregó el 15 de octubre, después del lienzo: no tiene prototipo; la referencia es el código (`src/app/cargar/QuickLoad.tsx`).
+- Después de elegir la carrera. Título "Cargá tus materias", carrera y plan; arriba a la derecha créditos, promedio y "Terminar" (al mapa).
+- A la izquierda, los pasos: CBC, cada cuatrimestre y Electivas (por área), con "N de M" cargadas; un tilde menta cuando están todas aprobadas.
+- A la derecha, una tarjeta por paso con una fila por materia: estado, nombre y créditos, notas 4–10, Final / Cursando / Sin cursar. Un toque guarda. La prueba de inglés: Aprobada / Pendiente.
+- Teclado: 4–9 y 0 (=10) para la nota, F final, C cursando, Borrar sin cursar; después de cada tecla pasa a la materia siguiente.
+- Abajo: "← Anterior" y "Siguiente: <paso> →"; en el último, "Ver mi mapa". El mapa tiene un botón "Carga rápida" para volver.
+
+### Primera carga de materias (en el mapa)
 - Es el mapa vacío con el título "Cargá tus materias" y un botón "Listo" que lleva al inicio.
 - La ficha arranca abierta en la primera materia del CBC. Muestra notas 4–10 ("Aprobada con") y los botones Final pend. / Cursando / Sin cursar. Elegir cualquiera guarda y pasa **sola** a la materia siguiente (CBC y después columna por columna). "← Anterior" y "Siguiente →" para moverse sin cambiar nada.
 - La prueba de inglés solo tiene Aprobada / Pendiente. Las electivas se cargan desde su panel, sin avance automático.
