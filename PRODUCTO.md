@@ -94,7 +94,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 | Funcionalidad | Etapa |
 |---|---|
 | Diagrama por cuatrimestres con estados: aprobada, final pendiente, cursando, habilitada, bloqueada | MVP |
-| Clic en una materia: ficha con correlativas, lo que habilita, estado y nota | MVP |
+| Clic en una materia: ficha con correlativas, estado y nota; lo que habilita se resalta en el mapa | MVP |
 | Buscador de materias | MVP |
 | Primera carga guiada: la ficha recorre las materias en orden y cada toque de nota avanza a la siguiente | MVP |
 | Resaltar el camino crítico | Después |
