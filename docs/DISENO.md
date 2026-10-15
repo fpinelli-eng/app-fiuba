@@ -76,7 +76,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 
 ### Mapa de la carrera
 - Columnas CBC + 1.º a 8.º cuatrimestre, sin flechas. Nodo de 112 × 92 px: nombre (hasta 3 líneas), ícono de estado, nota en 16 px / 700 si está aprobada, créditos "8 C" chiquitos.
-- Clic en una materia: ficha flotante con Necesita / Tu estado / Nota. Lo que habilita no se lista en la ficha (cambio del 15 de octubre): se ve en el mapa con contorno punteado. Las que necesita se marcan con contorno sólido; las que habilita, con contorno punteado; el resto baja a 30 % de opacidad.
+- Clic en una materia: ficha flotante con el nombre, los créditos y el estado, los botones Aprobada / Final pendiente / Cursando / Sin cursar y la nota. Lo que necesita y lo que habilita no se listan (cambio del 15 de octubre): se ven en el mapa con contorno sólido y punteado. Si está bloqueada por créditos, la ficha dice cuántos pide. Las que necesita se marcan con contorno sólido; las que habilita, con contorno punteado; el resto baja a 30 % de opacidad.
 - "Aprobada" sin nota no se guarda: abre el selector de nota primero.
 - CBC compactable en una columna angosta; compactado por defecto cuando está completo.
 - Panel de electivas a la derecha (276 px, fondo #F1EEFD) agrupado por área, con filtros Todas / Habilitadas / Bloqueadas y barra de créditos de electivas.
