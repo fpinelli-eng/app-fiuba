@@ -163,3 +163,11 @@ body {
   /* Números de ancho fijo en toda la app */
   font-variant-numeric: tabular-nums lining-nums;
 }
+
+/* Tailwind 4 deja los botones con la flecha: la manito avisa que se puede tocar. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}

@@ -6,10 +6,14 @@ import { CareerMapView } from "./CareerMapView";
 
 export const metadata: Metadata = { title: `Mapa · ${APP_NAME}` };
 
-// Mapa de la carrera. Con ?carga=1 (al terminar de elegir la carrera) es la primera carga de materias.
+// Mapa de la carrera. Con ?carga=1 (al terminar de elegir la carrera) o sin ninguna materia cargada,
+// es la primera carga de materias.
 export default async function MapaPage({ searchParams }: PageProps<"/mapa">) {
   const account = await requireProfile();
   const params = await searchParams;
   const data = await getMapData(account.id, account.planId!);
-  return <CareerMapView userId={account.id} data={data} firstLoad={params.carga === "1"} />;
+  // Si todavía no cargó nada (por ejemplo, salió antes de terminar la primera carga), arranca en ese modo.
+  const empty = data.progress.subjects.length === 0 && data.progress.requirements.length === 0;
+  // La key hace que al entrar o salir de la carga se arranque de cero (ficha en la primera materia).
+  return <CareerMapView userId={account.id} data={data} firstLoad={params.carga === "1" || empty} key={params.carga === "1" || empty ? "carga" : "mapa"} />;
 }
