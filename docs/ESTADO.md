@@ -37,7 +37,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 ## Qué falta, en orden
 
 1. **Administración, lo que falta:** quitar o volver a mostrar cursos, reemplazar la oferta de un plan con otro texto (conservando los cursos, para no perder sus reseñas), cursos con cambios respecto del cuatrimestre anterior y emparejar a mano materias con nombres abreviados. Segundo desarrollador.
-2. **Plan → cursada:** botón "Me inscribí en esta opción" que pasa la opción a `user_courses` (reseñas pendientes y calendario del Inicio): PR abierto. Segundo desarrollador.
+2. **Plan → cursada:** botón "Me inscribí en esta opción" que pasa la opción a `user_courses` (reseñas pendientes y calendario del Inicio): PR #40 abierto. Segundo desarrollador.
 3. **Reseñas, lo que falta:** "Editar" en el perfil. La pantalla del plan bloqueado puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`. Francisco.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada. Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
