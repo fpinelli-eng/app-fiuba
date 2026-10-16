@@ -32,6 +32,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Reseñas libres: cualquier alumno reseña cualquier curso desde su ficha ("Tu reseña"); una reseña por alumno y curso, que se edita | `supabase/migrations/20261016140000_free_reviews.sql`, `src/app/(app)/resenas/curso/[id]/MyReview.tsx` | PR abierto (#34, PR #35) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
+| Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | PR abierto (#39) |
 
 ## Qué falta, en orden
 
