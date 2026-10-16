@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import type { Profile } from "@/lib/auth";
 
-export function Header({ profile }: { profile: Profile }) {
+export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pendingReviews?: number }) {
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -36,6 +36,11 @@ export function Header({ profile }: { profile: Profile }) {
               }
             >
               {item.label}
+              {item.href === "/resenas" && pendingReviews > 0 && (
+                <span className="ml-2 rounded-full bg-peach px-2 py-px text-xs font-semibold text-peach-ink" aria-label={`${pendingReviews} pendientes`}>
+                  {pendingReviews}
+                </span>
+              )}
             </Link>
           );
         })}

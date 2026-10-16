@@ -2,15 +2,17 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { StateIcon } from "./mapa/icons";
 import { getMapData } from "@/lib/map/data";
+import { getReviewRound } from "@/lib/reviews/pending";
 import { CareerMap, formatAverage, totalCredits, type Progress } from "@/lib/map/model";
 import { requireProfile } from "@/lib/session";
 
 // Inicio (prototipos 04-inicio y 05-inicio-oscuro): avance, promedio, materias, cursada y finales pendientes.
-// El aviso de reseñas pendientes y el calendario de la cursada llegan con las reseñas y el plan guardado.
+// El calendario de la cursada llega con la oferta y el plan guardado.
 
 export default async function InicioPage() {
   const account = await requireProfile();
-  const data = await getMapData(account.id, account.planId!);
+  const [data, round] = await Promise.all([getMapData(account.id, account.planId!), getReviewRound(account.id, null)]);
+  const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
   const map = new CareerMap(data.subjects, data.requirements);
   const progress: Progress = {
     subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
@@ -58,6 +60,19 @@ export default async function InicioPage() {
           </div>
         )}
       </div>
+
+      {round && pendingReviews > 0 && (
+        <section aria-label="Reseñas pendientes" className="flex flex-wrap items-center gap-5 rounded-[14px] bg-peach px-5 py-4 text-peach-ink">
+          <div className="text-[30px] leading-none font-semibold">{pendingReviews}</div>
+          <div className="flex-[1_1_360px]">
+            <div className="font-semibold">Reseñas pendientes de la cursada {round.termLabel}</div>
+            <div>Completalas para desbloquear el plan del {round.nextTermLabel}. Solo estrellas: menos de un minuto.</div>
+          </div>
+          <Link href="/resenas/pendientes" className="rounded-[10px] bg-accent px-5 py-3 font-semibold text-on-accent">
+            Reseñar ahora
+          </Link>
+        </section>
+      )}
 
       {nothingLoaded && (
         <section className="flex flex-wrap items-center gap-5 rounded-[14px] bg-lavender px-5 py-4 text-lavender-ink">

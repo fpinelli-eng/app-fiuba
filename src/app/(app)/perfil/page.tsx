@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
+import { Stars } from "@/components/Stars";
 import { APP_NAME } from "@/lib/app";
-import { getMyReviews } from "@/lib/reviews";
+import { getMyReviews } from "@/lib/reviews/mine";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
 import { DeleteAccount } from "./DeleteAccount";
@@ -95,25 +96,4 @@ export default async function PerfilPage() {
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`rounded-[18px] border border-line bg-surface px-6 py-[22px] ${className}`}>{children}</section>;
-}
-
-function Stars({ value }: { value: number }) {
-  return (
-    <span aria-label={`${value} de 5`} className="flex flex-none gap-px">
-      {[1, 2, 3, 4, 5].map((k) => (
-        <svg
-          key={k}
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className={k <= value ? "fill-star stroke-star" : "fill-none stroke-line-strong"}
-        >
-          <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
-        </svg>
-      ))}
-    </span>
-  );
 }
