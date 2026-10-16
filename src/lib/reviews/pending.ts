@@ -4,7 +4,7 @@ import { normalizeText } from "@/lib/map/model";
 import { termLabel } from "./mine";
 
 // Pending reviews: the courses a student took in terms whose review date already passed.
-// Each course can be reviewed once per term (submit_review edits it after that).
+// Each course can be reviewed once per student (submit_review and review_course edit it after that).
 
 export interface ReviewTask {
   offeringId: number;
@@ -72,10 +72,10 @@ export async function getReviewRound(userId: string, planId: string | null): Pro
 
   const termId = open.map((o) => o.term_id).sort().at(-1)!;
   const names = new Map((subjects.data ?? []).map((s) => [normalizeText(s.name as string), s.name as string]));
+  // One review per student and course: a course already reviewed (in any term, or freely
+  // from its page) counts as done.
   const sent = new Map(
-    ((mine.data ?? []) as { course_id: number; term_id: string; stars: number; comment: string | null }[])
-      .filter((r) => r.term_id === termId)
-      .map((r) => [r.course_id, r]),
+    ((mine.data ?? []) as { course_id: number; stars: number; comment: string | null }[]).map((r) => [r.course_id, r]),
   );
 
   // One task per course, even if the student marked a practice and its course.
