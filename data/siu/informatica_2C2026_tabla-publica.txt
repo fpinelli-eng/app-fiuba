@@ -1,0 +1,494 @@
+
+Acceso
+Fechas de Examen
+Horarios de Cursadas
+Validador de Certificados
+Ayuda
+Horarios de cursada BuscarLimpiar
+Filtro
+Responsable Académica (*)
+
+Facultad de Ingeniería - FIUBA
+Propuesta (*)
+
+Ingeniería en Informática
+Año de cursada
+
+-- Seleccione --
+Período lectivo (*)
+
+2do Cuatrimestre 2026
+Actividad
+
+Ubicación
+
+-- Todas --
+Día de la semana
+
+-- Seleccione --
+Turno
+
+-- Seleccione --
+Sede: Sede Unica
+Período Lectivo: 2do Cuatrimestre 2026
+MATEMATICA DISCRETA ( 6107 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MAULHARDT		Miercoles	08:00 - 11:00	Práctica	302-PC - PC	
+CURSO 01 - MAULHARDT		Viernes	07:00 - 10:00	Teórica	411 - PC - PC	
+SISTEMAS DIGITALES ( 6617 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ALVAREZ		Jueves	13:00 - 16:00	Teórico Práctica	L4-PC - PC	30
+CURSO 01 - ALVAREZ		Sabado	09:00 - 12:00	Práctica	L4-PC - PC	30
+CURSO 02 - ALVAREZ		Jueves	13:00 - 16:00	Teórico Práctica	L4-PC - PC	30
+CURSO 02 - ALVAREZ		Jueves	19:00 - 22:00	Práctica	L4-PC - PC	30
+ORGANIZACION DE COMPUTADORAS ( 6620 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - HAMKALO		Lunes	16:00 - 19:00	Teórica	Aula a determinar - Edificio a determinar	35
+CURSO 01 - HAMKALO		Viernes	19:00 - 22:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	35
+SISTEMAS GRÁFICOS ( 6671 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ALVAREZ HAMELIN		Martes	16:00 - 19:00	Teórica	L3-PC - PC	20
+CURSO 01 - ALVAREZ HAMELIN		Jueves	16:00 - 19:00	Práctica Obligatoria	L3-PC - PC	20
+MODELOS Y OPTIMIZACION II ( 7115 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GIOSCIO		Jueves	17:00 - 23:00	Teórico Práctica Obligatoria	103-LH - LH	
+MODELOS Y OPTIMIZACION III ( 7120 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RAMOS		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	111-LH - LH	10
+ANÁLISIS Y RESOLUCIÓN DE PROBLEMAS ( 7141 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RAMOS		Martes	18:30 - 22:30	Teórico Práctica Obligatoria	103-LH - LH	10
+INGENIERIA ECONOMICA ( 7146 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DI FIORE		Jueves	19:00 - 23:00	Teórico Práctica Obligatoria	104-LH - LH	
+TECNICAS DE DISEÑO ( 7510 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - PAEZ		Lunes	08:00 - 12:00	Teórico Práctica Obligatoria	509 - PC - PC	2
+CURSO 02 - PAEZ		Jueves	08:00 - 12:00	Teórico Práctica Obligatoria	509 - PC - PC	2
+CURSO 03 - ROJAS		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	2
+LENGUAJES FORMALES ( 7514 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERGMAN		Martes	19:00 - 23:00	Práctica Obligatoria	Clase Virtual-PC - PC	3
+CURSO 01 - BERGMAN		Miercoles	16:00 - 19:00	Teórica Obligatoria	Clase Virtual-PC - PC	3
+BASE DE DATOS ( 7515 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 03 - CABRERA		Martes	19:00 - 22:00	Teórica Obligatoria	105-PC - PC	3
+CURSO 03 - CABRERA		Jueves	19:00 - 22:00	Práctica Obligatoria	107-PC - PC	3
+CURSO 04 - SERVETTO		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	3
+CURSO 04 - SERVETTO		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	221-PC - PC	3
+SIMULACION ( 7526 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAIAFA		Lunes	19:00 - 22:00	Práctica Obligatoria	507 - PC - PC	3
+CURSO 01 - CAIAFA		Viernes	19:00 - 22:00	Teórica Obligatoria	507 - PC - PC	3
+INTRODUCCION A LOS SISTEMAS DISTRIBUIDOS ( 7543 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ALVAREZ HAMELIN		Martes	19:00 - 22:00	Práctica Obligatoria	500 - PC - PC	6
+CURSO 01 - ALVAREZ HAMELIN		Jueves	18:00 - 21:00	Práctica Obligatoria	500 - PC - PC	6
+CURSO 01 - ALVAREZ HAMELIN		Viernes	19:00 - 22:00	Teórica Obligatoria	403 - PC - PC	6
+ADM. Y CONTROL DE PROY. INFORMATICOS I ( 7544 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - TURRI		Jueves	16:00 - 17:00	Desarrollo y Consulta	E3 - PC - PC	2
+CURSO 02 - TURRI		Jueves	17:00 - 22:00	Teórico Práctica Obligatoria	221-PC - PC	2
+CURSO 03 - FONTDEVILA		Lunes	16:00 - 22:00	Teórico Práctica Obligatoria	222-PC - PC	2
+TALLER DE DESARROLLO DE PROYECTOS I ( 7545 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PIÑEIRO		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula 2-PC - PC	20
+CURSO 01 - PIÑEIRO		Jueves	18:00 - 22:00	Teórico Práctica Obligatoria	422-PC - PC	20
+ADM. Y CONTROL DE PROY. INFORMATICOS II ( 7546 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAROLO		Lunes	17:00 - 23:00	Teórico Práctica Obligatoria	Lab AT - PC - PC	5
+TALLER DE DESARROLLO DE PROYECTOS II ( 7547 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MOLINARI		Lunes	17:00 - 23:00	Teórico Práctica Obligatoria	313-PC - PC	40
+CALIDAD EN DESARROLLO DE SISTEMAS ( 7548 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FONTDEVILA		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	319-PC - PC	2
+TECNICAS DE PRODUCCION DE SOFTWARE I ( 7551 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - TURRI		Viernes	19:00 - 23:00	Teórico Práctica Obligatoria	422-PC - PC	10
+ORG. DE LA IMPLANTACION Y EL MANTENIM. ( 7556 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GUARNA		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	5
+CURSO 01 - GUARNA		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	5
+EVALUACION DE PROY. Y MANEJO DE RIESGOS ( 7558 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VILLAGRA		Jueves	18:30 - 22:30	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	2
+TECNICAS DE PROGRAMACION CONCURRENTE I ( 7559 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DEYMONNAZ		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	310-PC - PC	5
+CURSO 01 - DEYMONNAZ		Miercoles	19:00 - 22:00	Práctica Obligatoria	510 - PC - PC	5
+TALLER DE PROGRAMACION III ( 7561 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FERRIGNO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	5
+MANUFACTURA INTEGRADA POR COMP.(CIM) II ( 7566 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - IERACHE		Lunes	16:00 - 19:00	Teórica Obligatoria	Clase Virtual-PC - PC	40
+CURSO 01 - IERACHE		Jueves	19:00 - 22:00	Práctica Obligatoria	Clase Virtual-PC - PC	40
+SIST.DE PROG. NO CONVENCIONAL DE ROBOTS ( 7570 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MERLINO		Lunes	07:00 - 10:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	30
+CURSO 01 - MERLINO		Miercoles	07:00 - 10:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	30
+ARQUITECTURA DEL SOFTWARE ( 7573 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CALONICO		Jueves	18:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	30
+SISTEMAS DISTRIBUIDOS I ( 7574 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ROCA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	416-PC, 414-PC - PC, PC	
+CURSO 01 - ROCA		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	510 - PC - PC	
+CURSO 02 - ESPINA		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	507 - PC - PC	5
+CURSO 02 - ESPINA		Viernes	18:00 - 21:00	Teórico Práctica Obligatoria	411 - PC - PC	5
+IDIOMA INGLES ( 7801 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VEGA-Paseo Colón		Lunes	19:00 - 23:00	Teórico Práctica Obligatoria	A ASIGN - LH	30
+CURSO 02 - BORRELLO-PASEO COLON		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	512 - PC - PC	30
+CURSO 03 - ORTIZ-LAS HERAS		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	513 - PC - PC	30
+CURSO 04 - SPIZZO-LAS HERAS		Viernes	08:00 - 12:00	Teórico Práctica Obligatoria	13-LH - LH	30
+ANÁLISIS MATEMÁTICO II ( CB001 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MANCILLA AGUILAR		Martes	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 01 - MANCILLA AGUILAR		Martes	11:00 - 13:00	Práctica	203-PC, 510 - PC - PC, PC	120
+CURSO 01 - MANCILLA AGUILAR		Jueves	11:00 - 13:00	Práctica	201-PC - PC	120
+CURSO 01 - MANCILLA AGUILAR		Jueves	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 02 - LOPEZ		Martes	09:00 - 11:00	Práctica	411 - PC - PC	125
+CURSO 02 - LOPEZ		Martes	07:00 - 09:00	Teórica	403 - PC - PC	125
+CURSO 02 - LOPEZ		Jueves	09:00 - 11:00	Práctica	411 - PC - PC	125
+CURSO 02 - LOPEZ		Jueves	07:00 - 09:00	Teórica	403 - PC - PC	125
+CURSO 03 - BUCELLO		Lunes	11:00 - 13:00	Práctica	313-PC - PC	75
+CURSO 03 - BUCELLO		Lunes	09:00 - 11:00	Teórica	313-PC - PC	75
+CURSO 03 - BUCELLO		Miercoles	09:00 - 11:00	Teórica	313-PC - PC	75
+CURSO 03 - BUCELLO		Miercoles	11:00 - 13:00	Práctica	313-PC - PC	75
+CURSO 04 - ZITTO		Martes	11:00 - 13:00	Teórica	400-PC - PC	125
+CURSO 04 - ZITTO		Martes	09:00 - 11:00	Práctica	313-PC - PC	125
+CURSO 04 - ZITTO		Viernes	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 04 - ZITTO		Viernes	11:00 - 13:00	Teórica	400-PC - PC	125
+CURSO 05 - MAULHARDT		Martes	11:00 - 13:00	Práctica	200-PC - PC	150
+CURSO 05 - MAULHARDT		Martes	09:00 - 11:00	Teórica	403 - PC - PC	150
+CURSO 05 - MAULHARDT		Viernes	11:00 - 13:00	Práctica	411 - PC - PC	150
+CURSO 05 - MAULHARDT		Viernes	09:00 - 11:00	Teórica	403 - PC - PC	150
+CURSO 06 - SOLA		Lunes	13:00 - 15:00	Práctica	319-PC - PC	130
+CURSO 06 - SOLA		Lunes	15:00 - 17:00	Teórica	500 - PC - PC	130
+CURSO 06 - SOLA		Miercoles	15:00 - 17:00	Teórica	500 - PC - PC	130
+CURSO 06 - SOLA		Miercoles	13:00 - 15:00	Práctica	500 - PC - PC	130
+CURSO 07 - PUEBLA		Lunes	09:00 - 11:00	Teórica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Lunes	11:00 - 13:00	Práctica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Miercoles	09:00 - 11:00	Teórica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Miercoles	11:00 - 13:00	Práctica	E9 - PC - PC	75
+CURSO 09 - PASTOR		Lunes	11:00 - 13:00	Teórica	400-PC - PC	120
+CURSO 09 - PASTOR		Lunes	09:00 - 11:00	Práctica	107-PC, 411 - PC - PC, PC	120
+CURSO 09 - PASTOR		Miercoles	11:00 - 13:00	Teórica	400-PC - PC	120
+CURSO 09 - PASTOR		Miercoles	09:00 - 11:00	Práctica	319-PC - PC	120
+CURSO 10 - SASYK		Lunes	15:00 - 17:00	Práctica	203-PC - PC	75
+CURSO 10 - SASYK		Lunes	13:00 - 15:00	Teórica	203-PC - PC	75
+CURSO 10 - SASYK		Miercoles	13:00 - 15:00	Teórica	203-PC - PC	75
+CURSO 10 - SASYK		Miercoles	15:00 - 17:00	Práctica	203-PC - PC	75
+CURSO 11 - DE ROSSI		Martes	16:00 - 18:00	Teórica	418-PC - PC	125
+CURSO 11 - DE ROSSI		Martes	14:00 - 16:00	Práctica	305-PC - PC	125
+CURSO 11 - DE ROSSI		Jueves	16:00 - 18:00	Teórica	201-PC - PC	125
+CURSO 11 - DE ROSSI		Jueves	14:00 - 16:00	Práctica	302-PC - PC	125
+CURSO 12- CENTENO		Martes	16:00 - 18:00	Práctica	313-PC - PC	120
+CURSO 12- CENTENO		Martes	14:00 - 16:00	Teórica	418-PC - PC	120
+CURSO 12- CENTENO		Jueves	14:00 - 16:00	Teórica	201-PC - PC	120
+CURSO 12- CENTENO		Jueves	16:00 - 18:00	Práctica	310-PC - PC	120
+CURSO 14 - COMAS		Martes	18:00 - 20:00	Teórica	E9 - PC - PC	75
+CURSO 14 - COMAS		Martes	20:00 - 22:00	Práctica	302-PC - PC	75
+CURSO 14 - COMAS		Viernes	20:00 - 22:00	Práctica	400-PC - PC	75
+CURSO 14 - COMAS		Viernes	18:00 - 20:00	Teórica	400-PC - PC	75
+CURSO 15 - SEMINARA		Lunes	17:00 - 19:00	Práctica	302-PC - PC	125
+CURSO 15 - SEMINARA		Lunes	19:00 - 21:00	Teórica	403 - PC - PC	125
+CURSO 15 - SEMINARA		Miercoles	19:00 - 21:00	Teórica	107-PC - PC	125
+CURSO 15 - SEMINARA		Miercoles	17:00 - 19:00	Práctica	201-PC, 400-PC - PC, PC	125
+CURSO 16 - GONZALEZ		Martes	20:00 - 22:00	Práctica	411 - PC, 509 - PC - PC, PC	90
+CURSO 16 - GONZALEZ		Martes	18:00 - 20:00	Teórica	411 - PC, 509 - PC - PC, PC	90
+CURSO 16 - GONZALEZ		Jueves	18:00 - 20:00	Teórica	411 - PC - PC	90
+CURSO 16 - GONZALEZ		Jueves	20:00 - 22:00	Práctica	411 - PC - PC	90
+ÁLGEBRA LINEAL ( CB002 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VARGAS		Lunes	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Lunes	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Lunes	09:00 - 11:00	Teórica	403 - PC - PC	125
+CURSO 01 - VARGAS		Miercoles	11:02 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Miercoles	09:00 - 11:00	Teórica	403 - PC - PC	125
+CURSO 01 - VARGAS		Miercoles	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 02 - VIBRENTIS		Martes	14:00 - 16:00	Teórica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Martes	16:00 - 18:00	Práctica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Jueves	16:00 - 18:00	Práctica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Jueves	14:00 - 16:00	Teórica	400-PC - PC	125
+CURSO 04 - LOPEZ		Martes	09:00 - 11:00	Práctica	510 - PC, 200-PC - PC, PC	125
+CURSO 04 - LOPEZ		Martes	11:00 - 13:00	Teórica	403 - PC - PC	125
+CURSO 04 - LOPEZ		Jueves	11:00 - 13:00	Teórica	403 - PC - PC	125
+CURSO 04 - LOPEZ		Jueves	09:00 - 11:00	Práctica	510 - PC - PC	125
+CURSO 05 - PALACIOS		Miercoles	09:00 - 11:00	Teórica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Miercoles	11:00 - 13:00	Práctica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Viernes	09:00 - 11:00	Teórica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Viernes	11:00 - 13:00	Práctica	510 - PC - PC	75
+CURSO 06 - BOGGI		Lunes	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 06 - BOGGI		Lunes	11:00 - 13:00	Práctica	201-PC - PC	120
+CURSO 06 - BOGGI		Miercoles	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 06 - BOGGI		Miercoles	11:00 - 13:00	Práctica	319-PC - PC	120
+CURSO 07 - CENTENO		Martes	09:00 - 11:00	Teórica	500 - PC - PC	120
+CURSO 07 - CENTENO		Martes	11:00 - 13:00	Práctica	500 - PC - PC	120
+CURSO 07 - CENTENO		Jueves	09:00 - 11:00	Teórica	500 - PC - PC	120
+CURSO 07 - CENTENO		Jueves	11:00 - 13:00	Práctica	202-PC - PC	120
+CURSO 10 - CHARO		Miercoles	09:00 - 11:00	Teórica	203-PC - PC	75
+CURSO 10 - CHARO		Miercoles	11:00 - 13:00	Práctica	203-PC - PC	75
+CURSO 10 - CHARO		Viernes	11:00 - 13:00	Práctica	203-PC - PC	75
+CURSO 10 - CHARO		Viernes	09:00 - 11:00	Teórica	203-PC - PC	75
+CURSO 13 - CABANA		Miercoles	13:00 - 15:00	Práctica	418-PC - PC	125
+CURSO 13 - CABANA		Miercoles	15:00 - 17:00	Teórica	510 - PC - PC	125
+CURSO 13 - CABANA		Viernes	13:00 - 15:00	Práctica	418-PC - PC	125
+CURSO 13 - CABANA		Viernes	15:00 - 17:00	Teórica	510 - PC - PC	125
+CURSO 15 - PALAU		Lunes	19:00 - 21:00	Práctica	407 - PC - PC	90
+CURSO 15 - PALAU		Lunes	17:00 - 19:00	Teórico	500 - PC - PC	90
+CURSO 15 - PALAU		Miercoles	17:00 - 19:00	Teórico	400-PC, 201-PC - PC, PC	90
+CURSO 15 - PALAU		Miercoles	19:00 - 21:00	Práctica	407 - PC - PC	90
+CURSO 17 - VALDETTARO		Martes	07:00 - 09:00	Teórica	500 - PC - PC	75
+CURSO 17 - VALDETTARO		Martes	09:00 - 11:00	Práctica	319-PC - PC	75
+CURSO 17 - VALDETTARO		Jueves	09:00 - 11:00	Práctica	319-PC - PC	75
+CURSO 17 - VALDETTARO		Jueves	07:00 - 09:00	Teórica	500 - PC - PC	75
+CURSO 19 - GARCIA SERRANO		Lunes	13:00 - 15:00	Teórica	200-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Lunes	15:00 - 17:00	Práctica	201-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Miercoles	13:00 - 15:00	Teórica	200-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Miercoles	15:00 - 17:00	Práctica	201-PC - PC	75
+CURSO 23 - GRYNBERG		Lunes	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Lunes	07:00 - 09:00	Teórica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Miercoles	07:00 - 09:00	Teórica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Miercoles	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 24 - PERALTA		Lunes	15:00 - 17:00	Teórica	510 - PC - PC	70
+CURSO 24 - PERALTA		Lunes	17:00 - 19:00	Práctica	107-PC - PC	70
+CURSO 24 - PERALTA		Miercoles	15:00 - 17:00	Teórica	310-PC - PC	70
+CURSO 24 - PERALTA		Miercoles	17:00 - 19:00	Práctica	313-PC - PC	70
+CURSO 25 - ORECCHIA		Martes	16:00 - 18:00	Teórica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Martes	18:00 - 20:00	Práctica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Jueves	16:00 - 18:00	Teórica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Jueves	18:00 - 20:00	Práctica	416-PC - PC	70
+PROBABILIDAD Y ESTADÍSTICA ( CB003 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PEREZ		Lunes	09:00 - 13:00	Teórico-Práctica	500 - PC - PC	64
+CURSO 01 - PEREZ		Miercoles	09:00 - 11:00	Teórico-Práctica	500 - PC - PC	64
+CURSO 02 - PUEBLA		Lunes	15:00 - 17:00	Teórico-Práctica	302-PC - PC	64
+CURSO 02 - PUEBLA		Miercoles	15:00 - 19:00	Teórico-Práctica	313-PC - PC	64
+CURSO 03 - BELLO		Lunes	19:00 - 23:00	Teórico-Práctica	313-PC - PC	64
+CURSO 03 - BELLO		Miercoles	19:00 - 21:00	Teórico-Práctica	202-PC - PC	64
+CURSO 04 - SOSA		Martes	09:00 - 13:00	Teórico-Práctica	310-PC - PC	64
+CURSO 04 - SOSA		Viernes	09:00 - 11:00	Teórico-Práctica	310-PC - PC	64
+CURSO 05 - SOSA		Martes	14:00 - 18:00	Teórico Práctica	E9 - PC, 203-PC - PC, PC	64
+CURSO 05 - SOSA		Viernes	14:00 - 16:00	Teórico Práctica	E9 - PC, 203-PC - PC, PC	64
+CURSO 06 - BELLO		Martes	19:00 - 23:00	Teórico-Práctica	305-PC - PC	64
+CURSO 06 - BELLO		Jueves	19:00 - 21:00	Teórico-Práctica	305-PC - PC	64
+CURSO 07 - KORNBLIT		Miercoles	17:00 - 19:00	Teórico-Práctica	510 - PC - PC	64
+CURSO 07 - KORNBLIT		Viernes	17:00 - 21:00	Teórico-Práctica	418-PC - PC	64
+CURSO 08 - DI IORIO		Lunes	09:00 - 11:00	Teórico-Práctica	310-PC - PC	64
+CURSO 08 - DI IORIO		Miercoles	09:00 - 13:00	Teórico-Práctica	Aula a determinar - Edificio a determinar	64
+CURSO 10 - PEÑA (REMOTO SINCRONICO PARA RECURSANTES)		Martes	09:00 - 13:00	Teórico Práctica	Clase Virtual-PC - PC	25
+CURSO 10 - PEÑA (REMOTO SINCRONICO PARA RECURSANTES)		Jueves	11:00 - 13:00	Teórico Práctica	Clase Virtual-PC - PC	25
+ANÁLISIS MATEMÁTICO III ( CB005 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - MURMIS		Lunes	20:00 - 22:00	Práctica	418-PC - PC	55
+CURSO 02 - MURMIS		Lunes	18:00 - 20:00	Teórica	418-PC - PC	55
+CURSO 02 - MURMIS		Miercoles	20:00 - 22:00	Práctica	418-PC - PC	55
+CURSO 02 - MURMIS		Miercoles	18:00 - 20:00	Teórica	418-PC - PC	55
+CURSO 04 - GONZALEZ		Martes	16:00 - 18:00	Práctica	510 - PC - PC	55
+CURSO 04 - GONZALEZ		Martes	14:00 - 16:00	Teórica	510 - PC - PC	55
+CURSO 04 - GONZALEZ		Jueves	16:00 - 18:00	Práctica	500 - PC - PC	55
+CURSO 04 - GONZALEZ		Jueves	14:00 - 16:00	Teórica	510 - PC - PC	55
+FÍSICA PARA INFORMÁTICA ( CB024 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MACIAS		Miercoles	14:00 - 18:00	Teórico Práctica Obligatoria	305-PC - PC	50
+CURSO 02 - SORICHETTI		Jueves	14:00 - 18:00	Teórico Práctica Obligatoria	414-PC - PC	50
+CURSO 03 - DI LUOZZO		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	402-PC - PC	50
+CURSO 04 - MATTEO		Jueves	09:00 - 13:00	Teórico Práctica Obligatoria	407 - PC, 203-PC - PC, PC	50
+MODELACIÓN NUMÉRICA ( CB051 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RE		Jueves	14:00 - 18:00	Teórico Práctica Obligatoria	Clase Virtual-PC, 303-LH - PC, LH	90
+CURSO 02 - TARELA		Lunes	18:00 - 20:00	Teórica Obligatoria	414-PC - PC	45
+CURSO 02 - TARELA		Lunes	20:00 - 22:00	Práctica Obligatoria	414-PC - PC	45
+CURSO 03 - GRIGGIO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	310-PC - PC	90
+CURSO 04 - SCHWARZ		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	A ASIGN - PC	90
+CURSO 05 - GARCIA		Miercoles	19:00 - 21:00	Teórica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 05 - GARCIA		Sabado	08:00 - 10:00	Práctica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 06 - RODRIGUEZ		Miercoles	15:00 - 19:00	Teórico Práctica Obligatoria	407 - PC - PC	50
+CURSO 07 - CAVALIERE		Martes	18:00 - 20:00	Teórica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 07 - CAVALIERE		Martes	20:00 - 22:00	Práctica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 08 - BALZAROTTI		Martes	14:00 - 18:00	Práctica Obligatoria	Clase Virtual-PC - PC	45
+CURSO 09 - TARELA		Lunes	18:00 - 20:00	Práctica Obligatoria	416-PC - PC	45
+CURSO 09 - TARELA		Lunes	16:00 - 18:00	Teórica Obligatoria	416-PC - PC	45
+ALGORITMOS Y ESTRUCTURAS DE DATOS ( CB100 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SCHMIDT		Miercoles	19:00 - 22:00	Teórica Obligatoria	Clase Virtual-PC - PC	40
+CURSO 01 - SCHMIDT		Jueves	19:00 - 22:00	Práctica Obligatoria	Clase Virtual-PC - PC	40
+CURSO 02 - BUCHWALD		Miercoles	17:00 - 20:00	Teórica Obligatoria	200-PC - PC	110
+CURSO 02 - BUCHWALD		Jueves	18:00 - 21:00	Práctica Obligatoria	Clase Virtual-PC - PC	110
+CURSO 03 - JUAREZ		Martes	18:00 - 21:00	Teórica Obligatoria	LA - PC - PC	80
+CURSO 03 - JUAREZ		Jueves	18:00 - 21:00	Práctica Obligatoria	319-PC - PC	80
+CURSO 04 - PANDOLFO		Martes	18:00 - 21:00	Teórico Práctica Obligatoria	LF - PC - PC	80
+CURSO 04 - PANDOLFO		Jueves	18:00 - 21:00	Práctica Obligatoria	503 - PC - PC	80
+FUNDAMENTOS MATEMÁTICOS DE LA CRIPTOGRAFÍA ( CB101 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SASYK		Miercoles	18:00 - 21:00	Teórico Práctica Obligatoria	E5 - PC - PC	50
+GERENCIAMIENTO DE LA CALIDAD ( TA024 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - KOLL		Viernes	18:30 - 22:30	Teórico Práctica Obligatoria	103-LH - LH	100
+ENERGÍAS RENOVABLES ( TA039 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - OTERO		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	25
+USO EFICIENTE DE LA ENERGÍA ( TA040 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - TANIDES		Martes	15:00 - 19:00	Teórico Práctica Obligatoria	S27-PC - PC	20
+TECNOLOGÍAS EMERGENTES EN LA TRANSICIÓN ENERGÉTICA ( TA042 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VINSON		Viernes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	
+SISTEMAS OPERATIVOS ( TA043 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MENDEZ		Miercoles	18:00 - 21:00	Teórica Obligatoria	403 - PC - PC	135
+CURSO 01 - MENDEZ		Viernes	19:00 - 22:00	Práctica Obligatoria	A ASIGN - PC	135
+CURSO 02 - ESPINA		Martes	18:00 - 21:00	Teórica	400-PC - PC	135
+CURSO 02 - ESPINA		Viernes	19:00 - 22:00	Práctica	Clase Virtual-PC - PC	135
+BASE DE DATOS ( TA044 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ROMAN		Martes	19:00 - 22:00	Teórica Obligatoria	509 - PC - PC	110
+CURSO 01 - ROMAN		Miercoles	19:00 - 22:00	Práctica Obligatoria	313-PC - PC	110
+CURSO 03 - CABRERA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	105-PC - PC	75
+CURSO 03 - CABRERA		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	107-PC - PC	75
+CURSO 04 - SERVETTO		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	45
+CURSO 04 - SERVETTO		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	221-PC - PC	45
+TALLER DE PROGRAMACIÓN ( TA045 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VEIGA		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	510 - PC - PC	100
+CURSO 01 - VEIGA		Jueves	18:00 - 22:00	Desarrollo y Consulta	Clase Virtual-PC - PC	100
+CURSO 02 - DEYMONNAZ		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	203-PC - PC	90
+CURSO 02 - DEYMONNAZ		Jueves	18:00 - 22:00	Desarrollo y Consulta	E3 - PC - PC	90
+CURSO 03 - CAMEJO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	30
+INGENIERÍA DE SOFTWARE I ( TA046 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VILLAGRA		Lunes	18:30 - 21:30	Teórico Práctica Obligatoria	107-PC - PC	75
+CURSO 01 - VILLAGRA		Jueves	18:30 - 21:30	Teórico Práctica Obligatoria	509 - PC - PC	75
+CURSO 02 - MONTALDO		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	302-PC - PC	75
+CURSO 02 - MONTALDO		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	E7 - PC, 416-PC - PC, PC	75
+CURSO 03 - LEVERONI		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	222-PC - PC	68
+CURSO 03 - LEVERONI		Viernes	18:00 - 22:00	Teórico Práctica Obligatoria	310-PC - PC	68
+CIENCIA DE DATOS ( TA047 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MARTINELLI		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	60
+CURSO 01 - MARTINELLI		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	60
+CURSO 02 - RODRIGUEZ		Martes	19:00 - 22:00	Teórica Obligatoria	Clase Virtual-PC - PC	60
+CURSO 02 - RODRIGUEZ		Jueves	19:00 - 22:00	Práctica Obligatoria	Clase Virtual-PC - PC	60
+REDES ( TA048 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ALVAREZ HAMELIN		Martes	19:00 - 22:00	Práctica Obligatoria	500 - PC - PC	160
+CURSO 01 - ALVAREZ HAMELIN		Jueves	18:00 - 21:00	Práctica Obligatoria	500 - PC - PC	160
+CURSO 01 - ALVAREZ HAMELIN		Viernes	19:00 - 22:00	Teórica Obligatoria	403 - PC - PC	160
+CURSO 03 - VOLPI		Miercoles	13:00 - 16:00	Teórico Práctica Obligatoria	202-PC - PC	80
+CURSO 03 - VOLPI		Viernes	16:00 - 19:00	Teórico Práctica Obligatoria	510 - PC - PC	80
+INGENIERÍA DE SOFTWARE II ( TA049 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - PAEZ		Lunes	08:00 - 12:00	Teórico Práctica Obligatoria	509 - PC - PC	40
+CURSO 02 - PAEZ		Jueves	08:00 - 12:00	Teórico Práctica Obligatoria	509 - PC - PC	40
+CURSO 03 - ROJAS		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	70
+CURSO 03 - ROJAS		Viernes	18:00 - 21:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	70
+CURSO 04 - VOLPI		Lunes	16:00 - 19:00	Teórico Práctica Obligatoria	E3 - PC - PC	50
+CURSO 04 - VOLPI		Miercoles	16:00 - 19:00	Teórico Práctica Obligatoria	509 - PC - PC	50
+SISTEMAS DISTRIBUIDOS I ( TA050 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ROCA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	416-PC, 414-PC - PC, PC	80
+CURSO 01 - ROCA		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	510 - PC - PC	80
+CURSO 02 - ESPINA		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	507 - PC - PC	35
+CURSO 02 - ESPINA		Viernes	18:00 - 21:00	Teórico Práctica Obligatoria	411 - PC - PC	35
+TALLER DE SEGURIDAD INFORMÁTICA ( TA051 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PAGOLA		Lunes	19:30 - 22:30	Teórico Práctica Obligatoria	E9 - PC - PC	65
+CURSO 01 - PAGOLA		Viernes	19:30 - 22:30	Teórico Práctica Obligatoria	221-PC - PC	65
+CURSO 02 - MENDEZ		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	302-PC - PC	65
+CURSO 02 - MENDEZ		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	E9 - PC - PC	65
+APRENDIZAJE AUTOMÁTICO ( TA061 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MERLINO		Martes	07:00 - 10:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	40
+CURSO 01 - MERLINO		Jueves	07:00 - 10:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	40
+APRENDIZAJE PROFUNDO ( TA062 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LEW		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	20
+CURSO 01 - LEW		Miercoles	16:00 - 18:00	Clase de Consulta	Aula a determinar - Edificio a determinar	20
+FUNDAMENTOS DE PROGRAMACIÓN ( TB021 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GUARNA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	E3 - PC - PC	125
+CURSO 01 - GUARNA		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	200-PC - PC	125
+CURSO 02 - AZCURRA		Miercoles	16:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	120
+CURSO 03 - ESSAYA		Lunes	18:00 - 21:00	Teórica Obligatoria	Clase Virtual-PC - PC	85
+CURSO 03 - ESSAYA		Miercoles	18:00 - 21:00	Práctica Obligatoria	203-PC - PC	85
+CURSO 04 - MENDEZ		Martes	18:00 - 21:00	Teórica Obligatoria	201-PC - PC	85
+CURSO 04 - MENDEZ		Jueves	18:00 - 21:00	Práctica Obligatoria	500 - PC - PC	85
+INTRODUCCIÓN AL DESARROLLO DE SOFTWARE ( TB022 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAMEJO		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	265
+CURSO 01 - CAMEJO		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	403 - PC - PC	265
+CURSO 02 - LANZILLOTA		Lunes	18:30 - 21:30	Teórico Práctica	201-PC - PC	265
+CURSO 02 - LANZILLOTA		Miercoles	18:30 - 21:30	Teórico Práctica	500 - PC - PC	265
+ORGANIZACIÓN DEL COMPUTADOR ( TB023 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BENITEZ		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	60
+CURSO 01 - BENITEZ		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	60
+CURSO 03 - BURIN		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	411 - PC - PC	60
+CURSO 03 - BURIN		Martes	19:00 - 23:00	Teórico Práctica Obligatoria	407 - PC - PC	60
+CURSO 04 - VOLPI		Lunes	08:00 - 11:00	Teórica Obligatoria	200-PC, 203-PC - PC, PC	70
+CURSO 04 - VOLPI		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	411 - PC - PC	70
+CURSO 05 - MUSSO RODRIGUEZ		Martes	07:00 - 10:00	Teórica Obligatoria	200-PC - PC	160
+CURSO 05 - MUSSO RODRIGUEZ		Martes	19:00 - 22:00	Práctica Obligatoria	319-PC - PC	160
+CURSO 05 - MUSSO RODRIGUEZ		Martes	19:00 - 22:00	Práctica Obligatoria	221-PC - PC	160
+CURSO 05 - MUSSO RODRIGUEZ		Miercoles	19:00 - 22:00	Práctica Obligatoria	310-PC - PC	160
+CURSO 05 - MUSSO RODRIGUEZ		Jueves	19:00 - 22:00	Práctica Obligatoria	414-PC - PC	160
+TEORÍA DE ALGORITMOS ( TB024 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PODBEREZSKI		Lunes	19:00 - 22:00	Práctica Obligatoria	200-PC - PC	100
+CURSO 01 - PODBEREZSKI		Miercoles	19:00 - 22:00	Teórica Obligatoria	200-PC - PC	100
+CURSO 02 - BUCHWALD		Lunes	17:00 - 20:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	110
+CURSO 02 - BUCHWALD		Miercoles	17:00 - 20:00	Teórico Práctica Obligatoria	414-PC - PC	110
+CURSO 03 - ECHEVARRIA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	313-PC - PC	80
+CURSO 03 - ECHEVARRIA		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	302-PC - PC	80
+CURSO 04 - RAMOS		Lunes	19:00 - 22:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	32
+CURSO 04 - RAMOS		Miercoles	18:30 - 21:30	Teórica Obligatoria	103-LH - LH	32
+CURSO 04 - RAMOS		Sabado	10:00 - 13:00	Práctica Obligatoria	104-LH - LH	32
+PARADIGMAS DE PROGRAMACIÓN ( TB025 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SUAREZ		Martes	19:00 - 22:00	Práctica Obligatoria	403 - PC - PC	105
+CURSO 01 - SUAREZ		Jueves	19:00 - 22:00	Teórica Obligatoria	203-PC - PC	105
+CURSO 02 - BRASBURG		Martes	18:30 - 21:30	Teórico Práctica Obligatoria	303-PC - PC	80
+CURSO 02 - BRASBURG		Jueves	18:30 - 21:30	Teórico Práctica Obligatoria	310-PC - PC	80
+CURSO 03 - ESSAYA		Lunes	14:00 - 17:00	Práctica Obligatoria	Clase Virtual-PC - PC	105
+CURSO 03 - ESSAYA		Viernes	18:00 - 21:00	Práctica Obligatoria	Clase Virtual-PC - PC	105
+PROGRAMACIÓN CONCURRENTE ( TB026 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DEYMONNAZ		Martes	19:00 - 22:00	Teórica Obligatoria	310-PC - PC	120
+CURSO 01 - DEYMONNAZ		Miercoles	19:00 - 22:00	Práctica Obligatoria	510 - PC - PC	120
+CURSO 02 - MUSSO RODRIGUEZ		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	E14-PC - PC	50
+LENGUAJES Y COMPILADORES I ( TB027 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DEL MAZO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	40
+SIMULACIÓN ( TB028 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAIAFA		Lunes	19:00 - 22:00	Práctica Obligatoria	507 - PC - PC	32
+CURSO 01 - CAIAFA		Viernes	19:00 - 22:00	Teórica Obligatoria	507 - PC - PC	32
+COMPUTACIÓN CUÁNTICA ( TB032 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CARAM		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	211B-PC - PC	40
+CURSO 01 - CARAM		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	105-PC - PC	40
+ARQUITECTURA DE SOFTWARE ( TB034 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CALONICO		Jueves	18:00 - 22:00	Teórico Práctica Obligatoria	Clase Virtual-PC - PC	30
+GESTIÓN DEL DESARROLLO DE SISTEMAS INFORMÁTICOS ( TC017 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FONTELA		Miercoles	19:00 - 22:00	Práctica	302-PC - PC	78
+CURSO 01 - FONTELA		Miercoles	16:00 - 17:00	Desarrollo y Consulta	302-PC - PC	78
+CURSO 01 - FONTELA		Miercoles	17:00 - 19:00	Teórico Práctica Obligatoria	302-PC - PC	78
+CURSO 02 - TURRI		Jueves	16:00 - 17:00	Desarrollo y Consulta	E3 - PC - PC	50
+CURSO 02 - TURRI		Jueves	17:00 - 22:00	Teórico Práctica Obligatoria	221-PC - PC	50
+CURSO 03 - FONTDEVILA		Lunes	16:00 - 22:00	Teórico Práctica	222-PC - PC	50
+EMPRESAS DE BASE TECNOLÓGICA I ( TC018 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GODOY		Lunes	18:30 - 21:30	Teórico Práctica Obligatoria	400-PC - PC	200
+CURSO 01 - GODOY		Jueves	18:30 - 21:30	Teórico Práctica Obligatoria	201-PC - PC	200
+EMPRESAS DE BASE TECNOLÓGICA II ( TC019 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DI MAURO		Martes	18:00 - 21:00	Teórico Práctica Obligatoria	203-PC - PC	150
+CURSO 01 - DI MAURO		Jueves	18:00 - 21:00	Teórico Práctica Obligatoria	400-PC - PC	150
+INTRODUCCIÓN A LA INDUSTRIA, LOS SISTEMAS Y EL NEGOCIO AEROESPACIAL ( TC025 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SALVATIERRA		Lunes	11:00 - 15:00	Teórico Práctica Obligatoria	103-LH - LH	

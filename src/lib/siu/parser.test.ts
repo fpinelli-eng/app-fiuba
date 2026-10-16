@@ -115,3 +115,55 @@ describe("campusFromRoom", () => {
     expect(campusFromRoom(room)).toBe(campus);
   });
 });
+
+describe("parseSiuOffer with the public 'Horarios de cursada' table", () => {
+  const informatica = parseSiuOffer(fixture("informatica_2C2026_tabla-publica.txt"));
+  const civil = parseSiuOffer(fixture("civil_2C2026_tabla-publica.txt"));
+  const subject = (code: string) => informatica.offer.materias.find((m) => m.codigo === code)!;
+
+  it("detects each format", () => {
+    expect(informatica.format).toBe("public-table");
+    expect(parseSiuOffer(fixture("industrial-2023_2C2026.txt")).format).toBe("detail");
+    expect(parseSiuOffer("cualquier cosa").format).toBeNull();
+  });
+
+  it("reads every row, skipping the page menu and the search form", () => {
+    const commissions = informatica.offer.materias.flatMap((m) => m.comisiones);
+    expect(informatica.offer.periodo).toBe("2026 - 2do Cuatrimestre");
+    expect(informatica.offer.materias).toHaveLength(65);
+    expect(commissions).toHaveLength(150);
+    expect(commissions.flatMap((c) => c.horarios)).toHaveLength(331);
+    expect(informatica.warnings).toEqual(["línea 209: horario corregido 11:02 - 13:00"]);
+  });
+
+  it("groups the rows of each commission and reads the lead teacher from its name", () => {
+    const c = subject("7547").comisiones[0];
+    expect(subject("7547").nombre).toBe("TALLER DE DESARROLLO DE PROYECTOS II");
+    expect(c).toMatchObject({ nombre: "CURSO 01 - MOLINARI", numero: "01", docente_en_nombre: "MOLINARI", cupo: 40, es_condicional: false });
+    expect(c.horarios).toEqual([
+      { tipo: "Teórico Práctica Obligatoria", dia: "Lunes", inicio: "17:00", fin: "23:00", aula: "313-PC", sede: "Paseo Colón" },
+    ]);
+    expect(subject("CB001").comisiones[0].horarios).toHaveLength(4);
+  });
+
+  it("puts accents back on days and splits rooms from campuses", () => {
+    const guarna = subject("7556").comisiones[0].horarios;
+    expect(guarna.map((h) => h.dia)).toEqual(["Lunes", "Miércoles"]);
+    expect(guarna[0]).toMatchObject({ aula: "Clase Virtual-PC", sede: "Paseo Colón" });
+
+    const roca = subject("7574").comisiones[0];
+    expect(roca.cupo).toBeNull(); // empty "Cupo" column
+    expect(roca.horarios.map((h) => [h.aula, h.sede])).toEqual([
+      ["416-PC, 414-PC", "Paseo Colón"],
+      ["510 - PC", "Paseo Colón"],
+    ]);
+    expect(subject("7561").comisiones[0].horarios[0]).toMatchObject({ aula: null, sede: null });
+    expect(subject("7801").comisiones[0].horarios[0]).toMatchObject({ aula: null, sede: "Las Heras" });
+  });
+
+  it("marks CONDICIONALES", () => {
+    const commissions = civil.offer.materias.flatMap((m) => m.comisiones);
+    expect(commissions).toHaveLength(186);
+    expect(commissions.filter((c) => c.es_condicional)).toHaveLength(2);
+  });
+});

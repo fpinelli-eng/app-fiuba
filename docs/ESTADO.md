@@ -19,6 +19,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Proyecto base: Next.js 16, Tailwind 4, colores claro/oscuro, tipografía, barra superior, páginas vacías | `src/app/`, `src/components/` | En `main` (#1, PR #4) |
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | En `main` (#5, PR #10) |
+| El intérprete también lee la tabla pública de "Horarios de cursada" (todas las carreras, sin docentes) | `src/lib/siu/`, `data/siu/*_tabla-publica.txt` | PR #32 abierto |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
 | Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | En `main` (PR #14) |
 | Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
