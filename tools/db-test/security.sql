@@ -197,7 +197,15 @@ reset role;
 
 -- Deleting the account keeps the review, without author ---------------------------
 
-delete from auth.users where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role anon;
+select test.fails('select public.delete_my_account()', 'anon deletes an account');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select public.delete_my_account();
+reset role;
+select test.ok((select count(*) from auth.users where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 0, 'student deletes their account');
+select test.ok((select count(*) from auth.users where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 1, 'deleting an account leaves the others');
 select test.ok((select count(*) from public.reviews) = 1, 'review stays after deleting the account');
 select test.ok((select count(*) from public.review_authors) = 0, 'authorship is deleted with the account');
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
