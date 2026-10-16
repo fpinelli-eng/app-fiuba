@@ -37,7 +37,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 ## Qué falta, en orden
 
-1. **Administración, lo que falta:** quitar o volver a mostrar cursos, reemplazar la oferta de un plan con otro texto (conservando los cursos, para no perder sus reseñas), cursos con cambios respecto del cuatrimestre anterior y emparejar a mano materias con nombres abreviados. Segundo desarrollador.
+1. **Administración, lo que falta:** cursos con cambios respecto del cuatrimestre anterior, emparejar a mano materias que no coinciden por nombre y agregar electivas nuevas al plan. Quitar / volver a mostrar cursos y reemplazar la oferta sin borrar: PR abierto. Segundo desarrollador.
 2. **Plan del cuatrimestre, lo que falta:** "Reemplazar" en Administración actualizando los cursos existentes en vez de borrarlos ("Me inscribí en esta opción" ya está, PR #40). Para la beta, Química e Informática se publican directo con la oferta completa. Segundo desarrollador.
 3. **Reseñas, lo que falta:** la pantalla del plan bloqueado, que puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.

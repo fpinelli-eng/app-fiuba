@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { commissionKey, previewImport, sameLead, termFromPeriodo } from "./offer-import";
+import { commissionKey, offeringKey, previewImport, sameLead, termFromPeriodo } from "./offer-import";
 
 const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), "utf-8");
 // Plan subjects as they would come from the database (ids are made up).
@@ -68,6 +68,20 @@ describe("course identity helpers", () => {
     const b = { siu_subject_code: "CB002", course_number: "01", label: "Curso 1 · práctica B" };
     expect(commissionKey(a)).toBe(commissionKey(b));
     expect(commissionKey({ ...a, course_number: "02" })).not.toBe(commissionKey(a));
+  });
+
+  it("identifies the same offering row when an offer is replaced", () => {
+    const row = { siu_subject_code: "CB002", course_number: "01", practice: "A" };
+    expect(offeringKey(row)).toBe(offeringKey({ ...row }));
+    expect(offeringKey({ ...row, practice: "B" })).not.toBe(offeringKey(row));
+    expect(offeringKey({ ...row, practice: null })).not.toBe(offeringKey(row));
+    // A replaced text gives the same keys for the courses that did not change.
+    const read = (p: string) => readFileSync(new URL(`../../../${p}`, import.meta.url), "utf-8");
+    const subjects = plan("industrial-2020.json");
+    const first = previewImport(read("data/siu/industrial-2023_2C2026.txt"), subjects, new Map()).drafts.map(offeringKey);
+    const again = previewImport(read("data/siu/industrial-2023_2C2026.txt"), subjects, new Map()).drafts.map(offeringKey);
+    expect(new Set(first).size).toBe(first.length); // no two rows share a key
+    expect(again).toEqual(first);
   });
 
   it("treats a surname and a full name as the same lead", () => {
