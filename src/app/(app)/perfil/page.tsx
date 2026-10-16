@@ -72,6 +72,18 @@ export default async function PerfilPage() {
         )}
       </section>
 
+      {account.isAdmin && (
+        <Card className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-[19px] font-semibold">Administración</h2>
+            <div className="mt-0.5 text-sm text-muted">Oferta del cuatrimestre por plan</div>
+          </div>
+          <Link href="/admin" className="inline-flex h-10 items-center rounded-[10px] bg-accent px-4 text-sm font-semibold text-on-accent">
+            Abrir
+          </Link>
+        </Card>
+      )}
+
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-[19px] font-semibold">Tus datos</h2>
         <div className="flex flex-wrap gap-2">
@@ -85,7 +97,12 @@ export default async function PerfilPage() {
         </div>
       </Card>
 
-      <footer className="pt-2 text-center text-[13px] text-muted">Hecho por estudiantes. No es un sitio oficial de la universidad.</footer>
+      <footer className="pt-2 text-center text-[13px] text-muted">
+        Hecho por estudiantes. No es un sitio oficial de la universidad. ·{" "}
+        <Link href="/privacidad" className="underline">
+          Privacidad
+        </Link>
+      </footer>
     </main>
   );
 }

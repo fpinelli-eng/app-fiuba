@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { APP_NAME } from "@/lib/app";
 import { isAllowedEmail } from "@/lib/auth";
@@ -56,6 +57,13 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
           <div className="mt-0.5">Probá de nuevo en un momento.</div>
         </div>
       )}
+
+      <footer className="mt-24 text-[13px] text-muted">
+        Hecho por estudiantes. No es un sitio oficial de la universidad. ·{" "}
+        <Link href="/privacidad" className="underline">
+          Privacidad
+        </Link>
+      </footer>
     </main>
   );
 }
