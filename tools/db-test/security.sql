@@ -61,6 +61,14 @@ select test.ok(
    where s.plan_id <> r.plan_id) = 0,
   'prerequisites stay inside their plan');
 select test.ok((select count(*) from public.subject_areas where plan_id = 'industrial-2023') = 5, 'Industrial 2023 has 5 elective areas');
+-- Fixes from the official plans (20261016180000_verified_plans_fixes.sql).
+select test.ok((select name from public.subjects where plan_id = 'quimica-2023' and code = 'CM1') = 'Conocimiento de Materiales Metálicos', 'Química: Materiales Metálicos');
+select test.ok(
+  (select count(*) from public.subject_prerequisites sp
+   join public.subjects s on s.id = sp.subject_id
+   join public.subjects p on p.id = sp.prerequisite_id
+   where s.plan_id = 'quimica-2023' and s.code = 'MI' and p.code in ('QO', 'IBP')) = 2,
+  'Química: Microbiología Industrial needs Química Orgánica and Ingeniería de Bioprocesos');
 select test.ok(
   (select count(*) from public.subjects where plan_id = 'industrial-2023' and kind = 'elective' and area_id is null) = 0,
   'every Industrial 2023 elective has an area');

@@ -47,4 +47,14 @@ Cada archivo es una lista de materias con estos campos:
 - `requiere`: créditos aprobados requeridos.
 - `requiereCBC`: si pide el CBC completo.
 
-**Antes de usarlos en producción:** cruzar cada plan contra su PDF oficial en fi.uba.ar/grado/carreras/…/plan-de-estudios.
+**Antes de usarlos en producción:** cruzar cada plan contra su resolución oficial (lista en fi.uba.ar/institucional/plan2020/planes-de-estudio-2023). Estos archivos quedan como los publica FIUBA Map, porque de ellos sale la migración de la semilla; las diferencias se corrigen en una migración aparte.
+
+### Verificados
+
+| Plan | Resolución | Diferencias corregidas |
+|---|---|---|
+| Industrial 2023 | RESCS-2023-1216, texto ordenado RCS-2024-63 | Ninguna |
+| Informática 2023 | RESCS-2023-1215 | Empresas de Base Tecnológica II va en el 10.º cuatrimestre (columna 8) |
+| Química 2023 | RESCS-2023-1927 | "Conocimiento de Materiales I" se llama Conocimiento de Materiales Metálicos (como en el SIU); Microbiología Industrial también pide Ingeniería de Bioprocesos; Emisiones de Contaminantes y Legislación van en el 11.º cuatrimestre (columna 9) |
+
+Se compararon materias, créditos, correlativas, créditos requeridos y cuatrimestre sugerido. Las correcciones están en `supabase/migrations/20261016180000_verified_plans_fixes.sql`. Ninguno de los tres planes agrupa sus electivas por área: las de Química e Informática se muestran en una sola lista (las áreas de Industrial salen del diseño).
