@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
-import type { OptionKey } from "@/lib/plan/data";
+import type { Entry, OptionKey } from "@/lib/plan/data";
 
 export type SaveResult = { error: string | null };
 
@@ -30,9 +30,14 @@ export async function savePlanOption(option: OptionKey, courseIds: string[]): Pr
 // "Me inscribí en esta opción": esos cursos pasan a ser la cursada del cuatrimestre actual
 // (user_courses), de donde salen las reseñas pendientes. Reemplaza la cursada de este
 // cuatrimestre; las de cuatrimestres anteriores no se tocan.
-export async function enrollInCourses(courseIds: string[]): Promise<SaveResult> {
+// En el mapa, sus materias quedan "Cursando", y las de la cursada anterior que ya no están
+// vuelven a quedar sin marcar (solo si estaban en "Cursando": nunca toca aprobadas ni finales).
+export async function enrollInCourses(entries: Entry[], droppedSubjects: string[]): Promise<SaveResult> {
   const account = await requireProfile();
-  const ids = courseIds.map(Number);
+  const ids = entries.map((e) => Number(e.course));
+  const subjectIds = entries.map((e) => Number(e.subject));
+  const dropped = droppedSubjects.map(Number).filter((id) => !subjectIds.includes(id));
+  if ([...subjectIds, ...dropped].some((id) => !Number.isInteger(id) || id <= 0)) return { error: "Materias inválidas." };
   if (ids.length === 0 || ids.length > 40 || ids.some((id) => !Number.isInteger(id) || id <= 0)) {
     return { error: "Elegí al menos un curso." };
   }
@@ -62,6 +67,33 @@ export async function enrollInCourses(courseIds: string[]): Promise<SaveResult> 
     }
     return { error: "No pudimos guardar tu cursada." };
   }
+  // The map: taking these subjects now.
+  const statuses = await supabase
+    .from("user_subjects")
+    .select("subject_id, status")
+    .eq("user_id", account.id)
+    .in("subject_id", [...subjectIds, ...dropped]);
+  if (statuses.error) return { error: "Guardamos tu cursada, pero no pudimos actualizar tu mapa." };
+  const statusOf = new Map(statuses.data.map((r) => [r.subject_id as number, r.status as string]));
+  const toMark = subjectIds.filter((id) => !statusOf.has(id));
+  const toClear = dropped.filter((id) => statusOf.get(id) === "in_progress");
+  if (toMark.length) {
+    const marked = await supabase
+      .from("user_subjects")
+      .insert(toMark.map((subject_id) => ({ user_id: account.id, subject_id, status: "in_progress", grade: null })));
+    if (marked.error) return { error: "Guardamos tu cursada, pero no pudimos actualizar tu mapa." };
+  }
+  if (toClear.length) {
+    const cleared = await supabase
+      .from("user_subjects")
+      .delete()
+      .eq("user_id", account.id)
+      .eq("status", "in_progress")
+      .in("subject_id", toClear);
+    if (cleared.error) return { error: "Guardamos tu cursada, pero no pudimos actualizar tu mapa." };
+  }
+
   revalidatePath("/");
+  revalidatePath("/mapa");
   return { error: null };
 }

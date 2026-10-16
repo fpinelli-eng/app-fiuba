@@ -96,11 +96,15 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   const planCourses = plan.map((e) => e.course);
   const isEnrolledHere =
     planCourses.length > 0 && planCourses.length === enrolled.length && planCourses.every((c) => enrolled.includes(c));
+  // Subjects of the courses enrolled before, to unmark them in the map if they are no longer taken.
+  const droppedSubjects = data.subjects
+    .filter((s) => s.courses.some((c) => enrolled.includes(c.id)))
+    .map((s) => s.code);
   const enroll = () => {
     setEnrollState("saving");
     // After any pending save, so both go in order.
     saving.current = saving.current
-      .then(() => enrollInCourses(planCourses))
+      .then(() => enrollInCourses(plan, droppedSubjects))
       .then((r) => {
         if (r.error) return setEnrollState("error");
         setEnrolled(planCourses);
