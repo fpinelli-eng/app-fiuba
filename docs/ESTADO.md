@@ -29,6 +29,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Mapa: web en São Paulo (`gru1`), botón "Carga rápida", ficha simplificada (sin "Necesita" ni "Habilita") | `vercel.json`, `src/app/(app)/mapa/` | En `main` (PR #21, #26, #27) |
 | Perfil: apariencia, mis reseñas, descargar mis datos, borrar mi cuenta | `src/app/(app)/perfil/`, `src/lib/reviews/mine.ts`, `supabase/migrations/20261016120000_delete_my_account.sql` | En `main` (PR #28) |
 | Reseñas: buscador, ficha del curso, reseñas pendientes con filtro de comentarios, contador en el menú y aviso en el inicio. Solo leen la oferta: hasta que se cargue, el buscador muestra "No se dicta este cuatrimestre" | `src/lib/reviews/`, `src/app/(app)/resenas/`, `tools/local-supabase/sample-offer.mjs` | PR abierto (#30, PR #31) |
+| Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | PR abierto (#8) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 
@@ -40,7 +41,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada (con la oferta y el plan guardado).
 6. **Moderación de reseñas** (administración).
-7. **#8 · Política de privacidad** y publicación de la app en Google, antes del lanzamiento. Revisar ahí también la protección de las vistas previas de Vercel.
+7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
 8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
 **Administradores:** Francisco y el segundo desarrollador (`profiles.is_admin`), marcados desde el editor SQL de Supabase. Para sumar a alguien: `update profiles set is_admin = true where id = (select id from auth.users where email = '<mail>');` (tiene que haber entrado a la web al menos una vez).
