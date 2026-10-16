@@ -1,0 +1,183 @@
+// From the text pasted by an admin to the rows of `offerings` and `offering_blocks` of one
+// plan (admin prototype 13-administracion). Pure functions: the screen shows the preview
+// and the publish action writes the drafts.
+
+import { normalizeText } from "../map/model";
+import { courseOptions, type CourseOption } from "../plan/options";
+import { parseSiuOffer, type SiuFormat, type Teacher } from "../siu/parser";
+
+/** A subject of the plan, as stored in `subjects`. */
+export interface PlanSubjectRef {
+  id: number;
+  name: string;
+}
+
+export interface MatchedSubject {
+  siuCode: string;
+  siuName: string;
+  subjectId: number;
+  subjectName: string;
+  courses: number;
+}
+
+export interface UnmatchedSubject {
+  siuCode: string;
+  siuName: string;
+  courses: number;
+}
+
+/** What the admin sees after "Procesar". Stored in offer_imports.parsed. */
+export interface ImportPreview {
+  format: SiuFormat | null;
+  /** e.g. "2026 - 2do Cuatrimestre", when the pasted text says it. */
+  periodo: string | null;
+  stats: { subjects: number; courses: number; blocks: number };
+  warnings: string[];
+  matched: MatchedSubject[];
+  /** SIU subjects that are not in this plan (other plan of the career, other careers): ignored. */
+  unmatched: UnmatchedSubject[];
+}
+
+export interface BlockDraft {
+  weekday: number; // 1 = Monday
+  starts_at: number; // minutes since midnight
+  ends_at: number;
+  class_type: string;
+  room: string | null;
+  campus: "PC" | "LH" | "CU" | null;
+  is_async: boolean;
+}
+
+/** One row of `offerings`, before it has a course_id. */
+export interface OfferingDraft {
+  subjectId: number;
+  siu_subject_code: string;
+  siu_subject_name: string;
+  course_number: string | null;
+  practice: string | null;
+  label: string;
+  modality: string | null;
+  teachers: Teacher[];
+  quota: number | null;
+  enrolled: number | null;
+  blocks: BlockDraft[];
+}
+
+const WEEKDAY: Record<string, number> = {
+  Lunes: 1,
+  Martes: 2,
+  Miércoles: 3,
+  Jueves: 4,
+  Viernes: 5,
+  Sábado: 6,
+  Domingo: 7,
+};
+
+const CAMPUS_CODE = { "Paseo Colón": "PC", "Las Heras": "LH", "Ciudad Universitaria": "CU" } as const;
+
+function toDraft(option: CourseOption, subjectId: number): OfferingDraft {
+  return {
+    subjectId,
+    siu_subject_code: option.subjectCode,
+    siu_subject_name: option.subjectName,
+    course_number: option.courseNumber,
+    practice: option.practice,
+    label: option.label,
+    modality: option.modality,
+    teachers: option.teachers,
+    quota: option.quota,
+    enrolled: option.enrolled,
+    blocks: option.blocks.map((b) => ({
+      weekday: WEEKDAY[b.day],
+      starts_at: b.start,
+      ends_at: b.end,
+      class_type: b.type,
+      room: b.room,
+      campus: b.campus ? CAMPUS_CODE[b.campus] : null,
+      is_async: b.async,
+    })),
+  };
+}
+
+/**
+ * Parses the pasted text and keeps the subjects of the plan. A SIU subject belongs to the
+ * plan when its code is already known (`subject_siu_codes`) or, failing that, when its
+ * name is the same as a plan subject's (ignoring accents and case).
+ */
+export function previewImport(
+  text: string,
+  planSubjects: PlanSubjectRef[],
+  knownCodes: Map<string, number>,
+): { preview: ImportPreview; drafts: OfferingDraft[] } {
+  const { offer, warnings, format } = parseSiuOffer(text);
+  const byId = new Map(planSubjects.map((s) => [s.id, s]));
+  const byName = new Map(planSubjects.map((s) => [normalizeText(s.name), s]));
+
+  const matched: MatchedSubject[] = [];
+  const unmatched: UnmatchedSubject[] = [];
+  const drafts: OfferingDraft[] = [];
+
+  for (const subject of offer.materias) {
+    const options = courseOptions(subject);
+    if (options.length === 0) continue; // only CONDICIONALES
+    const known = knownCodes.get(subject.codigo);
+    const planSubject = (known !== undefined ? byId.get(known) : undefined) ?? byName.get(normalizeText(subject.nombre));
+    if (!planSubject) {
+      unmatched.push({ siuCode: subject.codigo, siuName: subject.nombre, courses: options.length });
+      continue;
+    }
+    matched.push({
+      siuCode: subject.codigo,
+      siuName: subject.nombre,
+      subjectId: planSubject.id,
+      subjectName: planSubject.name,
+      courses: options.length,
+    });
+    drafts.push(...options.map((o) => toDraft(o, planSubject.id)));
+  }
+
+  return {
+    preview: {
+      format,
+      periodo: offer.periodo,
+      stats: {
+        subjects: matched.length,
+        courses: drafts.length,
+        blocks: drafts.reduce((n, d) => n + d.blocks.length, 0),
+      },
+      warnings,
+      matched,
+      unmatched,
+    },
+    drafts,
+  };
+}
+
+/** The same commission is offered to several plans: they share one course (and its reviews). */
+export function commissionKey(d: Pick<OfferingDraft, "siu_subject_code" | "course_number" | "label">): string {
+  return `${d.siu_subject_code}|${d.course_number ?? d.label}`;
+}
+
+/** First teacher's name in capitals: the lead of the commission. */
+export function leadOf(teachers: Pick<Teacher, "nombre">[] | null | undefined): string {
+  return (teachers?.[0]?.nombre ?? "").toUpperCase().trim();
+}
+
+/**
+ * A commission of an earlier term is the same course when it keeps its number and its
+ * lead teacher. "VARGAS" (public table) and "VARGAS GABRIELA" (detail) are the same lead.
+ * Changes (new number, new lead) get a new course; reviewing them is the next step of the
+ * admin screen ("Cursos con cambios").
+ */
+export function sameLead(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  return a === b || a.startsWith(`${b} `) || b.startsWith(`${a} `);
+}
+
+/** "2026 - 2do Cuatrimestre" → { year: 2026, half: 2 } */
+export function termFromPeriodo(periodo: string | null): { year: number; half: 1 | 2 } | null {
+  const m = periodo?.match(/(\d{4})\s*-\s*(\d)/);
+  if (!m) return null;
+  const half = Number(m[2]);
+  return half === 1 || half === 2 ? { year: Number(m[1]), half } : null;
+}
