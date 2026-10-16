@@ -1,7 +1,8 @@
-import { getSamplePlanData } from "@/lib/plan/sample-offer";
+import { getPlanData } from "@/lib/plan/data";
+import { requireProfile } from "@/lib/session";
 import { PlanBuilder } from "./PlanBuilder";
 
-export default function PlanPage() {
-  // Datos de prueba hasta que la oferta esté en la base de datos (#3).
-  return <PlanBuilder data={getSamplePlanData()} />;
+export default async function PlanPage() {
+  const account = await requireProfile();
+  return <PlanBuilder data={await getPlanData(account.id, account.planId!)} />;
 }

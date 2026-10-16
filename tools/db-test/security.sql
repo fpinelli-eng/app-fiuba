@@ -61,6 +61,14 @@ select test.ok(
    where s.plan_id <> r.plan_id) = 0,
   'prerequisites stay inside their plan');
 select test.ok((select count(*) from public.subject_areas where plan_id = 'industrial-2023') = 5, 'Industrial 2023 has 5 elective areas');
+-- Fixes from the official plans (20261016180000_verified_plans_fixes.sql).
+select test.ok((select name from public.subjects where plan_id = 'quimica-2023' and code = 'CM1') = 'Conocimiento de Materiales Metálicos', 'Química: Materiales Metálicos');
+select test.ok(
+  (select count(*) from public.subject_prerequisites sp
+   join public.subjects s on s.id = sp.subject_id
+   join public.subjects p on p.id = sp.prerequisite_id
+   where s.plan_id = 'quimica-2023' and s.code = 'MI' and p.code in ('QO', 'IBP')) = 2,
+  'Química: Microbiología Industrial needs Química Orgánica and Ingeniería de Bioprocesos');
 select test.ok(
   (select count(*) from public.subjects where plan_id = 'industrial-2023' and kind = 'elective' and area_id is null) = 0,
   'every Industrial 2023 elective has an area');
@@ -139,6 +147,16 @@ insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 
 select test.fails($$insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 2)$$, 'student adds a hidden offering');
 select test.fails($$insert into public.user_courses values ('aaaaaaaa-0000-0000-0000-000000000001', 3)$$, 'student adds an offering of another plan');
 
+-- Semester plan (Opción A / B).
+insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 1), ('aaaaaaaa-0000-0000-0000-000000000001', 'B', 1);
+select test.ok((select count(*) from public.plan_choices) = 2, 'student saves a course in both options');
+select test.fails($$insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 2)$$, 'student plans a hidden offering');
+select test.fails($$insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 3)$$, 'student plans an offering of another plan');
+select test.fails($$insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'C', 1)$$, 'student uses an option that is not A or B');
+select test.fails($$insert into public.plan_choices (user_id, option, offering_id) values ('bbbbbbbb-0000-0000-0000-000000000002', 'A', 1)$$, 'student writes the plan of another student');
+delete from public.plan_choices where option = 'B';
+select test.ok((select count(*) from public.plan_choices) = 1, 'student removes a course from an option');
+
 -- Reviews ---------------------------------------------------------------------------
 
 select test.fails('select public.submit_review(1, 5::smallint, null)', 'review before the review date');
@@ -199,6 +217,8 @@ select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-0000000
 select test.ok((select count(*) from public.user_subjects) = 0, 'another student does not see her subjects');
 select test.ok((select count(*) from public.user_requirements) = 0, 'another student does not see her requirements');
 select test.ok((select count(*) from public.user_courses) = 0, 'another student does not see her courses');
+select test.ok((select count(*) from public.plan_choices) = 0, 'another student does not see her plan');
+delete from public.plan_choices;  -- RLS: deletes nothing
 select test.ok((select count(*) from public.my_reviews()) = 0, 'another student does not get her review in my_reviews');
 select test.fails('select 1 from public.review_authors', 'admin reads review_authors');
 
@@ -217,6 +237,8 @@ select test.ok((select count(*) from public.reviews) = 0, 'students do not see h
 select test.ok((select bool_and(hidden) from public.my_reviews()), 'the author sees them as hidden');
 reset role;
 
+select test.ok((select count(*) from public.plan_choices) = 1, 'another student cannot delete her plan');
+
 -- Deleting the account keeps the review, without author ---------------------------
 
 set role anon;
@@ -231,5 +253,6 @@ select test.ok((select count(*) from auth.users where id = 'bbbbbbbb-0000-0000-0
 select test.ok((select count(*) from public.reviews) = 2, 'reviews stay after deleting the account');
 select test.ok((select count(*) from public.review_authors) = 0, 'authorship is deleted with the account');
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
+select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
 
 \echo 'All security checks passed.'

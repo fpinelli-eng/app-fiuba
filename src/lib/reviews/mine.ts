@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface MyReview {
   id: number;
+  courseId: number;
   stars: number;
   comment: string | null;
   hidden: boolean;
@@ -47,6 +48,7 @@ export async function getMyReviews(): Promise<MyReview[]> {
     const o = offeringOf(r);
     return {
       id: r.review_id,
+      courseId: r.course_id,
       stars: r.stars,
       comment: r.comment,
       hidden: r.hidden,
