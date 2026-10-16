@@ -20,7 +20,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Login con Google solo @fi.uba.ar, verificado en el servidor; pantalla de cuenta rechazada; perfil con cerrar sesión | `src/lib/session.ts`, `src/lib/auth.ts`, `src/lib/supabase/`, `src/proxy.ts`, `src/app/ingresar/`, `src/app/auth/` | En `main` (#2, PR #9), probado en producción |
 | Intérprete del SIU en TypeScript, con pruebas | `src/lib/siu/` | En `main` (#5, PR #10) |
 | El intérprete también lee la tabla pública de "Horarios de cursada" (todas las carreras, sin docentes) | `src/lib/siu/`, `data/siu/*_tabla-publica.txt` | En `main` (PR #32) |
-| Administración: cuatrimestre actual, fecha de reseñas, cargar la oferta del SIU por plan (procesar, resumen, materias fuera del plan, publicar) y ver la oferta publicada | `src/app/admin/`, `src/lib/admin/` | PR #33 abierto |
+| Administración: cuatrimestre actual, fecha de reseñas, cargar la oferta del SIU por plan (procesar, resumen, materias fuera del plan, publicar) y ver la oferta publicada | `src/app/admin/`, `src/lib/admin/` | En `main` (PR #33) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
 | Pantalla del plan del cuatrimestre con datos de prueba (oferta real de Industrial 2C 2026), sin guardado | `src/app/(app)/plan/`, `src/lib/plan/sample-offer.ts` | En `main` (PR #14) |
 | Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
@@ -28,13 +28,14 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Inicio: avance, promedio, materias, cursando y finales pendientes | `src/app/(app)/page.tsx` | En `main` (#24, PR #25) |
 | Mapa: web en São Paulo (`gru1`), botón "Carga rápida", ficha simplificada (sin "Necesita" ni "Habilita") | `vercel.json`, `src/app/(app)/mapa/` | En `main` (PR #21, #26, #27) |
 | Perfil: apariencia, mis reseñas, descargar mis datos, borrar mi cuenta | `src/app/(app)/perfil/`, `src/lib/reviews/mine.ts`, `supabase/migrations/20261016120000_delete_my_account.sql` | En `main` (PR #28) |
-| Reseñas: buscador, ficha del curso, reseñas pendientes con filtro de comentarios, contador en el menú y aviso en el inicio. Solo leen la oferta: hasta que se cargue, el buscador muestra "No se dicta este cuatrimestre" | `src/lib/reviews/`, `src/app/(app)/resenas/`, `tools/local-supabase/sample-offer.mjs` | PR abierto (#30, PR #31) |
+| Reseñas: buscador, ficha del curso, reseñas pendientes con filtro de comentarios, contador en el menú y aviso en el inicio. Solo leen la oferta: hasta que se cargue, el buscador muestra "No se dicta este cuatrimestre" | `src/lib/reviews/`, `src/app/(app)/resenas/`, `tools/local-supabase/sample-offer.mjs` | En `main` (#30, PR #31) |
+| Reseñas libres: cualquier alumno reseña cualquier curso desde su ficha ("Tu reseña"); una reseña por alumno y curso, que se edita | `supabase/migrations/20261016140000_free_reviews.sql`, `src/app/(app)/resenas/curso/[id]/MyReview.tsx` | PR abierto (#34, PR #35) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 
 ## Qué falta, en orden
 
-1. **Administración: carga de la oferta del SIU por plan** (prototipo `13-administracion`). Es lo que más destraba: sin oferta en la base, el plan, el calendario del inicio y las reseñas no tienen datos reales. Propuesta: lo hace el segundo desarrollador, que hizo el intérprete del SIU.
+1. **Administración, lo que falta:** quitar o volver a mostrar cursos, reemplazar la oferta de un plan con otro texto (conservando los cursos, para no perder sus reseñas), cursos con cambios respecto del cuatrimestre anterior y emparejar a mano materias con nombres abreviados. Segundo desarrollador.
 2. **Plan del cuatrimestre conectado a la base** (hoy usa `src/lib/plan/sample-offer.ts`), solo materias habilitadas, y guardar Opción A / B en su propia migración. Segundo desarrollador.
 3. **Reseñas, lo que falta:** "Editar" en el perfil. La pantalla del plan bloqueado puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`. Francisco.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
@@ -42,6 +43,8 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 6. **Moderación de reseñas** (administración).
 7. **#8 · Política de privacidad** y publicación de la app en Google, antes del lanzamiento. Revisar ahí también la protección de las vistas previas de Vercel.
 8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
+
+**Beta (decidido el 16 de octubre):** primero con tres carreras, Industrial, Química e Informática, cargadas con la oferta completa del SIU con sesión (prácticas, docentes y horarios de cada práctica). La prueban alumnos de confianza de esas carreras. Las demás carreras se suman después pegando su oferta en `/admin`, sin cambiar código; la tabla pública del SIU también sirve, con menos detalle. En la beta lo primero que se usa son las reseñas libres: las pendientes y el plan dependen de que el alumno haya armado su plan en la app.
 
 **Administradores:** Francisco y el segundo desarrollador (`profiles.is_admin`), marcados desde el editor SQL de Supabase. Para sumar a alguien: `update profiles set is_admin = true where id = (select id from auth.users where email = '<mail>');` (tiene que haber entrado a la web al menos una vez).
 

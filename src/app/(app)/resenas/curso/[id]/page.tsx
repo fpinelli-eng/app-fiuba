@@ -5,8 +5,10 @@ import type { ReactNode } from "react";
 import { StarIcon, Stars } from "@/components/Stars";
 import { APP_NAME } from "@/lib/app";
 import { getCourse } from "@/lib/reviews/catalog";
+import { getMyReviewOf } from "@/lib/reviews/mine";
 import { formatScore } from "@/lib/reviews/types";
 import { requireProfile } from "@/lib/session";
+import { MyReview } from "./MyReview";
 
 export const metadata: Metadata = { title: `Curso · ${APP_NAME}` };
 
@@ -16,7 +18,7 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
   const { id } = await params;
   const courseId = Number(id);
   if (!Number.isInteger(courseId)) notFound();
-  const course = await getCourse(courseId, account.planId!);
+  const [course, mine] = await Promise.all([getCourse(courseId, account.planId!), getMyReviewOf(courseId)]);
   if (!course) notFound();
 
   const total = course.score?.count ?? 0;
@@ -66,6 +68,8 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
               <div className="text-muted">Sin reseñas todavía.</div>
             )}
           </Card>
+
+          <MyReview courseId={courseId} mine={mine} />
 
           {course.otherCourses.length > 0 && (
             <Card label="OTROS CURSOS DE LA MATERIA">
