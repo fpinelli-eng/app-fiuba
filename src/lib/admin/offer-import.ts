@@ -36,6 +36,13 @@ export interface ImportPreview {
   matched: MatchedSubject[];
   /** SIU subjects that are not in this plan (other plan of the career, other careers): ignored. */
   unmatched: UnmatchedSubject[];
+  /** "Reemplazar con otro texto": the published import this one replaces, to restore it on "Descartar". */
+  replacing?: { rawText: string; preview: ImportPreview; publishedAt: string | null };
+}
+
+/** Same row of `offerings` across publications: subject, course number and practice. */
+export function offeringKey(d: { siu_subject_code: string; course_number: string | null; practice: string | null }): string {
+  return `${d.siu_subject_code}|${d.course_number ?? ""}|${d.practice ?? ""}`;
 }
 
 export interface BlockDraft {

@@ -6,6 +6,7 @@ import {
   processOffer,
   publishOffer,
   setCurrentTerm,
+  setOfferingVisible,
   setReviewsDate,
   type ActionState,
 } from "./actions";
@@ -128,14 +129,55 @@ export function DiscardButton({ planId }: { planId: string }) {
   return <PlanAction planId={planId} run={discardOffer} className={secondary} label="Descartar" pendingLabel="Descartando…" />;
 }
 
-export function PublishButton({ planId }: { planId: string }) {
+export function PublishButton({ planId, label = "Publicar" }: { planId: string; label?: string }) {
   return (
     <PlanAction
       planId={planId}
       run={publishOffer}
       className={`${primary} h-[46px] px-[22px] text-[15px]`}
-      label="Publicar"
+      label={label}
       pendingLabel="Publicando…"
     />
+  );
+}
+
+/** Plan publicado: pegar un texto nuevo del SIU para reemplazar la oferta. */
+export function ReplacePanel({ planId, title }: { planId: string; title: string }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={secondary}>
+        Reemplazar con otro texto
+      </button>
+    );
+  }
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <ProcessForm planId={planId} title={`Reemplazar · ${title}`} />
+      <div className="flex justify-end">
+        <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted underline">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** "Quitar" / "Volver a mostrar" un curso de la oferta publicada. */
+export function VisibilityButton({ offeringId, visible }: { offeringId: number; visible: boolean }) {
+  const [state, action, pending] = useActionState(setOfferingVisible, initial);
+  return (
+    <form action={action} className="flex flex-col items-end">
+      <input type="hidden" name="offeringId" value={offeringId} />
+      <input type="hidden" name="visible" value={visible ? "false" : "true"} />
+      <button
+        type="submit"
+        disabled={pending}
+        className={`text-[13px] font-semibold whitespace-nowrap ${visible ? "text-danger" : "text-accent"} disabled:text-disabled-ink`}
+      >
+        {pending ? "…" : visible ? "Quitar" : "Volver a mostrar"}
+      </button>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
   );
 }
