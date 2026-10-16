@@ -114,3 +114,19 @@ describe("analyzePlan", () => {
     expect(r.rushedTransfers).toEqual([]);
   });
 });
+
+describe("courseOptions with the public SIU table", () => {
+  const text = readFileSync(new URL("../../../data/siu/informatica_2C2026_tabla-publica.txt", import.meta.url), "utf-8");
+  const options = parseSiuOffer(text).offer.materias.flatMap(courseOptions);
+
+  it("gives one option per commission, with the lead teacher from its name", () => {
+    expect(options).toHaveLength(150);
+    const o = options.find((x) => x.id === "7547-01")!;
+    expect(o).toMatchObject({ label: "Curso 1", practice: null, modality: null, quota: 40 });
+    expect(o.teachers).toEqual([{ nombre: "MOLINARI", rol: "" }]);
+  });
+
+  it("drops the campus of virtual classes", () => {
+    expect(options.find((x) => x.id === "7556-01")!.blocks.every((b) => b.campus === null)).toBe(true);
+  });
+});

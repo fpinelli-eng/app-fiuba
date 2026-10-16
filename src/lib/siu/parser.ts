@@ -59,10 +59,22 @@ export interface Offer {
   materias: Subject[];
 }
 
+/**
+ * The SIU shows the offer in two ways:
+ * - "detail": logged-in "Oferta de comisiones" view ("Actividad: …", "Comisión: …", "Docentes: …"),
+ *   with teachers, modality, enrolled students and practice subcommissions;
+ * - "public-table": the public "Horarios de cursada" page, one row per class
+ *   (Comisión · Turno · Día · Hora · Tipo · Aula · Cupo). Every career, but no teachers
+ *   besides the lead's surname in the commission name, no modality and no subcommissions.
+ */
+export type SiuFormat = "detail" | "public-table";
+
 export interface ParseResult {
   offer: Offer;
   /** Human-readable notes for the admin: corrected times, unknown lines, etc. */
   warnings: string[];
+  /** null when the text is neither format (nothing was read). */
+  format: SiuFormat | null;
 }
 
 const DAYS = new Set(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]);
@@ -108,7 +120,22 @@ function parseCount(s: string): number | null {
   return /^\d+$/.test(s) ? Number(s) : null;
 }
 
+const RE_DETAIL = /^Actividad: /m;
+const RE_TABLE_HEADER = /^Comisión\tTurno\tDía de la semana\tHora inicio-fin/m;
+
+export function detectFormat(text: string): SiuFormat | null {
+  if (RE_DETAIL.test(text)) return "detail";
+  if (RE_TABLE_HEADER.test(text)) return "public-table";
+  return null;
+}
+
 export function parseSiuOffer(text: string): ParseResult {
+  const format = detectFormat(text);
+  if (format === "public-table") return { ...parsePublicTable(text), format };
+  return { ...parseDetail(text), format };
+}
+
+function parseDetail(text: string): Omit<ParseResult, "format"> {
   let periodo: string | null = null;
   const materias: Subject[] = [];
   let subject: Subject | null = null;
@@ -212,6 +239,101 @@ export function parseSiuOffer(text: string): ParseResult {
     }
 
     warn(`no reconocida '${Array.from(line).slice(0, 60).join("")}'`);
+  });
+
+  return { offer: { periodo, materias }, warnings };
+}
+
+// Public "Horarios de cursada" table -------------------------------------------------
+
+const RE_TABLE_SUBJECT = /^(.+?) \( ?([A-Z0-9]+) ?\)$/;
+const RE_TABLE_TIME = /^(\d{1,2}):(\d{2}) - (\d{1,2}):(\d{2})$/;
+const RE_TABLE_TERM = /Per[ií]odo Lectivo:\s*(\d)\w*\s+Cuatrimestre\s+(\d{4})/i;
+// The public page writes days without accents.
+const DAY_NAMES: Record<string, string> = { Miercoles: "Miércoles", Sabado: "Sábado" };
+
+/**
+ * "107-PC, 411 - PC - PC, PC" → room "107-PC, 411 - PC", campus Paseo Colón.
+ * The campus list comes after the last " - "; "Edificio a determinar" means unknown.
+ */
+function splitRoom(field: string): { aula: string | null; sede: Campus | null } {
+  const cut = field.lastIndexOf(" - ");
+  const room = (cut >= 0 ? field.slice(0, cut) : field).trim();
+  const campuses = cut >= 0 ? field.slice(cut + 3).split(",").map((s) => s.trim().toUpperCase()) : [];
+  const sede = campuses.map((c) => CAMPUS_SUFFIX[c]).find(Boolean) ?? null;
+  const aula = !room || /determinar|^a asign/i.test(room) ? null : room;
+  return { aula, sede };
+}
+
+function parsePublicTable(text: string): Omit<ParseResult, "format"> {
+  let periodo: string | null = null;
+  const materias: Subject[] = [];
+  let subject: Subject | null = null;
+  const warnings: string[] = [];
+
+  text.split(RE_LINE_BREAK).forEach((rawLine, i) => {
+    const lineNo = i + 1;
+    const line = rawLine.trim();
+    if (!line) return;
+    const warn = (msg: string): void => {
+      warnings.push(`línea ${lineNo}: ${msg}`);
+    };
+
+    const term = line.match(RE_TABLE_TERM);
+    if (term) {
+      periodo = `${term[2]} - ${term[1]}${term[1] === "1" ? "er" : "do"} Cuatrimestre`;
+      return;
+    }
+
+    const subjectMatch = !line.includes("\t") && line.match(RE_TABLE_SUBJECT);
+    if (subjectMatch) {
+      subject = { codigo: subjectMatch[2], nombre: subjectMatch[1].trim(), comisiones: [] };
+      materias.push(subject);
+      return;
+    }
+    // Everything before the first subject is the page menu and the search form.
+    if (!subject) return;
+    if (line.startsWith("Comisión\t") || /^Sede:/.test(line)) return;
+
+    // Split the raw line: a trailing empty "Cupo" is still a column.
+    const parts = rawLine.split("\t").map((p) => p.trim());
+    if (parts.length < 6) return warn(`no reconocida '${Array.from(line).slice(0, 60).join("")}'`);
+    const [nombre, , rawDay, horario, tipo, aulaField = "", cupo = ""] = parts;
+
+    let commission = subject.comisiones.find((c) => c.nombre === nombre);
+    if (!commission) {
+      const course = nombre.match(RE_COURSE);
+      commission = {
+        nombre,
+        subcomisiones: [],
+        horarios: [],
+        docentes: [],
+        numero: course ? course[1] : null,
+        docente_en_nombre: course ? course[2].trim() : null,
+        es_condicional: nombre.toUpperCase().startsWith("CONDICIONALES"),
+        cupo: parseCount(cupo),
+      };
+      subject.comisiones.push(commission);
+    } else if (commission.cupo == null) {
+      commission.cupo = parseCount(cupo);
+    }
+
+    const dia = DAY_NAMES[rawDay] ?? rawDay;
+    if (dia === "Sin definir") return;
+    const t = horario.match(RE_TABLE_TIME);
+    if (!DAYS.has(dia) || !t) return warn(`horario no interpretable '${line}'`);
+    const start = toMinutes(t[1], t[2]);
+    const end = toMinutes(t[3], t[4]);
+    const fixedStart = fixTypo(start);
+    const fixedEnd = fixTypo(end);
+    if (fixedStart !== start || fixedEnd !== end) warn(`horario corregido ${horario}`);
+    commission.horarios.push({
+      tipo,
+      dia,
+      inicio: formatMinutes(fixedStart),
+      fin: formatMinutes(fixedEnd),
+      ...splitRoom(aulaField),
+    });
   });
 
   return { offer: { periodo, materias }, warnings };

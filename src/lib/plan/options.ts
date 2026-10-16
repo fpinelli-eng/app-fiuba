@@ -101,7 +101,12 @@ export function courseOptions(subject: Subject): CourseOption[] {
     const practices = c.subcomisiones.filter((s) => practiceLetter(s.nombre) !== "");
     const shared = c.subcomisiones.filter((s) => practiceLetter(s.nombre) === "");
     const sharedBlocks = [...c.horarios, ...shared.flatMap((s) => s.horarios)];
-    const sharedTeachers = [...c.docentes, ...shared.flatMap((s) => s.docentes)];
+    const listed = [...c.docentes, ...shared.flatMap((s) => s.docentes)];
+    // The public SIU table has no teacher list: use the surnames in the course name.
+    const sharedTeachers =
+      listed.length || !c.docente_en_nombre
+        ? listed
+        : c.docente_en_nombre.split("/").map((nombre) => ({ nombre: nombre.trim(), rol: "" }));
 
     if (practices.length === 0) {
       const counted = shared[0] ?? c;

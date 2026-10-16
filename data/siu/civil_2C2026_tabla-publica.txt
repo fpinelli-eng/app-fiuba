@@ -1,0 +1,603 @@
+
+Acceso
+Fechas de Examen
+Horarios de Cursadas
+Validador de Certificados
+Ayuda
+Horarios de cursada BuscarLimpiar
+Filtro
+Responsable Académica (*)
+
+Facultad de Ingeniería - FIUBA
+Propuesta (*)
+
+Ingeniería Civil
+Año de cursada
+
+-- Seleccione --
+Período lectivo (*)
+
+2do Cuatrimestre 2026
+Actividad
+
+Ubicación
+
+-- Todas --
+Día de la semana
+
+-- Seleccione --
+Turno
+
+-- Seleccione --
+Sede: Sede Unica
+Período Lectivo: 2do Cuatrimestre 2026
+ANÁLISIS MATEMÁTICO III B ( 8106 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - MURMIS / MURMIS		Lunes	20:00 - 22:00	Práctica	418-PC - PC	5
+CURSO 02 - MURMIS / MURMIS		Lunes	18:00 - 20:00	Teórica	418-PC - PC	5
+CURSO 02 - MURMIS / MURMIS		Miercoles	20:00 - 22:00	Práctica	418-PC - PC	5
+CURSO 02 - MURMIS / MURMIS		Miercoles	18:00 - 20:00	Teórica	418-PC - PC	5
+CURSO 04 - GONZALEZ / PEÑA		Martes	14:00 - 16:00	Teórica	510 - PC - PC	5
+CURSO 04 - GONZALEZ / PEÑA		Martes	16:00 - 18:00	Práctica	510 - PC - PC	5
+CURSO 04 - GONZALEZ / PEÑA		Jueves	16:00 - 18:00	Práctica	500 - PC - PC	5
+CURSO 04 - GONZALEZ / PEÑA		Jueves	14:00 - 16:00	Teórica	510 - PC - PC	5
+ESTABILIDAD IV ( 8408 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FAZIO		Jueves	19:00 - 23:00	Práctica Obligatoria	14-LH - LH	5
+CURSO 01 - FAZIO		Viernes	09:00 - 13:00	Teórica Obligatoria	14-LH - LH	5
+ANÁLISIS SÍSMICO ( 8414 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERTERO RAUL		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	13-LH - LH	10
+TRABAJO PROFESIONAL DE INGENIERÍA CIVIL ( 8499 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SOSTI		Lunes	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	30
+CURSO 01 - SOSTI		Jueves	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	30
+CURSO 01 - SOSTI		Viernes	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	30
+PLANIFICACIÓN DE RECURSOS HIDRÁULICOS ( 8906 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ARADAS		Jueves	17:00 - 21:00	Teórico-Práctica	Departamento, 17-LH - LH, LH	
+GESTIÓN AMBIENTAL EN INGENIERÍA CIVIL ( 8912 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERECIARTUA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	302-LH - LH	
+HIDRÁULICA FLUVIAL ( 8913 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - KAZIMIERSKI		Martes	15:00 - 19:00	Teórico-Práctica	309-LH - LH	
+HIDRÁULICA MARÍTIMA ( 8914 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GARAVENTO		Lunes	15:00 - 19:00	Teórico-Práctica	201-LH - LH	
+INGENIERÍA SANITARIA II ( 8916 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GAVAZZO		Jueves	19:00 - 23:00	Teórico-Práctica	302-LH - LH	
+LEGISLACIÓN Y EJERCICIO PROFESIONAL DE LA INGENIERÍA CIVIL ( 9116 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CASSIN		Martes	19:00 - 23:00	Teórico Práctica	102-LH - LH	100
+CURSO 01 - CASSIN		Martes	18:00 - 19:00	Desarrollo y Consulta	102-LH - LH	100
+ARQUITECTURA Y PLANIFICACIÓN URBANA ( 9402 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MARINELLI		Lunes	15:00 - 18:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	
+CURSO 01 - MARINELLI		Viernes	19:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	
+ESTRUCTURAS METÁLICAS I ( 9410 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LEJBOWICZ ABATE / DARIN		Viernes	19:00 - 22:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	80
+CURSO 01 - LEJBOWICZ ABATE / DARIN		Viernes	16:00 - 19:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	80
+ESTRUCTURAS METÁLICAS II ( 9411 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LEJBOWICZ ABATE / DARIN		Viernes	16:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	80
+PATOLOGÍA DE LA CONSTRUCCIÓN ( 9413 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DIEGUEZ		Viernes	19:00 - 23:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+SISTEMAS CONSTRUCTIVOS ( 9415 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MAC DONNELL		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+DISEÑO ESTRUCTURAL ( 9417 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VAZQUEZ		Miercoles	17:00 - 23:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	10
+INSPECCIÓN Y EJECUCIÓN DE ESTRUCTURAS DE HORMIGÓN ( 9418 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DE BRASI		Martes	19:00 - 21:00	Teórico Práctica	Aula a determinar - Edificio a determinar	15
+CURSO 01 - DE BRASI		Jueves	19:00 - 23:00	Teórico Práctica	Aula a determinar - Edificio a determinar	15
+ANÁLISIS MATEMÁTICO II ( CB001 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MANCILLA AGUILAR		Martes	11:00 - 13:00	Práctica	203-PC, 510 - PC - PC, PC	120
+CURSO 01 - MANCILLA AGUILAR		Martes	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 01 - MANCILLA AGUILAR		Jueves	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 01 - MANCILLA AGUILAR		Jueves	11:00 - 13:00	Práctica	201-PC - PC	120
+CURSO 02 - LOPEZ		Martes	07:00 - 09:00	Teórica	403 - PC - PC	125
+CURSO 02 - LOPEZ		Martes	09:00 - 11:00	Práctica	411 - PC - PC	125
+CURSO 02 - LOPEZ		Jueves	09:00 - 11:00	Práctica	411 - PC - PC	125
+CURSO 02 - LOPEZ		Jueves	07:00 - 09:00	Teórica	403 - PC - PC	125
+CURSO 03 - BUCELLO		Lunes	09:00 - 11:00	Teórica	313-PC - PC	75
+CURSO 03 - BUCELLO		Lunes	11:00 - 13:00	Práctica	313-PC - PC	75
+CURSO 03 - BUCELLO		Miercoles	11:00 - 13:00	Práctica	313-PC - PC	75
+CURSO 03 - BUCELLO		Miercoles	09:00 - 11:00	Teórica	313-PC - PC	75
+CURSO 04 - ZITTO		Martes	11:00 - 13:00	Teórica	400-PC - PC	125
+CURSO 04 - ZITTO		Martes	09:00 - 11:00	Práctica	313-PC - PC	125
+CURSO 04 - ZITTO		Viernes	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 04 - ZITTO		Viernes	11:00 - 13:00	Teórica	400-PC - PC	125
+CURSO 05 - MAULHARDT		Martes	11:00 - 13:00	Práctica	200-PC - PC	150
+CURSO 05 - MAULHARDT		Martes	09:00 - 11:00	Teórica	403 - PC - PC	150
+CURSO 05 - MAULHARDT		Viernes	09:00 - 11:00	Teórica	403 - PC - PC	150
+CURSO 05 - MAULHARDT		Viernes	11:00 - 13:00	Práctica	411 - PC - PC	150
+CURSO 06 - SOLA		Lunes	15:00 - 17:00	Teórica	500 - PC - PC	130
+CURSO 06 - SOLA		Lunes	13:00 - 15:00	Práctica	319-PC - PC	130
+CURSO 06 - SOLA		Miercoles	13:00 - 15:00	Práctica	500 - PC - PC	130
+CURSO 06 - SOLA		Miercoles	15:00 - 17:00	Teórica	500 - PC - PC	130
+CURSO 07 - PUEBLA		Lunes	11:00 - 13:00	Práctica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Lunes	09:00 - 11:00	Teórica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Miercoles	11:00 - 13:00	Práctica	E9 - PC - PC	75
+CURSO 07 - PUEBLA		Miercoles	09:00 - 11:00	Teórica	E9 - PC - PC	75
+CURSO 09 - PASTOR		Lunes	09:00 - 11:00	Práctica	107-PC, 411 - PC - PC, PC	120
+CURSO 09 - PASTOR		Lunes	11:00 - 13:00	Teórica	400-PC - PC	120
+CURSO 09 - PASTOR		Miercoles	09:00 - 11:00	Práctica	319-PC - PC	120
+CURSO 09 - PASTOR		Miercoles	11:00 - 13:00	Teórica	400-PC - PC	120
+CURSO 10 - SASYK		Lunes	15:00 - 17:00	Práctica	203-PC - PC	75
+CURSO 10 - SASYK		Lunes	13:00 - 15:00	Teórica	203-PC - PC	75
+CURSO 10 - SASYK		Miercoles	13:00 - 15:00	Teórica	203-PC - PC	75
+CURSO 10 - SASYK		Miercoles	15:00 - 17:00	Práctica	203-PC - PC	75
+CURSO 11 - DE ROSSI		Martes	14:00 - 16:00	Práctica	305-PC - PC	125
+CURSO 11 - DE ROSSI		Martes	16:00 - 18:00	Teórica	418-PC - PC	125
+CURSO 11 - DE ROSSI		Jueves	16:00 - 18:00	Teórica	201-PC - PC	125
+CURSO 11 - DE ROSSI		Jueves	14:00 - 16:00	Práctica	302-PC - PC	125
+CURSO 12- CENTENO		Martes	16:00 - 18:00	Práctica	313-PC - PC	120
+CURSO 12- CENTENO		Martes	14:00 - 16:00	Teórica	418-PC - PC	120
+CURSO 12- CENTENO		Jueves	14:00 - 16:00	Teórica	201-PC - PC	120
+CURSO 12- CENTENO		Jueves	16:00 - 18:00	Práctica	310-PC - PC	120
+CURSO 14 - COMAS		Martes	20:00 - 22:00	Práctica	302-PC - PC	75
+CURSO 14 - COMAS		Martes	18:00 - 20:00	Teórica	E9 - PC - PC	75
+CURSO 14 - COMAS		Viernes	20:00 - 22:00	Práctica	400-PC - PC	75
+CURSO 14 - COMAS		Viernes	18:00 - 20:00	Teórica	400-PC - PC	75
+CURSO 15 - SEMINARA		Lunes	17:00 - 19:00	Práctica	302-PC - PC	125
+CURSO 15 - SEMINARA		Lunes	19:00 - 21:00	Teórica	403 - PC - PC	125
+CURSO 15 - SEMINARA		Miercoles	17:00 - 19:00	Práctica	201-PC, 400-PC - PC, PC	125
+CURSO 15 - SEMINARA		Miercoles	19:00 - 21:00	Teórica	107-PC - PC	125
+CURSO 16 - GONZALEZ		Martes	18:00 - 20:00	Teórica	411 - PC, 509 - PC - PC, PC	90
+CURSO 16 - GONZALEZ		Martes	20:00 - 22:00	Práctica	411 - PC, 509 - PC - PC, PC	90
+CURSO 16 - GONZALEZ		Jueves	18:00 - 20:00	Teórica	411 - PC - PC	90
+CURSO 16 - GONZALEZ		Jueves	20:00 - 22:00	Práctica	411 - PC - PC	90
+ÁLGEBRA LINEAL ( CB002 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VARGAS		Lunes	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Lunes	09:00 - 11:00	Teórica	403 - PC - PC	125
+CURSO 01 - VARGAS		Lunes	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Miercoles	11:00 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 01 - VARGAS		Miercoles	09:00 - 11:00	Teórica	403 - PC - PC	125
+CURSO 01 - VARGAS		Miercoles	11:02 - 13:00	Práctica	Aula a determinar - Edificio a determinar	125
+CURSO 02 - VIBRENTIS		Martes	14:00 - 16:00	Teórica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Martes	16:00 - 18:00	Práctica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Jueves	14:00 - 16:00	Teórica	400-PC - PC	125
+CURSO 02 - VIBRENTIS		Jueves	16:00 - 18:00	Práctica	400-PC - PC	125
+CURSO 04 - LOPEZ		Martes	11:00 - 13:00	Teórica	403 - PC - PC	125
+CURSO 04 - LOPEZ		Martes	09:00 - 11:00	Práctica	510 - PC, 200-PC - PC, PC	125
+CURSO 04 - LOPEZ		Jueves	09:00 - 11:00	Práctica	510 - PC - PC	125
+CURSO 04 - LOPEZ		Jueves	11:00 - 13:00	Teórica	403 - PC - PC	125
+CURSO 05 - PALACIOS		Miercoles	09:00 - 11:00	Teórica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Miercoles	11:00 - 13:00	Práctica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Viernes	09:00 - 11:00	Teórica	510 - PC - PC	75
+CURSO 05 - PALACIOS		Viernes	11:00 - 13:00	Práctica	510 - PC - PC	75
+CURSO 06 - BOGGI		Lunes	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 06 - BOGGI		Lunes	11:00 - 13:00	Práctica	201-PC - PC	120
+CURSO 06 - BOGGI		Miercoles	11:00 - 13:00	Práctica	319-PC - PC	120
+CURSO 06 - BOGGI		Miercoles	09:00 - 11:00	Teórica	201-PC - PC	120
+CURSO 07 - CENTENO		Martes	11:00 - 13:00	Práctica	500 - PC - PC	120
+CURSO 07 - CENTENO		Martes	09:00 - 11:00	Teórica	500 - PC - PC	120
+CURSO 07 - CENTENO		Jueves	11:00 - 13:00	Práctica	202-PC - PC	120
+CURSO 07 - CENTENO		Jueves	09:00 - 11:00	Teórica	500 - PC - PC	120
+CURSO 10 - CHARO		Miercoles	09:00 - 11:00	Teórica	203-PC - PC	75
+CURSO 10 - CHARO		Miercoles	11:00 - 13:00	Práctica	203-PC - PC	75
+CURSO 10 - CHARO		Viernes	09:00 - 11:00	Teórica	203-PC - PC	75
+CURSO 10 - CHARO		Viernes	11:00 - 13:00	Práctica	203-PC - PC	75
+CURSO 13 - CABANA		Miercoles	13:00 - 15:00	Práctica	418-PC - PC	125
+CURSO 13 - CABANA		Miercoles	15:00 - 17:00	Teórica	510 - PC - PC	125
+CURSO 13 - CABANA		Viernes	13:00 - 15:00	Práctica	418-PC - PC	125
+CURSO 13 - CABANA		Viernes	15:00 - 17:00	Teórica	510 - PC - PC	125
+CURSO 15 - PALAU		Lunes	19:00 - 21:00	Práctica	407 - PC - PC	90
+CURSO 15 - PALAU		Lunes	17:00 - 19:00	Teórico	500 - PC - PC	90
+CURSO 15 - PALAU		Miercoles	17:00 - 19:00	Teórico	400-PC, 201-PC - PC, PC	90
+CURSO 15 - PALAU		Miercoles	19:00 - 21:00	Práctica	407 - PC - PC	90
+CURSO 17 - VALDETTARO		Martes	07:00 - 09:00	Teórica	500 - PC - PC	75
+CURSO 17 - VALDETTARO		Martes	09:00 - 11:00	Práctica	319-PC - PC	75
+CURSO 17 - VALDETTARO		Jueves	09:00 - 11:00	Práctica	319-PC - PC	75
+CURSO 17 - VALDETTARO		Jueves	07:00 - 09:00	Teórica	500 - PC - PC	75
+CURSO 19 - GARCIA SERRANO		Lunes	15:00 - 17:00	Práctica	201-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Lunes	13:00 - 15:00	Teórica	200-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Miercoles	13:00 - 15:00	Teórica	200-PC - PC	75
+CURSO 19 - GARCIA SERRANO		Miercoles	15:00 - 17:00	Práctica	201-PC - PC	75
+CURSO 23 - GRYNBERG		Lunes	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Lunes	07:00 - 09:00	Teórica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Miercoles	09:00 - 11:00	Práctica	400-PC - PC	125
+CURSO 23 - GRYNBERG		Miercoles	07:00 - 09:00	Teórica	400-PC - PC	125
+CURSO 24 - PERALTA		Lunes	15:00 - 17:00	Teórica	510 - PC - PC	70
+CURSO 24 - PERALTA		Lunes	17:00 - 19:00	Práctica	107-PC - PC	70
+CURSO 24 - PERALTA		Miercoles	17:00 - 19:00	Práctica	313-PC - PC	70
+CURSO 24 - PERALTA		Miercoles	15:00 - 17:00	Teórica	310-PC - PC	70
+CURSO 25 - ORECCHIA		Martes	16:00 - 18:00	Teórica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Martes	18:00 - 20:00	Práctica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Jueves	16:00 - 18:00	Teórica	416-PC - PC	70
+CURSO 25 - ORECCHIA		Jueves	18:00 - 20:00	Práctica	416-PC - PC	70
+PROBABILIDAD Y ESTADÍSTICA ( CB003 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PEREZ		Lunes	09:00 - 13:00	Teórico-Práctica	500 - PC - PC	64
+CURSO 01 - PEREZ		Miercoles	09:00 - 11:00	Teórico-Práctica	500 - PC - PC	64
+CURSO 02 - PUEBLA		Lunes	15:00 - 17:00	Teórico-Práctica	302-PC - PC	64
+CURSO 02 - PUEBLA		Miercoles	15:00 - 19:00	Teórico-Práctica	313-PC - PC	64
+CURSO 03 - BELLO		Lunes	19:00 - 23:00	Teórico-Práctica	313-PC - PC	64
+CURSO 03 - BELLO		Miercoles	19:00 - 21:00	Teórico-Práctica	202-PC - PC	64
+CURSO 04 - SOSA		Martes	09:00 - 13:00	Teórico-Práctica	310-PC - PC	64
+CURSO 04 - SOSA		Viernes	09:00 - 11:00	Teórico-Práctica	310-PC - PC	64
+CURSO 05 - SOSA		Martes	14:00 - 18:00	Teórico Práctica	E9 - PC, 203-PC - PC, PC	64
+CURSO 05 - SOSA		Viernes	14:00 - 16:00	Teórico Práctica	E9 - PC, 203-PC - PC, PC	64
+CURSO 06 - BELLO		Martes	19:00 - 23:00	Teórico-Práctica	305-PC - PC	64
+CURSO 06 - BELLO		Jueves	19:00 - 21:00	Teórico-Práctica	305-PC - PC	64
+CURSO 07 - KORNBLIT		Miercoles	17:00 - 19:00	Teórico-Práctica	510 - PC - PC	64
+CURSO 07 - KORNBLIT		Viernes	17:00 - 21:00	Teórico-Práctica	418-PC - PC	64
+CURSO 08 - DI IORIO		Lunes	09:00 - 11:00	Teórico-Práctica	310-PC - PC	64
+CURSO 08 - DI IORIO		Miercoles	09:00 - 13:00	Teórico-Práctica	Aula a determinar - Edificio a determinar	64
+CURSO 10 - PEÑA (REMOTO SINCRONICO PARA RECURSANTES)		Martes	09:00 - 13:00	Teórico Práctica	Clase Virtual-PC - PC	25
+CURSO 10 - PEÑA (REMOTO SINCRONICO PARA RECURSANTES)		Jueves	11:00 - 13:00	Teórico Práctica	Clase Virtual-PC - PC	25
+ANÁLISIS MATEMÁTICO III ( CB005 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 02 - MURMIS		Lunes	20:00 - 22:00	Práctica	418-PC - PC	55
+CURSO 02 - MURMIS		Lunes	18:00 - 20:00	Teórica	418-PC - PC	55
+CURSO 02 - MURMIS		Miercoles	20:00 - 22:00	Práctica	418-PC - PC	55
+CURSO 02 - MURMIS		Miercoles	18:00 - 20:00	Teórica	418-PC - PC	55
+CURSO 04 - GONZALEZ		Martes	14:00 - 16:00	Teórica	510 - PC - PC	55
+CURSO 04 - GONZALEZ		Martes	16:00 - 18:00	Práctica	510 - PC - PC	55
+CURSO 04 - GONZALEZ		Jueves	14:00 - 16:00	Teórica	510 - PC - PC	55
+CURSO 04 - GONZALEZ		Jueves	16:00 - 18:00	Práctica	500 - PC - PC	55
+FÍSICA DE LOS SISTEMAS DE PARTÍCULAS ( CB020 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CORSINI		Lunes	08:00 - 11:00	Teórico Práctica Obligatoria	414-PC, 200-PC - PC, PC	
+CURSO 01 - CORSINI		Miercoles	08:00 - 11:00	Teórico Práctica Obligatoria	200-PC - PC	
+CURSO 02 - SACCONE		Lunes	08:00 - 11:00	Teórico Práctica Obligatoria	506 - PC - PC	
+CURSO 02 - SACCONE		Miercoles	08:00 - 11:00	Teórico Práctica Obligatoria	506 - PC - PC	
+CURSO 03 - AGUIRRE		Martes	10:00 - 13:00	Teórico Práctica Obligatoria	302-PC - PC	
+CURSO 03 - AGUIRRE		Jueves	10:00 - 13:00	Teórico Práctica Obligatoria	302-PC - PC	
+CURSO 04 - CORACH		Martes	10:00 - 13:00	Teórico Práctica Obligatoria	414-PC, 203-PC - PC, PC	
+CURSO 04 - CORACH		Jueves	10:00 - 13:00	Teórico Práctica Obligatoria	414-PC - PC	
+CURSO 05 - VIÑALES		Miercoles	09:00 - 12:00	Teórico Práctica Obligatoria	310-PC - PC	
+CURSO 05 - VIÑALES		Viernes	09:00 - 12:00	Teórico Práctica Obligatoria	302-PC - PC	
+CURSO 06 - CHIABRANDO		Miercoles	09:00 - 12:00	Teórico Práctica Obligatoria	418-PC - PC	
+CURSO 06 - CHIABRANDO		Viernes	09:00 - 12:00	Teórico Práctica Obligatoria	418-PC - PC	
+CURSO 07 - CORNEJO		Lunes	14:00 - 17:00	Teórico Práctica Obligatoria	418-PC - PC	
+CURSO 07 - CORNEJO		Miercoles	14:00 - 17:00	Teórico Práctica Obligatoria	400-PC - PC	
+CURSO 08 - TOSCANI		Lunes	13:00 - 16:00	Teórico Práctica Obligatoria	313-PC - PC	
+CURSO 08 - TOSCANI		Miercoles	13:00 - 16:00	Teórico Práctica Obligatoria	302-PC - PC	
+CURSO 09 - SOLA		Martes	14:00 - 17:00	Teórico Práctica Obligatoria	201-PC - PC	
+CURSO 09 - SOLA		Jueves	14:00 - 17:00	Teórico Práctica Obligatoria	200-PC - PC	
+CURSO 10 - ROSSI		Martes	14:00 - 17:00	Teórico Práctica Obligatoria	200-PC - PC	
+CURSO 10 - ROSSI		Jueves	14:00 - 17:00	Teórico Práctica Obligatoria	203-PC - PC	
+CURSO 11 - CAMUYRANO		Lunes	18:00 - 21:00	Teórico Práctica Obligatoria	202-PC - PC	
+CURSO 11 - CAMUYRANO		Miercoles	18:00 - 21:00	Teórico Práctica Obligatoria	506 - PC - PC	
+CURSO 12 - RACERO		Lunes	17:00 - 20:00	Teórico Práctica Obligatoria	303-PC - PC	
+CURSO 12 - RACERO		Miercoles	17:00 - 20:00	Teórico Práctica Obligatoria	303-PC - PC	
+CURSO 13 - FERRINI		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	107-PC - PC	
+CURSO 13 - FERRINI		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	418-PC - PC	
+CURSO 14 - MORENO		Martes	18:00 - 21:00	Teórico Práctica Obligatoria	506 - PC, 202-PC - PC, PC	
+CURSO 14 - MORENO		Jueves	18:00 - 21:00	Teórico Práctica Obligatoria	E3 - PC - PC	
+CURSO 15 - DADAMIA		Martes	08:00 - 12:00	Teórico Práctica Obligatoria	407 - PC - PC	
+ELECTRICIDAD Y MAGNETISMO ( CB022 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FONTANA		Martes	10:30 - 12:00	Teórico Práctica	305-PC - PC	
+CURSO 01 - FONTANA		Martes	12:00 - 13:30	Práctica Obligatoria	305-PC - PC	
+CURSO 01 - FONTANA		Jueves	12:00 - 13:30	Práctica Obligatoria	305-PC - PC	
+CURSO 01 - FONTANA		Jueves	10:30 - 12:00	Teórica Obligatoria	305-PC - PC	
+CURSO 02 - PIVA		Martes	13:30 - 15:00	Práctica Obligatoria	319-PC, 507 - PC - PC, PC	
+CURSO 02 - PIVA		Martes	12:00 - 13:30	Teórica Obligatoria	319-PC - PC	
+CURSO 02 - PIVA		Jueves	12:00 - 13:30	Teórica Obligatoria	Aula a determinar - Edificio a determinar	
+CURSO 02 - PIVA		Jueves	13:30 - 15:00	Práctica Obligatoria	507 - PC - PC	
+CURSO 03 - APARICIO		Martes	14:00 - 15:30	Teórica Obligatoria	506 - PC - PC	
+CURSO 03 - APARICIO		Martes	15:30 - 17:00	Práctica Obligatoria	506 - PC - PC	
+CURSO 03 - APARICIO		Jueves	15:30 - 17:00	Práctica Obligatoria	506 - PC - PC	
+CURSO 03 - APARICIO		Jueves	14:00 - 15:30	Teórica Obligatoria	Aula a determinar - Edificio a determinar	
+CURSO 04 - ZALDIVAR		Martes	17:30 - 19:00	Práctica Obligatoria	221-PC - PC	
+CURSO 04 - ZALDIVAR		Martes	16:00 - 17:30	Teórica Obligatoria	221-PC - PC	
+CURSO 04 - ZALDIVAR		Jueves	16:00 - 17:30	Teórica Obligatoria	222-PC - PC	
+CURSO 04 - ZALDIVAR		Jueves	17:30 - 19:00	Práctica Obligatoria	222-PC - PC	
+CURSO 05 - REDIN		Martes	19:30 - 21:00	Práctica Obligatoria	E14-PC - PC	
+CURSO 05 - REDIN		Martes	18:00 - 19:30	Teórica Obligatoria	E14-PC - PC	
+CURSO 05 - REDIN		Jueves	18:00 - 19:30	Teórica Obligatoria	E14-PC - PC	
+CURSO 05 - REDIN		Jueves	19:30 - 21:00	Práctica Obligatoria	E14-PC - PC	
+CURSO 06 - SILVEYRA		Miercoles	11:30 - 13:00	Práctica Obligatoria	507 - PC - PC	
+CURSO 06 - SILVEYRA		Miercoles	10:00 - 11:30	Teórica Obligatoria	305-PC - PC	
+CURSO 06 - SILVEYRA		Viernes	11:30 - 13:00	Práctica Obligatoria	305-PC - PC	
+CURSO 06 - SILVEYRA		Viernes	10:00 - 11:30	Teórica Obligatoria	305-PC - PC	
+CURSO 07 - ROHT		Miercoles	11:30 - 13:00	Teórica Obligatoria	416-PC - PC	
+CURSO 07 - ROHT		Miercoles	13:00 - 14:30	Práctica Obligatoria	416-PC - PC	
+CURSO 07 - ROHT		Viernes	11:30 - 13:00	Teórica Obligatoria	416-PC - PC	
+CURSO 07 - ROHT		Viernes	13:00 - 14:30	Práctica Obligatoria	416-PC - PC	
+CURSO 08 - BINDA		Miercoles	14:30 - 16:00	Práctica Obligatoria	411 - PC - PC	
+CURSO 08 - BINDA		Miercoles	13:00 - 14:30	Teórica Obligatoria	411 - PC - PC	
+CURSO 08 - BINDA		Viernes	14:30 - 16:00	Práctica Obligatoria	310-PC - PC	
+CURSO 08 - BINDA		Viernes	13:00 - 14:30	Teórica Obligatoria	310-PC - PC	
+CURSO 09 - PAMPILLO		Miercoles	15:30 - 17:00	Práctica Obligatoria	E9 - PC - PC	
+CURSO 09 - PAMPILLO		Miercoles	14:00 - 15:30	Teórica Obligatoria	E9 - PC - PC	
+CURSO 09 - PAMPILLO		Viernes	14:00 - 15:30	Teórica Obligatoria	302-PC - PC	
+CURSO 09 - PAMPILLO		Viernes	15:30 - 17:00	Práctica Obligatoria	302-PC - PC	
+CURSO 10 - PAGNOLA		Miercoles	16:00 - 17:30	Teórica Obligatoria	507 - PC - PC	
+CURSO 10 - PAGNOLA		Miercoles	17:30 - 19:00	Práctica Obligatoria	507 - PC - PC	
+CURSO 10 - PAGNOLA		Viernes	16:00 - 17:30	Teórica Obligatoria	305-PC - PC	
+CURSO 10 - PAGNOLA		Viernes	17:30 - 19:00	Práctica Obligatoria	305-PC - PC	
+CURSO 11 - PAGNOLA (2da comisión)		Miercoles	13:00 - 14:30	Práctica Obligatoria	506 - PC - PC	
+CURSO 11 - PAGNOLA (2da comisión)		Miercoles	11:30 - 13:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	
+CURSO 11 - PAGNOLA (2da comisión)		Viernes	11:30 - 13:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	
+CURSO 11 - PAGNOLA (2da comisión)		Viernes	13:00 - 14:30	Práctica Obligatoria	414-PC - PC	
+QUÍMICA BÁSICA ( CB040 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - IRIANNI		Lunes	09:00 - 13:00	Teórico Práctica Obligatoria	504 - PC - PC	50
+CURSO 01 - IRIANNI		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	50
+CURSO 02 - PORTA		Jueves	09:00 - 13:00	Teórico Práctica Obligatoria	504 - PC - PC	40
+CURSO 02 - PORTA		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	40
+CURSO 03 - SARALEGUI		Viernes	08:30 - 12:30	Teórico Práctica Obligatoria	504 - PC - PC	40
+CURSO 03 - SARALEGUI		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	40
+CURSO 04 - ANDRONIKOV		Martes	14:00 - 18:00	Teórico Práctica Obligatoria	504 - PC - PC	50
+CURSO 04 - ANDRONIKOV		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	50
+CURSO 05 - DIZ		Miercoles	10:00 - 14:00	Teórico Práctica Obligatoria	504 - PC - PC	50
+CURSO 05 - DIZ		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	50
+CURSO 06 - GOBBI MIÑONES		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	40
+CURSO 06 - GOBBI MIÑONES		Viernes	13:00 - 17:00	Teórico Práctica Obligatoria	502 - PC - PC	40
+CURSO 07 - CARACCIOLO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	40
+CURSO 07 - CARACCIOLO		Viernes	20:00 - 22:00	Teórica Asincrónica	504 - PC - PC	40
+CURSO 08 - PORTA		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	504 - PC - PC	40
+CURSO 08 - PORTA		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	40
+CURSO 09 - ROMERO		Jueves	18:00 - 22:00	Teórico Práctica Obligatoria	504 - PC - PC	40
+CURSO 09 - ROMERO		Viernes	20:00 - 22:00	Teórica Asincrónica	Aula a determinar - Edificio a determinar	40
+CURSO 10 - CARACCIOLO		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	504 - PC - PC	50
+CURSO 10 - CARACCIOLO		Viernes	20:00 - 22:00	Teórica Asincrónica	504 - PC - PC	50
+MODELACIÓN NUMÉRICA ( CB051 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RE		Jueves	14:00 - 18:00	Teórico Práctica Obligatoria	Clase Virtual-PC, 303-LH - PC, LH	90
+CURSO 02 - TARELA		Lunes	18:00 - 20:00	Teórica Obligatoria	414-PC - PC	45
+CURSO 02 - TARELA		Lunes	20:00 - 22:00	Práctica Obligatoria	414-PC - PC	45
+CURSO 03 - GRIGGIO		Lunes	18:00 - 22:00	Teórico Práctica Obligatoria	310-PC - PC	90
+CURSO 04 - SCHWARZ		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	A ASIGN - PC	90
+CURSO 05 - GARCIA		Miercoles	19:00 - 21:00	Teórica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 05 - GARCIA		Sabado	08:00 - 10:00	Práctica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 06 - RODRIGUEZ		Miercoles	15:00 - 19:00	Teórico Práctica Obligatoria	407 - PC - PC	50
+CURSO 07 - CAVALIERE		Martes	20:00 - 22:00	Práctica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 07 - CAVALIERE		Martes	18:00 - 20:00	Teórica Obligatoria	Clase Virtual-PC - PC	90
+CURSO 08 - BALZAROTTI		Martes	14:00 - 18:00	Práctica Obligatoria	Clase Virtual-PC - PC	45
+CURSO 09 - TARELA		Lunes	18:00 - 20:00	Práctica Obligatoria	416-PC - PC	45
+CURSO 09 - TARELA		Lunes	16:00 - 18:00	Teórica Obligatoria	416-PC - PC	45
+COMERCIALIZACIÓN DE PRODUCTOS Y SERVICIOS ( TA023 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FAINSOD		Miercoles	19:00 - 23:00	Teórico Práctica Obligatoria	104-LH - LH	
+GERENCIAMIENTO DE LA CALIDAD ( TA024 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - KOLL		Viernes	18:30 - 22:30	Teórico Práctica Obligatoria	103-LH - LH	100
+ENERGÍAS RENOVABLES ( TA039 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - OTERO		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	25
+USO EFICIENTE DE LA ENERGÍA ( TA040 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - TANIDES		Martes	15:00 - 19:00	Teórico Práctica Obligatoria	S27-PC - PC	20
+TECNOLOGÍAS EMERGENTES EN LA TRANSICIÓN ENERGÉTICA ( TA042 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VINSON		Viernes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	
+INTRODUCCIÓN AL TRANSPORTE, LA MOVILIDAD Y EL URBANISMO ( TA066 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PAPAZIAN		Lunes	17:00 - 19:00	Práctica Obligatoria	205-LH - LH	100
+CURSO 01 - PAPAZIAN		Lunes	21:00 - 23:00	Práctica Obligatoria	205-LH - LH	100
+CURSO 01 - PAPAZIAN		Lunes	19:00 - 21:00	Teórica Obligatoria	209-LH - LH	100
+HIDRÁULICA APLICADA ( TA067 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DALMATI / ZANALDA		Lunes	17:00 - 19:00	Teórica Obligatoria	209-LH - LH	
+CURSO 01 - DALMATI / ZANALDA		Miercoles	17:00 - 19:00	Práctica Obligatoria	209-LH - LH	
+DISEÑO GEOMÉTRICO DE OBRAS LINEALES ( TA068 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GONZALEZ		Martes	19:00 - 22:00	Teórico Práctica	209-LH - LH	100
+CONSTRUCCIONES CIVILES Y ARQUITECTURA ( TA069 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SARUBBI		Jueves	19:00 - 22:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	80
+CURSO 01 - SARUBBI		Jueves	16:00 - 19:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	80
+CURSO 01 - SARUBBI		Viernes	19:00 - 22:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	80
+HORMIGÓN I ( TA070 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FOLINO / MALVAR PERRIN		Lunes	17:00 - 21:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+CURSO 01 - FOLINO / MALVAR PERRIN		Miercoles	17:00 - 21:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+SISTEMAS DE TRANSPORTE GUIADO I ( TA071 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CASTRO DURAN		Lunes	19:00 - 22:00	Práctica Obligatoria	303-LH - LH	100
+PUERTOS Y VÍAS NAVEGABLES I ( TA072 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FARAH		Miercoles	16:00 - 19:00	Teórico Práctica	203-LH - LH	100
+AEROPUERTOS I ( TA073 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SCHVARTZER		Martes	16:00 - 18:00	Teórico Práctica	204-LH - LH	100
+INGENIERÍA SANITARIA I ( TA074 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BURGELL		Jueves	15:00 - 19:00	Teórico Práctica Obligatoria	202-LH - LH	
+ESTRUCTURAS METÁLICAS ( TA075 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LEJBOWICZ ABATE / DARIN		Viernes	16:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	110
+TRABAJO PROFESIONAL DE INGENIERÍA CIVIL ( TA076 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SOSTI		Lunes	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	70
+CURSO 01 - SOSTI		Jueves	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	70
+CURSO 01 - SOSTI		Viernes	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	70
+INSTALACIONES DE LAS OBRAS CIVILES ( TA078 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DI MARCO		Martes	19:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	100
+CURSO 01 - DI MARCO		Jueves	19:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	100
+CIMENTACIONES ( TA079 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PRATO		Miercoles	19:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	90
+HORMIGÓN II ( TA080 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - COLOMBO / EDER	Noche	Lunes	19:00 - 23:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	150
+GESTIÓN SOCIOAMBIENTAL DE LAS OBRAS CIVILES ( TA081 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERECIARTUA		Martes	19:00 - 22:00	Teórico Práctica Obligatoria	302-LH - LH	0
+PUERTOS Y VÍAS NAVEGABLES II ( TA083 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FARAH		Viernes	16:00 - 19:00	Teórico Práctica	204-LH - LH	50
+SISTEMAS DE TRANSPORTE GUIADO II ( TA084 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CASTRO DURAN		Miercoles	19:00 - 22:00	Teórico Práctica	303-LH - LH	50
+AEROPUERTOS II ( TA085 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SCHVARTZER		Jueves	15:00 - 19:00	Teórico Práctica	207-LH - LH	50
+PLANEAMIENTO DEL TRANSPORTE ( TA086 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BELENKY		Lunes	15:00 - 19:00	Teórico Práctica	206-LH - LH	25
+TRÁNSITO Y SEGURIDAD VIAL ( TA087 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RAÑO		Viernes	19:00 - 23:00	Teórico Práctica	203-LH - LH	30
+INGENIERÍA TERRITORIAL Y URBANA ( TA088 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MOLERES		Miercoles	19:00 - 23:00	Teórico Práctica Obligatoria	204-LH - LH	30
+SISTEMAS INTELIGENTES DE TRANSPORTE ( TA089 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VIALE		Jueves	19:00 - 22:00	Teórico Práctica	212-LH - LH	100
+CIENCIA DE DATOS APLICADA AL TRANSPORTE ( TA090 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GONZALEZ		Lunes	19:00 - 22:00	Teórico Práctica Obligatoria	A ASIGN - LH	
+CENTRALES HIDRÁULICAS ( TA091 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BACCHIEGA		Jueves	17:00 - 23:00	Teórico Práctica	A ASIGN, Clase virtual - LH, LH	
+HIDRÁULICA FLUVIAL ( TA093 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - KAZIMIERSKI		Martes	15:00 - 19:00	Teórico-Práctica	309-LH - LH	
+HIDRÁULICA MARÍTIMA ( TA094 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GARAVENTO		Lunes	15:00 - 19:00	Teórico-Práctica	201-LH - LH	
+PLANIFICACIÓN DE RECURSOS HÍDRICOS ( TA095 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ARADAS		Jueves	17:00 - 21:00	Teórico-Práctica	17-LH - LH	
+APROVECHAMIENTOS HIDRÁULICOS ( TA097 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - AROSTEGUI		Miercoles	17:00 - 21:00	Teórico-Práctica	201-LH - LH	
+INGENIERÍA SANITARIA APLICADA ( TA098 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GAVAZZO		Jueves	19:00 - 23:00	Teórico-Práctica	302-LH - LH	
+ARQUITECTURA Y URBANISMO ( TA100 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MARINELLI		Lunes	15:00 - 18:00	Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+CURSO 01 - MARINELLI		Viernes	19:00 - 22:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	60
+ESTRUCTURAS METÁLICAS AVANZADAS ( TA101 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LEJBOWICZ ABATE / DARIN		Viernes	16:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	90
+PATOLOGÍA DE LA CONSTRUCCIÓN ( TA102 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DIEGUEZ		Viernes	19:00 - 23:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+SISTEMAS CONSTRUCTIVOS ( TA104 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - MAC DONNELL		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	60
+DISEÑO ESTRUCTURAL ( TA106 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - VAZQUEZ		Miercoles	17:00 - 23:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	40
+INSPECCIÓN Y EJECUCIÓN DE ESTRUCTURAS DE HORMIGÓN ( TA107 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - DE BRASI		Martes	19:00 - 21:00	Teórico Práctica	Aula a determinar - Edificio a determinar	30
+CURSO 01 - DE BRASI		Jueves	19:00 - 23:00	Teórico Práctica	Aula a determinar - Edificio a determinar	30
+GEOFÍSICA DE EXPLORACIÓN DE SALES ( TA270 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CURCIO		Viernes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	
+INTRODUCCIÓN A LA INGENIERÍA CIVIL ( TB035 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - TABOADA		Martes	20:00 - 21:00	Teórico Práctica Obligatoria	Clase virtual - LH	
+CURSO 01 - TABOADA		Viernes	18:00 - 21:00	Teórico Práctica Obligatoria	16-LH - LH	
+ESTÁTICA ( TB036 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - TASLAKTZIAN		Miercoles	17:00 - 21:00	Teórico Práctica Obligatoria	9-LH, 16-LH - LH, LH	50
+CURSO 02 - LEHMANN		Jueves	17:00 - 21:00	Teórico Práctica Obligatoria	18-LH - LH	50
+RESISTENCIA DE MATERIALES ( TB037 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ALONSO		Martes	15:00 - 19:00	Teórico Práctica Obligatoria	16-LH - LH	55
+CURSO 01 - ALONSO		Jueves	15:00 - 19:00	Teórico Práctica Obligatoria	16-LH - LH	55
+CURSO 02 - SOSTI		Martes	09:00 - 13:00	Teórico Práctica Obligatoria	16-LH - LH	55
+CURSO 02 - SOSTI		Jueves	09:00 - 13:00	Teórico Práctica Obligatoria	16-LH - LH	55
+HIDRÁULICA GENERAL ( TB038 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SCHIFINI		Lunes	16:00 - 19:00	Teórica Obligatoria	202-LH - LH	
+CURSO 01 - SCHIFINI		Miercoles	16:00 - 19:00	Práctica Obligatoria	202-LH - LH	
+ANÁLISIS ESTRUCTURAL ( TB039 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERTERO, SANTIAGO		Miercoles	19:00 - 22:00	Teórico Práctica Obligatoria	16-LH, 9-LH - LH, LH	40
+CURSO 01 - BERTERO, SANTIAGO		Jueves	19:00 - 22:00	Teórico Práctica Obligatoria	A ASIGN, Aulka SUM - LH, LH	40
+CURSO 02 - BERTERO, AGUSTIN		Martes	10:00 - 13:00	Teórico Práctica Obligatoria	302-LH - LH	40
+CURSO 02 - BERTERO, AGUSTIN		Jueves	10:00 - 13:00	Teórico Práctica Obligatoria	302-LH - LH	40
+COMPORTAMIENTO DE MATERIALES ( TB040 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BENITEZ		Lunes	19:00 - 23:00	Teórica Obligatoria	16-LH - LH	0
+CURSO 01 - BENITEZ		Martes	19:00 - 23:00	Práctica Obligatoria	16-LH - LH	0
+MECÁNICA DE SUELOS Y GEOLOGÍA ( TB041 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - STRINA / CODEVILLA		Miercoles	15:00 - 19:00	Teórica Obligatoria	16-LH, 9-LH - LH, LH	80
+CURSO 01 - STRINA / CODEVILLA		Jueves	19:00 - 23:00	Práctica Obligatoria	16-LH - LH	80
+CURSO 01 - STRINA / CODEVILLA		Viernes	15:00 - 19:00	Práctica Obligatoria	Anf.I-LH - LH	80
+INTRODUCCIÓN A LA CIENCIA DE DATOS PARA INGENIERÍA CIVIL ( TB042 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BALBI		Martes	16:00 - 19:00	Teórico Práctica Obligatoria	202-LH - LH	0
+TOPOGRAFÍA Y GEODESIA ( TB043 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - ARCURI CAROU		Viernes	14:00 - 18:00	Teórico Práctica Obligatoria	302-LH - LH	40
+CURSO 02 - LUVINI		Sabado	08:00 - 12:00	Teórico Práctica Obligatoria	209-LH - LH	40
+MATERIALES VIALES Y PAVIMENTOS I ( TB044 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAMPANA		Lunes	14:00 - 17:00	Teórico Práctica	303-LH - LH	100
+HIDROLOGÍA APLICADA ( TB045 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - URIBURU		Martes	19:00 - 21:00	Teórico Práctica Obligatoria	303-LH - LH	
+CURSO 01 - URIBURU		Jueves	18:00 - 22:00	Teórico Práctica Obligatoria	303-LH - LH	
+MECÁNICA DEL SÓLIDO ( TB046 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FAZIO		Jueves	19:00 - 22:00	Práctica Obligatoria	14-LH - LH	25
+CURSO 01 - FAZIO		Viernes	09:00 - 12:00	Teórica Obligatoria	14-LH - LH	25
+ANÁLISIS SÍSMICO DE ESTRUCTURAS ( TB048 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - BERTERO, RAUL		Lunes	15:00 - 19:00	Teórico Práctica Obligatoria	13-LH - LH	20
+INTERACCIÓN TERRENO-ESTRUCTURA ( TB052 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FERNANDEZ		Lunes	18:00 - 21:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	10
+GEOTECNIA NUMÉRICA ( TB053 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - LOPEZ RIVAROLA		Martes	17:00 - 21:00	Teórico Práctica Obligatoria	Clase virtual - LH	10
+MATERIALES VIALES Y PAVIMENTOS II ( TB054 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - CAMPANA		Lunes	17:00 - 19:00	Teórico-Práctica	Lab. Transporte - LH	100
+CURSO 01 - CAMPANA		Viernes	14:00 - 16:00	Teórico-Práctica	Lab. Transporte - LH	100
+TECNOLOGÍA DEL HORMIGÓN ( TB055 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FAVA		Martes	15:00 - 19:00	Teórica Obligatoria	Aula a determinar - Edificio a determinar	60
+INTRODUCCIÓN A LA INTELIGENCIA ARTIFICIAL ( TB056 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - REY VEGA		Lunes	16:00 - 19:00	Teórico Práctica Obligatoria	L3-PC - PC	15
+MODELADO NUMÉRICO DE PROBLEMAS FÍSICOS DEL SUBSUELO ( TB170 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SEFAIR IBAÑEZ		Martes	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	
+LEGISLACIÓN Y EJERCICIO PROFESIONAL ( TC002 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - STEPANIK		Miercoles	19:00 - 21:00	Teórico Práctica Obligatoria	106-LH - LH	80
+CURSO 02 - CASSIN		Martes	19:00 - 21:00	Teórico Práctica Obligatoria	102-LH - LH	80
+CURSO 03 - LOPEZ		Miercoles	17:00 - 19:00	Teórico Práctica Obligatoria	Anf.I-LH - LH	80
+CURSO 04 - NOREMBERG		Jueves	17:00 - 19:00	Teórico Práctica Obligatoria	Anf.II-LH - LH	80
+CURSO 05 - RAIDEN		Lunes	16:00 - 18:00	Teórico Práctica Obligatoria	102-LH - LH	50
+CURSO 06 - RAIDEN		Lunes	19:00 - 21:00	Teórico Práctica Obligatoria	102-LH - LH	50
+HIGIENE Y SEGURIDAD ( TC003 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - RIZZO / CHENLO		Lunes	16:00 - 18:00	Teórico Práctica Obligatoria	305-PC - PC	50
+CURSO 02 - BENAVIDES / BRIOZZO		Lunes	18:00 - 20:00	Teórico Práctica Obligatoria	509 - PC - PC	50
+CURSO 03 - BELTRAMINI / DI MEGLIO / MARENSI		Miercoles	14:00 - 16:00	Teórico-Práctica	107-PC - PC	50
+CURSO 04 - MARENSI		Miercoles	16:00 - 18:00	Teórico Práctica Obligatoria	403 - PC - PC	47
+CURSO 05 - LEYBOVICH		Miercoles	16:00 - 18:00	Teórico Práctica Obligatoria	403 - PC - PC	50
+CURSO 06 - D`ELIA / BATTAN / BENAVIDES		Jueves	16:00 - 18:00	Teórico Práctica	411 - PC - PC	54
+CAPITAL HUMANO Y COMPORTAMIENTO ORGANIZACIONAL ( TC013 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CONDICIONALES		Jueves	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.III-LH - LH	
+CURSO 01 - TURCO GRECO		Jueves	19:00 - 23:00	Teórico Práctica Obligatoria	Anf.III-LH - LH	100
+EMPRENDIMIENTOS EN INGENIERÍA ( TC015 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CONDICIONALES		Miercoles	15:00 - 19:00	Teórico Práctica Obligatoria	104-LH - LH	
+CURSO 01 - IRURETA		Miercoles	15:00 - 19:00	Teórico Práctica Obligatoria	104-LH - LH	20
+INTRODUCCIÓN A LA TRANSICIÓN ENERGÉTICA ( TC016 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - GIOVAGNOLI		Miercoles	18:00 - 22:00	Teórico Práctica Obligatoria	Aula a determinar - Edificio a determinar	20
+ECONOMÍA Y EVALUACIÓN DE PROYECTOS DE INGENIERÍA CIVIL ( TC020 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - PIAZZA		Viernes	15:00 - 19:00	Teórico Práctica	209-LH - LH	100
+GERENCIAMIENTO Y ORGANIZACIÓN DE OBRAS CIVILES ( TC021 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - FILIP		Lunes	19:00 - 23:00	Teórico Práctica Obligatoria	203-LH - LH	100
+INTRODUCCIÓN A LA INDUSTRIA, LOS SISTEMAS Y EL NEGOCIO AEROESPACIAL ( TC025 )
+Comisión	Turno	Día de la semana	Hora inicio-fin	Tipo clase	Aula	Cupo
+CURSO 01 - SALVATIERRA		Lunes	11:00 - 15:00	Teórico Práctica Obligatoria	103-LH - LH	
