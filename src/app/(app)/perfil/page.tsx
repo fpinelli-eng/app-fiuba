@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
-import { Stars } from "@/components/Stars";
 import { APP_NAME } from "@/lib/app";
 import { getMyReviews } from "@/lib/reviews/mine";
+import { countPendingReviews } from "@/lib/reviews/pending";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
 import { DeleteAccount } from "./DeleteAccount";
+import { MyReviewRow } from "./MyReviewRow";
 import { ThemeChooser } from "./ThemeChooser";
 
 export const metadata: Metadata = { title: `Tu perfil · ${APP_NAME}` };
 
 // Perfil y configuración (prototipo 12-perfil). Falta: subir una foto propia (necesita
-// almacenamiento de archivos) y cambiar de carrera o plan (depende de las equivalencias).
+// almacenamiento de archivos) y cambiar de carrera o plan (se hace al final, sin equivalencias).
 export default async function PerfilPage() {
   const account = await requireProfile();
   const supabase = await createClient();
-  const [plan, reviews] = await Promise.all([
+  const [plan, reviews, pending] = await Promise.all([
     supabase.from("plans").select("year, careers(short_name)").eq("id", account.planId!).single(),
     getMyReviews(),
+    countPendingReviews(account.id),
   ]);
   const career = plan.data?.careers as unknown as { short_name: string } | { short_name: string }[] | null;
   const careerName = (Array.isArray(career) ? career[0]?.short_name : career?.short_name) ?? "";
@@ -51,28 +54,21 @@ export default async function PerfilPage() {
       </Card>
 
       <section aria-label="Mis reseñas" className="overflow-hidden rounded-[18px] border border-line bg-surface">
-        <div className="px-6 pt-[22px] pb-3.5">
-          <h2 className="text-[19px] font-semibold">Mis reseñas</h2>
-          <div className="mt-0.5 text-sm text-muted">Se publican sin tu nombre.</div>
+        <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-[22px] pb-3.5">
+          <div>
+            <h2 className="text-[19px] font-semibold">Mis reseñas</h2>
+            <div className="mt-0.5 text-sm text-muted">Se publican sin tu nombre.</div>
+          </div>
+          {pending > 0 && (
+            <Link href="/resenas/pendientes" className="rounded-full bg-peach px-3 py-1 text-[13px] font-semibold text-peach-ink">
+              {pending} {pending === 1 ? "pendiente" : "pendientes"} →
+            </Link>
+          )}
         </div>
         {reviews.length === 0 ? (
           <div className="border-t border-line px-6 py-4 text-sm text-muted">Todavía no escribiste reseñas.</div>
         ) : (
-          reviews.map((r) => (
-            <div key={r.id} className="flex flex-col gap-2 border-t border-line px-6 py-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="font-semibold">{r.subjectName}</div>
-                  <div className="text-[13px] text-muted">
-                    {r.detail}
-                    {r.hidden && " · Oculta por moderación"}
-                  </div>
-                </div>
-                <Stars value={r.stars} />
-              </div>
-              {r.comment && <div className="text-sm text-ink-2">{r.comment}</div>}
-            </div>
-          ))
+          reviews.map((r) => <MyReviewRow key={r.id} review={r} />)
         )}
       </section>
 
