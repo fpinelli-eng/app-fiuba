@@ -34,11 +34,11 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 1. **Administración: carga de la oferta del SIU por plan** (prototipo `13-administracion`). Es lo que más destraba: sin oferta en la base, el plan, el calendario del inicio y las reseñas no tienen datos reales. Propuesta: lo hace el segundo desarrollador, que hizo el intérprete del SIU.
 2. **Plan del cuatrimestre conectado a la base** (hoy usa `src/lib/plan/sample-offer.ts`), solo materias habilitadas, y guardar Opción A / B en su propia migración. Segundo desarrollador.
 3. **Reseñas:** buscador, ficha del curso, reseñas pendientes, filtro de comentarios y "Editar" en el perfil. Necesitan la oferta (para saber qué curso hizo cada alumno). Francisco.
-4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase) y "Cambiar" carrera o plan (depende de las equivalencias). Francisco.
+4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada (con la oferta y el plan guardado) y aviso de reseñas pendientes (con las reseñas).
 6. **Moderación de reseñas** (administración).
 7. **#8 · Política de privacidad** y publicación de la app en Google, antes del lanzamiento. Revisar ahí también la protección de las vistas previas de Vercel.
-8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, equivalencias entre planes, áreas de electivas de los demás planes.
+8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
 **Administradores:** Francisco y el segundo desarrollador (`profiles.is_admin`), marcados desde el editor SQL de Supabase. Para sumar a alguien: `update profiles set is_admin = true where id = (select id from auth.users where email = '<mail>');` (tiene que haber entrado a la web al menos una vez).
 

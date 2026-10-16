@@ -76,7 +76,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 | Funcionalidad | Etapa |
 |---|---|
 | Elegir carrera y plan de estudios (las opciones de plan dependen de la carrera; el vigente viene marcado) | MVP |
-| Cambiar de carrera o plan desde el perfil; las materias pasan según las equivalencias oficiales | MVP |
+| Cambiar de carrera o plan desde el perfil: se borran las materias cargadas y se cargan de nuevo en el plan nuevo (sin equivalencias) | Al final del MVP |
 | Marcar materias: aprobada (con nota obligatoria), final pendiente, cursando | MVP |
 | Porcentaje de avance por créditos, total y por categoría (CBC, obligatorias, electivas, trabajo final) | MVP |
 | Promedio general (incluye CBC, sin aplazos) | MVP |
@@ -263,9 +263,8 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 2. **Criterios de calificación:** ¿solo estrellas generales, o criterios adicionales opcionales?
 3. **Lic. en Análisis de Sistemas:** la web oficial solo muestra el plan 1986 (versión 2016); FIUBA Map tiene además un plan 2014. Confirmar con alguien de la carrera.
 4. **Google Workspace:** confirmar que las cuentas @fi.uba.ar entregan nombre y foto al iniciar sesión con Google.
-5. **Equivalencias entre planes:** conseguir las tablas oficiales para el cambio de plan desde el perfil.
-6. **Cursos con sufijo "i":** significado desconocido; mientras tanto se tratan como el mismo curso.
-7. **Áreas de las electivas en los demás planes:** el panel del mapa agrupa las electivas por área, definidas a mano por plan en `data/planes/areas.json` (FIUBA Map no las trae). Industrial 2023 usa las del diseño; los demás planes muestran sus electivas en una sola lista hasta que alguien defina sus áreas.
+5. **Cursos con sufijo "i":** significado desconocido; mientras tanto se tratan como el mismo curso.
+6. **Áreas de las electivas en los demás planes:** el panel del mapa agrupa las electivas por área, definidas a mano por plan en `data/planes/areas.json` (FIUBA Map no las trae). Industrial 2023 usa las del diseño; los demás planes muestran sus electivas en una sola lista hasta que alguien defina sus áreas.
 
 ### Decisiones cerradas
 
@@ -277,6 +276,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 - **Primer ingreso (7 de octubre):** sin pantalla aparte de carga de materias; la carga se hace en el mapa.
 - **Moderación (7 de octubre):** sin reportes de usuarios.
 - **Doble carrera (9 de octubre):** no se contempla.
+- **Cambio de carrera o plan (16 de octubre):** sin equivalencias. Al cambiar se borran las materias cargadas y el alumno las carga de nuevo en el plan nuevo; la pantalla avisa antes de confirmar. Se programa al final, con el resto armado.
 - **Reseñas al borrar la cuenta (9 de octubre):** quedan publicadas, anónimas.
 - **Electivas por área (15 de octubre):** se mantienen las áreas del diseño ("Gestión y negocios", "Energía"…).
 
