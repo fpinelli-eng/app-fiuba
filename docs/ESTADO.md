@@ -37,7 +37,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 1. **Administración: carga de la oferta del SIU por plan** (prototipo `13-administracion`). Es lo que más destraba: sin oferta en la base, el plan, el calendario del inicio y las reseñas no tienen datos reales. Propuesta: lo hace el segundo desarrollador, que hizo el intérprete del SIU.
 2. **Plan del cuatrimestre conectado a la base** (hoy usa `src/lib/plan/sample-offer.ts`), solo materias habilitadas, y guardar Opción A / B en su propia migración. Segundo desarrollador.
-3. **Reseñas, lo que falta:** "Editar" en el perfil. La pantalla del plan bloqueado puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`. Francisco.
+3. **Reseñas:** "Editar" en el perfil, en el PR #37. La pantalla del plan bloqueado puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`. Francisco.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada (con la oferta y el plan guardado).
 6. **Moderación de reseñas** (administración).

@@ -107,7 +107,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Tus datos: "Descargar mis datos" y "Borrar mi cuenta" con confirmación ("…Tus reseñas siguen publicadas, sin tu nombre. No se puede deshacer.").
 - Pie: "Hecho por estudiantes. No es un sitio oficial de la universidad."
 
-- Programado el 16 de octubre sin la foto propia ni "Cambiar" carrera. "Cambiar" queda para el final y sin equivalencias: el aviso pasa a ser que se borran las materias cargadas. "Mis reseñas" por ahora es solo lectura; "Editar" llega con las reseñas.
+- Programado el 16 de octubre sin la foto propia ni "Cambiar" carrera. "Cambiar" queda para el final y sin equivalencias: el aviso pasa a ser que se borran las materias cargadas. "Mis reseñas" tiene "Editar" en el lugar (las mismas estrellas y comentario que las pendientes; no aparece en las ocultas por moderación) y, si hay pendientes, un acceso en durazno "N pendientes →" (PR #37).
 - Agregado el 16 de octubre (no está en el prototipo): tarjeta "Administración" con "Abrir", solo para administradores, antes de "Tus datos"; y en el pie, "· Privacidad" hacia `/privacidad`, que también se enlaza desde el pie del ingreso.
 
 ### Política de privacidad
