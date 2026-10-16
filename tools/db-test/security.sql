@@ -71,6 +71,7 @@ set role anon;
 select test.fails('select 1 from public.subjects limit 1', 'anon reads subjects');
 select test.fails('select 1 from public.reviews limit 1', 'anon reads reviews');
 select test.fails('select public.ensure_profile()', 'anon creates a profile');
+select test.fails('select public.review_course(1, 4::smallint, null)', 'anon writes a review');
 reset role;
 
 -- An account from another domain --------------------------------------------------
@@ -162,11 +163,32 @@ select test.fails($$insert into public.reviews (course_id, term_id, stars) value
 update public.reviews set pinned = true;
 select test.ok((select not pinned from public.reviews), 'student pins a review');
 select test.ok((select count(*) from public.my_reviews()) = 1, 'student sees their review in my_reviews');
+
+-- Free reviews: any course with a visible offering, taken or not; one per student and course.
+reset role;
+insert into public.courses (siu_subject_code) values ('CB001'), ('CB001');
+insert into public.offerings (term_id, plan_id, course_id, siu_subject_code, siu_subject_name, course_number, label, visible)
+values
+  ('2026-1C', 'industrial-2023', 2, 'CB001', 'Análisis Matemático II', '01', 'Curso 1', true),
+  ('2026-1C', 'industrial-2023', 3, 'CB001', 'Análisis Matemático II', '02', 'Curso 2', false);
+set role authenticated;
+select test.ok(public.review_course(2, 3::smallint, '  Bien  ') = 2, 'student reviews a course she did not take');
+select test.ok((select comment from public.reviews where id = 2) = 'Bien', 'free review comment is trimmed');
+select test.ok(public.review_course(2, 5::smallint, null) = 2, 'reviewing again edits the same review');
+select test.ok((select stars = 5 and comment is null from public.reviews where id = 2), 'free review edited');
+select test.ok(public.review_course(1, 2::smallint, null) = 1, 'free review of a taken course edits the pending one');
+select test.ok(public.submit_review(1, 4::smallint, null) = 1, 'pending review edits the existing one');
+select test.ok((select count(*) from public.my_reviews()) = 2, 'one review per student and course');
+select test.fails('select public.review_course(3, 4::smallint, null)', 'review of a removed course');
+select test.fails('select public.review_course(999, 4::smallint, null)', 'review of a course that does not exist');
+select test.fails('select public.review_course(2, 0::smallint, null)', '0 stars');
+select test.fails($$select public.review_course(2, 3::smallint, repeat('a', 501))$$, 'free review over 500 characters');
 reset role;
 
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
 select test.ok((select count(*) from public.reviews) = 0, 'gmail account reads reviews');
+select test.fails('select public.review_course(2, 4::smallint, null)', 'gmail account writes a review');
 reset role;
 
 -- Another student, admin ------------------------------------------------------------
@@ -181,9 +203,9 @@ select test.ok((select count(*) from public.my_reviews()) = 0, 'another student 
 select test.fails('select 1 from public.review_authors', 'admin reads review_authors');
 
 update public.reviews set pinned = true, hidden_at = now();
-select test.ok((select pinned and hidden_at is not null from public.reviews), 'admin pins and hides a review');
+select test.ok((select bool_and(pinned and hidden_at is not null) from public.reviews), 'admin pins and hides reviews');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
-select test.ok((select count(*) from public.offerings) = 3, 'admin sees hidden offerings');
+select test.ok((select count(*) from public.offerings) = 5, 'admin sees hidden offerings');
 select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
@@ -192,7 +214,7 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
 select test.ok((select count(*) from public.reviews) = 0, 'students do not see hidden reviews');
-select test.ok((select hidden from public.my_reviews()), 'the author sees it as hidden');
+select test.ok((select bool_and(hidden) from public.my_reviews()), 'the author sees them as hidden');
 reset role;
 
 -- Deleting the account keeps the review, without author ---------------------------
@@ -206,7 +228,7 @@ select public.delete_my_account();
 reset role;
 select test.ok((select count(*) from auth.users where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 0, 'student deletes their account');
 select test.ok((select count(*) from auth.users where id = 'bbbbbbbb-0000-0000-0000-000000000002') = 1, 'deleting an account leaves the others');
-select test.ok((select count(*) from public.reviews) = 1, 'review stays after deleting the account');
+select test.ok((select count(*) from public.reviews) = 2, 'reviews stay after deleting the account');
 select test.ok((select count(*) from public.review_authors) = 0, 'authorship is deleted with the account');
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
 

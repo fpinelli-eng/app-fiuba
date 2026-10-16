@@ -55,3 +55,14 @@ export async function getMyReviews(): Promise<MyReview[]> {
     };
   });
 }
+
+/** The caller's review of one course, if any (for "Tu reseña" on the course page). */
+export async function getMyReviewOf(courseId: number): Promise<{ stars: number; comment: string | null; hidden: boolean } | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_reviews");
+  if (error) throw new Error(`my_reviews: ${error.message}`);
+  const r = ((data ?? []) as { course_id: number; stars: number; comment: string | null; hidden: boolean }[]).find(
+    (x) => x.course_id === courseId,
+  );
+  return r ? { stars: r.stars, comment: r.comment, hidden: r.hidden } : null;
+}

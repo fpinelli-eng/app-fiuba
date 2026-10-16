@@ -45,7 +45,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 | Reseñas: formato | Puntaje de 1 a 5 estrellas obligatorio; comentario de texto opcional |
 | Reseñas: anonimato | **Siempre anónimas.** Si un alumno borra su cuenta, sus reseñas quedan publicadas, desvinculadas de cualquier usuario |
 | Reseñas: fuente | Propias, desde cero. No se usan los datos de FIUBA Reviews |
-| Reseñas: recolección | Las reseñas pendientes bloquean el plan del cuatrimestre hasta completarlas, como la encuesta del SIU antes de inscribirse |
+| Reseñas: recolección | Las reseñas pendientes bloquean el plan del cuatrimestre hasta completarlas, como la encuesta del SIU antes de inscribirse. Aparte, cualquiera puede reseñar cualquier curso cuando quiera, desde su ficha |
 | Reseñas: moderación | Sin sistema de reportes. Filtro automático al escribir + revisión manual del administrador (eliminar o fijar) |
 | Datos de planes | Se reutilizan los JSON de FIUBA Map (licencia MIT), verificados contra los PDF oficiales |
 
@@ -122,7 +122,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 | Buscador de cursos por materia o docente, con todas las materias del plan (aunque no tengan reseñas) | MVP |
 | Ficha de curso: puntaje promedio, distribución de estrellas, otros cursos de la materia, comentarios; las reseñas fijadas aparecen primero como "Destacada" | MVP |
 | Reseñar un curso: 1 a 5 estrellas obligatorio + comentario opcional (hasta 500 caracteres) | MVP |
-| Solo pueden reseñar quienes cursaron ese curso según su perfil; una reseña por alumno, curso y cuatrimestre | MVP |
+| Cualquier alumno puede reseñar cualquier curso, lo haya cursado o no; una reseña por alumno y curso, que después se edita | MVP |
 | Reseñas pendientes en dos fechas fijas por año (principios de julio y de diciembre) | MVP |
 | Filtro automático al escribir: bloquea insultos, teléfonos, mails, links y usuarios de redes (@usuario) | MVP |
 | Criterios desglosados además del puntaje general | Después |
@@ -278,6 +278,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 - **Doble carrera (9 de octubre):** no se contempla.
 - **Cambio de carrera o plan (16 de octubre):** sin equivalencias. Al cambiar se borran las materias cargadas y el alumno las carga de nuevo en el plan nuevo; la pantalla avisa antes de confirmar. Se programa al final, con el resto armado.
 - **Reseñas al borrar la cuenta (9 de octubre):** quedan publicadas, anónimas.
+- **Reseñas libres (16 de octubre):** además de las pendientes, cualquiera reseña cualquier curso desde su ficha, sin haberlo cursado según la app (por ejemplo, el curso de una materia recursada). Una por alumno y curso; las reseñas fuera de lugar las elimina el administrador. Una reseña libre de un curso pendiente lo da por hecho.
 - **Electivas por área (15 de octubre):** se mantienen las áreas del diseño ("Gestión y negocios", "Energía"…).
 
 ## 14. Próximos pasos
