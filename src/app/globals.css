@@ -23,6 +23,9 @@
   --disabled-ink: #8a8aa0;
   --star: #e8b23a;
   --danger: #b3261e;
+  --danger-line: #ebc3bf;
+  --danger-soft: #fdecea;
+  --danger-ink: #7a1d17;
 
   --lavender: #e3deff;
   --lavender-ink: #2e2a6e;
@@ -72,6 +75,9 @@
   --disabled-ink: #6c6c80;
   --star: #e8b23a;
   --danger: #f2867d;
+  --danger-line: #5a2b28;
+  --danger-soft: #2e1a19;
+  --danger-ink: #f7c2bc;
 
   --lavender: #2b2850;
   --lavender-ink: #c9c4ff;
@@ -119,6 +125,9 @@
   --color-disabled-ink: var(--disabled-ink);
   --color-star: var(--star);
   --color-danger: var(--danger);
+  --color-danger-line: var(--danger-line);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
   --color-lavender: var(--lavender);
   --color-lavender-ink: var(--lavender-ink);
   --color-lavender-panel: var(--lavender-panel);

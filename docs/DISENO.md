@@ -106,6 +106,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Tus datos: "Descargar mis datos" y "Borrar mi cuenta" con confirmación ("…Tus reseñas siguen publicadas, sin tu nombre. No se puede deshacer.").
 - Pie: "Hecho por estudiantes. No es un sitio oficial de la universidad."
 
+- Programado el 16 de octubre sin la foto propia ni "Cambiar" carrera (pendientes: almacenamiento de archivos y equivalencias). "Mis reseñas" por ahora es solo lectura; "Editar" llega con las reseñas.
 ### Administración
 - Pestañas "Oferta del cuatrimestre" y "Reseñas". Solo para administradores.
 - **Oferta:** lista de los 24 planes con un punto de estado (sin cargar / procesado / publicado) y el progreso "N de 24 planes publicados". Fecha de reseñas pendientes arriba.
