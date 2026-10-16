@@ -391,7 +391,6 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             {selItem && selPos && !selIsElective && (
               <Popover x={selPos.x} y={selPos.y} containerWidth={width} containerHeight={height}>
                 <SubjectCard
-                  map={map}
                   item={selItem}
                   progress={progress}
                   credits={credits}
@@ -504,7 +503,6 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         {selItem && selIsElective && (
           <div className="absolute right-[288px] bottom-4 z-40">
             <SubjectCard
-              map={map}
               item={selItem}
               progress={progress}
               credits={credits}
@@ -599,18 +597,6 @@ function Popover(props: { x: number; y: number; containerWidth: number; containe
   );
 }
 
-const TAG_STYLE: Record<DisplayState, string> = {
-  approved: "bg-mint text-mint-ink",
-  final_pending: "bg-butter text-butter-ink",
-  in_progress: "bg-sky text-sky-ink",
-  enabled: "bg-surface text-ink border border-enabled-line",
-  blocked: "bg-blocked text-blocked-ink",
-};
-
-function Tag({ state, children }: { state: DisplayState; children: ReactNode }) {
-  return <span className={`flex-none rounded-full px-2 py-px text-[11px] font-semibold ${TAG_STYLE[state]}`}>{children}</span>;
-}
-
 function SectionTitle({ line, children }: { line?: "solid" | "dashed"; children: ReactNode }) {
   return (
     <div className="mt-1.5 flex items-center gap-2 text-[11px] font-semibold tracking-[0.08em] text-muted">
@@ -621,7 +607,6 @@ function SectionTitle({ line, children }: { line?: "solid" | "dashed"; children:
 }
 
 function SubjectCard(props: {
-  map: CareerMap;
   item: MapItem;
   progress: Progress;
   credits: number;
@@ -636,7 +621,7 @@ function SubjectCard(props: {
   onNext: () => void;
   onClose: () => void;
 }) {
-  const { map, item, progress, credits, stateOf, firstLoad, pending, inSequence, electiveGroup, onGrade, onState, onPrev, onNext, onClose } = props;
+  const { item, progress, credits, stateOf, firstLoad, pending, inSequence, electiveGroup, onGrade, onState, onPrev, onNext, onClose } = props;
   const state = stateOf(item);
   const isReq = item.type === "requirement";
   const subject = item.type === "subject" ? item.subject : null;
@@ -649,24 +634,9 @@ function SubjectCard(props: {
     ? `Requisito · ${state === "approved" ? "Aprobada" : "Pendiente"}`
     : `${subject!.credits} créditos · ${state === "approved" && grade !== null ? `Aprobada con ${grade}` : STATE_LABEL[state]}`;
 
-  // Necesita
-  const cbcNode = map.cbcNode;
-  const prereqRows = subject
-    ? subject.prerequisites.map((p) => {
-        if (cbcNode && p === cbcNode.id) {
-          const ok = map.cbcComplete(progress);
-          return { key: "cbc", name: `Ciclo Básico Común (${map.cbcSubjects.length} materias)`, state: (ok ? "approved" : "blocked") as DisplayState, label: ok ? "Completo" : "Incompleto" };
-        }
-        const s = map.byId.get(p)!;
-        const st = map.displayState(progress, p, credits);
-        return { key: String(p), name: s.name, state: st, label: STATE_LABEL[st] };
-      })
-    : [];
-  if (subject?.requiresCbc && !(cbcNode && subject.prerequisites.includes(cbcNode.id))) {
-    const ok = map.cbcComplete(progress);
-    prereqRows.unshift({ key: "cbc", name: "Ciclo Básico Común completo", state: ok ? "approved" : "blocked", label: ok ? "Completo" : "Incompleto" });
-  }
+  // Si está bloqueada por créditos, se dice cuántos pide (las correlativas ya se ven resaltadas en el mapa).
   const rc = subject?.requiredCredits ?? null;
+  const missingCredits = state === "blocked" && rc !== null && credits < rc;
 
   const buttons: [ButtonState, string][] = isReq
     ? [
@@ -722,6 +692,11 @@ function SubjectCard(props: {
           )}
           <div className="text-[15px] leading-tight font-semibold">{name}</div>
           <div className="mt-0.5 text-xs text-muted">{sub}</div>
+          {missingCredits && (
+            <div className="mt-0.5 text-xs text-muted">
+              Pide {rc} créditos aprobados · tenés {credits}
+            </div>
+          )}
         </div>
         <button type="button" aria-label="Cerrar" onClick={onClose} className="grid size-7 flex-none place-items-center rounded-lg bg-bg text-muted">
           <CloseIcon />
@@ -756,27 +731,7 @@ function SubjectCard(props: {
         </>
       ) : (
         <>
-          {!isReq && (
-            <>
-              <SectionTitle line="solid">NECESITA</SectionTitle>
-              {prereqRows.length === 0 && rc === null && <div className="text-muted">Sin correlativas</div>}
-              {prereqRows.map((r) => (
-                <div key={r.key} className="flex items-center justify-between gap-2">
-                  <span>{r.name}</span>
-                  <Tag state={r.state}>{r.label}</Tag>
-                </div>
-              ))}
-              {rc !== null && (
-                <div className="flex items-center justify-between gap-2">
-                  <span>{rc} créditos aprobados</span>
-                  <Tag state={credits >= rc ? "approved" : "blocked"}>Tenés {credits}</Tag>
-                </div>
-              )}
-            </>
-          )}
-          {/* Lo que habilita no se lista: en el mapa ya se marca con contorno punteado. */}
-          <SectionTitle>TU ESTADO</SectionTitle>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
             {buttons.map(([s, label]) => (
               <StateButton key={s} on={current === s} waiting={pending && s === "approved"} onClick={() => onState(s)}>
                 {label}
