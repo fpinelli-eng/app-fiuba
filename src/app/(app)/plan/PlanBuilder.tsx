@@ -5,7 +5,7 @@ import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
 import { WEEK_DAYS, type ClassBlock, type WeekDay } from "@/lib/plan/options";
 import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, Score, SubjectGroup } from "@/lib/plan/data";
-import { savePlanOption } from "./actions";
+import { enrollInCourses, savePlanOption } from "./actions";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
 // Cada cambio se guarda solo en la base (plan_choices), como en el mapa.
@@ -58,6 +58,8 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   // Los guardados van en fila: así el último cambio es el que queda.
   const saving = useRef<Promise<void>>(Promise.resolve());
+  const [enrolled, setEnrolled] = useState<string[]>(data.enrolled);
+  const [enrollState, setEnrollState] = useState<"idle" | "saving" | "error">("idle");
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [hover, setHover] = useState<Entry | null>(null);
@@ -91,6 +93,22 @@ export function PlanBuilder({ data }: { data: PlanData }) {
     else setPlan([...plan, { subject, course }]);
     setHover(null);
   };
+  const planCourses = plan.map((e) => e.course);
+  const isEnrolledHere =
+    planCourses.length > 0 && planCourses.length === enrolled.length && planCourses.every((c) => enrolled.includes(c));
+  const enroll = () => {
+    setEnrollState("saving");
+    // After any pending save, so both go in order.
+    saving.current = saving.current
+      .then(() => enrollInCourses(planCourses))
+      .then((r) => {
+        if (r.error) return setEnrollState("error");
+        setEnrolled(planCourses);
+        setEnrollState("idle");
+      })
+      .catch(() => setEnrollState("error"));
+  };
+
   const toggleOpen = (code: string) => {
     const next = new Set(open);
     if (next.has(code)) next.delete(code);
@@ -160,12 +178,33 @@ export function PlanBuilder({ data }: { data: PlanData }) {
             label={`h por semana${analysis.asyncMinutes ? ` + ${formatHours(analysis.asyncMinutes)} h asincrónicas` : ""}`}
           />
         </div>
-        <button
-          onClick={() => setPlan([])}
-          className="h-[38px] rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted hover:text-ink"
-        >
-          Vaciar plan
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {enrollState === "error" && <span className="text-[13px] text-danger">No pudimos guardar tu cursada</span>}
+          {isEnrolledHere ? (
+            <span className="inline-flex h-[38px] items-center gap-1.5 rounded-[10px] bg-mint px-3.5 text-[13.5px] font-semibold text-mint-ink">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              Te inscribiste en esta opción
+            </span>
+          ) : (
+            planCourses.length > 0 && (
+              <button
+                onClick={enroll}
+                disabled={enrollState === "saving"}
+                className="h-[38px] rounded-[10px] bg-accent px-3.5 text-[13.5px] font-semibold text-on-accent disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink"
+              >
+                {enrollState === "saving" ? "Guardando…" : "Me inscribí en esta opción"}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => setPlan([])}
+            className="h-[38px] rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted hover:text-ink"
+          >
+            Vaciar plan
+          </button>
+        </div>
       </div>
 
       <div className="flex items-stretch gap-4">

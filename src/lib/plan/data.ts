@@ -39,6 +39,8 @@ export interface PlanData {
   career: string;
   subjects: PlanSubject[];
   saved: Record<OptionKey, Entry[]>;
+  /** Courses of this term the student said they enrolled in ("Me inscribí en esta opción"). */
+  enrolled: string[];
 }
 
 const DAYS: WeekDay[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -75,7 +77,7 @@ type OfferingRow = {
   }[];
 };
 
-const empty = (term: string | null, career: string): PlanData => ({ term, career, subjects: [], saved: { A: [], B: [] } });
+const empty = (term: string | null, career: string): PlanData => ({ term, career, subjects: [], saved: { A: [], B: [] }, enrolled: [] });
 
 export async function getPlanData(userId: string, planId: string): Promise<PlanData> {
   const supabase = await createClient();
@@ -122,12 +124,14 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   const subjectOf = (o: OfferingRow) => byCode.get(o.siu_subject_code) ?? byName.get(normalizeText(o.siu_subject_name));
 
   const ids = rows.map((o) => o.id);
-  const [reviews, choices] = await Promise.all([
+  const [reviews, choices, taken] = await Promise.all([
     supabase.from("reviews").select("course_id, stars").in("course_id", [...new Set(rows.map((o) => o.course_id))]).is("hidden_at", null),
     supabase.from("plan_choices").select("option, offering_id").eq("user_id", userId).in("offering_id", ids),
+    supabase.from("user_courses").select("offering_id").eq("user_id", userId).in("offering_id", ids),
   ]);
   if (reviews.error) throw new Error(`reviews: ${reviews.error.message}`);
   if (choices.error) throw new Error(`plan_choices: ${choices.error.message}`);
+  if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
 
   const scoreOf = new Map<number, Score>();
   for (const r of reviews.data) {
@@ -197,5 +201,5 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
     if (subject && !saved[option].some((e) => e.subject === subject)) saved[option].push({ subject, course });
   }
 
-  return { term: term.label, career, subjects, saved };
+  return { term: term.label, career, subjects, saved, enrolled: taken.data.map((t) => String(t.offering_id)) };
 }
