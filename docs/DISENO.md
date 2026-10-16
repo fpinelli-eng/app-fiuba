@@ -97,6 +97,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - **Ficha de curso:** "Curso N" como título, docentes debajo, puntaje grande con distribución de estrellas, otros cursos de la materia y comentarios (más recientes primero; las fijadas arriba con la etiqueta "Destacada"). Sin botón de reportar.
 - **Reseñas pendientes:** una tarjeta por curso con estrellas (al pasar el mouse: Muy malo / Malo / Regular / Bueno / Excelente), "+ Agregar un comentario" (hasta 500 caracteres) y "Enviar reseña", deshabilitado hasta elegir estrellas. Barra de progreso "N de 3" y, al completar todas, un aviso verde con "Ir al plan".
 - **Filtro al escribir:** si el comentario tiene insultos, teléfonos, mails, links o @usuarios, aparece un aviso en durazno debajo del campo y no se puede enviar.
+- Programado el 16 de octubre. Las reseñas abren por cuatrimestre (`terms.reviews_open_on`) y se piden por los cursos que el alumno marcó en `user_courses`; una práctica y su curso cuentan como una sola. El menú muestra en durazno cuántas faltan.
 
 ### Perfil y configuración
 - Avatar grande con botón de cámara para subir foto ("Quitar foto" cuando hay una); nombre, mail, "Cerrar sesión".

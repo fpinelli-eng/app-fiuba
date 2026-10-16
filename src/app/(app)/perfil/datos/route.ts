@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMapData } from "@/lib/map/data";
-import { getMyReviews } from "@/lib/reviews";
+import { getMyReviews } from "@/lib/reviews/mine";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
 

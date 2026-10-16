@@ -21,3 +21,13 @@ NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_PUBLISHABLE
 `start.sh` imprime la cookie de sesión (`node tools/local-supabase/gateway.mjs cookie`). Con Playwright: `context.addCookies([cookie])` y después abrir `http://localhost:3000`.
 
 Cada vez que se corre, la base se crea de cero.
+
+## Oferta y reseñas de ejemplo
+
+Para probar el buscador de reseñas y las pendientes, después de elegir Ingeniería Industrial (plan 2023) con el usuario de prueba:
+
+```bash
+node tools/local-supabase/sample-offer.mjs | psql -d app_fiuba_local
+```
+
+Carga la oferta real de Industrial 2C 2026 (`data/siu/`) como cuatrimestre actual y como 1C 2026 (con reseñas abiertas), reseñas inventadas sin autor y tres cursos hechos por el usuario de prueba en 1C 2026, que quedan como reseñas pendientes.

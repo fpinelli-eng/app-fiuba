@@ -1,3 +1,4 @@
+import { titleCase } from "@/lib/plan/format";
 import { createClient } from "@/lib/supabase/server";
 
 export interface MyReview {
@@ -49,7 +50,7 @@ export async function getMyReviews(): Promise<MyReview[]> {
       stars: r.stars,
       comment: r.comment,
       hidden: r.hidden,
-      subjectName: (o?.siu_subject_name as string | undefined) ?? "Curso",
+      subjectName: o?.siu_subject_name ? titleCase(o.siu_subject_name as string) : "Curso",
       detail: [o?.label as string | undefined, termLabel(r.term_id)].filter(Boolean).join(" · "),
     };
   });
