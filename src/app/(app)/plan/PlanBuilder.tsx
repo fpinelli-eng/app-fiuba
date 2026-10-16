@@ -1,17 +1,14 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
 import { WEEK_DAYS, type ClassBlock, type WeekDay } from "@/lib/plan/options";
-import type { PlanCourse, PlanData, PlanSubject, SubjectGroup } from "@/lib/plan/sample-offer";
+import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, Score, SubjectGroup } from "@/lib/plan/data";
+import { savePlanOption } from "./actions";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
-// Por ahora el plan vive solo en memoria: el guardado de Opción A / B llega con su migración,
-// después de la base de datos (#3).
-
-type OptionKey = "A" | "B";
-type Entry = { subject: string; course: string };
+// Cada cambio se guarda solo en la base (plan_choices), como en el mapa.
 
 const GROUP_TITLE: Record<SubjectGroup, string> = {
   obligatorias: "OBLIGATORIAS",
@@ -57,7 +54,10 @@ const overlaps = (a: ClassBlock, b: ClassBlock) => a.day === b.day && a.start < 
 
 export function PlanBuilder({ data }: { data: PlanData }) {
   const [active, setActive] = useState<OptionKey>("A");
-  const [plans, setPlans] = useState<Record<OptionKey, Entry[]>>({ A: [], B: [] });
+  const [plans, setPlans] = useState<Record<OptionKey, Entry[]>>(data.saved);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // Los guardados van en fila: así el último cambio es el que queda.
+  const saving = useRef<Promise<void>>(Promise.resolve());
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [hover, setHover] = useState<Entry | null>(null);
@@ -74,7 +74,16 @@ export function PlanBuilder({ data }: { data: PlanData }) {
 
   const analysis = analyzePlan(selected.map((s) => ({ option: s.course, credits: s.subject.credits ?? undefined })));
 
-  const setPlan = (next: Entry[]) => setPlans({ ...plans, [active]: next });
+  const setPlan = (next: Entry[]) => {
+    setPlans({ ...plans, [active]: next });
+    const option = active;
+    const ids = next.map((e) => e.course);
+    setSaveState("saving");
+    saving.current = saving.current
+      .then(() => savePlanOption(option, ids))
+      .then((r) => setSaveState(r.error ? "error" : "saved"))
+      .catch(() => setSaveState("error"));
+  };
   const pick = (subject: string, course: string) => {
     const current = plan.find((e) => e.subject === subject);
     if (current?.course === course) setPlan(plan.filter((e) => e.subject !== subject));
@@ -108,13 +117,18 @@ export function PlanBuilder({ data }: { data: PlanData }) {
 
   const ghost = hover && !plan.some((e) => e.subject === hover.subject && e.course === hover.course) ? courseOf(hover) : undefined;
 
+  if (data.subjects.length === 0) return <NoOffer term={data.term} career={data.career} />;
+
   return (
     <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-6 pt-6 pb-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Armá tu {data.term}</h1>
-          <p className="text-sm text-muted">
-            {data.career} · datos de prueba con la oferta real del SIU, todavía sin reseñas
+          <p className="text-sm text-muted" aria-live="polite">
+            {data.career}
+            {saveState === "saving" && " · Guardando…"}
+            {saveState === "saved" && " · Guardado"}
+            {saveState === "error" && <span className="text-danger"> · No pudimos guardar el último cambio</span>}
           </p>
         </div>
         <div role="tablist" aria-label="Opciones" className="flex gap-1.5 rounded-xl border border-line bg-surface p-1">
@@ -356,7 +370,7 @@ function SubjectRow({
                   {course.modality && ` · ${course.modality}`}
                 </div>
               </div>
-              <span className="text-xs whitespace-nowrap text-muted">Sin reseñas</span>
+              <Rating score={course.score} />
               <button
                 aria-pressed={isChosen}
                 onClick={() => onPick(course.id)}
@@ -468,5 +482,34 @@ function CalendarBlock({ placed: p, width }: { placed: Placed; width: number }) 
         {formatHour(block.start)}–{formatHour(block.end)} hs
       </div>
     </div>
+  );
+}
+
+function NoOffer({ term, career }: { term: string | null; career: string }) {
+  return (
+    <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-6 pt-6 pb-10">
+      <div>
+        <h1 className="text-[32px] font-semibold tracking-[-0.01em]">{term ? `Armá tu ${term}` : "Plan del cuatrimestre"}</h1>
+        <p className="text-sm text-muted">{career}</p>
+      </div>
+      <div className="rounded-2xl border border-line bg-surface px-6 py-8 text-ink-2">
+        {term
+          ? "Todavía no hay cursos para armar tu plan: la oferta de tu carrera no está cargada o no tenés materias habilitadas en tu mapa."
+          : "Todavía no empezó la carga de la oferta del cuatrimestre."}
+      </div>
+    </main>
+  );
+}
+
+function Rating({ score }: { score: Score | null }) {
+  if (!score) return <span className="text-xs whitespace-nowrap text-muted">Sin reseñas</span>;
+  return (
+    <span className="flex items-center gap-[3px] text-[12.5px] font-semibold whitespace-nowrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" className="fill-star">
+        <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z" />
+      </svg>
+      {score.average.toFixed(1).replace(".", ",")}
+      <span className="font-normal text-muted">({score.count})</span>
+    </span>
   );
 }
