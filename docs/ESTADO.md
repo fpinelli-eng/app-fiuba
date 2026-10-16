@@ -22,7 +22,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | El intérprete también lee la tabla pública de "Horarios de cursada" (todas las carreras, sin docentes) | `src/lib/siu/`, `data/siu/*_tabla-publica.txt` | En `main` (PR #32) |
 | Administración: cuatrimestre actual, fecha de reseñas, cargar la oferta del SIU por plan (procesar, resumen, materias fuera del plan, publicar) y ver la oferta publicada | `src/app/admin/`, `src/lib/admin/` | En `main` (PR #33) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
-| Pantalla del plan del cuatrimestre (PR #14); ahora lee la oferta de la base, solo materias habilitadas, con puntajes y guardado de Opción A / B | `src/app/(app)/plan/`, `src/lib/plan/data.ts`, `supabase/migrations/20261016170000_plan_choices.sql` | PR abierto |
+| Pantalla del plan del cuatrimestre (PR #14); ahora lee la oferta de la base, solo materias habilitadas, con puntajes y guardado de Opción A / B | `src/app/(app)/plan/`, `src/lib/plan/data.ts`, `supabase/migrations/20261016170000_plan_choices.sql` | PR #38 abierto |
 | Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
 | Mapa de la carrera y primera carga de materias, guardando en la base | `src/lib/map/`, `src/app/(app)/mapa/` | En `main` (#17, PR #18) |
 | Inicio: avance, promedio, materias, cursando y finales pendientes | `src/app/(app)/page.tsx` | En `main` (#24, PR #25) |
@@ -36,7 +36,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 ## Qué falta, en orden
 
 1. **Administración, lo que falta:** quitar o volver a mostrar cursos, reemplazar la oferta de un plan con otro texto (conservando los cursos, para no perder sus reseñas), cursos con cambios respecto del cuatrimestre anterior y emparejar a mano materias con nombres abreviados. Segundo desarrollador.
-2. **Plan del cuatrimestre conectado a la base** con guardado de Opción A / B (`plan_choices`): PR abierto. Segundo desarrollador.
+2. **Plan del cuatrimestre conectado a la base** con guardado de Opción A / B (`plan_choices`): PR #38 abierto. Segundo desarrollador.
 3. **Reseñas, lo que falta:** "Editar" en el perfil. La pantalla del plan bloqueado puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`. Francisco.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada. La oferta ya está en la base y el plan guardado en `plan_choices` (opción A); `getPlanData()` de `src/lib/plan/data.ts` arma los cursos con sus horarios.
