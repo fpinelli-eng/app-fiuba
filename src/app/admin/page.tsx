@@ -13,8 +13,8 @@ import {
   type PlanRow,
   type PublishedCourse,
 } from "@/lib/admin/data";
-import type { ImportPreview } from "@/lib/admin/offer-import";
-import { DiscardButton, LinkSubjectForm, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
+import { decisionFor, type ImportPreview } from "@/lib/admin/offer-import";
+import { ChangeChoice, DiscardButton, LinkSubjectForm, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
 
 export const metadata: Metadata = { title: `Administración · ${APP_NAME}` };
 
@@ -195,6 +195,24 @@ function Processed({
           </ul>
         )}
       </Card>
+
+      {preview.changes && preview.changes.length > 0 && (
+        <Card
+          flush
+          title={
+            <>
+              <h2 className="text-[19px] font-semibold">Cursos con cambios</h2>
+              <p className="text-sm text-muted">
+                Elegí qué hacer con cada uno. Ya viene marcada la opción sugerida: si es el mismo curso, conserva sus reseñas.
+              </p>
+            </>
+          }
+        >
+          {preview.changes.map((c) => (
+            <ChangeChoice key={c.key} planId={planId} change={c} chosen={decisionFor(preview, c.key)} />
+          ))}
+        </Card>
+      )}
 
       {preview.unmatched.length > 0 && (
         <Card

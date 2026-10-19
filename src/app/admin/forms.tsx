@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import type { CourseChange, CourseDecision } from "@/lib/admin/offer-import";
 import {
   discardOffer,
   linkSiuSubject,
   processOffer,
   publishOffer,
+  setCourseDecision,
   setCurrentTerm,
   setOfferingVisible,
   setReviewsDate,
@@ -230,5 +232,58 @@ export function LinkSubjectForm({
       </div>
       {state.error && <span className="text-xs text-danger">{state.error}</span>}
     </form>
+  );
+}
+
+const decisionValue = (d: CourseDecision) => (d.kind === "same" ? `same:${d.courseId}` : d.kind);
+
+/** "Cursos con cambios": una fila con sus opciones; elegir guarda al instante. */
+export function ChangeChoice({ planId, change, chosen }: { planId: string; change: CourseChange; chosen: CourseDecision | null }) {
+  const [state, action, pending] = useActionState(setCourseDecision, initial);
+  const current = decisionValue(chosen ?? change.suggestion);
+  const suggested = decisionValue(change.suggestion);
+  const options = [
+    ...change.candidates.map((c) => ({
+      value: `same:${c.courseId}`,
+      label: `Mismo curso que ${c.label}${c.teachers ? ` · ${c.teachers}` : ""} (${c.term})`,
+    })),
+    { value: "new", label: "Curso nuevo" },
+    { value: "hide", label: "No mostrar" },
+  ];
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_360px] items-center gap-5 border-t border-line px-6 py-4">
+      <div className="min-w-0">
+        <div className="font-semibold">
+          {change.subjectName} · {change.label}
+        </div>
+        {change.teachers && <div className="text-[13px] text-muted">{change.teachers}</div>}
+        <div className="mt-1 text-[13px] text-muted">{change.reason}</div>
+        {state.error && <div className="mt-1 text-xs text-danger">{state.error}</div>}
+      </div>
+      <form action={action} role="radiogroup" aria-label={`${change.subjectName} ${change.label}`} className="flex flex-col gap-1.5">
+        <input type="hidden" name="planId" value={planId} />
+        <input type="hidden" name="key" value={change.key} />
+        {options.map((o) => {
+          const on = o.value === current;
+          return (
+            <button
+              key={o.value}
+              type="submit"
+              name="decision"
+              value={o.value}
+              role="radio"
+              aria-checked={on}
+              disabled={pending}
+              className={`min-h-[34px] rounded-[9px] px-3 py-1.5 text-left text-[13px] text-ink ${
+                on ? "border-[1.5px] border-accent bg-accent-soft font-semibold" : "border border-line-strong bg-surface"
+              }`}
+            >
+              {o.label}
+              {o.value === suggested && <span className="ml-2 text-[11.5px] font-semibold text-muted">SUGERIDO</span>}
+            </button>
+          );
+        })}
+      </form>
+    </div>
   );
 }

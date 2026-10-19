@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { commissionKey, offeringKey, previewImport, sameLead, termFromPeriodo } from "./offer-import";
+import { commissionKey, decisionFor, detectCourseChanges, offeringKey, previewImport, sameLead, termFromPeriodo } from "./offer-import";
 
 const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), "utf-8");
 // Plan subjects as they would come from the database (ids are made up).
@@ -95,5 +95,84 @@ describe("course identity helpers", () => {
     expect(termFromPeriodo("2026 - 2do Cuatrimestre")).toEqual({ year: 2026, half: 2 });
     expect(termFromPeriodo("2027 - 1er Cuatrimestre")).toEqual({ year: 2027, half: 1 });
     expect(termFromPeriodo(null)).toBeNull();
+  });
+});
+
+describe("detectCourseChanges", () => {
+  const draft = (number: string, teachers: string[], practice: string | null = null) => ({
+    subjectId: 7,
+    siu_subject_code: "CB002",
+    siu_subject_name: "ÁLGEBRA LINEAL",
+    course_number: number,
+    practice,
+    label: practice ? `Curso ${Number(number)} · práctica ${practice}` : `Curso ${Number(number)}`,
+    modality: null,
+    teachers: teachers.map((nombre) => ({ nombre, rol: "" })),
+    quota: null,
+    enrolled: null,
+    blocks: [],
+  });
+  const before = (courseId: number, number: string, teachers: string[], termId = "2026-2C") => ({
+    courseId,
+    termId,
+    siuCode: "CB002",
+    courseNumber: number,
+    label: `Curso ${Number(number)}`,
+    teachers: teachers.map((nombre) => ({ nombre })),
+  });
+  const names = new Map([[7, "Álgebra Lineal"]]);
+  const detect = (drafts: ReturnType<typeof draft>[], previous: ReturnType<typeof before>[]) =>
+    detectCourseChanges(drafts, previous, "2027-1C", names);
+
+  it("asks nothing when number and lead teacher are the same (also surname vs full name)", () => {
+    expect(detect([draft("01", ["VARGAS"])], [before(10, "01", ["VARGAS GABRIELA", "TORLASCO ANA"])])).toEqual([]);
+  });
+
+  it("asks nothing for a subject never offered before", () => {
+    expect(detect([draft("01", ["VARGAS"])], [])).toEqual([]);
+  });
+
+  it("suggests the same course when the lead changes but a teacher stays", () => {
+    const [c] = detect([draft("01", ["TORLASCO ANA", "JALIFE MICAELA"])], [before(10, "01", ["VARGAS GABRIELA", "TORLASCO ANA"])]);
+    expect(c).toMatchObject({ key: "CB002|01", subjectName: "Álgebra Lineal", label: "Curso 1", suggestion: { kind: "same", courseId: 10 } });
+    expect(c.reason).toMatch(/^Cambió el titular/);
+    expect(c.candidates.map((x) => x.courseId)).toEqual([10]);
+  });
+
+  it("suggests a new course when the lead and every teacher change", () => {
+    const [c] = detect([draft("01", ["PEREZ JUAN"])], [before(10, "01", ["VARGAS GABRIELA"])]);
+    expect(c.suggestion).toEqual({ kind: "new" });
+    expect(c.candidates.map((x) => x.courseId)).toEqual([10]); // still offered
+  });
+
+  it("follows the lead teacher when the number changes", () => {
+    const [c] = detect([draft("05", ["VARGAS"])], [before(10, "01", ["VARGAS GABRIELA"]), before(11, "02", ["LOPEZ"])]);
+    expect(c.reason).toBe("Cambió el número: antes Curso 1");
+    expect(c.suggestion).toEqual({ kind: "same", courseId: 10 });
+  });
+
+  it("lists new courses, offering earlier ones that share a teacher", () => {
+    const [shared] = detect([draft("07", ["NUEVO", "TORLASCO"])], [before(10, "01", ["VARGAS", "TORLASCO ANA"])]);
+    expect(shared).toMatchObject({ reason: "Curso nuevo que comparte docentes con uno anterior", suggestion: { kind: "new" } });
+    expect(shared.candidates.map((x) => x.courseId)).toEqual([10]);
+    const [alone] = detect([draft("08", ["NADIE"])], [before(10, "01", ["VARGAS"])]);
+    expect(alone).toMatchObject({ reason: "Curso nuevo", candidates: [] });
+  });
+
+  it("compares with the latest earlier term only, once per commission", () => {
+    const changes = detect(
+      [draft("01", ["TORLASCO"], "A"), draft("01", ["TORLASCO"], "B")],
+      [before(9, "01", ["TORLASCO"], "2026-1C"), before(10, "01", ["VARGAS", "TORLASCO"])],
+    );
+    expect(changes).toHaveLength(1);
+    expect(changes[0].suggestion).toEqual({ kind: "same", courseId: 10 });
+    expect(changes[0].candidates.every((c) => c.term === "2C 2026")).toBe(true);
+  });
+
+  it("uses the admin's decision over the suggestion", () => {
+    const changes = detect([draft("01", ["PEREZ"])], [before(10, "01", ["VARGAS"])]);
+    expect(decisionFor({ changes }, "CB002|01")).toEqual({ kind: "new" });
+    expect(decisionFor({ changes, decisions: { "CB002|01": { kind: "same", courseId: 10 } } }, "CB002|01")).toEqual({ kind: "same", courseId: 10 });
+    expect(decisionFor({ changes }, "otra")).toBeNull();
   });
 });
