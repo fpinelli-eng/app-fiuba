@@ -147,3 +147,16 @@ export async function getPublishedOffer(termId: string, planId: string): Promise
   }
   return [...subjects.values()];
 }
+
+/** Subjects of the plan an unmatched SIU subject can be paired with (no CBC), by name. */
+export async function getPlanSubjectOptions(planId: string): Promise<{ id: number; name: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subjects")
+    .select("id, name")
+    .eq("plan_id", planId)
+    .not("kind", "in", "(cbc,cbc_subject)")
+    .order("name");
+  if (error) throw new Error(`subjects: ${error.message}`);
+  return data.map((s) => ({ id: s.id as number, name: s.name as string }));
+}

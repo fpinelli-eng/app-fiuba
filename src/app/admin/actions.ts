@@ -127,6 +127,54 @@ export async function processOffer(_prev: ActionState, formData: FormData): Prom
   return ok;
 }
 
+/**
+ * Emparejar a mano: a SIU subject that did not match by name ("ADM. Y CONTROL DE PROY.
+ * INFORMATICOS I") is a subject of the plan. Saved in subject_siu_codes, so the next terms
+ * recognize it alone, and the processed summary is recalculated.
+ */
+export async function linkSiuSubject(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const planId = String(formData.get("planId") ?? "");
+  const siuCode = String(formData.get("siuCode") ?? "").trim();
+  const subjectId = Number(formData.get("subjectId"));
+  const term = await currentTerm();
+  if (!term) return { error: "Primero elegí el cuatrimestre." };
+  if (!/^[A-Z0-9]+$/.test(siuCode) || !Number.isInteger(subjectId) || subjectId <= 0) {
+    return { error: "Elegí la materia del plan." };
+  }
+
+  const { subjects } = await planCatalog(planId);
+  if (!subjects.some((s) => s.id === subjectId)) return { error: "Esa materia no es de este plan." };
+
+  const supabase = await createClient();
+  const imp = await supabase
+    .from("offer_imports")
+    .select("status, raw_text, parsed")
+    .eq("term_id", term.id)
+    .eq("plan_id", planId)
+    .maybeSingle();
+  if (imp.error || !imp.data || imp.data.status !== "processed") {
+    return { error: "Emparejá antes de publicar: procesá el texto (o reemplazalo) y emparejá ahí." };
+  }
+
+  const linked = await supabase
+    .from("subject_siu_codes")
+    .upsert({ subject_id: subjectId, siu_code: siuCode }, { ignoreDuplicates: true });
+  if (linked.error) return { error: "No pudimos guardar el emparejamiento." };
+
+  const { knownCodes } = await planCatalog(planId);
+  const { preview } = previewImport(imp.data.raw_text as string, subjects, knownCodes);
+  const replacing = (imp.data.parsed as ImportPreview | null)?.replacing;
+  const saved = await supabase
+    .from("offer_imports")
+    .update({ parsed: replacing ? { ...preview, replacing } : preview })
+    .eq("term_id", term.id)
+    .eq("plan_id", planId);
+  if (saved.error) return { error: "Guardamos el emparejamiento, pero no pudimos actualizar el resumen." };
+  revalidatePath("/admin");
+  return ok;
+}
+
 /** "Descartar": forgets a processed text that was not published (and brings back the offer it was replacing). */
 export async function discardOffer(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
