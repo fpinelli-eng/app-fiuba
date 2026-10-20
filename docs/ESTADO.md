@@ -37,12 +37,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 ## Qué falta, en orden
 
-1. **Administración, lo que falta:** agregar electivas nuevas al plan. Quitar / volver a mostrar cursos y reemplazar la oferta sin borrar: PR #41. Emparejar a mano materias: PR #44 (encima del #41). Cursos con cambios respecto del cuatrimestre anterior: PR #45 (encima del #44). Segundo desarrollador.
-2. **Plan del cuatrimestre, lo que falta:** "Reemplazar" en Administración actualizando los cursos existentes en vez de borrarlos ("Me inscribí en esta opción" ya está, PR #40). Para la beta, Química e Informática se publican directo con la oferta completa. Segundo desarrollador.
-3. **Reseñas, lo que falta:** la pantalla del plan bloqueado por reseñas pendientes: PR #42 abierto (segundo desarrollador).
+1. **Administración, lo que falta:** agregar electivas nuevas al plan. Ya están en `main`: quitar / volver a mostrar cursos y reemplazar la oferta sin borrar (PR #41), emparejar a mano materias (PR #44), cursos con cambios entre cuatrimestres (PR #45) y moderación de reseñas (PR #43). Detalle: un curso que un reemplazo ocultó por no estar en el SIU no vuelve a mostrarse solo si reaparece; se muestra a mano. Segundo desarrollador.
+2. **Plan del cuatrimestre:** completo para la beta ("Me inscribí en esta opción", PR #40; plan bloqueado por reseñas pendientes, PR #42). Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que tocaron "Me inscribí" se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
+3. **Reseñas:** completas para la beta.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
-5. **Inicio, lo que falta:** calendario de la cursada. Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
-6. **Moderación de reseñas** (administración): PR #43 abierto (segundo desarrollador).
+5. **Inicio, lo que falta:** calendario de la cursada (Francisco, en curso). Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
+6. **Moderación de reseñas:** hecha (PR #43).
 7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
 8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
