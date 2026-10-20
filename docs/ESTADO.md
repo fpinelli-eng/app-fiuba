@@ -39,7 +39,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 1. **Administración, lo que falta:** agregar electivas nuevas al plan. Quitar / volver a mostrar cursos y reemplazar la oferta sin borrar: PR #41. Emparejar a mano materias: PR #44 (encima del #41). Cursos con cambios respecto del cuatrimestre anterior: PR #45 (encima del #44). Segundo desarrollador.
 2. **Plan del cuatrimestre, lo que falta:** "Reemplazar" en Administración actualizando los cursos existentes en vez de borrarlos ("Me inscribí en esta opción" ya está, PR #40). Para la beta, Química e Informática se publican directo con la oferta completa. Segundo desarrollador.
-3. **Reseñas, lo que falta:** la pantalla del plan bloqueado, que puede usar `getReviewRound()` y `countPendingReviews()` de `src/lib/reviews/pending.ts`.
+3. **Reseñas, lo que falta:** la pantalla del plan bloqueado por reseñas pendientes: PR #42 abierto (segundo desarrollador).
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada. Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
 6. **Moderación de reseñas** (administración).
