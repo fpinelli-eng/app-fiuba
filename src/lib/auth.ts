@@ -16,7 +16,7 @@ export type Profile = {
 };
 
 // Nombre y foto vienen de la cuenta de Google.
-export function profileFromUser(user: User): Profile {
+export function profileFromUser(user: Pick<User, "email" | "user_metadata">): Profile {
   const meta = user.user_metadata ?? {};
   const email = user.email ?? "";
   const fullName: string = (meta.full_name || meta.name || email.split("@")[0]).trim();

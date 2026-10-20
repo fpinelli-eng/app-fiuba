@@ -24,10 +24,12 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  // getClaims verifica la firma del token en el servidor, sin ir a Supabase cuando el proyecto
+  // usa claves asimétricas (si no, consulta a Supabase como getUser). También renueva el token vencido.
   let loggedIn = false;
   try {
-    const { data } = await supabase.auth.getUser();
-    loggedIn = !!data.user;
+    const { data } = await supabase.auth.getClaims();
+    loggedIn = !!data?.claims.sub;
   } catch {
     loggedIn = false;
   }

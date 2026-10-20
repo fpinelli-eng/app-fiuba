@@ -16,9 +16,12 @@ export type Account = Profile & {
 // `cache` evita repetir las consultas si el layout y la página las piden en el mismo pedido.
 export const requireAccount = cache(async (): Promise<Account> => {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
-  if (!user) redirect("/ingresar");
+  // Verifica la firma del token (la base hace lo mismo con cada consulta). Más rápido que getUser,
+  // que siempre va a Supabase; el token dura una hora y el proxy lo renueva.
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) redirect("/ingresar");
+  const user = { id: claims.sub, email: claims.email, user_metadata: claims.user_metadata ?? {} };
   if (!isAllowedEmail(user.email)) {
     redirect(`/auth/salir?error=dominio&email=${encodeURIComponent(user.email ?? "")}`);
   }
