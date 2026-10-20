@@ -5,6 +5,7 @@ import { APP_NAME } from "@/lib/app";
 import { formatHour } from "@/lib/plan/format";
 import {
   getAdminOverview,
+  getPlanSubjectOptions,
   getPlanImport,
   getPublishedOffer,
   termLabel,
@@ -13,7 +14,7 @@ import {
   type PublishedCourse,
 } from "@/lib/admin/data";
 import type { ImportPreview } from "@/lib/admin/offer-import";
-import { DiscardButton, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
+import { DiscardButton, LinkSubjectForm, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
 
 export const metadata: Metadata = { title: `Administración · ${APP_NAME}` };
 
@@ -94,7 +95,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <div className="flex min-w-0 flex-col gap-4">
           {selected && !planImport && <ProcessForm key={selected.id} planId={selected.id} title={planName(selected)} />}
           {selected && planImport?.status === "processed" && (
-            <Processed planId={selected.id} title={planName(selected)} preview={planImport.preview} />
+            <Processed
+              planId={selected.id}
+              title={planName(selected)}
+              preview={planImport.preview}
+              options={pairableSubjects(await getPlanSubjectOptions(selected.id), planImport.preview)}
+            />
           )}
           {selected && planImport?.status === "published" && (
             <Published termId={term.id} plan={selected} preview={planImport.preview} />
@@ -142,7 +148,23 @@ function Stats({ preview }: { preview: ImportPreview }) {
   );
 }
 
-function Processed({ planId, title, preview }: { planId: string; title: string; preview: ImportPreview }) {
+/** Subjects already paired with a SIU subject of this text are not offered again. */
+const pairableSubjects = (all: { id: number; name: string }[], preview: ImportPreview) => {
+  const taken = new Set(preview.matched.map((m) => m.subjectId));
+  return all.filter((s) => !taken.has(s.id));
+};
+
+function Processed({
+  planId,
+  title,
+  preview,
+  options,
+}: {
+  planId: string;
+  title: string;
+  preview: ImportPreview;
+  options: { id: number; name: string }[];
+}) {
   return (
     <>
       <Card>
@@ -175,7 +197,17 @@ function Processed({ planId, title, preview }: { planId: string; title: string; 
       </Card>
 
       {preview.unmatched.length > 0 && (
-        <Card flush title={<h2 className="text-[19px] font-semibold">Materias que no están en el plan</h2>}>
+        <Card
+          flush
+          title={
+            <>
+              <h2 className="text-[19px] font-semibold">Materias que no están en el plan</h2>
+              <p className="text-sm text-muted">
+                Si alguna es de este plan con otro nombre, elegí cuál es: queda guardado para los próximos cuatrimestres.
+              </p>
+            </>
+          }
+        >
           {preview.unmatched.map((u) => (
             <div key={u.siuCode} className="flex items-center justify-between gap-4 border-t border-line px-6 py-3.5">
               <div>
@@ -184,7 +216,7 @@ function Processed({ planId, title, preview }: { planId: string; title: string; 
                   {u.siuCode} · {u.courses} {u.courses === 1 ? "curso" : "cursos"}
                 </div>
               </div>
-              <span className="text-[13px] text-muted">No se muestra</span>
+              <LinkSubjectForm planId={planId} siuCode={u.siuCode} siuName={u.siuName} options={options} />
             </div>
           ))}
         </Card>

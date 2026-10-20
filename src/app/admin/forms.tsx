@@ -3,6 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import {
   discardOffer,
+  linkSiuSubject,
   processOffer,
   publishOffer,
   setCurrentTerm,
@@ -177,6 +178,56 @@ export function VisibilityButton({ offeringId, visible }: { offeringId: number; 
       >
         {pending ? "…" : visible ? "Quitar" : "Volver a mostrar"}
       </button>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
+  );
+}
+
+/** "Materias que no están en el plan": decir a qué materia del plan corresponde. */
+export function LinkSubjectForm({
+  planId,
+  siuCode,
+  siuName,
+  options,
+}: {
+  planId: string;
+  siuCode: string;
+  siuName: string;
+  options: { id: number; name: string }[];
+}) {
+  const [state, action, pending] = useActionState(linkSiuSubject, initial);
+  const [subjectId, setSubjectId] = useState("");
+  const id = `link-${siuCode}`;
+  return (
+    <form action={action} className="flex flex-col items-end gap-1.5">
+      <input type="hidden" name="planId" value={planId} />
+      <input type="hidden" name="siuCode" value={siuCode} />
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="sr-only">
+          ¿A qué materia del plan corresponde {siuName}?
+        </label>
+        <select
+          id={id}
+          name="subjectId"
+          value={subjectId}
+          onChange={(e) => setSubjectId(e.target.value)}
+          className="h-9 max-w-[260px] rounded-[9px] border border-line-strong bg-surface px-2 text-[13px] text-ink"
+        >
+          <option value="">No se muestra</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              Es {o.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          disabled={pending || !subjectId}
+          className="h-9 rounded-[9px] border border-line-strong bg-surface px-3 text-[13px] font-semibold text-ink disabled:cursor-not-allowed disabled:text-disabled-ink"
+        >
+          {pending ? "…" : "Emparejar"}
+        </button>
+      </div>
       {state.error && <span className="text-xs text-danger">{state.error}</span>}
     </form>
   );
