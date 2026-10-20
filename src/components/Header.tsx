@@ -28,6 +28,9 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
             <Link
               key={item.href}
               href={item.href}
+              // Precarga la sección entera (con sus datos), así el clic la muestra al instante.
+              // Lo que se guarda en el mapa, el plan o las reseñas refresca estas precargas.
+              prefetch
               aria-current={active ? "page" : undefined}
               className={
                 active
