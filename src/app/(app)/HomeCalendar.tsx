@@ -16,12 +16,17 @@ const PALETTE = [
   "bg-teal text-teal-ink border-teal-ink/25",
 ];
 const CAMPUS_NAME = { PC: "Paseo Colón", LH: "Las Heras", CU: "Ciudad Universitaria" } as const;
-const HOUR_PX = 24;
+// La grilla mide siempre más o menos lo mismo: con pocas horas de cursada, cada hora es más alta
+// y los nombres entran enteros.
+const GRID_PX = 420;
+const hourPx = (hours: number) => Math.round(Math.min(56, Math.max(26, GRID_PX / hours)));
+
 
 export function HomeCalendar({ data }: { data: HomeCourses }) {
   const week = layoutWeek(data.courses);
   const hours = Array.from({ length: week.last - week.first }, (_, i) => week.first + i);
-  const height = hours.length * HOUR_PX;
+  const hourHeight = hourPx(hours.length);
+  const height = hours.length * hourHeight;
 
   return (
     <section aria-label={`Cursada ${data.term}`} className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-7">
@@ -44,7 +49,7 @@ export function HomeCalendar({ data }: { data: HomeCourses }) {
           ))}
           <div className="flex flex-col text-[11px] leading-none text-muted tabular-nums">
             {hours.map((h) => (
-              <div key={h} style={{ height: HOUR_PX }}>
+              <div key={h} style={{ height: hourHeight }}>
                 {h}
               </div>
             ))}
@@ -52,7 +57,7 @@ export function HomeCalendar({ data }: { data: HomeCourses }) {
           {week.days.map((blocks, i) => (
             <div key={CALENDAR_DAYS[i]} className="relative rounded-lg bg-bg" style={{ height }}>
               {blocks.map((p) => (
-                <Block key={`${p.course.offeringId}-${p.block.start}`} placed={p} first={week.first} />
+                <Block key={`${p.course.offeringId}-${p.block.start}`} placed={p} first={week.first} hourHeight={hourHeight} />
               ))}
             </div>
           ))}
@@ -77,22 +82,35 @@ export function HomeCalendar({ data }: { data: HomeCourses }) {
   );
 }
 
-function Block({ placed: p, first }: { placed: PlacedBlock; first: number }) {
+// Alto de una línea de texto en un bloque (12 px con interlineado 1,25) y relleno vertical.
+const LINE_PX = 15;
+const PAD_PX = 12;
+
+function Block({ placed: p, first, hourHeight }: { placed: PlacedBlock; first: number; hourHeight: number }) {
   const { block } = p;
-  const top = ((block.start - first * 60) / 60) * HOUR_PX + 1;
-  const height = ((block.end - block.start) / 60) * HOUR_PX - 2;
+  const top = ((block.start - first * 60) / 60) * hourHeight + 1;
+  const height = ((block.end - block.start) / 60) * hourHeight - 2;
   const width = 100 / p.lanes;
   const where = block.campus ?? (block.virtual ? "Virtual" : null);
+  const details = [p.course.code, where, `${formatHour(block.start)}–${formatHour(block.end)}`].filter(Boolean).join(" · ");
+  // El nombre usa todo el alto que haya; la línea de curso y horario solo entra si sobra lugar
+  // (si no, queda en el texto que aparece al pasar el mouse).
+  const lines = Math.max(1, Math.floor((height - PAD_PX) / LINE_PX));
+  const showDetails = lines >= 3;
+  const titleLines = showDetails ? lines - 1 : lines;
   return (
     <div
-      className={`absolute overflow-hidden rounded-lg border px-2 py-1.5 text-xs leading-tight ${PALETTE[p.color % PALETTE.length]}`}
+      className={`absolute overflow-hidden rounded-lg border px-2 py-1.5 leading-tight ${p.lanes > 1 ? "text-[11px]" : "text-xs"} ${PALETTE[p.color % PALETTE.length]}`}
       style={{ top, height, left: `calc(${p.lane * width}% + 3px)`, width: `calc(${width}% - 6px)` }}
-      title={`${p.course.subject} · ${p.course.code}${where ? ` · ${where}` : ""} · ${formatHour(block.start)}–${formatHour(block.end)} hs`}
+      title={`${p.course.subject} · ${details}`}
     >
-      <div className="line-clamp-2 font-semibold">{p.course.subject}</div>
-      <div className="opacity-90 tabular-nums">
-        {[p.course.code, where, `${formatHour(block.start)}–${formatHour(block.end)}`].filter(Boolean).join(" · ")}
+      <div
+        className="overflow-hidden font-semibold hyphens-auto"
+        style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: titleLines }}
+      >
+        {p.course.subject}
       </div>
+      {showDetails && <div className="truncate opacity-90 tabular-nums">{details}</div>}
     </div>
   );
 }

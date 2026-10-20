@@ -37,10 +37,27 @@ describe("home calendar", () => {
     ]);
   });
 
-  it("keeps asynchronous classes out of the grid and widens the hours when needed", () => {
+  it("keeps asynchronous classes out of the grid", () => {
     const w = layoutWeek([course("A", 6, [block(2, 8, 12), block(1, 0, 2, { async: true, campus: null })]), course("B", 4, [block(6, 22, 24)])]);
     expect(w.days[0]).toHaveLength(0);
     expect(w.asyncClasses.map((x) => x.course.subject)).toEqual(["A"]);
-    expect([w.first, w.last]).toEqual([7, 24]);
+    expect([w.first, w.last]).toEqual([8, 24]);
+  });
+
+  it("joins classes of the same course that follow each other", () => {
+    const w = layoutWeek([course("A", 6, [block(1, 19, 21), block(1, 18, 19), block(1, 22, 23)])]);
+    expect(w.days[0].map((p) => [p.block.start / 60, p.block.end / 60])).toEqual([
+      [18, 21],
+      [22, 23],
+    ]);
+  });
+
+  it("shows only the hours with classes, at least six", () => {
+    const evening = layoutWeek([course("A", 4, [block(1, 18, 22)]), course("B", 4, [block(3, 19, 23)])]);
+    expect([evening.first, evening.last]).toEqual([18, 24]);
+    const late = layoutWeek([course("A", 4, [block(1, 21, 23)])]);
+    expect([late.first, late.last]).toEqual([18, 24]);
+    const morning = layoutWeek([course("A", 4, [block(1, 9, 11)])]);
+    expect([morning.first, morning.last]).toEqual([9, 15]);
   });
 });

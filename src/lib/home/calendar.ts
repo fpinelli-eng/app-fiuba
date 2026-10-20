@@ -26,16 +26,31 @@ export interface WeekLayout {
   campuses: ("PC" | "LH" | "CU")[];
 }
 
-/** Hours shown by default (prototype: 7 to 22); widened if a class is earlier or later. */
-const DEFAULT_FIRST = 7;
-const DEFAULT_LAST = 23;
+/**
+ * Hours shown: only the span with classes (at least MIN_SPAN hours), so the grid gives the
+ * classes as much height as possible. Nobody needs to see an empty morning.
+ */
+const MIN_SPAN = 6;
+const EMPTY = { first: 8, last: 22 };
+
+/** Classes of one course that follow each other on the same day (theory 18–19 + practice 19–21) make one block. */
+function joinBackToBack(blocks: HomeBlock[]): HomeBlock[] {
+  const sorted = [...blocks].sort((a, b) => a.weekday - b.weekday || a.start - b.start);
+  const out: HomeBlock[] = [];
+  for (const b of sorted) {
+    const prev = out[out.length - 1];
+    if (prev && prev.weekday === b.weekday && prev.end === b.start && prev.campus === b.campus) prev.end = b.end;
+    else out.push({ ...b });
+  }
+  return out;
+}
 
 export function layoutWeek(courses: HomeCourse[]): WeekLayout {
   const subjects = [...new Set(courses.map((c) => c.subject))];
   const colorOf = (c: HomeCourse) => subjects.indexOf(c.subject);
 
   const inPerson = courses.flatMap((course) =>
-    course.blocks.filter((b) => !b.async && b.weekday >= 1 && b.weekday <= 6).map((block) => ({ course, block })),
+    joinBackToBack(course.blocks.filter((b) => !b.async && b.weekday >= 1 && b.weekday <= 6)).map((block) => ({ course, block })),
   );
 
   const days = CALENDAR_DAYS.map((_, i) => {
@@ -56,8 +71,13 @@ export function layoutWeek(courses: HomeCourse[]): WeekLayout {
 
   const starts = inPerson.map((p) => p.block.start);
   const ends = inPerson.map((p) => p.block.end);
-  const first = Math.min(DEFAULT_FIRST, ...starts.map((m) => Math.floor(m / 60)));
-  const last = Math.max(DEFAULT_LAST, ...ends.map((m) => Math.ceil(m / 60)));
+  let first = starts.length ? Math.floor(Math.min(...starts) / 60) : EMPTY.first;
+  let last = ends.length ? Math.ceil(Math.max(...ends) / 60) : EMPTY.last;
+  if (last - first < MIN_SPAN) {
+    // Grow downwards first (evening classes are the usual case), then upwards.
+    last = Math.min(24, first + MIN_SPAN);
+    first = Math.max(0, last - MIN_SPAN);
+  }
 
   const creditsBySubject = new Map(courses.map((c) => [c.subject, c.credits]));
   const order: ("PC" | "LH" | "CU")[] = ["PC", "LH", "CU"];

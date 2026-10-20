@@ -73,7 +73,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 
 ### Inicio
 - Saludo, aviso de reseñas pendientes cuando las hay, avance (porcentaje y barra dividida CBC / obligatorias, créditos por categoría), promedio, cuadro "Materias" (aprobadas incluyendo CBC y estado de la prueba de inglés), calendario semanal de la cursada actual y "Finales pendientes" con lo que destraba cada uno.
-- Calendario de la cursada (programado el 20 de octubre): sale de los cursos en los que el alumno tocó "Me inscribí en esta opción" en el Plan. Mismos colores en el mismo orden que el calendario del plan, bloques que se pisan lado a lado, asincrónicas en una línea aparte y "Ver el plan →". Sin inscripción en el cuatrimestre actual, queda la lista de materias en "Cursando" del mapa.
+- Calendario de la cursada (programado el 20 de octubre): sale de los cursos en los que el alumno tocó "Me inscribí en esta opción" en el Plan. Mismos colores en el mismo orden que el calendario del plan, bloques que se pisan lado a lado, asincrónicas en una línea aparte y "Ver el plan →". Solo muestra las horas con clases (mínimo 6) y la grilla mide siempre unos 420 px, así cada hora es lo más alta posible; las clases seguidas de un mismo curso (teórica + práctica) son un solo bloque, y el nombre de la materia usa todo el alto del bloque: la línea de curso y horario aparece solo si sobra lugar (si no, queda al pasar el mouse). Sin inscripción en el cuatrimestre actual, queda la lista de materias en "Cursando" del mapa.
 
 ### Mapa de la carrera
 - Columnas CBC + 1.º a 8.º cuatrimestre, sin flechas. Nodo de 112 × 92 px: nombre (hasta 3 líneas), ícono de estado, nota en 16 px / 700 si está aprobada, créditos "8 C" chiquitos.
