@@ -1,11 +1,15 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import type { CourseChange, CourseDecision } from "@/lib/admin/offer-import";
 import {
   discardOffer,
+  linkSiuSubject,
   processOffer,
   publishOffer,
+  setCourseDecision,
   setCurrentTerm,
+  setOfferingVisible,
   setReviewsDate,
   type ActionState,
 } from "./actions";
@@ -128,14 +132,158 @@ export function DiscardButton({ planId }: { planId: string }) {
   return <PlanAction planId={planId} run={discardOffer} className={secondary} label="Descartar" pendingLabel="Descartando…" />;
 }
 
-export function PublishButton({ planId }: { planId: string }) {
+export function PublishButton({ planId, label = "Publicar" }: { planId: string; label?: string }) {
   return (
     <PlanAction
       planId={planId}
       run={publishOffer}
       className={`${primary} h-[46px] px-[22px] text-[15px]`}
-      label="Publicar"
+      label={label}
       pendingLabel="Publicando…"
     />
+  );
+}
+
+/** Plan publicado: pegar un texto nuevo del SIU para reemplazar la oferta. */
+export function ReplacePanel({ planId, title }: { planId: string; title: string }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={secondary}>
+        Reemplazar con otro texto
+      </button>
+    );
+  }
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <ProcessForm planId={planId} title={`Reemplazar · ${title}`} />
+      <div className="flex justify-end">
+        <button type="button" onClick={() => setOpen(false)} className="text-sm text-muted underline">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** "Quitar" / "Volver a mostrar" un curso de la oferta publicada. */
+export function VisibilityButton({ offeringId, visible }: { offeringId: number; visible: boolean }) {
+  const [state, action, pending] = useActionState(setOfferingVisible, initial);
+  return (
+    <form action={action} className="flex flex-col items-end">
+      <input type="hidden" name="offeringId" value={offeringId} />
+      <input type="hidden" name="visible" value={visible ? "false" : "true"} />
+      <button
+        type="submit"
+        disabled={pending}
+        className={`text-[13px] font-semibold whitespace-nowrap ${visible ? "text-danger" : "text-accent"} disabled:text-disabled-ink`}
+      >
+        {pending ? "…" : visible ? "Quitar" : "Volver a mostrar"}
+      </button>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
+  );
+}
+
+/** "Materias que no están en el plan": decir a qué materia del plan corresponde. */
+export function LinkSubjectForm({
+  planId,
+  siuCode,
+  siuName,
+  options,
+}: {
+  planId: string;
+  siuCode: string;
+  siuName: string;
+  options: { id: number; name: string }[];
+}) {
+  const [state, action, pending] = useActionState(linkSiuSubject, initial);
+  const [subjectId, setSubjectId] = useState("");
+  const id = `link-${siuCode}`;
+  return (
+    <form action={action} className="flex flex-col items-end gap-1.5">
+      <input type="hidden" name="planId" value={planId} />
+      <input type="hidden" name="siuCode" value={siuCode} />
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="sr-only">
+          ¿A qué materia del plan corresponde {siuName}?
+        </label>
+        <select
+          id={id}
+          name="subjectId"
+          value={subjectId}
+          onChange={(e) => setSubjectId(e.target.value)}
+          className="h-9 max-w-[260px] rounded-[9px] border border-line-strong bg-surface px-2 text-[13px] text-ink"
+        >
+          <option value="">No se muestra</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              Es {o.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          disabled={pending || !subjectId}
+          className="h-9 rounded-[9px] border border-line-strong bg-surface px-3 text-[13px] font-semibold text-ink disabled:cursor-not-allowed disabled:text-disabled-ink"
+        >
+          {pending ? "…" : "Emparejar"}
+        </button>
+      </div>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
+  );
+}
+
+const decisionValue = (d: CourseDecision) => (d.kind === "same" ? `same:${d.courseId}` : d.kind);
+
+/** "Cursos con cambios": una fila con sus opciones; elegir guarda al instante. */
+export function ChangeChoice({ planId, change, chosen }: { planId: string; change: CourseChange; chosen: CourseDecision | null }) {
+  const [state, action, pending] = useActionState(setCourseDecision, initial);
+  const current = decisionValue(chosen ?? change.suggestion);
+  const suggested = decisionValue(change.suggestion);
+  const options = [
+    ...change.candidates.map((c) => ({
+      value: `same:${c.courseId}`,
+      label: `Mismo curso que ${c.label}${c.teachers ? ` · ${c.teachers}` : ""} (${c.term})`,
+    })),
+    { value: "new", label: "Curso nuevo" },
+    { value: "hide", label: "No mostrar" },
+  ];
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_360px] items-center gap-5 border-t border-line px-6 py-4">
+      <div className="min-w-0">
+        <div className="font-semibold">
+          {change.subjectName} · {change.label}
+        </div>
+        {change.teachers && <div className="text-[13px] text-muted">{change.teachers}</div>}
+        <div className="mt-1 text-[13px] text-muted">{change.reason}</div>
+        {state.error && <div className="mt-1 text-xs text-danger">{state.error}</div>}
+      </div>
+      <form action={action} role="radiogroup" aria-label={`${change.subjectName} ${change.label}`} className="flex flex-col gap-1.5">
+        <input type="hidden" name="planId" value={planId} />
+        <input type="hidden" name="key" value={change.key} />
+        {options.map((o) => {
+          const on = o.value === current;
+          return (
+            <button
+              key={o.value}
+              type="submit"
+              name="decision"
+              value={o.value}
+              role="radio"
+              aria-checked={on}
+              disabled={pending}
+              className={`min-h-[34px] rounded-[9px] px-3 py-1.5 text-left text-[13px] text-ink ${
+                on ? "border-[1.5px] border-accent bg-accent-soft font-semibold" : "border border-line-strong bg-surface"
+              }`}
+            >
+              {o.label}
+              {o.value === suggested && <span className="ml-2 text-[11.5px] font-semibold text-muted">SUGERIDO</span>}
+            </button>
+          );
+        })}
+      </form>
+    </div>
   );
 }
