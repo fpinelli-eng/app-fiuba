@@ -13,7 +13,7 @@ import {
   type PublishedCourse,
 } from "@/lib/admin/data";
 import type { ImportPreview } from "@/lib/admin/offer-import";
-import { DiscardButton, ProcessForm, PublishButton, ReviewsDateForm, TermForm } from "./forms";
+import { DiscardButton, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
 
 export const metadata: Metadata = { title: `Administración · ${APP_NAME}` };
 
@@ -154,6 +154,12 @@ function Processed({ planId, title, preview }: { planId: string; title: string; 
           <DiscardButton planId={planId} />
         </div>
         <Stats preview={preview} />
+        {preview.replacing && (
+          <p className="mt-3 rounded-[10px] bg-sky px-3 py-2 text-[13px] text-sky-ink">
+            Es un reemplazo de la oferta publicada: los alumnos siguen viendo la anterior hasta que publiques. Los cursos que siguen se
+            actualizan (sin perder planes, cursadas ni reseñas), los nuevos se agregan y los que ya no están se quitan.
+          </p>
+        )}
         {preview.format === "public-table" && (
           <p className="mt-3 rounded-[10px] bg-butter px-3 py-2 text-[13px] text-butter-ink">
             La tabla pública no trae docentes (solo el titular), ni promoción o regularidad, ni las prácticas por separado.
@@ -185,7 +191,7 @@ function Processed({ planId, title, preview }: { planId: string; title: string; 
       )}
 
       <div className="flex justify-end">
-        <PublishButton planId={planId} />
+        <PublishButton planId={planId} label={preview.replacing ? "Publicar cambios" : "Publicar"} />
       </div>
     </>
   );
@@ -200,16 +206,22 @@ const describeBlocks = (c: PublishedCourse) => {
 async function Published({ termId, plan, preview }: { termId: string; plan: PlanRow; preview: ImportPreview }) {
   const subjects = await getPublishedOffer(termId, plan.id);
   const courses = subjects.reduce((n, s) => n + s.courses.length, 0);
+  const hidden = subjects.reduce((n, s) => n + s.courses.filter((c) => !c.visible).length, 0);
   return (
     <>
       <Card>
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-[19px] font-semibold">{planName(plan)}</h2>
-          <span className="rounded-full bg-mint px-2.5 py-0.5 text-[12.5px] font-semibold text-mint-ink">Publicada</span>
-        </div>
-        <div className="text-sm text-muted">
-          {subjects.length} materias · {courses} cursos
-          {preview.format ? ` · desde la ${FORMAT_LABEL[preview.format]}` : ""}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-[19px] font-semibold">{planName(plan)}</h2>
+              <span className="rounded-full bg-mint px-2.5 py-0.5 text-[12.5px] font-semibold text-mint-ink">Publicada</span>
+            </div>
+            <div className="text-sm text-muted">
+              {subjects.length} materias · {courses} cursos{hidden ? ` (${hidden} quitados)` : ""}
+              {preview.format ? ` · desde la ${FORMAT_LABEL[preview.format]}` : ""}
+            </div>
+          </div>
+          <ReplacePanel key={plan.id} planId={plan.id} title={planName(plan)} />
         </div>
       </Card>
       <Card flush>
@@ -224,11 +236,14 @@ async function Published({ termId, plan, preview }: { termId: string; plan: Plan
             {s.courses.map((c) => (
               <div
                 key={c.id}
-                className="grid grid-cols-[160px_minmax(0,1fr)_minmax(0,300px)] items-center gap-3.5 border-t border-line px-6 py-2.5"
+                className={`grid grid-cols-[160px_minmax(0,1fr)_minmax(0,300px)_130px] items-center gap-3.5 border-t border-line px-6 py-2.5 ${
+                  c.visible ? "" : "opacity-50"
+                }`}
               >
                 <span className="text-sm font-semibold">{c.label}</span>
                 <span className="min-w-0 text-sm text-ink-2">{c.teachers.join(", ")}</span>
                 <span className="text-[13px] text-muted">{describeBlocks(c)}</span>
+                <VisibilityButton offeringId={c.id} visible={c.visible} />
               </div>
             ))}
           </div>
