@@ -5,13 +5,17 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin, termLabel } from "@/lib/admin/data";
 import {
   commissionKey,
+  decisionFor,
+  detectCourseChanges,
   leadOf,
   offeringKey,
   previewImport,
   sameLead,
   termFromPeriodo,
+  type CourseDecision,
   type ImportPreview,
   type OfferingDraft,
+  type PreviousOffering,
 } from "@/lib/admin/offer-import";
 
 // Writes of the admin screen. Every action checks that the caller is an admin, and the
@@ -76,6 +80,36 @@ async function planCatalog(planId: string) {
   };
 }
 
+/** Commissions of these subjects published in earlier terms (any plan), for "Cursos con cambios". */
+async function previousOfferings(codes: string[], termId: string): Promise<PreviousOffering[]> {
+  if (!codes.length) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("offerings")
+    .select("course_id, term_id, siu_subject_code, course_number, label, teachers")
+    .in("siu_subject_code", codes)
+    .lt("term_id", termId);
+  if (error) throw new Error(`offerings: ${error.message}`);
+  return data.map((o) => ({
+    courseId: o.course_id as number,
+    termId: o.term_id as string,
+    siuCode: o.siu_subject_code as string,
+    courseNumber: (o.course_number as string | null) ?? null,
+    label: o.label as string,
+    teachers: (o.teachers as { nombre: string }[] | null) ?? null,
+  }));
+}
+
+/** The summary of a pasted text for a plan, with the courses that changed since the previous term. */
+async function buildPreview(text: string, planId: string, termId: string) {
+  const { subjects, knownCodes } = await planCatalog(planId);
+  const { preview, drafts } = previewImport(text, subjects, knownCodes);
+  const previous = await previousOfferings([...new Set(drafts.map((d) => d.siu_subject_code))], termId);
+  const names = new Map(subjects.map((s) => [s.id, s.name]));
+  const changes = detectCourseChanges(drafts, previous, termId, names);
+  return { preview: changes.length ? { ...preview, changes } : preview, drafts, subjects };
+}
+
 /** "Procesar": reads the pasted text and saves it with its summary, without publishing. */
 export async function processOffer(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
@@ -85,9 +119,8 @@ export async function processOffer(_prev: ActionState, formData: FormData): Prom
   if (!term) return { error: "Primero elegí el cuatrimestre." };
   if (!text.trim()) return { error: "Pegá el texto de la página de horarios del SIU." };
 
-  const { subjects, knownCodes } = await planCatalog(planId);
+  const { preview, subjects } = await buildPreview(text, planId, term.id);
   if (subjects.length === 0) return { error: "No encontramos ese plan." };
-  const { preview } = previewImport(text, subjects, knownCodes);
   if (!preview.format) {
     return { error: "No reconocemos el texto. Copiá la página de horarios del SIU completa (Ctrl+A, Ctrl+C) y pegala acá." };
   }
@@ -162,12 +195,16 @@ export async function linkSiuSubject(_prev: ActionState, formData: FormData): Pr
     .upsert({ subject_id: subjectId, siu_code: siuCode }, { ignoreDuplicates: true });
   if (linked.error) return { error: "No pudimos guardar el emparejamiento." };
 
-  const { knownCodes } = await planCatalog(planId);
-  const { preview } = previewImport(imp.data.raw_text as string, subjects, knownCodes);
-  const replacing = (imp.data.parsed as ImportPreview | null)?.replacing;
+  const { preview } = await buildPreview(imp.data.raw_text as string, planId, term.id);
+  const old = imp.data.parsed as ImportPreview | null;
+  const keys = new Set((preview.changes ?? []).map((c) => c.key));
+  const decisions = Object.fromEntries(Object.entries(old?.decisions ?? {}).filter(([k]) => keys.has(k)));
+  const parsed: ImportPreview = { ...preview };
+  if (old?.replacing) parsed.replacing = old.replacing;
+  if (Object.keys(decisions).length) parsed.decisions = decisions;
   const saved = await supabase
     .from("offer_imports")
-    .update({ parsed: replacing ? { ...preview, replacing } : preview })
+    .update({ parsed })
     .eq("term_id", term.id)
     .eq("plan_id", planId);
   if (saved.error) return { error: "Guardamos el emparejamiento, pero no pudimos actualizar el resumen." };
@@ -225,7 +262,7 @@ type ExistingOffering = {
  * published this term for another plan keeps its course; one from an earlier term keeps it
  * when the number and the lead teacher are the same. Everything else is a new course.
  */
-async function courseIds(termId: string, drafts: OfferingDraft[]): Promise<Map<string, number>> {
+async function courseIds(termId: string, drafts: OfferingDraft[], preview: ImportPreview): Promise<Map<string, number>> {
   const supabase = await createClient();
   const codes = [...new Set(drafts.map((d) => d.siu_subject_code))];
   const { data, error } = await supabase
@@ -242,11 +279,20 @@ async function courseIds(termId: string, drafts: OfferingDraft[]): Promise<Map<s
     const key = commissionKey(d);
     if (ids.has(key) || missing.some((m) => m.key === key)) continue;
     const same = existing.filter((e) => commissionKey(e) === key);
-    const found =
-      same.find((e) => e.term_id === termId) ??
-      same.find((e) => e.term_id < termId && sameLead(leadOf(e.teachers), leadOf(d.teachers)));
-    if (found) ids.set(key, found.course_id);
-    else missing.push({ key, siuCode: d.siu_subject_code });
+    const thisTerm = same.find((e) => e.term_id === termId);
+    if (thisTerm) {
+      ids.set(key, thisTerm.course_id);
+      continue;
+    }
+    // "Cursos con cambios": what the admin chose, or else the suggestion.
+    const decision = decisionFor(preview, key);
+    if (decision?.kind === "same") ids.set(key, decision.courseId);
+    else if (decision) missing.push({ key, siuCode: d.siu_subject_code });
+    else {
+      const found = same.find((e) => e.term_id < termId && sameLead(leadOf(e.teachers), leadOf(d.teachers)));
+      if (found) ids.set(key, found.course_id);
+      else missing.push({ key, siuCode: d.siu_subject_code });
+    }
   }
 
   if (missing.length) {
@@ -283,12 +329,13 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
 
   const imp = await supabase
     .from("offer_imports")
-    .select("status, raw_text")
+    .select("status, raw_text, parsed")
     .eq("term_id", term.id)
     .eq("plan_id", planId)
     .maybeSingle();
   if (imp.error || !imp.data) return { error: "Primero procesá el texto del SIU." };
   if (imp.data.status === "published") return { error: "Esta oferta ya está publicada." };
+  const decisions = (imp.data.parsed as ImportPreview | null)?.decisions;
 
   const existingRows = await supabase
     .from("offerings")
@@ -299,8 +346,9 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
   const existing = new Map((existingRows.data as OfferingRow[]).map((o) => [offeringKey(o), o.id]));
   const replacing = existing.size > 0;
 
-  const { subjects, knownCodes } = await planCatalog(planId);
-  const { preview, drafts } = previewImport(imp.data.raw_text as string, subjects, knownCodes);
+  const built = await buildPreview(imp.data.raw_text as string, planId, term.id);
+  const preview: ImportPreview = decisions ? { ...built.preview, decisions } : built.preview;
+  const drafts = built.drafts;
   if (drafts.length === 0) return { error: "El texto no tiene cursos de este plan." };
 
   const fields = (d: OfferingDraft) => ({
@@ -326,7 +374,7 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
     // New rows (the whole offer the first time).
     const offeringIdOf = new Map<string, number>();
     if (toInsert.length) {
-      const courseOf = await courseIds(term.id, toInsert);
+      const courseOf = await courseIds(term.id, toInsert, preview);
       const inserted = await supabase
         .from("offerings")
         .insert(
@@ -334,6 +382,7 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
             term_id: term.id,
             plan_id: planId,
             course_id: courseOf.get(commissionKey(d))!,
+            visible: decisionFor(preview, commissionKey(d))?.kind !== "hide",
             siu_subject_code: d.siu_subject_code,
             course_number: d.course_number,
             practice: d.practice,
@@ -400,6 +449,43 @@ export async function setOfferingVisible(_prev: ActionState, formData: FormData)
   const supabase = await createClient();
   const { error } = await supabase.from("offerings").update({ visible }).eq("id", id);
   if (error) return { error: "No pudimos cambiar el curso." };
+  revalidatePath("/admin");
+  return ok;
+}
+
+/** "Cursos con cambios": same course as an earlier one, new course, or new and hidden. */
+export async function setCourseDecision(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const planId = String(formData.get("planId") ?? "");
+  const key = String(formData.get("key") ?? "");
+  const choice = String(formData.get("decision") ?? "");
+  const term = await currentTerm();
+  if (!term) return { error: "Primero elegí el cuatrimestre." };
+  const supabase = await createClient();
+  const imp = await supabase
+    .from("offer_imports")
+    .select("status, parsed")
+    .eq("term_id", term.id)
+    .eq("plan_id", planId)
+    .maybeSingle();
+  if (imp.error || !imp.data || imp.data.status !== "processed") return { error: "Primero procesá el texto del SIU." };
+  const parsed = imp.data.parsed as ImportPreview;
+  const change = parsed.changes?.find((c) => c.key === key);
+  if (!change) return { error: "Ese curso ya no está en la lista." };
+
+  let decision: CourseDecision;
+  if (choice === "new" || choice === "hide") decision = { kind: choice };
+  else {
+    const courseId = Number(choice.replace(/^same:/, ""));
+    if (!change.candidates.some((c) => c.courseId === courseId)) return { error: "Elegí un curso de la lista." };
+    decision = { kind: "same", courseId };
+  }
+  const { error } = await supabase
+    .from("offer_imports")
+    .update({ parsed: { ...parsed, decisions: { ...parsed.decisions, [key]: decision } } })
+    .eq("term_id", term.id)
+    .eq("plan_id", planId);
+  if (error) return { error: "No pudimos guardar la elección." };
   revalidatePath("/admin");
   return ok;
 }
