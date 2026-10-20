@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { APP_NAME } from "@/lib/app";
 import { requireAdmin } from "@/lib/admin/data";
+import { AdminNav } from "./AdminNav";
 
 // Administración (prototipo 13-administracion): barra propia, solo para administradores.
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -17,11 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <span className="font-bold tracking-[0.02em]">{APP_NAME}</span>
           <span className="rounded-full bg-ink px-2.5 py-[3px] text-xs font-semibold text-bg">Administración</span>
         </div>
-        <nav aria-label="Secciones" className="flex gap-1.5">
-          <span aria-current="page" className="rounded-[10px] bg-lavender px-4 py-2 font-semibold text-lavender-ink">
-            Oferta del cuatrimestre
-          </span>
-        </nav>
+        <AdminNav />
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <Link href="/" className="text-sm text-muted hover:text-ink">

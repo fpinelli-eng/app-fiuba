@@ -42,7 +42,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 3. **Reseñas, lo que falta:** la pantalla del plan bloqueado por reseñas pendientes: PR #42 abierto (segundo desarrollador).
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
 5. **Inicio, lo que falta:** calendario de la cursada. Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
-6. **Moderación de reseñas** (administración).
+6. **Moderación de reseñas** (administración): PR #43 abierto (segundo desarrollador).
 7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
 8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
