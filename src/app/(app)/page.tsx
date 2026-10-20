@@ -1,18 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HomeCalendar } from "./HomeCalendar";
 import { StateIcon } from "./mapa/icons";
+import { getHomeCourses } from "@/lib/home/courses";
 import { getMapData } from "@/lib/map/data";
 import { getReviewRound } from "@/lib/reviews/pending";
 import { CareerMap, formatAverage, totalCredits, type Progress } from "@/lib/map/model";
 import { requireProfile } from "@/lib/session";
 
 // Inicio (prototipos 04-inicio y 05-inicio-oscuro): avance, promedio, materias, cursada y finales pendientes.
-// El calendario de la cursada llega con la oferta y el plan guardado.
+// La cursada es un calendario si el alumno se inscribió desde el Plan; si no, la lista de materias en "Cursando" del mapa.
 
 export default async function InicioPage() {
   const account = await requireProfile();
   const [data, round] = await Promise.all([getMapData(account.id, account.planId!), getReviewRound(account.id, null)]);
   const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
+  const courses = await getHomeCourses(account.id, data.subjects);
   const map = new CareerMap(data.subjects, data.requirements);
   const progress: Progress = {
     subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
@@ -144,24 +147,28 @@ export default async function InicioPage() {
       </div>
 
       <div className="flex flex-wrap items-start gap-[22px]">
-        <section aria-label="Cursando" className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-7">
-          <Label>
-            CURSANDO{inProgress.length > 0 && ` · ${inProgress.reduce((a, s) => a + s.credits, 0)} CRÉDITOS`}
-          </Label>
-          {inProgress.length === 0 ? (
-            <div className="text-muted">No tenés materias marcadas como cursando.</div>
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5">
-              {inProgress.map((s) => (
-                <div key={s.id} className="flex items-start gap-3 rounded-xl border border-sky-line bg-sky px-4 py-3.5 text-sky-ink">
-                  <StateIcon state="in_progress" size={18} />
-                  <div className="flex-auto font-semibold">{s.name}</div>
-                  <span className="text-xs font-medium whitespace-nowrap opacity-80">{s.credits} C</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {courses ? (
+          <HomeCalendar data={courses} />
+        ) : (
+          <section aria-label="Cursando" className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-7">
+            <Label>
+              CURSANDO{inProgress.length > 0 && ` · ${inProgress.reduce((a, s) => a + s.credits, 0)} CRÉDITOS`}
+            </Label>
+            {inProgress.length === 0 ? (
+              <div className="text-muted">No tenés materias marcadas como cursando.</div>
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5">
+                {inProgress.map((s) => (
+                  <div key={s.id} className="flex items-start gap-3 rounded-xl border border-sky-line bg-sky px-4 py-3.5 text-sky-ink">
+                    <StateIcon state="in_progress" size={18} />
+                    <div className="flex-auto font-semibold">{s.name}</div>
+                    <span className="text-xs font-medium whitespace-nowrap opacity-80">{s.credits} C</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section aria-label="Finales pendientes" className="flex flex-[1_1_300px] flex-col gap-3 self-start rounded-2xl border border-line bg-surface p-7">
           <div className="flex items-baseline justify-between gap-2">
