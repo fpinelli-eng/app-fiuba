@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -56,6 +57,28 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [cbcOpenChoice, setCbcOpenChoice] = useState<boolean | null>(firstLoad ? true : null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+
+  // Las otras secciones (Inicio, Plan) quedan precargadas con los datos de antes del cambio:
+  // después de guardar, se pide refrescarlas. Se agrupan los cambios seguidos en un solo pedido.
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshSoon = useCallback(() => {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => {
+      refreshTimer.current = null;
+      router.refresh();
+    }, 800);
+  }, [router]);
+  useEffect(
+    () => () => {
+      // Si se va del mapa con un refresco pendiente, se hace ya.
+      if (refreshTimer.current) {
+        clearTimeout(refreshTimer.current);
+        router.refresh();
+      }
+    },
+    [router],
+  );
 
   // Cálculos ------------------------------------------------------------------
 
@@ -141,6 +164,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
           .from("user_subjects")
           .upsert({ user_id: userId, subject_id: id, status: next.status, grade: next.grade }, { onConflict: "user_id,subject_id" })
       : await supabase.from("user_subjects").delete().eq("user_id", userId).eq("subject_id", id);
+    if (!error) refreshSoon();
     if (error) {
       setProgress((p) => {
         const subjects = new Map(p.subjects);
@@ -165,6 +189,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     const { error } = approved
       ? await supabase.from("user_requirements").upsert({ user_id: userId, requirement_id: id }, { onConflict: "user_id,requirement_id" })
       : await supabase.from("user_requirements").delete().eq("user_id", userId).eq("requirement_id", id);
+    if (!error) refreshSoon();
     if (error) {
       apply(!approved);
       fail();
