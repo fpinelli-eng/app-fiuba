@@ -1,14 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { APP_NAME, NAV } from "@/lib/app";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import type { Profile } from "@/lib/auth";
 
+// Las secciones del menú quedan precargadas (prefetch de los links). Para que nunca venzan
+// mientras se usa la web, se renuevan cada 4 minutos con la pestaña a la vista, y al volver
+// a la pestaña (por si algo cambió desde otro dispositivo). Vencen a los 10 (next.config.ts).
+const RENEW_MS = 4 * 60 * 1000;
+
+function useFreshPrefetches() {
+  const router = useRouter();
+  useEffect(() => {
+    let last = Date.now();
+    const renew = () => {
+      if (document.visibilityState !== "visible") return;
+      last = Date.now();
+      router.refresh();
+    };
+    const timer = setInterval(() => {
+      if (Date.now() - last >= RENEW_MS) renew();
+    }, 30 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - last > 60 * 1000) renew();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [router]);
+}
+
 export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pendingReviews?: number }) {
   const pathname = usePathname();
+  useFreshPrefetches();
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
