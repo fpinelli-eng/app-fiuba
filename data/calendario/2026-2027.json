@@ -1,0 +1,422 @@
+[
+  {
+    "title": "Período de Clases",
+    "starts_on": "2026-03-09",
+    "ends_on": "2026-06-27",
+    "sort": 0
+  },
+  {
+    "title": "Período de Clases",
+    "starts_on": "2026-08-17",
+    "ends_on": "2026-12-05",
+    "sort": 0
+  },
+  {
+    "title": "Período de Clases",
+    "starts_on": "2027-03-08",
+    "ends_on": "2027-04-03",
+    "sort": 0
+  },
+  {
+    "title": "Evaluaciones Parciales",
+    "starts_on": "2026-04-13",
+    "ends_on": "2026-05-16",
+    "sort": 1
+  },
+  {
+    "title": "Evaluaciones Parciales",
+    "starts_on": "2026-09-21",
+    "ends_on": "2026-10-24",
+    "sort": 1
+  },
+  {
+    "title": "Evaluaciones Parciales - 1ra. recuperación",
+    "starts_on": "2026-06-01",
+    "ends_on": "2026-06-20",
+    "sort": 2
+  },
+  {
+    "title": "Evaluaciones Parciales - 1ra. recuperación",
+    "starts_on": "2026-11-09",
+    "ends_on": "2026-11-28",
+    "sort": 2
+  },
+  {
+    "title": "Evaluaciones Parciales - 2da. recuperación",
+    "starts_on": "2026-06-29",
+    "ends_on": "2026-07-04",
+    "sort": 3
+  },
+  {
+    "title": "Evaluaciones Parciales - 2da. recuperación",
+    "starts_on": "2026-12-07",
+    "ends_on": "2026-12-12",
+    "sort": 3
+  },
+  {
+    "title": "Período para completar encuestas estudiantiles",
+    "starts_on": "2026-06-22",
+    "ends_on": "2026-08-01",
+    "sort": 4
+  },
+  {
+    "title": "Período para completar encuestas estudiantiles",
+    "starts_on": "2026-11-30",
+    "ends_on": "2027-02-20",
+    "sort": 4
+  },
+  {
+    "title": "Evaluaciones Integradoras",
+    "starts_on": "2026-02-02",
+    "ends_on": "2026-03-07",
+    "sort": 5
+  },
+  {
+    "title": "Evaluaciones Integradoras",
+    "starts_on": "2026-06-29",
+    "ends_on": "2026-08-15",
+    "sort": 5
+  },
+  {
+    "title": "Evaluaciones Integradoras",
+    "starts_on": "2026-12-07",
+    "ends_on": "2026-12-19",
+    "sort": 5
+  },
+  {
+    "title": "Evaluaciones Integradoras",
+    "starts_on": "2027-02-01",
+    "ends_on": "2027-03-06",
+    "sort": 5
+  },
+  {
+    "title": "Presentación de Certificados de Trabajo / Discapacidad",
+    "starts_on": "2026-02-02",
+    "ends_on": "2026-02-14",
+    "sort": 6
+  },
+  {
+    "title": "Presentación de Certificados de Trabajo / Discapacidad",
+    "starts_on": "2026-06-29",
+    "ends_on": "2026-07-25",
+    "sort": 6
+  },
+  {
+    "title": "Presentación de Certificados de Trabajo / Discapacidad",
+    "starts_on": "2026-11-02",
+    "ends_on": "2026-12-19",
+    "sort": 6
+  },
+  {
+    "title": "Presentación de Certificados de Trabajo / Discapacidad",
+    "starts_on": "2027-02-01",
+    "ends_on": "2027-02-13",
+    "sort": 6
+  },
+  {
+    "title": "Publicación de oferta horaria de asignaturas para cursar",
+    "starts_on": "2026-02-16",
+    "ends_on": "2026-02-21",
+    "sort": 7
+  },
+  {
+    "title": "Publicación de oferta horaria de asignaturas para cursar",
+    "starts_on": "2026-07-27",
+    "ends_on": "2026-08-01",
+    "sort": 7
+  },
+  {
+    "title": "Publicación de oferta horaria de asignaturas para cursar",
+    "starts_on": "2027-02-15",
+    "ends_on": "2027-02-20",
+    "sort": 7
+  },
+  {
+    "title": "Publicación de Prioridades para Inscripción a Asignaturas a Cursar",
+    "starts_on": "2026-02-16",
+    "ends_on": "2026-02-21",
+    "sort": 8
+  },
+  {
+    "title": "Publicación de Prioridades para Inscripción a Asignaturas a Cursar",
+    "starts_on": "2026-07-27",
+    "ends_on": "2026-08-01",
+    "sort": 8
+  },
+  {
+    "title": "Publicación de Prioridades para Inscripción a Asignaturas a Cursar",
+    "starts_on": "2027-02-15",
+    "ends_on": "2027-02-20",
+    "sort": 8
+  },
+  {
+    "title": "Inscripción para Cursar Asignaturas",
+    "starts_on": "2026-02-23",
+    "ends_on": "2026-02-28",
+    "sort": 9
+  },
+  {
+    "title": "Inscripción para Cursar Asignaturas",
+    "starts_on": "2026-08-03",
+    "ends_on": "2026-08-08",
+    "sort": 9
+  },
+  {
+    "title": "Inscripción para Cursar Asignaturas",
+    "starts_on": "2027-02-22",
+    "ends_on": "2027-02-27",
+    "sort": 9
+  },
+  {
+    "title": "Desinscripción de Asignaturas",
+    "starts_on": "2026-03-02",
+    "ends_on": "2026-03-21",
+    "sort": 10
+  },
+  {
+    "title": "Desinscripción de Asignaturas",
+    "starts_on": "2026-08-10",
+    "ends_on": "2026-08-29",
+    "sort": 10
+  },
+  {
+    "title": "Desinscripción de Asignaturas",
+    "starts_on": "2027-03-01",
+    "ends_on": "2027-03-20",
+    "sort": 10
+  },
+  {
+    "title": "Inscripción para Evaluaciones Integradoras",
+    "starts_on": "2026-01-26",
+    "ends_on": "2026-03-07",
+    "sort": 11
+  },
+  {
+    "title": "Inscripción para Evaluaciones Integradoras",
+    "starts_on": "2026-06-15",
+    "ends_on": "2026-08-15",
+    "sort": 11
+  },
+  {
+    "title": "Inscripción para Evaluaciones Integradoras",
+    "starts_on": "2026-11-23",
+    "ends_on": "2026-12-19",
+    "sort": 11
+  },
+  {
+    "title": "Inscripción para Evaluaciones Integradoras",
+    "starts_on": "2027-01-25",
+    "ends_on": "2027-03-06",
+    "sort": 11
+  },
+  {
+    "title": "Admisión de estudiantes del CBC",
+    "starts_on": "2026-02-02",
+    "ends_on": "2026-03-28",
+    "sort": 12
+  },
+  {
+    "title": "Admisión de estudiantes del CBC",
+    "starts_on": "2026-06-29",
+    "ends_on": "2026-09-05",
+    "sort": 12
+  },
+  {
+    "title": "Admisión de estudiantes del CBC",
+    "starts_on": "2026-11-23",
+    "ends_on": "2026-12-19",
+    "sort": 12
+  },
+  {
+    "title": "Admisión de estudiantes del CBC",
+    "starts_on": "2027-02-01",
+    "ends_on": "2027-04-03",
+    "sort": 12
+  },
+  {
+    "title": "Período de postulaciones de movilidad académica saliente",
+    "starts_on": "2026-02-09",
+    "ends_on": "2026-03-14",
+    "sort": 13
+  },
+  {
+    "title": "Período de postulaciones de movilidad académica saliente",
+    "starts_on": "2026-08-10",
+    "ends_on": "2026-09-12",
+    "sort": 13
+  },
+  {
+    "title": "Período de postulaciones de movilidad académica saliente",
+    "starts_on": "2027-02-08",
+    "ends_on": "2027-03-13",
+    "sort": 13
+  },
+  {
+    "title": "Período de Solicitud de Prórrogas de Asignaturas Vencidas",
+    "starts_on": "2026-03-02",
+    "ends_on": "2026-04-04",
+    "sort": 14
+  },
+  {
+    "title": "Período de Solicitud de Prórrogas de Asignaturas Vencidas",
+    "starts_on": "2026-08-10",
+    "ends_on": "2026-09-12",
+    "sort": 14
+  },
+  {
+    "title": "Período de Solicitud de Prórrogas de Asignaturas Vencidas",
+    "starts_on": "2027-03-01",
+    "ends_on": "2027-04-03",
+    "sort": 14
+  },
+  {
+    "title": "Período de Solicitud de Excepciones de Correlatividades",
+    "starts_on": "2026-02-09",
+    "ends_on": "2026-03-21",
+    "sort": 15
+  },
+  {
+    "title": "Período de Solicitud de Excepciones de Correlatividades",
+    "starts_on": "2026-07-20",
+    "ends_on": "2026-08-29",
+    "sort": 15
+  },
+  {
+    "title": "Período de Solicitud de Excepciones de Correlatividades",
+    "starts_on": "2027-02-08",
+    "ends_on": "2027-03-27",
+    "sort": 15
+  },
+  {
+    "title": "Recepción de otros trámites (para el cuatrimestre siguiente)",
+    "starts_on": "2026-02-09",
+    "ends_on": "2026-06-13",
+    "sort": 16
+  },
+  {
+    "title": "Recepción de otros trámites (para el cuatrimestre siguiente)",
+    "starts_on": "2026-08-03",
+    "ends_on": "2026-11-21",
+    "sort": 16
+  },
+  {
+    "title": "Recepción de otros trámites (para el cuatrimestre siguiente)",
+    "starts_on": "2027-02-08",
+    "ends_on": "2027-04-03",
+    "sort": 16
+  },
+  {
+    "title": "Publicación de oferta horaria de cursos de verano",
+    "starts_on": "2026-11-02",
+    "ends_on": "2026-11-07",
+    "sort": 17
+  },
+  {
+    "title": "Inscripción para Cursos de Verano 2027",
+    "starts_on": "2026-11-09",
+    "ends_on": "2026-11-14",
+    "sort": 18
+  },
+  {
+    "title": "Desinscripción de Cursos de Verano",
+    "starts_on": "2026-11-16",
+    "ends_on": "2026-12-05",
+    "sort": 19
+  },
+  {
+    "title": "Inicio de los Cursos de Verano",
+    "starts_on": "2027-01-04",
+    "ends_on": "2027-02-27",
+    "sort": 20
+  },
+  {
+    "title": "Recepción de trámites de simultaneidad entre carreras de FIUBA",
+    "starts_on": "2026-02-09",
+    "ends_on": "2026-07-11",
+    "sort": 21
+  },
+  {
+    "title": "Recepción de trámites de simultaneidad entre carreras de FIUBA",
+    "starts_on": "2026-08-03",
+    "ends_on": "2026-11-28",
+    "sort": 21
+  },
+  {
+    "title": "Recepción de trámites de simultaneidad entre carreras de FIUBA",
+    "starts_on": "2027-02-08",
+    "ends_on": "2027-04-03",
+    "sort": 21
+  },
+  {
+    "title": "Período para abonar el trámite de convalidación para el siguiente cuatrimestre",
+    "starts_on": "2026-02-02",
+    "ends_on": "2026-05-09",
+    "sort": 22
+  },
+  {
+    "title": "Período para abonar el trámite de convalidación para el siguiente cuatrimestre",
+    "starts_on": "2026-08-03",
+    "ends_on": "2026-11-07",
+    "sort": 22
+  },
+  {
+    "title": "Período para abonar el trámite de convalidación para el siguiente cuatrimestre",
+    "starts_on": "2027-02-01",
+    "ends_on": "2027-04-03",
+    "sort": 22
+  },
+  {
+    "title": "Período para mesas de examen especiales",
+    "starts_on": "2026-03-09",
+    "ends_on": "2026-06-20",
+    "sort": 23
+  },
+  {
+    "title": "Período para mesas de examen especiales",
+    "starts_on": "2026-08-17",
+    "ends_on": "2026-11-28",
+    "sort": 23
+  },
+  {
+    "title": "Período para mesas de examen especiales",
+    "starts_on": "2027-03-08",
+    "ends_on": "2027-04-03",
+    "sort": 23
+  },
+  {
+    "title": "Charla de Ingresantes",
+    "starts_on": "2026-03-02",
+    "ends_on": "2026-03-07",
+    "sort": 24
+  },
+  {
+    "title": "Charla de Ingresantes",
+    "starts_on": "2026-08-10",
+    "ends_on": "2026-08-15",
+    "sort": 24
+  },
+  {
+    "title": "Charla de Ingresantes",
+    "starts_on": "2027-03-01",
+    "ends_on": "2027-03-06",
+    "sort": 24
+  },
+  {
+    "title": "Charla de Bienvenida a estudiantes de movilidad académica",
+    "starts_on": "2026-03-02",
+    "ends_on": "2026-03-07",
+    "sort": 25
+  },
+  {
+    "title": "Charla de Bienvenida a estudiantes de movilidad académica",
+    "starts_on": "2026-08-10",
+    "ends_on": "2026-08-15",
+    "sort": 25
+  },
+  {
+    "title": "Charla de Bienvenida a estudiantes de movilidad académica",
+    "starts_on": "2027-03-01",
+    "ends_on": "2027-03-06",
+    "sort": 25
+  }
+]

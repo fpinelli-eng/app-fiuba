@@ -49,6 +49,7 @@ insert into public.offering_blocks (offering_id, weekday, starts_at, ends_at, ca
 values (1, 1, 540, 660, 'PC'), (2, 2, 540, 660, 'PC');
 insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to)
 values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00');
+insert into public.news (title, body) values ('Inscripción a cursos de verano', 'Del 9 al 14 de noviembre.');
 
 -- Seed ------------------------------------------------------------------------------
 
@@ -74,6 +75,7 @@ select test.ok(
 select test.ok(
   (select count(*) from public.subjects where plan_id = 'industrial-2023' and kind = 'elective' and area_id is null) = 0,
   'every Industrial 2023 elective has an area');
+select test.ok((select count(*) from public.academic_events where calendar = '2026-2027') = 70, 'academic calendar 2026-2027 has 70 events');
 
 -- Visitors without a session ------------------------------------------------------
 
@@ -99,6 +101,8 @@ select test.ok((select count(*) from public.terms) = 0, 'gmail account reads ter
 select test.ok((select count(*) from public.offerings) = 0, 'gmail account reads offerings');
 select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account reads schedules');
 select test.ok((select count(*) from public.exam_tables) = 0, 'gmail account reads exam tables');
+select test.ok((select count(*) from public.academic_events) = 0, 'gmail account reads the academic calendar');
+select test.ok((select count(*) from public.news) = 0, 'gmail account reads news');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -142,6 +146,13 @@ select test.ok((select count(*) from public.subject_areas) > 0, 'students read t
 select test.ok((select count(*) from public.exam_tables) = 1, 'students read exam tables');
 select test.fails($$insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'X', 'X', 'X', '2026-12-01', 'Regular')$$, 'student adds an exam table');
 select test.ok((select count(*) from public.exam_imports) = 0, 'student reads exam imports');
+select test.ok((select count(*) from public.academic_events) = 70, 'students read the academic calendar');
+select test.ok((select count(*) from public.news) = 1, 'students read news');
+select test.fails($$insert into public.news (title) values ('x')$$, 'student publishes news');
+select test.fails($$insert into public.academic_events (calendar, title, starts_on, ends_on) values ('2026-2027', 'x', '2026-11-02', '2026-11-07')$$, 'student adds an academic event');
+update public.news set pinned = true;
+select test.ok((select not pinned from public.news), 'student pins news');
+delete from public.news;  -- RLS: deletes nothing
 -- RLS turns a forbidden update into "0 rows".
 update public.subjects set credits = 99 where code = 'AL';
 select test.ok((select count(*) from public.subjects where credits = 99) = 0, 'student edits a subject');
@@ -237,6 +248,13 @@ insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, nam
 insert into public.exam_imports (plan_id, stats) values ('industrial-2023', '{"tables": 2}');
 delete from public.exam_tables where siu_subject_code = 'CB001';
 select test.ok((select count(*) from public.exam_imports) = 1, 'admin manages exam imports');
+insert into public.news (title, url) values ('Charla de ingresantes', 'https://www.ingenieria.uba.ar');
+update public.news set pinned = true where title = 'Charla de ingresantes';
+select test.ok((select count(*) from public.news where pinned) = 1, 'admin publishes and pins news');
+select test.fails($$insert into public.news (title) values ('')$$, 'news with an empty title');
+select test.fails($$insert into public.news (title) values (repeat('a', 141))$$, 'news title over 140 characters');
+delete from public.news where title = 'Charla de ingresantes';
+select test.ok((select count(*) from public.news) = 1, 'admin deletes news');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
 reset role;

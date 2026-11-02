@@ -1,0 +1,30 @@
+# Calendario académico
+
+Fechas del calendario académico de la FIUBA que se muestran en **Novedades** (`/novedades`). Solo el bloque **ESTUDIANTES** del PDF.
+
+- `2026-2027.json`: sacado de `Calendario_Academico_2026_2027.pdf` (lo publica la FIUBA en www.ingenieria.uba.ar). Una entrada por cada tramo de semanas seguidas: `title`, `starts_on` (lunes de la primera semana), `ends_on` (sábado de la última) y `sort` (fila del PDF, de arriba hacia abajo).
+- Se cargó en la base con `supabase/migrations/20261102150000_news.sql` (tabla `academic_events`, `calendar = '2026-2027'`). La app muestra solo el calendario más nuevo (el nombre más grande).
+
+## Cómo cargar el del año que viene
+
+El PDF es un dibujo (no tiene texto): una tabla con una fila por actividad y una columna por semana, con las semanas marcadas en celeste. `tools/calendar/extract.py` lee la grilla y las celdas pintadas.
+
+1. Bajá el PDF nuevo y abrilo. Fijate:
+   - el **lunes de la primera columna** (en 2026-2027 era el 5 de enero de 2026);
+   - que las filas de ESTUDIANTES sean las mismas. Si cambiaron, actualizá la lista `TITLES` de `tools/calendar/extract.py` (de arriba hacia abajo). El script avisa si la cantidad de filas no coincide.
+2. Corré el script (necesita Python con PyMuPDF: `pip install pymupdf`), desde una carpeta cualquiera:
+
+   ```
+   cd "$TEMP" && python -E <repo>/tools/calendar/extract.py <ruta al PDF> 2027-01-04 <repo>/data/calendario/2027-2028.json
+   ```
+
+   Muestra cuántas filas y columnas encontró (tienen que ser todas las semanas del PDF).
+3. **Revisá el resultado contra el PDF**, por lo menos 5 o 6 filas (por ejemplo Período de Clases, Inscripción para Cursar Asignaturas, Evaluaciones Integradoras, Charla de Ingresantes). Si algo no coincide, se arregla el script, no el JSON a mano.
+4. Generá la migración con una fecha posterior a la última:
+
+   ```
+   node tools/calendar/build.mjs 2027-2028 > supabase/migrations/<AAAAMMDDHHMMSS>_academic_calendar_2027_2028.sql
+   ```
+
+   Borra las fechas de ese mismo calendario antes de insertarlas, así que si hubo un error se puede corregir con otra migración igual.
+5. Pull request como siempre. Al integrarse a `main`, la migración se aplica sola y Novedades pasa a mostrar el calendario nuevo.
