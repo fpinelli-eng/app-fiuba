@@ -1,0 +1,51 @@
+# Keeps the Supabase project awake.
+# The free plan pauses a project after about a week without activity. Every three days this
+# runs a real query against the database so the project counts as active. If the database
+# cannot be reached (for example, because it is already paused) the job fails and GitHub
+# emails the repository owner.
+# Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
+name: Mantener Supabase activo
+
+on:
+  schedule:
+    - cron: "17 9 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Consultar la base
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Query the database
+        # Same connection as "Base de datos": GitHub runners have no IPv6, so the database is
+        # reached through Supabase's IPv4 session pooler (aws-0 or aws-1, depending on when
+        # the project was created). Only "ok" is printed: no data goes to the log.
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -v ON_ERROR_STOP=1 -Atc "select count(*) from public.profiles" > /dev/null 2> /tmp/probe.log; then
+              echo "ok: $candidate"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudo consultar Supabase::¿El proyecto está pausado? Reactivalo con Restore project en supabase.com. $(tr '\n' ' ' < /tmp/probe.log | cut -c1-600)"
+          exit 1

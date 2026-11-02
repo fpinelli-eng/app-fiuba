@@ -62,6 +62,7 @@ Antes de tocar algo, leé:
 - **Probar de punta a punta sin el Supabase real:** `tools/local-supabase/` levanta una copia local de la base con su API y un usuario de prueba (ver su README). Sirve para probar pantallas con Playwright antes de abrir el pull request.
 - **Cómo llegan a Supabase:** al integrarse a `main`, el workflow "Base de datos" aplica las migraciones nuevas. Para probar una vista previa antes, se puede correr a mano desde GitHub → Actions → Base de datos → Run workflow, eligiendo la rama (aplica en la base compartida: solo si la migración está lista).
 - Nombres de migración: `AAAAMMDDHHMMSS_descripcion.sql`, siempre con fecha posterior a la última.
+- **Supabase activo y respaldos:** `.github/workflows/keepalive.yml` consulta la base cada 3 días (el plan gratuito pausa el proyecto tras una semana sin uso) y `.github/workflows/backup.yml` guarda los lunes un respaldo de `public` y `auth` cifrado con el secreto `BACKUP_PASSPHRASE` (el repo es público: nunca subir un respaldo sin cifrar ni imprimir datos en el log). Los dos se conectan igual que "Base de datos". Cómo restaurar: `docs/RESPALDOS.md`.
 
 ## Reglas que no se negocian
 
