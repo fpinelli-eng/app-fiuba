@@ -82,6 +82,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - CBC compactable en una columna angosta; compactado por defecto cuando está completo.
 - Panel de electivas a la derecha (276 px, fondo #F1EEFD) agrupado por área, con filtros Todas / Habilitadas / Bloqueadas y barra de créditos de electivas.
 - Buscador de materias que atenúa las que no coinciden.
+- **Celular** (menos de 768 px, no está en el prototipo): pestañas "Obligatorias | Electivas"; las obligatorias en secciones plegables por cuatrimestre (abiertas la actual y la siguiente, con una barrita de colores por materia); la ficha sube desde abajo con los mismos botones y, como no hay contornos, lista "Necesita" y "Habilita". El buscador filtra la lista.
 
 ### Plan del cuatrimestre
 - Columna izquierda (390 px) con materias habilitadas y sus cursos. Por curso: "Curso N" en negrita (+ chip "En tu plan"), debajo hasta 3 apellidos de docentes (sin "Prof.") y "+N" si hay más, horario y sede, estrellas y botón Agregar / Cambiar / Quitar.
