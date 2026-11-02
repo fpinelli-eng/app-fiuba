@@ -7,6 +7,7 @@ const TABS = [
   { href: "/admin", label: "Oferta del cuatrimestre" },
   { href: "/admin/examenes", label: "Fechas de examen" },
   { href: "/admin/resenas", label: "Reseñas" },
+  { href: "/admin/novedades", label: "Novedades" },
 ] as const;
 
 export function AdminNav() {
