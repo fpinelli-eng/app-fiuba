@@ -17,6 +17,20 @@ export interface ExamPreview {
   warnings: string[];
   /** Set when the filters copied from the SIU are not the chosen plan's ("Ingeniería Civil · 2009"). */
   mismatch: string | null;
+  /** Read from the page by its link (with times) or from the copied text (without them). */
+  source: "link" | "text";
+  rows: ExamPreviewRow[];
+}
+
+/** One exam table in the preview list. */
+export interface ExamPreviewRow {
+  subject: string;
+  name: string;
+  date: string;
+  kind: string;
+  startTime: string | null;
+  endTime: string | null;
+  room: string | null;
 }
 
 export interface ExamRow {
@@ -28,6 +42,11 @@ export interface ExamRow {
   kind: string;
   enroll_from: string | null;
   enroll_to: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  room: string | null;
+  drop_until: string | null;
+  teachers: string | null;
 }
 
 export function examStats(parsed: ExamParseResult): ExamStats {
@@ -38,6 +57,23 @@ export function examStats(parsed: ExamParseResult): ExamStats {
     from: dates[0] ?? null,
     to: dates.at(-1) ?? null,
   };
+}
+
+/** Every exam table, sorted by date and time, for the preview list. */
+export function examPreviewRows(parsed: ExamParseResult): ExamPreviewRow[] {
+  return parsed.subjects
+    .flatMap((s) =>
+      s.tables.map((t) => ({
+        subject: s.name,
+        name: t.name,
+        date: t.date,
+        kind: t.kind,
+        startTime: t.startTime,
+        endTime: t.endTime,
+        room: t.room,
+      })),
+    )
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.startTime ?? "").localeCompare(b.startTime ?? ""));
 }
 
 /** Compares the SIU filters in the copy with the chosen plan, to catch a wrong paste. */
@@ -59,6 +95,11 @@ export function examRows(parsed: ExamParseResult, planId: string): ExamRow[] {
       kind: t.kind,
       enroll_from: t.enrollFrom,
       enroll_to: t.enrollTo,
+      start_time: t.startTime,
+      end_time: t.endTime,
+      room: t.room,
+      drop_until: t.dropUntil,
+      teachers: t.teachers,
     })),
   );
 }

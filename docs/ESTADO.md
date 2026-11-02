@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 16 de octubre de 2026.
+Última actualización: 2 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -33,11 +33,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | En `main` (#8, PR #36) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
+| Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
 
 ## Qué falta, en orden
 
-0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración, PR #50 abierto. Sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador), en el PR #51 (encima del #50). Sección **Novedades** (calendario académico de la FIUBA y avisos de los administradores, que se publican desde Administración → Novedades), en el PR #52 (encima del #51). El calendario se carga una vez por año desde el PDF (`data/calendario/README.md`). Segundo desarrollador; Francisco decide el diseño.
+0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración (PR #50), sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador; PR #51) y sección **Novedades** (calendario académico de la FIUBA y avisos de los administradores, que se publican desde Administración → Novedades; PR #52), ya en `main`. En un PR abierto: el horario, el aula y los docentes de cada mesa, cargando las fechas con el enlace de la búsqueda del SIU. El calendario se carga una vez por año desde el PDF (`data/calendario/README.md`). Segundo desarrollador; Francisco decide el diseño.
 1. **Administración, lo que falta:** agregar electivas nuevas al plan. Ya están en `main`: quitar / volver a mostrar cursos y reemplazar la oferta sin borrar (PR #41), emparejar a mano materias (PR #44), cursos con cambios entre cuatrimestres (PR #45) y moderación de reseñas (PR #43). Detalle: un curso que un reemplazo ocultó por no estar en el SIU no vuelve a mostrarse solo si reaparece; se muestra a mano. Segundo desarrollador.
 2. **Plan del cuatrimestre:** completo para la beta ("Me inscribí en esta opción", PR #40; plan bloqueado por reseñas pendientes, PR #42). Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que tocaron "Me inscribí" se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
 3. **Reseñas:** completas para la beta.

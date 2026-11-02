@@ -3,11 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/data";
-import { examRows, examStats, planMismatch, type ExamPreview } from "@/lib/admin/exams";
-import { parseSiuExams } from "@/lib/siu/exams";
+import { examPreviewRows, examRows, examStats, planMismatch, type ExamPreview } from "@/lib/admin/exams";
+import { parseSiuExams, type ExamParseResult } from "@/lib/siu/exams";
+import { fetchSiuExamsPage, isLink, siuExamsUrl } from "@/lib/siu/exams-fetch";
+import { parseSiuExamsHtml } from "@/lib/siu/exams-html";
 
 // "Fechas de examen" in Administración: process (summary, nothing saved) and publish
 // (replaces the plan's exam tables). The database only lets admins write them.
+// The admin pastes the link of the SIU search (the server downloads the page, with times,
+// rooms and teachers) or the copied text of the page (only dates).
 
 export type ExamState = { error: string | null; preview: ExamPreview | null; published: boolean };
 
@@ -19,15 +23,34 @@ async function planInfo(planId: string) {
   return { year: data.year as number, career: (Array.isArray(c) ? c[0]?.name : c?.name) ?? "" };
 }
 
-function read(text: string, plan: { year: number; career: string }) {
-  const parsed = parseSiuExams(text);
+type Read = { error: string } | { parsed: ExamParseResult; preview: ExamPreview };
+
+async function read(input: string, plan: { year: number; career: string }): Promise<Read> {
+  let parsed: ExamParseResult;
+  const source = isLink(input) ? "link" : "text";
+  if (source === "link") {
+    const checked = siuExamsUrl(input);
+    if ("error" in checked) return checked;
+    const page = await fetchSiuExamsPage(checked.url);
+    if ("error" in page) return page;
+    parsed = parseSiuExamsHtml(page.html);
+  } else {
+    parsed = parseSiuExams(input);
+  }
   const preview: ExamPreview = {
     stats: examStats(parsed),
     warnings: parsed.warnings,
     mismatch: planMismatch(parsed, plan.career, plan.year),
+    source,
+    rows: examPreviewRows(parsed),
   };
   return { parsed, preview };
 }
+
+const NOTHING_FOUND = {
+  link: "No encontramos mesas en esa búsqueda. En el SIU elegí carrera y plan, tocá Buscar y copiá el enlace de la barra de direcciones.",
+  text: "No encontramos mesas en el texto. Pegá el enlace de la búsqueda del SIU, o copiá la página \"Fechas de examen\" completa (Ctrl+A, Ctrl+C) después de Buscar.",
+};
 
 export async function previewExams(_prev: ExamState, formData: FormData): Promise<ExamState> {
   await requireAdmin();
@@ -35,14 +58,10 @@ export async function previewExams(_prev: ExamState, formData: FormData): Promis
   const text = String(formData.get("text") ?? "");
   const plan = await planInfo(planId);
   if (!plan) return { error: "No encontramos ese plan.", preview: null, published: false };
-  const { preview } = read(text, plan);
-  if (preview.stats.tables === 0) {
-    return {
-      error: "No encontramos mesas en el texto. Copiá la página \"Fechas de examen\" del SIU completa (Ctrl+A, Ctrl+C) después de Buscar.",
-      preview: null,
-      published: false,
-    };
-  }
+  const result = await read(text, plan);
+  if ("error" in result) return { error: result.error, preview: null, published: false };
+  const { preview } = result;
+  if (preview.stats.tables === 0) return { error: NOTHING_FOUND[preview.source], preview: null, published: false };
   return { error: null, preview, published: false };
 }
 
@@ -52,9 +71,11 @@ export async function publishExams(_prev: ExamState, formData: FormData): Promis
   const text = String(formData.get("text") ?? "");
   const plan = await planInfo(planId);
   if (!plan) return { error: "No encontramos ese plan.", preview: null, published: false };
-  const { parsed, preview } = read(text, plan);
+  const result = await read(text, plan);
+  if ("error" in result) return { error: result.error, preview: null, published: false };
+  const { parsed, preview } = result;
   const rows = examRows(parsed, planId);
-  if (rows.length === 0) return { error: "No encontramos mesas en el texto.", preview: null, published: false };
+  if (rows.length === 0) return { error: NOTHING_FOUND[preview.source], preview: null, published: false };
 
   const supabase = await createClient();
   // The plan's exam dates are replaced as a whole: nothing points to these rows.

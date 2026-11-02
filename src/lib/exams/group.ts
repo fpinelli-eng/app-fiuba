@@ -13,6 +13,11 @@ export interface ExamTableRow {
   kind: string;
   enroll_from: string | null;
   enroll_to: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  room: string | null;
+  drop_until: string | null;
+  teachers: string | null;
 }
 
 export interface PlanSubjectRef {
@@ -59,12 +64,22 @@ export function groupExamTables(input: {
       kind: r.kind,
       enrollFrom: toMoment(r.enroll_from),
       enrollTo: toMoment(r.enroll_to),
+      startTime: r.start_time ? r.start_time.slice(0, 5) : null,
+      endTime: r.end_time ? r.end_time.slice(0, 5) : null,
+      room: r.room,
+      dropUntil: toMoment(r.drop_until),
+      teachers: r.teachers,
     };
     group.tables.push(table);
   }
   // Several SIU codes of one subject may interleave: keep each subject's tables in date order.
   for (const g of groups.values()) {
-    g.tables.sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name, "es", { numeric: true }));
+    g.tables.sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        (a.startTime ?? "").localeCompare(b.startTime ?? "") ||
+        a.name.localeCompare(b.name, "es", { numeric: true }),
+    );
   }
 
   const all = [...groups.values()].sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name), "es"));

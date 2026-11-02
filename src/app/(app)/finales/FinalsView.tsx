@@ -7,6 +7,8 @@ import {
   enrollmentStatus,
   formatEnrollMoment,
   formatExamDay,
+  formatExamTime,
+  formatTeachers,
   type ExamSubjectView,
   type ExamTableView,
   type FinalsData,
@@ -29,13 +31,28 @@ function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
   }
 }
 
-function TableRow({ table, now }: { table: ExamTableView; now: string }) {
+/** Room, examiners and drop deadline, when the dates were loaded with the SIU link. */
+function tableDetails(t: ExamTableView): string {
+  const room = t.room && (/^aula\b/i.test(t.room) ? t.room : `Aula ${t.room}`);
+  const drop = t.dropUntil && `Baja hasta el ${formatEnrollMoment(t.dropUntil)}`;
+  return [room, formatTeachers(t.teachers), drop].filter(Boolean).join(" · ");
+}
+
+function TableRow({ table, now, timed }: { table: ExamTableView; now: string; timed: boolean }) {
+  const time = formatExamTime(table.startTime, table.endTime);
+  const details = tableDetails(table);
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-[22px] py-2.5">
-      <span className="w-[76px] flex-none text-sm font-semibold text-ink-2 tabular-nums">{formatExamDay(table.date)}</span>
-      <span className="min-w-0 flex-auto text-sm text-ink-2">
-        {table.name}
-        {table.kind !== "Regular" && <span className="text-[13px] text-muted"> · {table.kind}</span>}
+      <span className={`${timed ? "w-[184px]" : "w-[76px]"} flex-none text-sm text-ink-2 tabular-nums`}>
+        <span className="font-semibold">{formatExamDay(table.date)}</span>
+        {time && <span> · {time}</span>}
+      </span>
+      <span className="flex min-w-0 flex-auto flex-col">
+        <span className="text-sm text-ink-2">
+          {table.name}
+          {table.kind !== "Regular" && <span className="text-[13px] text-muted"> · {table.kind}</span>}
+        </span>
+        {details && <span className="text-[12.5px] text-muted">{details}</span>}
       </span>
       <EnrollmentChip table={table} now={now} />
     </div>
@@ -52,6 +69,8 @@ export function FinalsView({ data }: { data: FinalsData }) {
     return table?.enrollTo ? [{ name: s.name, until: table.enrollTo }] : [];
   });
   const shown = q ? all.filter((s) => normalizeText(s.name).includes(q)) : all;
+  // Dates loaded with the SIU link have times: the date column makes room for them.
+  const timed = all.some((s) => s.tables.some((t) => t.startTime));
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-6 pt-8 pb-14">
@@ -95,7 +114,7 @@ export function FinalsView({ data }: { data: FinalsData }) {
                     {s.tables.length === 0 ? (
                       <div className="px-[22px] pb-3 text-[13px] text-muted">Sin mesas cargadas.</div>
                     ) : (
-                      s.tables.slice(0, 3).map((t) => <TableRow key={t.id} table={t} now={now} />)
+                      s.tables.slice(0, 3).map((t) => <TableRow key={t.id} table={t} now={now} timed={timed} />)
                     )}
                   </div>
                 ))}
@@ -137,7 +156,7 @@ export function FinalsView({ data }: { data: FinalsData }) {
                 </div>
                 <div className="py-1">
                   {s.tables.map((t) => (
-                    <TableRow key={t.id} table={t} now={now} />
+                    <TableRow key={t.id} table={t} now={now} timed={timed} />
                   ))}
                 </div>
               </section>

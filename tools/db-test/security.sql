@@ -47,8 +47,8 @@ values
   ('2026-1C', 'civil-2023', 1, 'CB002', 'Álgebra Lineal', '03', 'Curso 3', true);
 insert into public.offering_blocks (offering_id, weekday, starts_at, ends_at, campus)
 values (1, 1, 540, 660, 'PC'), (2, 2, 540, 660, 'PC');
-insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to)
-values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00');
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to, start_time, end_time)
+values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00', '17:00', '20:00');
 insert into public.news (title, body) values ('Inscripción a cursos de verano', 'Del 9 al 14 de noviembre.');
 
 -- Seed ------------------------------------------------------------------------------
@@ -144,6 +144,7 @@ select test.fails($$insert into public.careers values ('x', 'x', 'x', 0)$$, 'stu
 select test.fails($$insert into public.subject_areas (plan_id, name) values ('industrial-2023', 'x')$$, 'student adds an elective area');
 select test.ok((select count(*) from public.subject_areas) > 0, 'students read the elective areas');
 select test.ok((select count(*) from public.exam_tables) = 1, 'students read exam tables');
+select test.ok((select start_time from public.exam_tables) = '17:00', 'students read exam times');
 select test.fails($$insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'X', 'X', 'X', '2026-12-01', 'Regular')$$, 'student adds an exam table');
 select test.ok((select count(*) from public.exam_imports) = 0, 'student reads exam imports');
 select test.ok((select count(*) from public.academic_events) = 70, 'students read the academic calendar');
