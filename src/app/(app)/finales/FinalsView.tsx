@@ -55,7 +55,7 @@ export function FinalsView({ data }: { data: FinalsData }) {
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
-      <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.01em] md:text-[32px] md:leading-normal">Finales</h1>
+      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Finales</h1>
 
       {!data.loaded && (
         <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">

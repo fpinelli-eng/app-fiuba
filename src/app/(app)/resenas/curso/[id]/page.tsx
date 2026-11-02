@@ -35,7 +35,7 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
           › {course.subject?.name}
           {course.subject?.credits ? ` · ${course.subject.credits} C` : ""}
         </div>
-        <h1 className="mt-1 text-[28px] leading-tight font-semibold tracking-[-0.01em] md:text-[34px] md:leading-normal">{course.label}</h1>
+        <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.01em] md:text-[34px]">{course.label}</h1>
         <div className="text-base font-medium text-ink-2">{course.teachers}</div>
       </div>
 

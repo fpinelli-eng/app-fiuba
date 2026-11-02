@@ -55,7 +55,7 @@ export default async function InicioPage() {
           <Label>
             {data.careerName} · Plan {data.year}
           </Label>
-          <h1 className="mt-1.5 text-[28px] leading-tight font-semibold md:text-4xl md:leading-normal tracking-[-0.01em]">Hola, {account.firstName}</h1>
+          <h1 className="mt-1.5 text-[28px] font-semibold md:text-4xl tracking-[-0.01em]">Hola, {account.firstName}</h1>
         </div>
         {data.lastChange && (
           <div className="text-[13px] text-muted">

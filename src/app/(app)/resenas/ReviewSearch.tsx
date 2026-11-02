@@ -36,7 +36,7 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
-      <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.01em] md:text-[32px] md:leading-normal">Reseñas de cursos</h1>
+      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Reseñas de cursos</h1>
 
       {pending && (
         <Link href="/resenas/pendientes" className="flex items-center gap-3.5 rounded-[14px] bg-peach px-4 py-3.5 text-peach-ink md:px-[18px]">
