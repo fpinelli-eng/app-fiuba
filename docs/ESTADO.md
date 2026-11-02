@@ -34,7 +34,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
-| Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR abierto |
+| Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR #54 abierto |
 
 ## Qué falta, en orden
 
