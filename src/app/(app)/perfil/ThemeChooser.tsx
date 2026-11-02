@@ -16,6 +16,7 @@ function apply(theme: Theme) {
 }
 
 // Apariencia: mismo valor que el botón de la barra superior ("tema" en localStorage).
+// En el celular es el único lugar para cambiar el tema (la barra superior no tiene el botón).
 export function ThemeChooser() {
   const [theme, setTheme] = useState<Theme | null>(null);
 
@@ -46,7 +47,7 @@ export function ThemeChooser() {
   }
 
   return (
-    <div role="radiogroup" aria-label="Tema" className="flex gap-0.5 rounded-[10px] bg-bg p-[3px]">
+    <div role="radiogroup" aria-label="Tema" className="flex w-full gap-0.5 rounded-[10px] bg-bg p-[3px] md:w-auto">
       {OPTIONS.map(([value, label]) => {
         const on = theme === value;
         return (
@@ -56,7 +57,7 @@ export function ThemeChooser() {
             role="radio"
             aria-checked={on}
             onClick={() => pick(value)}
-            className={`h-[34px] rounded-lg px-4 text-sm ${on ? "bg-surface font-semibold text-ink shadow-[0_1px_2px_var(--pop-shadow)]" : "text-muted"}`}
+            className={`h-10 flex-auto rounded-lg px-2 text-sm whitespace-nowrap md:h-[34px] md:flex-initial md:px-4 md:whitespace-normal ${on ? "bg-surface font-semibold text-ink shadow-[0_1px_2px_var(--pop-shadow)]" : "text-muted"}`}
           >
             {label}
           </button>

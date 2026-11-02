@@ -29,7 +29,7 @@ export function CareerPicker({ careers }: { careers: CareerOption[] }) {
       {career && career.plans.length > 1 && (
         <div>
           <div className="mb-2 font-semibold">Plan de estudios</div>
-          <div role="radiogroup" aria-label="Plan de estudios" className="grid grid-cols-3 gap-2">
+          <div role="radiogroup" aria-label="Plan de estudios" className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {career.plans.map((p) => (
               <Option key={p.id} checked={p.id === planId} onPick={() => setPlanId(p.id)}>
                 <span>
@@ -44,7 +44,7 @@ export function CareerPicker({ careers }: { careers: CareerOption[] }) {
 
       <input type="hidden" name="plan" value={planId ?? ""} />
 
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end md:gap-4">
         {state.error && (
           <p role="alert" className="rounded-xl bg-peach px-4 py-2.5 text-sm text-peach-ink">
             {state.error}
@@ -69,7 +69,7 @@ function Option({ checked, onPick, children }: { checked: boolean; onPick: () =>
       role="radio"
       aria-checked={checked}
       onClick={onPick}
-      className={`flex items-center justify-between gap-2.5 rounded-xl px-4 py-3.5 text-left ${
+      className={`flex items-center justify-between gap-2.5 rounded-xl px-3 py-3.5 text-left md:px-4 ${
         checked
           ? "border-[1.5px] border-accent bg-accent-soft font-semibold"
           : "border border-line bg-surface hover:border-line-strong"

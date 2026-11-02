@@ -10,7 +10,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   await requireAdmin();
   return (
     <>
-      <header className="flex min-h-[68px] items-center justify-between gap-6 border-b border-line bg-header px-8">
+      {/* Administración se usa en la computadora; en el celular solo se acomoda para no desbordar. */}
+      <header className="flex min-h-[68px] flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line bg-header px-4 py-3 md:flex-nowrap md:gap-6 md:px-8 md:py-0">
         <div className="flex items-center gap-3">
           <span className="grid size-[30px] place-items-center rounded-lg bg-lavender text-sm font-bold text-lavender-ink">
             F

@@ -49,13 +49,13 @@ export default async function InicioPage() {
     .join(" · ");
 
   return (
-    <main className="mx-auto flex w-full max-w-[1280px] flex-col gap-[22px] px-10 pt-9 pb-12">
+    <main className="mx-auto flex w-full max-w-[1280px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[22px] md:px-10 md:pt-9 md:pb-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Label>
             {data.careerName} · Plan {data.year}
           </Label>
-          <h1 className="mt-1.5 text-4xl font-semibold tracking-[-0.01em]">Hola, {account.firstName}</h1>
+          <h1 className="mt-1.5 text-[28px] leading-tight font-semibold md:text-4xl md:leading-normal tracking-[-0.01em]">Hola, {account.firstName}</h1>
         </div>
         {data.lastChange && (
           <div className="text-[13px] text-muted">
@@ -65,7 +65,7 @@ export default async function InicioPage() {
       </div>
 
       {round && pendingReviews > 0 && (
-        <section aria-label="Reseñas pendientes" className="flex flex-wrap items-center gap-5 rounded-[14px] bg-peach px-5 py-4 text-peach-ink">
+        <section aria-label="Reseñas pendientes" className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[14px] bg-peach px-4 py-4 md:gap-5 md:px-5 text-peach-ink">
           <div className="text-[30px] leading-none font-semibold">{pendingReviews}</div>
           <div className="flex-[1_1_360px]">
             <div className="font-semibold">Reseñas pendientes de la cursada {round.termLabel}</div>
@@ -78,7 +78,7 @@ export default async function InicioPage() {
       )}
 
       {nothingLoaded && (
-        <section className="flex flex-wrap items-center gap-5 rounded-[14px] bg-lavender px-5 py-4 text-lavender-ink">
+        <section className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[14px] bg-lavender px-4 py-4 md:gap-5 md:px-5 text-lavender-ink">
           <div className="flex-[1_1_360px] font-semibold">Todavía no cargaste tus materias</div>
           <Link href="/mapa?carga=1" className="rounded-[10px] bg-accent px-5 py-3 font-semibold text-on-accent">
             Cargar materias
@@ -86,11 +86,11 @@ export default async function InicioPage() {
         </section>
       )}
 
-      <div className="flex flex-wrap gap-[22px]">
-        <section aria-label="Avance de carrera" className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 rounded-2xl border border-line bg-surface p-7">
+      <div className="flex flex-wrap gap-4 md:gap-[22px]">
+        <section aria-label="Avance de carrera" className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 rounded-2xl border border-line bg-surface p-5 md:p-7">
           <Label>AVANCE DE CARRERA</Label>
           <div className="flex flex-wrap items-baseline gap-5">
-            <div className="text-[104px] leading-[0.9] font-semibold tracking-[-0.04em]">
+            <div className="text-[80px] leading-[0.9] md:text-[104px] font-semibold tracking-[-0.04em]">
               {pct}
               <span className="text-5xl text-muted">%</span>
             </div>
@@ -104,7 +104,7 @@ export default async function InicioPage() {
             <div className="bg-progress-cbc" style={{ width: `${total ? (cat.cbc.done / total) * 100 : 0}%` }} />
             <div className="bg-accent" style={{ width: `${total ? ((credits - cat.cbc.done) / total) * 100 : 0}%` }} />
           </div>
-          <div className="grid grid-cols-4 gap-4 border-t border-disabled pt-[18px]">
+          <div className="grid grid-cols-2 gap-4 border-t md:grid-cols-4 border-disabled pt-[18px]">
             <Category dot="bg-progress-cbc" name="CBC" done={cat.cbc.done} total={cat.cbc.total} />
             <Category dot="bg-accent" name="Obligatorias" done={cat.required.done} total={cat.required.total} />
             <Category name="Electivas" done={cat.electives.done} total={cat.electives.total} />
@@ -112,15 +112,15 @@ export default async function InicioPage() {
           </div>
         </section>
 
-        <div className="flex flex-[1_1_300px] flex-col gap-[22px]">
-          <section aria-label="Promedio" className="flex flex-col gap-2 rounded-2xl bg-lavender p-7 text-lavender-ink">
+        <div className="flex flex-[1_1_300px] flex-col gap-4 md:gap-[22px]">
+          <section aria-label="Promedio" className="flex flex-col gap-2 rounded-2xl bg-lavender p-5 text-lavender-ink md:p-7">
             <div className="text-xs font-semibold tracking-[0.08em] opacity-80">PROMEDIO</div>
-            <div className="text-[64px] leading-none font-semibold">{formatAverage(average)}</div>
+            <div className="text-[52px] leading-none md:text-[64px] font-semibold">{formatAverage(average)}</div>
             <div className="opacity-80">
               {graded ? `Sin aplazos · ${graded} ${graded === 1 ? "materia" : "materias"} con nota (incluye CBC)` : "Sin notas todavía"}
             </div>
           </section>
-          <section aria-label="Materias" className="flex flex-auto flex-col justify-center gap-4 rounded-2xl border border-line bg-surface px-7 py-6">
+          <section aria-label="Materias" className="flex flex-auto flex-col justify-center gap-4 rounded-2xl border border-line bg-surface px-5 py-5 md:px-7 md:py-6">
             <Label>MATERIAS</Label>
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -146,11 +146,11 @@ export default async function InicioPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-start gap-[22px]">
+      <div className="flex flex-wrap items-start gap-4 md:gap-[22px]">
         {courses ? (
           <HomeCalendar data={courses} />
         ) : (
-          <section aria-label="Cursando" className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-7">
+          <section aria-label="Cursando" className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-5 md:p-7">
             <Label>
               CURSANDO{inProgress.length > 0 && ` · ${inProgress.reduce((a, s) => a + s.credits, 0)} CRÉDITOS`}
             </Label>
@@ -170,7 +170,7 @@ export default async function InicioPage() {
           </section>
         )}
 
-        <section aria-label="Finales pendientes" className="flex flex-[1_1_300px] flex-col gap-3 self-start rounded-2xl border border-line bg-surface p-7">
+        <section aria-label="Finales pendientes" className="flex flex-[1_1_300px] flex-col gap-3 self-start rounded-2xl border border-line bg-surface p-5 md:p-7">
           <div className="flex items-baseline justify-between gap-2">
             <Label>FINALES PENDIENTES</Label>
             {finals.length > 0 && (

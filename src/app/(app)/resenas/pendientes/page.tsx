@@ -13,8 +13,8 @@ export default async function PendientesPage() {
 
   if (!round) {
     return (
-      <main className="mx-auto flex w-full max-w-[860px] flex-col gap-[18px] px-6 pt-9 pb-14">
-        <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Reseñas</h1>
+      <main className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-9 md:pb-14">
+        <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.01em] md:text-[32px] md:leading-normal">Reseñas</h1>
         <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">No tenés reseñas pendientes.</div>
       </main>
     );

@@ -25,21 +25,22 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
   const withComment = course.comments.length;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-5 px-6 pt-7 pb-14">
+    <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-5 md:px-6 md:pt-7 md:pb-14">
       <div>
         <div className="text-sm text-muted">
-          <Link href="/resenas" className="underline">
+          {/* El breadcrumb es el "volver" en el celular: el link tiene que ser fácil de tocar. */}
+          <Link href="/resenas" className="inline-block py-2 underline md:inline md:py-0">
             Reseñas de cursos
           </Link>{" "}
           › {course.subject?.name}
           {course.subject?.credits ? ` · ${course.subject.credits} C` : ""}
         </div>
-        <h1 className="mt-1 text-[34px] font-semibold tracking-[-0.01em]">{course.label}</h1>
+        <h1 className="mt-1 text-[28px] leading-tight font-semibold tracking-[-0.01em] md:text-[34px] md:leading-normal">{course.label}</h1>
         <div className="text-base font-medium text-ink-2">{course.teachers}</div>
       </div>
 
-      <div className="flex flex-wrap items-start gap-5">
-        <div className="flex flex-[1_1_320px] flex-col gap-5">
+      <div className="flex flex-wrap items-start gap-4 md:gap-5">
+        <div className="flex flex-[1_1_320px] flex-col gap-4 md:gap-5">
           <Card label="PUNTAJE DE LOS ALUMNOS">
             {course.score ? (
               <>
@@ -95,7 +96,7 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
           )}
         </div>
 
-        <section aria-label="Comentarios" className="flex min-w-0 flex-[999_1_520px] flex-col rounded-2xl border border-line bg-surface p-6">
+        <section aria-label="Comentarios" className="flex min-w-0 flex-[999_1_520px] flex-col rounded-2xl border border-line bg-surface p-5 md:p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3">
             <div className="text-xs font-semibold tracking-[0.08em] text-muted">COMENTARIOS</div>
             {total > 0 && (
@@ -132,7 +133,7 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
 
 function Card({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
+    <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 md:p-6">
       <div className="text-xs font-semibold tracking-[0.08em] text-muted">{label}</div>
       {children}
     </section>
