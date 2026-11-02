@@ -9,4 +9,5 @@ export const NAV = [
   { href: "/mapa", label: "Mapa" },
   { href: "/plan", label: "Plan" },
   { href: "/resenas", label: "Reseñas" },
+  { href: "/finales", label: "Finales" },
 ] as const;

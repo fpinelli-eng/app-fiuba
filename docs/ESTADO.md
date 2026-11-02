@@ -37,7 +37,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 ## Qué falta, en orden
 
-0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración, PR #50 abierto. Después: sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador) y sección **Novedades** (calendario académico y avisos). Segundo desarrollador; Francisco decide el diseño.
+0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración, PR #50 abierto. Sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador), en un PR abierto encima del #50. Después: sección **Novedades** (calendario académico y avisos). Segundo desarrollador; Francisco decide el diseño.
 1. **Administración, lo que falta:** agregar electivas nuevas al plan. Ya están en `main`: quitar / volver a mostrar cursos y reemplazar la oferta sin borrar (PR #41), emparejar a mano materias (PR #44), cursos con cambios entre cuatrimestres (PR #45) y moderación de reseñas (PR #43). Detalle: un curso que un reemplazo ocultó por no estar en el SIU no vuelve a mostrarse solo si reaparece; se muestra a mano. Segundo desarrollador.
 2. **Plan del cuatrimestre:** completo para la beta ("Me inscribí en esta opción", PR #40; plan bloqueado por reseñas pendientes, PR #42). Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que tocaron "Me inscribí" se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
 3. **Reseñas:** completas para la beta.
