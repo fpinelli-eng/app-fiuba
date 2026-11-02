@@ -17,8 +17,8 @@ const DOTS = [
 export function PlanBlocked({ round }: { round: ReviewRound }) {
   const missing = round.tasks.filter((t) => t.sentStars === null).length;
   return (
-    <main className="mx-auto w-full max-w-[600px] px-6 py-[72px]">
-      <section className="flex flex-col items-center gap-[18px] rounded-[20px] border border-line bg-surface px-9 pt-9 pb-7 text-center">
+    <main className="mx-auto w-full max-w-[600px] px-4 pt-6 pb-24 md:px-6 md:py-[72px]">
+      <section className="flex flex-col items-center gap-[18px] rounded-[20px] border border-line bg-surface px-5 pt-7 pb-6 text-center md:px-9 md:pt-9 md:pb-7">
         <div className="grid size-14 place-items-center rounded-full bg-peach text-peach-ink">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="4" y="11" width="16" height="10" rx="2" />
@@ -26,7 +26,7 @@ export function PlanBlocked({ round }: { round: ReviewRound }) {
           </svg>
         </div>
         <div>
-          <h1 className="text-[26px] leading-tight font-semibold text-balance">
+          <h1 className="text-[22px] leading-tight md:text-[26px] font-semibold text-balance">
             Reseñá tu cursada para armar el plan del {round.nextTermLabel}
           </h1>
           <p className="mt-1.5 text-muted">
@@ -53,7 +53,7 @@ export function PlanBlocked({ round }: { round: ReviewRound }) {
         </ul>
         <Link
           href="/resenas/pendientes"
-          className="inline-flex h-[46px] items-center rounded-[11px] bg-accent px-6 font-semibold text-on-accent"
+          className="inline-flex h-[46px] w-full items-center justify-center rounded-[11px] bg-accent px-6 font-semibold text-on-accent md:w-auto"
         >
           Completar reseñas
         </Link>
