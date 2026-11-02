@@ -47,6 +47,8 @@ values
   ('2026-1C', 'civil-2023', 1, 'CB002', 'Álgebra Lineal', '03', 'Curso 3', true);
 insert into public.offering_blocks (offering_id, weekday, starts_at, ends_at, campus)
 values (1, 1, 540, 660, 'PC'), (2, 2, 540, 660, 'PC');
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to)
+values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00');
 
 -- Seed ------------------------------------------------------------------------------
 
@@ -96,6 +98,7 @@ select test.ok((select count(*) from public.subject_areas) = 0, 'gmail account r
 select test.ok((select count(*) from public.terms) = 0, 'gmail account reads terms');
 select test.ok((select count(*) from public.offerings) = 0, 'gmail account reads offerings');
 select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account reads schedules');
+select test.ok((select count(*) from public.exam_tables) = 0, 'gmail account reads exam tables');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -136,6 +139,9 @@ values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.plan_requ
 select test.fails($$insert into public.careers values ('x', 'x', 'x', 0)$$, 'student edits the catalog');
 select test.fails($$insert into public.subject_areas (plan_id, name) values ('industrial-2023', 'x')$$, 'student adds an elective area');
 select test.ok((select count(*) from public.subject_areas) > 0, 'students read the elective areas');
+select test.ok((select count(*) from public.exam_tables) = 1, 'students read exam tables');
+select test.fails($$insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'X', 'X', 'X', '2026-12-01', 'Regular')$$, 'student adds an exam table');
+select test.ok((select count(*) from public.exam_imports) = 0, 'student reads exam imports');
 -- RLS turns a forbidden update into "0 rows".
 update public.subjects set credits = 99 where code = 'AL';
 select test.ok((select count(*) from public.subjects where credits = 99) = 0, 'student edits a subject');
@@ -227,6 +233,10 @@ select test.ok((select bool_and(pinned and hidden_at is not null) from public.re
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
 select test.ok((select count(*) from public.offerings) = 5, 'admin sees hidden offerings');
 select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'CB001', 'ANÁLISIS MATEMÁTICO II', 'MESA 01', '2026-12-10', 'Regular');
+insert into public.exam_imports (plan_id, stats) values ('industrial-2023', '{"tables": 2}');
+delete from public.exam_tables where siu_subject_code = 'CB001';
+select test.ok((select count(*) from public.exam_imports) = 1, 'admin manages exam imports');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
 reset role;
