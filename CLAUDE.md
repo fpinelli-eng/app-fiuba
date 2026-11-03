@@ -34,10 +34,10 @@ Antes de tocar algo, leé:
 ### Estructura
 
 - `src/app/`: una carpeta por sección (`mapa`, `plan`, `resenas`, `finales`, `novedades`, `perfil`); `page.tsx` es la página.
-- `src/components/`: componentes compartidos (barra superior, contenedor de página, botón de tema).
-- `src/lib/app.ts`: nombre de la app y menú. El nombre se cambia solo ahí.
+- `src/components/`: componentes compartidos (barra superior y barra de pestañas del celular en `Header.tsx`, íconos del menú en `icons.tsx`, contenedor de página, botón de tema).
+- `src/lib/app.ts`: nombre de la app y menú (`NAV`: cada sección con su ícono y, en el celular, `mobile: "tab"` para la barra de abajo o `"top"` para un ícono en la barra de arriba). El nombre se cambia solo ahí.
 - `src/app/globals.css`: **el único lugar con colores.** Variables para claro (`[data-theme="light"]`) y oscuro (`[data-theme="dark"]`) que Tailwind expone como clases: `bg-bg`, `bg-surface`, `bg-header`, `border-line`, `border-line-strong`, `text-ink`, `text-ink-2`, `text-muted`, `bg-accent`, `text-on-accent`, `bg-accent-soft`, `bg-lavender`/`text-lavender-ink`, `bg-mint`/`text-mint-ink`, `bg-butter`/`text-butter-ink`, `bg-sky`/`text-sky-ink`, `bg-peach`/`text-peach-ink`, `bg-pink`/`text-pink-ink` y `bg-teal`/`text-teal-ink` (solo calendario del plan), `text-star`, `text-danger`, `bg-disabled`/`text-disabled-ink`, y para el mapa `border-enabled-line`, `bg-blocked`/`border-blocked-line`/`text-blocked-ink`.
-- Tema: `src/lib/theme.ts`. Se guarda en `localStorage` ("claro" | "oscuro" | "sistema") y un script en `<head>` lo aplica antes de pintar.
+- Tema: `src/lib/theme.ts`. Se guarda en `localStorage` ("claro" | "oscuro" | "sistema") y un script en `<head>` lo aplica antes de pintar; el mismo script pinta `<meta name="theme-color">` (la barra del navegador del celular) con `--header`. En el celular el tema se cambia solo desde Perfil → Apariencia.
 - Sesión: `src/lib/session.ts` (`requireAccount()`: la verificación definitiva en el servidor, que además crea la fila del alumno en `profiles` la primera vez; `requireProfile()`: lo mismo y además exige haber elegido carrera y plan, si no manda a `/carrera`; la usa el layout de `src/app/(app)/`), `src/lib/auth.ts` (dominio permitido y datos del perfil), `src/lib/supabase/` (clientes de navegador, servidor y proxy) y `src/proxy.ts` (refresca la sesión y manda a `/ingresar` a quien no la tiene).
 - `src/app/(app)/`: las secciones que exigen sesión y plan elegido. `src/app/carrera/` es el paso 2 del ingreso (elegir carrera y plan; exige sesión). `src/app/ingresar/`, `src/app/auth/` y `src/app/privacidad/` (política de privacidad, la pide Google para publicar el login) son públicas: se suman en `PUBLIC_PATHS` de `src/lib/supabase/proxy.ts`. El mail de contacto está en `CONTACT_EMAIL` de `src/lib/app.ts`.
 - Carreras y planes: `src/lib/careers.ts` (consulta, solo servidor) y `src/lib/plans.ts` (tipos y textos, sirve en cliente y servidor).
@@ -79,7 +79,7 @@ Antes de tocar algo, leé:
 - Interfaz minimalista: nada de textos explicativos de relleno. Si una pantalla necesita una explicación para entenderse, el problema es el diseño.
 - Números con ancho fijo (`font-variant-numeric: tabular-nums`). Decimales con coma: "7,76".
 - Créditos se muestran como "8 C". Horarios como "Lun 18–22 hs · Paseo Colón".
-- Escritorio primero: la versión 1 no se diseña para celular.
+- Celular: la app se usa en pantallas de 360–430 px. Clases *mobile-first* (sin prefijo = celular) y `md:` (768 px) para la computadora, que tiene que verse igual que antes: al tocar una pantalla, el valor de escritorio va con `md:` y el de celular sin prefijo. Nada puede desbordar a lo ancho en 360 px (tablas anchas, dentro de su propio `overflow-x-auto`). En el celular el menú es una barra de pestañas fija abajo (`Header.tsx`, 60 px + `env(safe-area-inset-bottom)`; el layout de `(app)` deja ese lugar al final): una pantalla con alto fijo tiene que restarlo. Campos de texto con 16 px en el celular (`text-base md:text-sm`) para que el iPhone no haga zoom, y lugares para tocar de 40 px o más.
 
 ## Datos
 

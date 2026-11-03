@@ -88,7 +88,7 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
                   type="button"
                   aria-pressed={sort === value}
                   onClick={() => setSort(value)}
-                  className={`h-9 flex-1 rounded-[7px] px-2 text-[13px] whitespace-nowrap md:h-[30px] md:flex-initial md:px-3 ${sort === value ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
+                  className={`h-9 flex-1 rounded-[7px] px-2 text-[13px] whitespace-nowrap md:h-[30px] md:flex-initial md:px-3 md:whitespace-normal ${sort === value ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
                 >
                   {label}
                 </button>
