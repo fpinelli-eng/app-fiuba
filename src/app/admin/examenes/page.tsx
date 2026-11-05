@@ -23,7 +23,7 @@ export default async function AdminExamsPage({ searchParams }: { searchParams: P
   const current = selected ? loaded.get(selected.id) : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-6 pt-8 pb-14">
+    <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div>
         <h1 className="text-[30px] font-semibold">Fechas de examen</h1>
         <div className="text-muted">
@@ -31,7 +31,7 @@ export default async function AdminExamsPage({ searchParams }: { searchParams: P
         </div>
       </div>
 
-      <div className="grid grid-cols-[300px_minmax(0,1fr)] items-start gap-[18px]">
+      <div className="grid grid-cols-1 items-start gap-[18px] md:grid-cols-[300px_minmax(0,1fr)]">
         <aside aria-label="Planes" className="flex flex-col gap-0.5 rounded-[18px] border border-line bg-surface p-2.5">
           {plans.map((p) => {
             const on = p.id === selected?.id;

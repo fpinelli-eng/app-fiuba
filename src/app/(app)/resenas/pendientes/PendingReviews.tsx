@@ -24,9 +24,9 @@ export function PendingReviews({ round }: { round: ReviewRound }) {
   const allDone = done === total;
 
   return (
-    <main className="mx-auto flex w-full max-w-[860px] flex-col gap-[18px] px-6 pt-9 pb-14">
+    <main className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-9 md:pb-14">
       <div>
-        <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Reseñas de tu cursada {round.termLabel}</h1>
+        <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Reseñas de tu cursada {round.termLabel}</h1>
         <div className="mt-1 text-muted">
           Puntuá cada curso que hiciste. Las estrellas son obligatorias; el comentario, opcional. Tu reseña es anónima.
         </div>
@@ -78,7 +78,7 @@ function ReviewCard({ task, dot, onSent }: { task: ReviewTask; dot: string; onSe
   const [sent, setSent] = useState({ stars: task.sentStars, comment: task.sentComment });
 
   return (
-    <section aria-label={task.subjectName} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-6 py-[22px]">
+    <section aria-label={task.subjectName} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-4 py-[18px] md:px-6 md:py-[22px]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <span className={`mt-[5px] size-3.5 flex-none rounded-full border-2 ${dot}`} />
@@ -95,7 +95,7 @@ function ReviewCard({ task, dot, onSent }: { task: ReviewTask; dot: string; onSe
               </svg>
               Enviada · {sent.stars} de 5
             </span>
-            <button type="button" onClick={() => setOpen(true)} className="text-[13px] font-semibold text-accent">
+            <button type="button" onClick={() => setOpen(true)} className="px-1 py-2.5 text-[13px] font-semibold text-accent md:px-0 md:py-0">
               Editar
             </button>
           </div>
@@ -103,7 +103,7 @@ function ReviewCard({ task, dot, onSent }: { task: ReviewTask; dot: string; onSe
       </div>
 
       {open && (
-        <div className="pl-[26px]">
+        <div className="md:pl-[26px]">
           <ReviewForm
             id={String(task.offeringId)}
             initialStars={sent.stars}
