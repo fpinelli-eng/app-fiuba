@@ -35,11 +35,11 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
   return (
-    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-6 pt-8 pb-14">
-      <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Reseñas de cursos</h1>
+    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
+      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Reseñas de cursos</h1>
 
       {pending && (
-        <Link href="/resenas/pendientes" className="flex items-center gap-3.5 rounded-[14px] bg-peach px-[18px] py-3.5 text-peach-ink">
+        <Link href="/resenas/pendientes" className="flex items-center gap-3.5 rounded-[14px] bg-peach px-4 py-3.5 text-peach-ink md:px-[18px]">
           <span className="text-2xl leading-none font-semibold">{pending.count}</span>
           <span className="flex-auto">
             <b>Reseñas pendientes de tu cursada {pending.termLabel}.</b> Completalas para desbloquear el plan.
@@ -72,9 +72,11 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
               ? `${plural(shown.length, "materia", "materias")} · ${plural(courseCount, "curso", "cursos")}`
               : `Las ${shown.length} materias de ${planLabel} · ${plural(courseCount, "curso", "cursos")}`}
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className="text-[13px] text-muted">Ordenar cursos por</span>
-            <div role="group" aria-label="Ordenar" className="flex rounded-[10px] border border-line bg-surface p-[3px]">
+          <div className="flex w-full items-center gap-2.5 md:w-auto">
+            <span className="flex-none text-[13px] text-muted">
+              Ordenar <span className="hidden md:inline">cursos </span>por
+            </span>
+            <div role="group" aria-label="Ordenar" className="flex flex-auto rounded-[10px] border border-line bg-surface p-[3px] md:flex-initial">
               {(
                 [
                   ["score", "Mejor puntaje"],
@@ -86,7 +88,7 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
                   type="button"
                   aria-pressed={sort === value}
                   onClick={() => setSort(value)}
-                  className={`h-[30px] rounded-[7px] px-3 text-[13px] ${sort === value ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
+                  className={`h-9 flex-1 rounded-[7px] px-2 text-[13px] whitespace-nowrap md:h-[30px] md:flex-initial md:px-3 md:whitespace-normal ${sort === value ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
                 >
                   {label}
                 </button>
@@ -105,21 +107,21 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
       <div className="flex flex-col gap-2.5">
         {shown.map((s) => (
           <section key={s.subjectId} aria-label={s.name} className="overflow-hidden rounded-2xl border border-line bg-surface">
-            <div className="flex items-baseline justify-between gap-4 bg-lavender px-[22px] py-3.5">
-              <h2 className="text-[19px] leading-snug font-semibold text-lavender-ink">{s.name}</h2>
-              <span className="text-[13px] whitespace-nowrap text-lavender-ink/80">
+            <div className="flex flex-col gap-0.5 bg-lavender px-4 py-3 md:flex-row md:items-baseline md:justify-between md:gap-4 md:px-[22px] md:py-3.5">
+              <h2 className="text-[17px] leading-snug font-semibold text-lavender-ink md:text-[19px]">{s.name}</h2>
+              <span className="text-[13px] text-lavender-ink/80 md:whitespace-nowrap">
                 {s.kindLabel} · {s.credits} C ·{" "}
                 {s.courses.length === 0 ? "sin cursos este cuatrimestre" : plural(s.courses.length, "curso", "cursos")}
               </span>
             </div>
-            {s.courses.length === 0 && <div className="px-[22px] py-3.5 text-[13px] text-muted">No se dicta este cuatrimestre.</div>}
+            {s.courses.length === 0 && <div className="px-4 py-3.5 text-[13px] text-muted md:px-[22px]">No se dicta este cuatrimestre.</div>}
             {s.courses.length > 0 && (
               <div className="py-1">
                 {s.courses.map((c) => (
                   <Link
                     key={c.courseId}
                     href={`/resenas/curso/${c.courseId}`}
-                    className="flex items-center gap-4 px-[22px] py-2.5 hover:bg-bg"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-bg md:gap-4 md:px-[22px] md:py-2.5"
                   >
                     <div className="min-w-0 flex-auto">
                       <div className="text-sm font-semibold text-ink-2">{c.label}</div>
@@ -127,16 +129,16 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
                     </div>
                     {c.score ? (
                       <>
-                        <div className="h-1.5 w-[140px] flex-none overflow-hidden rounded-md bg-disabled" aria-hidden="true">
+                        <div className="hidden h-1.5 w-[140px] flex-none overflow-hidden rounded-md bg-disabled md:block" aria-hidden="true">
                           <div className="h-1.5 bg-star" style={{ width: `${Math.round((c.score.average / 5) * 100)}%` }} />
                         </div>
-                        <span className="flex w-[92px] flex-none items-center justify-end gap-1 text-sm font-semibold">
+                        <span className="flex flex-none items-center justify-end gap-1 text-sm font-semibold md:w-[92px]">
                           <StarIcon />
                           {formatScore(c.score.average)} <span className="text-[12.5px] font-normal text-muted">({c.score.count})</span>
                         </span>
                       </>
                     ) : (
-                      <span className="w-[240px] flex-none text-right text-[13px] text-muted">Sin reseñas todavía</span>
+                      <span className="flex-none text-right text-[13px] text-muted md:w-[240px]">Sin reseñas todavía</span>
                     )}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-enabled-line">
                       <path d="M9 6l6 6-6 6" />

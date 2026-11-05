@@ -27,15 +27,15 @@ export default async function PerfilPage() {
   const careerName = (Array.isArray(career) ? career[0]?.short_name : career?.short_name) ?? "";
 
   return (
-    <main className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-6 pt-9 pb-12">
-      <section className="flex items-center gap-[18px] pt-1 pb-2">
+    <main className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 pt-5 pb-8 md:px-6 md:pt-9 md:pb-12">
+      <section className="flex flex-wrap items-center gap-x-4 gap-y-3 pt-1 pb-2 md:flex-nowrap md:gap-[18px]">
         <Avatar profile={account} size={84} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-[30px] leading-tight font-semibold">{account.fullName}</h1>
-          <div className="text-muted">{account.email}</div>
+          <h1 className="text-[24px] leading-tight font-semibold md:text-[30px]">{account.fullName}</h1>
+          <div className="break-all text-muted md:break-normal">{account.email}</div>
         </div>
-        <form action="/auth/salir" method="post">
-          <button type="submit" className="h-10 rounded-[10px] border border-line-strong bg-surface px-4 text-sm font-semibold">
+        <form action="/auth/salir" method="post" className="w-full md:w-auto">
+          <button type="submit" className="h-10 w-full rounded-[10px] border border-line-strong bg-surface px-4 text-sm font-semibold md:w-auto">
             Cerrar sesión
           </button>
         </form>
@@ -54,7 +54,7 @@ export default async function PerfilPage() {
       </Card>
 
       <section aria-label="Mis reseñas" className="overflow-hidden rounded-[18px] border border-line bg-surface">
-        <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-[22px] pb-3.5">
+        <div className="flex flex-wrap items-start justify-between gap-3 px-4 pt-[18px] pb-3.5 md:px-6 md:pt-[22px]">
           <div>
             <h2 className="text-[19px] font-semibold">Mis reseñas</h2>
             <div className="mt-0.5 text-sm text-muted">Se publican sin tu nombre.</div>
@@ -66,7 +66,7 @@ export default async function PerfilPage() {
           )}
         </div>
         {reviews.length === 0 ? (
-          <div className="border-t border-line px-6 py-4 text-sm text-muted">Todavía no escribiste reseñas.</div>
+          <div className="border-t border-line px-4 py-4 text-sm text-muted md:px-6">Todavía no escribiste reseñas.</div>
         ) : (
           reviews.map((r) => <MyReviewRow key={r.id} review={r} />)
         )}
@@ -99,7 +99,7 @@ export default async function PerfilPage() {
 
       <footer className="pt-2 text-center text-[13px] text-muted">
         Hecho por estudiantes. No es un sitio oficial de la universidad. ·{" "}
-        <Link href="/privacidad" className="underline">
+        <Link href="/privacidad" className="inline-block py-2 underline md:inline md:py-0">
           Privacidad
         </Link>
       </footer>
@@ -108,5 +108,5 @@ export default async function PerfilPage() {
 }
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[18px] border border-line bg-surface px-6 py-[22px] ${className}`}>{children}</section>;
+  return <section className={`rounded-[18px] border border-line bg-surface px-4 py-[18px] md:px-6 md:py-[22px] ${className}`}>{children}</section>;
 }

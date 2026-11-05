@@ -23,6 +23,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Administración: cuatrimestre actual, fecha de reseñas, cargar la oferta del SIU por plan (procesar, resumen, materias fuera del plan, publicar) y ver la oferta publicada | `src/app/admin/`, `src/lib/admin/` | En `main` (PR #33) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
 | Pantalla del plan del cuatrimestre (PR #14); ahora lee la oferta de la base, solo materias habilitadas, con puntajes y guardado de Opción A / B | `src/app/(app)/plan/`, `src/lib/plan/data.ts`, `supabase/migrations/20261016170000_plan_choices.sql` | En `main` (PR #38) |
+| Plan del cuatrimestre en celular: Materias / Semana, hoja para elegir el curso, agenda por día y barra con totales y "Me inscribí"; escritorio sin cambios | `src/app/(app)/plan/PlanMobile.tsx` | PR abierto |
 | Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
 | Mapa de la carrera y primera carga de materias, guardando en la base | `src/lib/map/`, `src/app/(app)/mapa/` | En `main` (#17, PR #18) |
 | Inicio: avance, promedio, materias, cursando y finales pendientes | `src/app/(app)/page.tsx` | En `main` (#24, PR #25) |
@@ -32,9 +33,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Reseñas libres: cualquier alumno reseña cualquier curso desde su ficha ("Tu reseña"); una reseña por alumno y curso, que se edita | `supabase/migrations/20261016140000_free_reviews.sql`, `src/app/(app)/resenas/curso/[id]/MyReview.tsx` | En `main` (#34, PR #35) |
 | Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | En `main` (#8, PR #36) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
+| Mapa en el celular: lista por cuatrimestre, pestañas Obligatorias / Electivas y ficha desde abajo (desde 768 px queda igual) | `src/app/(app)/mapa/MobileMap.tsx` | PR #55 abierto |
+| Versión para celular (360–430 px): barra de pestañas abajo, barra superior compacta, calendario del inicio día por día y pantallas sin desborde. Desde 768 px queda igual que en la computadora. El mapa y el plan se adaptan en PRs aparte | `src/components/Header.tsx`, `src/components/icons.tsx`, `src/lib/app.ts`, `src/app/(app)/HomeDayView.tsx` | PR abierto |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 | Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
+| Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR #54 abierto |
 
 ## Qué falta, en orden
 
@@ -54,6 +58,8 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 **Migraciones:** se aplican solas al integrarse a `main`. GitHub entra a Supabase con el secreto `SUPABASE_DB_PASSWORD` por el *session pooler* (IPv4), sin token.
 
+**Supabase activo y respaldos** (`docs/RESPALDOS.md`): el workflow "Mantener Supabase activo" consulta la base cada 3 días para que no se pause (si falla, llega un mail: probablemente ya se pausó). "Respaldo de la base" guarda los lunes una copia cifrada de los datos, 30 días, como *artifact* de la corrida (el repo es público: sin cifrar no se sube nunca). Necesita el secreto `BACKUP_PASSPHRASE`, que crea Francisco y guarda en un lugar seguro: sin esa contraseña los respaldos no se abren. Cómo descargar, descifrar y restaurar: en ese documento. **GitHub apaga los workflows programados tras 60 días sin commits en el repo**: si pasa, se prenden de nuevo en Actions → Enable workflow.
+
 ## Cómo está armado GitHub
 
 - **Repositorio:** `fpinelli-eng/app-fiuba`, público. Dueño: Francisco.
@@ -69,7 +75,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 |---|---|---|---|
 | GitHub | Código | Francisco | Colaborador con escritura |
 | Vercel | Publica la web; una vista previa por pull request | Francisco (plan gratuito) | No es miembro. Desde el 15 de octubre las vistas previas no piden sesión de Vercel (*Deployment Protection* desactivada): las protege el login de la app. **Antes del lanzamiento (#8), revisar:** las vistas previas usan la misma base que producción |
-| Supabase | Base de datos y login (plan gratuito: el proyecto se pausa tras una semana sin uso; se reactiva con *Restore project*) | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
+| Supabase | Base de datos y login (plan gratuito: el proyecto se pausa tras una semana sin uso, lo evita el workflow "Mantener Supabase activo"; si igual pasa, se reactiva con *Restore project*. Sin respaldos descargables: los hace el workflow "Respaldo de la base") | Francisco | Ninguno. Las migraciones van en el repo y GitHub las aplica solo al integrarse a `main` (workflow "Base de datos") |
 | Google Cloud | Credenciales de "Ingresar con Google" | Francisco | Ninguno. Para entrar a la app mientras está en modo prueba, su mail @fi.uba.ar tiene que estar en *Test users* |
 
 **Variables de entorno:** las dos de `.env.example` (URL y publishable key de Supabase) son públicas por diseño, pero no se suben al repo: Francisco las pasa por mensaje privado. La contraseña de la base, el *client secret* de Google y la *secret key* de Supabase **nunca** se comparten ni se suben.

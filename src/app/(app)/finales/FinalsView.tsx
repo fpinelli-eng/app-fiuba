@@ -18,7 +18,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
   const status = enrollmentStatus(table, now);
-  const chip = "rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold whitespace-nowrap";
+  const chip = "rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold md:whitespace-nowrap";
   switch (status.kind) {
     case "open":
       return <span className={`${chip} bg-mint text-mint-ink`}>Inscripción abierta hasta el {formatEnrollMoment(status.until)}</span>;
@@ -42,8 +42,8 @@ function TableRow({ table, now, timed }: { table: ExamTableView; now: string; ti
   const time = formatExamTime(table.startTime, table.endTime);
   const details = tableDetails(table);
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-[22px] py-2.5">
-      <span className={`${timed ? "w-[184px]" : "w-[76px]"} flex-none text-sm text-ink-2 tabular-nums`}>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 md:gap-x-4 md:px-[22px]">
+      <span className={`${timed ? "w-auto md:w-[184px]" : "w-[68px] md:w-[76px]"} flex-none text-sm text-ink-2 tabular-nums`}>
         <span className="font-semibold">{formatExamDay(table.date)}</span>
         {time && <span> · {time}</span>}
       </span>
@@ -73,8 +73,8 @@ export function FinalsView({ data }: { data: FinalsData }) {
   const timed = all.some((s) => s.tables.some((t) => t.startTime));
 
   return (
-    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-6 pt-8 pb-14">
-      <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Finales</h1>
+    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
+      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Finales</h1>
 
       {!data.loaded && (
         <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">
@@ -85,7 +85,7 @@ export function FinalsView({ data }: { data: FinalsData }) {
       {data.loaded && (
         <>
           {open.length > 0 && (
-            <div className="rounded-[14px] bg-mint px-[18px] py-3.5 text-mint-ink">
+            <div className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]">
               <b>Inscripción abierta:</b>{" "}
               {open
                 .slice(0, 3)
@@ -96,11 +96,11 @@ export function FinalsView({ data }: { data: FinalsData }) {
           )}
 
           <section aria-labelledby="pending-title" className="overflow-hidden rounded-2xl border border-line bg-surface">
-            <h2 id="pending-title" className="px-[22px] pt-4 pb-2 text-[19px] font-semibold">
+            <h2 id="pending-title" className="px-4 pt-4 pb-2 text-[19px] font-semibold md:px-[22px]">
               Tus finales pendientes
             </h2>
             {pending.length === 0 ? (
-              <div className="px-[22px] pb-4 text-sm text-muted">
+              <div className="px-4 pb-4 text-sm text-muted md:px-[22px]">
                 No tenés finales pendientes en tu mapa.{" "}
                 <Link href="/mapa" className="font-semibold text-ink-2 underline">
                   Ir al mapa
@@ -110,9 +110,9 @@ export function FinalsView({ data }: { data: FinalsData }) {
               <div className="flex flex-col pb-2">
                 {pending.map((s) => (
                   <div key={s.key} className="border-t border-line first:border-t-0">
-                    <h3 className="px-[22px] pt-3 pb-1 text-[15px] font-semibold">{s.name}</h3>
+                    <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">{s.name}</h3>
                     {s.tables.length === 0 ? (
-                      <div className="px-[22px] pb-3 text-[13px] text-muted">Sin mesas cargadas.</div>
+                      <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">Sin mesas cargadas.</div>
                     ) : (
                       s.tables.slice(0, 3).map((t) => <TableRow key={t.id} table={t} now={now} timed={timed} />)
                     )}
@@ -150,8 +150,8 @@ export function FinalsView({ data }: { data: FinalsData }) {
           <div className="flex flex-col gap-2.5">
             {shown.map((s: ExamSubjectView) => (
               <section key={s.key} aria-label={s.name} className="overflow-hidden rounded-2xl border border-line bg-surface">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-lavender px-[22px] py-3.5">
-                  <h3 className="text-[19px] leading-snug font-semibold text-lavender-ink">{s.name}</h3>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-lavender px-4 py-3 md:px-[22px] md:py-3.5">
+                  <h3 className="text-[17px] leading-snug md:text-[19px] font-semibold text-lavender-ink">{s.name}</h3>
                   <span className="text-[13px] whitespace-nowrap text-lavender-ink/80">{plural(s.tables.length, "mesa", "mesas")}</span>
                 </div>
                 <div className="py-1">

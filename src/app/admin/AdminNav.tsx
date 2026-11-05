@@ -13,7 +13,7 @@ const TABS = [
 export function AdminNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Secciones" className="flex gap-1.5">
+    <nav aria-label="Secciones" className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-1.5 overflow-x-auto px-4 whitespace-nowrap md:order-none md:mx-0 md:w-auto md:overflow-visible md:px-0 md:whitespace-normal">
       {TABS.map((t) => {
         const active = t.href === "/admin" ? pathname === "/admin" : pathname.startsWith(t.href);
         return (

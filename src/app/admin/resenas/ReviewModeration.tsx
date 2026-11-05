@@ -62,7 +62,7 @@ export function ReviewModeration({ reviews: initial }: { reviews: ModerationRevi
   const total = reviews.filter((r) => !r.hidden).length;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1000px] flex-col gap-4 px-6 pt-8 pb-14">
+    <main className="mx-auto flex w-full max-w-[1000px] flex-col gap-4 px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[30px] font-semibold">Reseñas</h1>
@@ -95,7 +95,7 @@ export function ReviewModeration({ reviews: initial }: { reviews: ModerationRevi
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar materia, docente o texto"
-            className="h-[42px] w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
+            className="h-[42px] w-full rounded-[10px] md:w-[280px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
           />
         </div>
       </div>

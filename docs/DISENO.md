@@ -57,7 +57,16 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Etiquetas de sección en mayúsculas: 11–12 px, 600, espaciado 0,08 em, color `muted`.
 - Radios: tarjetas 16–18 px, botones e inputs 10–12 px, chips 999 px.
 - Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo #ECEBF4, texto #8A8AA0, cursor `not-allowed`.
-- Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
+- Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas · Finales · Novedades al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
+
+## Celular (agregado el 2 de noviembre, no está en el prototipo)
+
+- Desde 768 px todo se ve como en la computadora. Debajo, el diseño se adapta en lugar de achicarse.
+- Barra superior compacta (56 px): logo y nombre, Novedades como ícono de campana y el avatar (lleva al perfil). Sin botón de tema: se cambia en Perfil → Apariencia.
+- Barra de pestañas fija abajo, como en una app: Inicio, Mapa, Plan, Reseñas y Finales, con ícono y nombre corto; la activa con el ícono sobre fondo lavanda y el contador de reseñas pendientes en durazno sobre el ícono. Respeta la zona segura del iPhone.
+- Márgenes de 16 px, títulos de 26–28 px, tarjetas de a una, los cuatro números del avance en 2 × 2.
+- Calendario de la cursada del inicio: un día por vez con botones Lun–Sáb (punto si hay clases, hoy con borde) y la lista de clases del día con horario, curso y sede. Arranca en hoy o, si hoy no hay clases, en el próximo día con clases.
+- Administración solo se acomoda para no desbordar: se usa en la computadora.
 
 ## Pantallas
 
@@ -82,6 +91,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - CBC compactable en una columna angosta; compactado por defecto cuando está completo.
 - Panel de electivas a la derecha (276 px, fondo #F1EEFD) agrupado por área, con filtros Todas / Habilitadas / Bloqueadas y barra de créditos de electivas.
 - Buscador de materias que atenúa las que no coinciden.
+- **Celular** (menos de 768 px, no está en el prototipo): pestañas "Obligatorias | Electivas"; las obligatorias en secciones plegables por cuatrimestre (abiertas la actual y la siguiente, con una barrita de colores por materia); la ficha sube desde abajo con los mismos botones y, como no hay contornos, lista "Necesita" y "Habilita". El buscador filtra la lista.
 
 ### Plan del cuatrimestre
 - Columna izquierda (390 px) con materias habilitadas y sus cursos. Por curso: "Curso N" en negrita (+ chip "En tu plan"), debajo hasta 3 apellidos de docentes (sin "Prof.") y "+N" si hay más, horario y sede, estrellas y botón Agregar / Cambiar / Quitar.
