@@ -22,9 +22,11 @@ import {
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
 import { CloseIcon, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
+import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 
 // Mapa de la carrera (prototipo 06-mapa) y primera carga de materias (prototipo 03-primera-carga).
 // Cada cambio se guarda en la base apenas se toca; si falla, se vuelve atrás y se avisa.
+// Desde md (768 px) se ven las columnas; en el celular, MobileMap (lista por cuatrimestre y hoja de la materia).
 
 const COL = 122;
 const NODE_W = 112;
@@ -33,7 +35,6 @@ const ROW = 100;
 const TOP = 34;
 const CBC_CLOSED_W = 64;
 
-type Filter = "all" | "enabled" | "blocked";
 type ButtonState = SubjectStatus | "none";
 
 interface Props {
@@ -115,6 +116,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     return out;
   }, [items, map, progress, credits]);
   const stateOf = useCallback((item: MapItem): DisplayState => states.get(item.key) ?? "blocked", [states]);
+  const gradeOf = (item: MapItem) => (item.type === "subject" ? (progress.subjects.get(item.subject.id)?.grade ?? null) : null);
 
   const selItem = sel ? (items.get(sel) ?? null) : null;
   const selSubject = selItem?.type === "subject" ? selItem.subject : null;
@@ -278,18 +280,18 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const count = (f: Filter) => allElectives.filter((s) => f === "all" || states.get(subjectKey(s.id)) === f).length;
 
   return (
-    <main className="flex flex-col gap-4 px-6 pt-[26px] pb-10">
+    <main className="flex flex-col gap-4 px-4 pt-5 pb-24 md:px-6 md:pt-[26px] md:pb-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-semibold tracking-[-0.01em]">{firstLoad ? "Cargá tus materias" : "Mapa de la carrera"}</h1>
+          <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">{firstLoad ? "Cargá tus materias" : "Mapa de la carrera"}</h1>
           <div className="text-muted">
             {data.careerName} · Plan {data.year} · <span className="font-semibold text-ink">{credits}</span>
             {total !== null && <> de {total}</>} C · Promedio{" "}
             <span className="font-semibold text-ink">{formatAverage(map.average(progress))}</span>
           </div>
         </div>
-        <div className="flex items-end gap-2.5">
-          <div className="flex flex-col gap-1">
+        <div className="flex w-full items-end gap-2.5 md:w-auto">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 md:flex-none">
             <label htmlFor="buscar" className="text-xs font-semibold tracking-[0.06em] text-muted">
               BUSCAR MATERIA
             </label>
@@ -299,13 +301,13 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ej.: Física"
-              className="h-[42px] w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
+              className="h-[42px] w-full md:w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
             />
           </div>
           {!firstLoad && (
             <Link
               href="/mapa?carga=1"
-              className="inline-flex h-[42px] items-center rounded-[10px] border border-line-strong bg-surface px-[18px] text-[15px] font-semibold"
+              className="inline-flex h-[42px] shrink-0 items-center rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-semibold md:px-[18px]"
             >
               Carga rápida
             </Link>
@@ -313,7 +315,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
           {firstLoad && (
             <Link
               href="/"
-              className="inline-flex h-[42px] items-center rounded-[10px] bg-accent px-[22px] text-[15px] font-semibold text-on-accent"
+              className="inline-flex h-[42px] shrink-0 items-center rounded-[10px] bg-accent px-[22px] text-[15px] font-semibold text-on-accent"
             >
               Listo
             </Link>
@@ -329,9 +331,60 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         </p>
       )}
 
+      <MobileMap
+        cbc={cbc}
+        terms={terms}
+        electiveGroups={groups}
+        items={items}
+        stateOf={stateOf}
+        gradeOf={gradeOf}
+        credits={credits}
+        sel={sel}
+        firstLoad={firstLoad}
+        query={query}
+        filter={filter}
+        onFilter={setFilter}
+        electiveCredits={eCredits}
+        electiveTarget={eTarget}
+        electiveTargetMax={eTargetMax}
+        onPick={select}
+      />
+
+      {selItem && (
+        <BottomSheet label={selSubject ? selSubject.name : selItem.type === "requirement" ? selItem.requirement.name : ""} onClose={close}>
+          <SubjectCard
+            variant="sheet"
+            item={selItem}
+            progress={progress}
+            credits={credits}
+            stateOf={stateOf}
+            firstLoad={firstLoad}
+            pending={pending === selItem.key}
+            inSequence={sequence.includes(selItem.key)}
+            electiveGroup={selIsElective ? (selSubject?.kind === "orientation" ? selSubject.category : (selSubject?.area?.name ?? null)) : null}
+            related={related}
+            items={items}
+            onPick={select}
+            onGrade={(g) => pickGrade(selItem, g)}
+            onState={(s) => pickState(selItem, s)}
+            onPrev={() => {
+              const i = sequence.indexOf(selItem.key);
+              setPending(null);
+              setSel(sequence[i - 1] ?? selItem.key);
+            }}
+            onNext={() => {
+              const i = sequence.indexOf(selItem.key);
+              setPending(null);
+              setSel(sequence[i + 1] ?? null);
+            }}
+            onClose={close}
+          />
+        </BottomSheet>
+      )}
+
       <section
         aria-label="Plan de estudios"
-        className="relative flex rounded-2xl border border-line bg-surface"
+        className="relative hidden rounded-2xl md:flex border border-line bg-surface"
         style={{ height: height + 32 }}
       >
         <div className="min-w-0 flex-1 overflow-x-auto px-3 py-4">
@@ -554,14 +607,20 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
 function Legend() {
   const states: DisplayState[] = ["approved", "final_pending", "in_progress", "enabled", "blocked"];
   return (
-    <div aria-label="Referencias" className="flex flex-wrap items-center gap-2">
+    <div
+      aria-label="Referencias"
+      className="-mx-4 flex items-center gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0"
+    >
       {states.map((s) => (
-        <span key={s} className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold ${STATE_STYLE[s]}`}>
+        <span
+          key={s}
+          className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap md:px-3 md:py-1 md:text-[13px] ${STATE_STYLE[s]}`}
+        >
           <StateIcon state={s} />
           {STATE_LABEL[s]}
         </span>
       ))}
-      <span className="px-1.5 py-1 text-[13px] text-muted">C = créditos</span>
+      <span className="shrink-0 px-1.5 py-1 text-[12px] whitespace-nowrap text-muted md:text-[13px]">C = créditos</span>
     </div>
   );
 }
@@ -640,6 +699,11 @@ function SubjectCard(props: {
   pending: boolean;
   inSequence: boolean;
   electiveGroup?: string | null;
+  /** "sheet": la hoja del celular (ancho completo, botones más altos y las correlativas, que no se ven en la lista). */
+  variant?: "popover" | "sheet";
+  related?: { needs: Set<string>; unlocks: Set<string> };
+  items?: Map<string, MapItem>;
+  onPick?: (key: string) => void;
   onGrade: (grade: number) => void;
   onState: (state: ButtonState) => void;
   onPrev: () => void;
@@ -647,6 +711,7 @@ function SubjectCard(props: {
   onClose: () => void;
 }) {
   const { item, progress, credits, stateOf, firstLoad, pending, inSequence, electiveGroup, onGrade, onState, onPrev, onNext, onClose } = props;
+  const sheet = props.variant === "sheet";
   const state = stateOf(item);
   const isReq = item.type === "requirement";
   const subject = item.type === "subject" ? item.subject : null;
@@ -693,7 +758,7 @@ function SubjectCard(props: {
             aria-pressed={on}
             aria-label={`Nota ${g}`}
             onClick={() => onGrade(g)}
-            className={`flex-1 rounded-[7px] p-0 font-semibold ${big ? "h-9 text-sm" : "h-[30px] text-[13px]"} ${on ? "border border-accent bg-accent text-on-accent" : "border border-line bg-surface text-ink"}`}
+            className={`flex-1 rounded-[7px] p-0 font-semibold ${sheet ? "h-11 text-[15px]" : big ? "h-9 text-sm" : "h-[30px] text-[13px]"} ${on ? "border border-accent bg-accent text-on-accent" : "border border-line bg-surface text-ink"}`}
           >
             {g}
           </button>
@@ -706,7 +771,11 @@ function SubjectCard(props: {
     <div
       role="dialog"
       aria-label={name}
-      className="flex w-[240px] flex-col gap-[7px] rounded-[14px] border border-line bg-surface px-3.5 pt-3.5 pb-3 text-left text-[13px] leading-[1.3] text-ink shadow-[0_12px_32px_var(--pop-shadow)]"
+      className={
+        sheet
+          ? "flex w-full flex-col gap-2 text-left text-sm leading-[1.3] text-ink"
+          : "flex w-[240px] flex-col gap-[7px] rounded-[14px] border border-line bg-surface px-3.5 pt-3.5 pb-3 text-left text-[13px] leading-[1.3] text-ink shadow-[0_12px_32px_var(--pop-shadow)]"
+      }
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -715,7 +784,7 @@ function SubjectCard(props: {
               {electiveGroup ? `ELECTIVA · ${electiveGroup.toUpperCase()}` : "ELECTIVA"}
             </div>
           )}
-          <div className="text-[15px] leading-tight font-semibold">{name}</div>
+          <div className={`${sheet ? "text-lg" : "text-[15px]"} leading-tight font-semibold`}>{name}</div>
           <div className="mt-0.5 text-xs text-muted">{sub}</div>
           {missingCredits && (
             <div className="mt-0.5 text-xs text-muted">
@@ -723,7 +792,12 @@ function SubjectCard(props: {
             </div>
           )}
         </div>
-        <button type="button" aria-label="Cerrar" onClick={onClose} className="grid size-7 flex-none place-items-center rounded-lg bg-bg text-muted">
+        <button
+          type="button"
+          aria-label="Cerrar"
+          onClick={onClose}
+          className={`grid flex-none place-items-center rounded-lg bg-bg text-muted ${sheet ? "size-9" : "size-7"}`}
+        >
           <CloseIcon />
         </button>
       </div>
@@ -738,17 +812,17 @@ function SubjectCard(props: {
           )}
           <div className={`mt-1.5 grid gap-1.5 ${buttons.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
             {buttons.map(([s, label]) => (
-              <StateButton key={s} on={current === s && (s !== "none" || isReq)} onClick={() => onState(s)}>
+              <StateButton key={s} big={sheet} on={current === s && (s !== "none" || isReq)} onClick={() => onState(s)}>
                 {label}
               </StateButton>
             ))}
           </div>
           {inSequence && (
-            <div className="mt-1 flex justify-between border-t border-line pt-2 text-[12.5px]">
-              <button type="button" onClick={onPrev} className="py-0.5 text-muted">
+            <div className={`mt-1 flex justify-between border-t border-line pt-2 ${sheet ? "text-sm" : "text-[12.5px]"}`}>
+              <button type="button" onClick={onPrev} className={sheet ? "py-2.5 text-muted" : "py-0.5 text-muted"}>
                 ← Anterior
               </button>
-              <button type="button" onClick={onNext} className="py-0.5 font-semibold text-accent">
+              <button type="button" onClick={onNext} className={sheet ? "py-2.5 font-semibold text-accent" : "py-0.5 font-semibold text-accent"}>
                 Siguiente →
               </button>
             </div>
@@ -758,7 +832,7 @@ function SubjectCard(props: {
         <>
           <div className="mt-1.5 grid grid-cols-2 gap-1.5">
             {buttons.map(([s, label]) => (
-              <StateButton key={s} on={current === s} waiting={pending && s === "approved"} onClick={() => onState(s)}>
+              <StateButton key={s} big={sheet} on={current === s} waiting={pending && s === "approved"} onClick={() => onState(s)}>
                 {label}
               </StateButton>
             ))}
@@ -769,19 +843,71 @@ function SubjectCard(props: {
               {gradeButtons(false)}
             </>
           )}
+          {sheet && props.related && props.items && props.onPick && (
+            <Related related={props.related} items={props.items} stateOf={stateOf} onPick={props.onPick} />
+          )}
         </>
       )}
     </div>
   );
 }
 
-function StateButton({ on, waiting, onClick, children }: { on: boolean; waiting?: boolean; onClick: () => void; children: ReactNode }) {
+/** En la hoja del celular: lo que necesita y lo que habilita, que en el mapa se ven con contornos. */
+function Related(props: {
+  related: { needs: Set<string>; unlocks: Set<string> };
+  items: Map<string, MapItem>;
+  stateOf: (item: MapItem) => DisplayState;
+  onPick: (key: string) => void;
+}) {
+  const { related, items, stateOf, onPick } = props;
+  const list = (keys: Set<string>) => [...keys].map((k) => items.get(k)).filter((i): i is MapItem => i !== undefined);
+  const needs = list(related.needs);
+  const unlocks = list(related.unlocks);
+  const chips = (list: MapItem[]) => (
+    <div className="flex flex-wrap gap-1.5">
+      {list.map((i) => {
+        const state = stateOf(i);
+        return (
+          <button
+            key={i.key}
+            type="button"
+            onClick={() => onPick(i.key)}
+            className={`flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-left text-xs font-medium ${STATE_STYLE[state]}`}
+          >
+            <StateIcon state={state} />
+            <span className="truncate">{i.type === "subject" ? i.subject.name : i.requirement.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+  if (!needs.length && !unlocks.length) return null;
+  return (
+    <div className="mt-2 flex flex-col gap-2 border-t border-line pt-2.5">
+      {needs.length > 0 && (
+        <>
+          <SectionTitle line="solid">NECESITA</SectionTitle>
+          {chips(needs)}
+        </>
+      )}
+      {unlocks.length > 0 && (
+        <>
+          <SectionTitle line="dashed">HABILITA</SectionTitle>
+          {chips(unlocks)}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StateButton(props: { on: boolean; waiting?: boolean; big?: boolean; onClick: () => void; children: ReactNode }) {
+  const { on, waiting, big, onClick, children } = props;
   return (
     <button
       type="button"
       aria-pressed={on || waiting}
       onClick={onClick}
-      className={`h-8 rounded-lg px-0.5 text-xs whitespace-nowrap text-ink ${
+      className={`rounded-lg px-0.5 whitespace-nowrap text-ink ${big ? "h-11 text-sm" : "h-8 text-xs"} ${
         on
           ? "border-[1.5px] border-accent bg-accent-soft font-semibold"
           : waiting
