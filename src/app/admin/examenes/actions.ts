@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/data";
 import { examPreviewRows, examRows, examStats, planMismatch, type ExamPreview } from "@/lib/admin/exams";
 import { parseSiuExams, type ExamParseResult } from "@/lib/siu/exams";
-import { fetchSiuExamsPage, isLink, siuExamsUrl } from "@/lib/siu/exams-fetch";
+import { PASTE_TEXT_INSTEAD, fetchSiuExamsPage, isLink, siuExamsUrl } from "@/lib/siu/exams-fetch";
 import { parseSiuExamsHtml } from "@/lib/siu/exams-html";
 
 // "Fechas de examen" in Administración: process (summary, nothing saved) and publish
@@ -48,7 +48,7 @@ async function read(input: string, plan: { year: number; career: string }): Prom
 }
 
 const NOTHING_FOUND = {
-  link: "No encontramos mesas en esa búsqueda. En el SIU elegí carrera y plan, tocá Buscar y copiá el enlace de la barra de direcciones.",
+  link: "No encontramos mesas en esa búsqueda. En el SIU elegí carrera y plan, tocá Buscar y copiá el enlace de la barra de direcciones." + PASTE_TEXT_INSTEAD,
   text: "No encontramos mesas en el texto. Pegá el enlace de la búsqueda del SIU, o copiá la página \"Fechas de examen\" completa (Ctrl+A, Ctrl+C) después de Buscar.",
 };
 

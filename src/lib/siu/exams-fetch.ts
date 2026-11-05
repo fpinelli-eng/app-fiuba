@@ -41,6 +41,10 @@ export function decodeSiuPage(bytes: ArrayBuffer, contentType: string | null): s
   return new TextDecoder(charset === "utf-8" || charset === "utf8" ? "utf-8" : "latin1").decode(bytes);
 }
 
+// If the SIU can't be reached from the server (or blocks it), the copied text still works, without times.
+export const PASTE_TEXT_INSTEAD =
+  " Si sigue sin andar, copiá la página del SIU (Ctrl+A, Ctrl+C) y pegá el texto acá: se cargan las fechas, sin horarios.";
+
 /** Downloads the page of a link already checked with siuExamsUrl(). Server only. */
 export async function fetchSiuExamsPage(url: string): Promise<{ html: string } | { error: string }> {
   try {
@@ -50,12 +54,12 @@ export async function fetchSiuExamsPage(url: string): Promise<{ html: string } |
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: { accept: "text/html" },
     });
-    if (res.status !== 200) return { error: `El SIU respondió con un error (${res.status}). Probá de nuevo en un rato.` };
+    if (res.status !== 200) return { error: `El SIU respondió con un error (${res.status}). Probá de nuevo en un rato.${PASTE_TEXT_INSTEAD}` };
     const bytes = await res.arrayBuffer();
     if (bytes.byteLength > MAX_BYTES) return { error: "La página del SIU es demasiado grande." };
     return { html: decodeSiuPage(bytes, res.headers.get("content-type")) };
   } catch (e) {
     const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
-    return { error: timeout ? "El SIU tardó demasiado en responder. Probá de nuevo." : "No pudimos conectarnos con el SIU." };
+    return { error: (timeout ? "El SIU tardó demasiado en responder. Probá de nuevo." : "No pudimos conectarnos con el SIU.") + PASTE_TEXT_INSTEAD };
   }
 }
