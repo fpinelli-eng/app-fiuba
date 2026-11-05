@@ -5,7 +5,8 @@
 //   Mesa de examen  Fecha  Tipo de inscripción  Inicio de inscripción  Fin de inscripción
 //   Mesa 1 Surace   11/12/2026  Regular  16/11/2026 08:00  09/12/2026 23:59  Ver
 //
-// The "Ver" details (time, room, teachers) are hidden until clicked, so they are not in the copy.
+// The "Ver" details (time, room, teachers) are hidden until clicked, so they are not in the copy:
+// the page itself (fetched by its link) has them, see parseSiuExamsHtml() in exams-html.ts.
 
 export interface ExamTable {
   /** "MESA 01", "Mesa 1 Surace", "LLAMADO 2" */
@@ -17,7 +18,20 @@ export interface ExamTable {
   /** Enrollment window, "YYYY-MM-DDTHH:MM" (Buenos Aires time), when the SIU gives it. */
   enrollFrom: string | null;
   enrollTo: string | null;
+  /** Start and end of the exam, "HH:MM", from the "Ver" details (only in the page, not in the copied text). */
+  startTime: string | null;
+  endTime: string | null;
+  room: string | null;
+  /** Last moment to drop out, "YYYY-MM-DDTHH:MM". */
+  dropUntil: string | null;
+  /** As the SIU lists them: "SURACE PABLO ESTEBAN (Profesor/a), …" */
+  teachers: string | null;
 }
+
+/** The "Ver" details of an exam table. */
+export type ExamDetails = Pick<ExamTable, "startTime" | "endTime" | "room" | "dropUntil" | "teachers">;
+
+export const NO_DETAILS: ExamDetails = { startTime: null, endTime: null, room: null, dropUntil: null, teachers: null };
 
 export interface ExamSubject {
   /** SIU code: "TC010", "8102", "RID-2023" */
@@ -35,7 +49,7 @@ export interface ExamParseResult {
   plan: string | null;
 }
 
-const RE_SUBJECT = /^(.+?) \(\s*([A-Z0-9][A-Z0-9-]*)\s*\)$/;
+export const RE_SUBJECT =/^(.+?) \(\s*([A-Z0-9][A-Z0-9-]*)\s*\)$/;
 const RE_DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 const RE_DATETIME = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{1,2}):(\d{2}))?$/;
 const RE_LINE_BREAK = /\r\n|[\n\r]/;
@@ -47,7 +61,7 @@ const toDate = (s: string): string | null => {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 };
 
-const toDateTime = (s: string): string | null => {
+export const toDateTime = (s: string): string | null => {
   const m = s.trim().match(RE_DATETIME);
   if (!m) return null;
   const hh = (m[4] ?? "00").padStart(2, "0");
@@ -55,6 +69,30 @@ const toDateTime = (s: string): string | null => {
 };
 
 const time = (iso: string) => Date.parse(`${iso}:00Z`);
+
+/**
+ * One exam table from the cells of its row (name, date, kind, enrollment start and end), or null
+ * when the second cell is not a date. Fixes the SIU's year typo in enrollment starts.
+ */
+export function buildExamTable(parts: string[], details: ExamDetails, warn: (msg: string) => void): ExamTable | null {
+  const date = parts.length >= 5 ? toDate(parts[1]) : null;
+  if (!date) return null;
+  const [name, , kind] = parts;
+  let enrollFrom = toDateTime(parts[3]);
+  const enrollTo = toDateTime(parts[4]);
+  if (enrollFrom && enrollTo) {
+    // Typo seen in the SIU: "27/01/2026 18:00" to "02/02/2027" for a February 2027 exam.
+    if (time(enrollTo) - time(enrollFrom) > 180 * DAY_MS) {
+      const fixed = `${enrollTo.slice(0, 4)}${enrollFrom.slice(4)}`;
+      if (time(fixed) <= time(enrollTo)) {
+        warn(`inscripción corregida: empezaba el ${parts[3]} (se tomó el año ${enrollTo.slice(0, 4)})`);
+        enrollFrom = fixed;
+      }
+    }
+    if (time(enrollFrom) > time(enrollTo)) warn(`la inscripción de '${name}' termina antes de empezar`);
+  }
+  return { name, date, kind, enrollFrom, enrollTo, ...details };
+}
 
 /** The value under a filter label in the copied search form, unless it is a placeholder. */
 function filterValue(lines: string[], label: string): string | null {
@@ -86,24 +124,9 @@ export function parseSiuExams(text: string): ExamParseResult {
     if (rawLine.startsWith(HEADER)) return;
 
     const parts = rawLine.split("\t").map((p) => p.trim());
-    const date = parts.length >= 5 ? toDate(parts[1]) : null;
-    if (!date) return warn(`no reconocida '${Array.from(line).slice(0, 60).join("")}'`);
-
-    const [name, , kind] = parts;
-    let enrollFrom = toDateTime(parts[3]);
-    const enrollTo = toDateTime(parts[4]);
-    if (enrollFrom && enrollTo) {
-      // Typo seen in the SIU: "27/01/2026 18:00" to "02/02/2027" for a February 2027 exam.
-      if (time(enrollTo) - time(enrollFrom) > 180 * DAY_MS) {
-        const fixed = `${enrollTo.slice(0, 4)}${enrollFrom.slice(4)}`;
-        if (time(fixed) <= time(enrollTo)) {
-          warn(`inscripción corregida: empezaba el ${parts[3]} (se tomó el año ${enrollTo.slice(0, 4)})`);
-          enrollFrom = fixed;
-        }
-      }
-      if (time(enrollFrom) > time(enrollTo)) warn(`la inscripción de '${name}' termina antes de empezar`);
-    }
-    subject.tables.push({ name, date, kind, enrollFrom, enrollTo });
+    const table = buildExamTable(parts, NO_DETAILS, warn);
+    if (!table) return warn(`no reconocida '${Array.from(line).slice(0, 60).join("")}'`);
+    subject.tables.push(table);
   });
 
   return {

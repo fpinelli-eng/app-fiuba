@@ -10,6 +10,11 @@ const row = (over: Partial<ExamTableRow>): ExamTableRow => ({
   kind: "Regular",
   enroll_from: "2026-11-30T14:00:00",
   enroll_to: "2026-12-07 14:00:00",
+  start_time: null,
+  end_time: null,
+  room: null,
+  drop_until: null,
+  teachers: null,
   ...over,
 });
 
@@ -32,7 +37,15 @@ describe("groupExamTables", () => {
     const { all } = groupExamTables({
       rows: [
         row({ id: 1, siu_subject_code: "CB001", siu_subject_name: "FISICA I A", exam_date: "2026-12-10" }),
-        row({ id: 2, siu_subject_code: "TC010" }),
+        row({
+          id: 2,
+          siu_subject_code: "TC010",
+          start_time: "17:00:00",
+          end_time: "20:00:00",
+          room: "Aula 3",
+          drop_until: "2026-12-08 23:59:00",
+          teachers: "SURACE PABLO ESTEBAN (Profesor/a)",
+        }),
         row({ id: 3, siu_subject_code: "CB002", siu_subject_name: "FISICA I B", exam_date: "2026-12-05" }),
       ],
       subjects,
@@ -53,7 +66,25 @@ describe("groupExamTables", () => {
       kind: "Regular",
       enrollFrom: "2026-11-30T14:00",
       enrollTo: "2026-12-07T14:00",
+      startTime: "17:00",
+      endTime: "20:00",
+      room: "Aula 3",
+      dropUntil: "2026-12-08T23:59",
+      teachers: "SURACE PABLO ESTEBAN (Profesor/a)",
     });
+  });
+
+  it("sorts tables of the same day by start time", () => {
+    const { all } = groupExamTables({
+      rows: [
+        row({ id: 1, name: "MESA 01", start_time: "18:00:00" }),
+        row({ id: 2, name: "MESA 02", start_time: "09:00:00" }),
+      ],
+      subjects,
+      subjectByCode: new Map(),
+      pendingIds: [],
+    });
+    expect(all[0].tables.map((t) => t.id)).toEqual([2, 1]);
   });
 
   it("keeps subjects outside the plan under their SIU code with a readable name", () => {

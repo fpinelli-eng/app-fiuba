@@ -10,7 +10,8 @@ export const metadata: Metadata = { title: `Fechas de examen · Administración 
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "short", timeZone: "America/Argentina/Buenos_Aires" });
 
-// Fechas de examen por plan: se pega la página "Fechas de examen" del SIU y se publica.
+// Fechas de examen por plan: se pega el enlace de la búsqueda en "Fechas de examen" del SIU
+// (o el texto de la página) y se publica.
 // El layout de /admin ya exige ser administrador.
 export default async function AdminExamsPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const { plan: planParam } = await searchParams;
@@ -27,7 +28,7 @@ export default async function AdminExamsPage({ searchParams }: { searchParams: P
       <div>
         <h1 className="text-[30px] font-semibold">Fechas de examen</h1>
         <div className="text-muted">
-          {loaded.size} de {plans.length} planes cargados · se copian de guaraniautogestion.fi.uba.ar/g3w/fecha_examen
+          {loaded.size} de {plans.length} planes cargados · se cargan con el enlace de la búsqueda en guaraniautogestion.fi.uba.ar/g3w/fecha_examen
         </div>
       </div>
 
