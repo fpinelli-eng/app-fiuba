@@ -13,8 +13,8 @@ export function MyReviewRow({ review }: { review: MyReview }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-2 border-t border-line px-6 py-4">
-      <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-2 border-t border-line px-4 py-4 md:px-6">
+      <div className="flex flex-col gap-1.5 md:flex-row md:items-start md:justify-between md:gap-4">
         <div className="min-w-0">
           <div className="font-semibold">{review.subjectName}</div>
           <div className="text-[13px] text-muted">
@@ -26,7 +26,7 @@ export function MyReviewRow({ review }: { review: MyReview }) {
           <div className="flex flex-none items-center gap-3">
             <Stars value={review.stars} />
             {!review.hidden && (
-              <button type="button" onClick={() => setOpen(true)} className="text-[13px] font-semibold text-accent">
+              <button type="button" onClick={() => setOpen(true)} className="-my-2.5 py-2.5 text-[13px] font-semibold text-accent md:my-0 md:py-0">
                 Editar
               </button>
             )}

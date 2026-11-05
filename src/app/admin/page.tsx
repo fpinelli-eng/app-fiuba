@@ -68,7 +68,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <ReviewsDateForm date={term.reviewsOpenOn} />
       </div>
 
-      <div className="grid grid-cols-[300px_minmax(0,1fr)] items-start gap-[18px]">
+      <div className="grid grid-cols-1 items-start gap-[18px] md:grid-cols-[300px_minmax(0,1fr)]">
         <aside aria-label="Planes" className="flex flex-col gap-0.5 rounded-[18px] border border-line bg-surface p-2.5">
           {plans.map((p) => {
             const on = p.id === selected?.id;
@@ -118,7 +118,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  return <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-6 pt-8 pb-14">{children}</main>;
+  return <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">{children}</main>;
 }
 
 function Card({ title, children, flush = false }: { title?: ReactNode; children: ReactNode; flush?: boolean }) {
@@ -286,7 +286,7 @@ async function Published({ termId, plan, preview }: { termId: string; plan: Plan
             {s.courses.map((c) => (
               <div
                 key={c.id}
-                className={`grid grid-cols-[160px_minmax(0,1fr)_minmax(0,300px)_130px] items-center gap-3.5 border-t border-line px-6 py-2.5 ${
+                className={`flex flex-wrap items-center gap-x-3.5 gap-y-1 border-t md:grid md:grid-cols-[160px_minmax(0,1fr)_minmax(0,300px)_130px] md:gap-3.5 border-line px-6 py-2.5 ${
                   c.visible ? "" : "opacity-50"
                 }`}
               >

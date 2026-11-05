@@ -251,7 +251,7 @@ export function ChangeChoice({ planId, change, chosen }: { planId: string; chang
     { value: "hide", label: "No mostrar" },
   ];
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_360px] items-center gap-5 border-t border-line px-6 py-4">
+    <div className="grid grid-cols-1 items-center gap-5 border-t md:grid-cols-[minmax(0,1fr)_360px] border-line px-6 py-4">
       <div className="min-w-0">
         <div className="font-semibold">
           {change.subjectName} · {change.label}

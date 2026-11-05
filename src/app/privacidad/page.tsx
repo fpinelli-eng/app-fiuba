@@ -11,18 +11,18 @@ const UPDATED = "16 de octubre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
-    <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-accent underline">
+    <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold break-words text-accent underline">
       {CONTACT_EMAIL}
     </a>
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-[760px] flex-col gap-7 px-6 pt-14 pb-16">
+    <main className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 pt-6 pb-12 md:gap-7 md:px-6 md:pt-14 md:pb-16">
       <div>
-        <Link href="/" className="text-sm font-semibold text-muted">
+        <Link href="/" className="inline-block py-2 text-sm font-semibold text-muted md:inline md:py-0">
           ← {APP_NAME}
         </Link>
-        <h1 className="mt-3 text-[34px] leading-tight font-semibold tracking-[-0.01em]">Política de privacidad</h1>
+        <h1 className="mt-1 text-[28px] leading-tight md:mt-3 md:text-[34px] font-semibold tracking-[-0.01em]">Política de privacidad</h1>
         <div className="mt-1 text-sm text-muted">Última actualización: {UPDATED}</div>
       </div>
 
