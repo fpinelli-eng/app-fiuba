@@ -27,7 +27,7 @@ export function CareerChange({ careers, planId }: { careers: CareerOption[]; pla
   }
 
   return (
-    <section aria-labelledby="carrera-titulo" className="flex flex-col gap-3.5 rounded-[18px] border border-line bg-surface px-6 py-[22px]">
+    <section aria-labelledby="carrera-titulo" className="flex flex-col gap-3.5 rounded-[18px] border border-line bg-surface px-4 py-[18px] md:px-6 md:py-[22px]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 id="carrera-titulo" className="text-[19px] font-semibold">
@@ -50,7 +50,7 @@ export function CareerChange({ careers, planId }: { careers: CareerOption[]; pla
 
       {open && (
         <form action={action} className="flex flex-col gap-3.5 border-t border-line pt-4">
-          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <div className="flex flex-col gap-1.5">
               <label htmlFor={careerSelect} className="text-[13px] font-semibold text-muted">
                 Carrera
@@ -63,7 +63,7 @@ export function CareerChange({ careers, planId }: { careers: CareerOption[]; pla
                   setCareerId(e.target.value);
                   setNewPlanId(c?.plans[0]?.id ?? ""); // el vigente viene marcado
                 }}
-                className="h-[42px] rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink"
+                className="h-[42px] rounded-[10px] border border-line-strong bg-surface px-3 text-base text-ink md:text-sm"
               >
                 {careers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -82,7 +82,7 @@ export function CareerChange({ careers, planId }: { careers: CareerOption[]; pla
                 value={newPlanId}
                 onChange={(e) => setNewPlanId(e.target.value)}
                 aria-describedby={changes ? warning : undefined}
-                className="h-[42px] rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink"
+                className="h-[42px] rounded-[10px] border border-line-strong bg-surface px-3 text-base text-ink md:text-sm"
               >
                 {career?.plans.map((p) => (
                   <option key={p.id} value={p.id}>
