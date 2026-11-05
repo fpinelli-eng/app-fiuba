@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { PlanAnalysis } from "@/lib/plan/analyze";
 import { DAY_SHORT, describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
 import { WEEK_DAYS, type ClassBlock, type WeekDay } from "@/lib/plan/options";
+import { firstDayToShow } from "@/lib/home/calendar";
 import type { Entry, OptionKey, PlanCourse, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { Check, DAY_LONG, GROUP_TITLE, Rating, Warning, overlaps, type Color } from "./shared";
 
@@ -15,8 +16,8 @@ type Selected = { subject: PlanSubject; course: PlanCourse; color: Color };
 type PlanWarning = { kind: "overlap" | "transfer"; day: WeekDay; text: string };
 type View = "materias" | "semana";
 
-// La barra de pestañas de la app ocupa unos 64 px abajo: lo fijo va encima.
-const ABOVE_TAB_BAR = "bottom-[calc(64px+env(safe-area-inset-bottom))]";
+// La barra de pestañas de la app ocupa 61 px abajo: lo fijo va encima.
+const ABOVE_TAB_BAR = "bottom-[calc(61px+env(safe-area-inset-bottom))]";
 
 const noSubscribe = () => () => {};
 // Día de hoy según el dispositivo (domingo → lunes). En el servidor, lunes.
@@ -372,7 +373,10 @@ function Week({
 }) {
   const today = useToday();
   const [picked, setPicked] = useState<WeekDay | null>(null);
-  const day = picked ?? today;
+  const classes = selected.flatMap((s) => s.course.blocks.filter((b) => !b.async).map((block) => ({ ...s, block })));
+  // Sin elegir, arranca en hoy si tiene clases; si no, en el próximo día que tenga (como el inicio).
+  const byDay = WEEK_DAYS.map((d) => classes.filter((c) => c.block.day === d));
+  const day = picked ?? WEEK_DAYS[firstDayToShow(byDay, (WEEK_DAYS as readonly WeekDay[]).indexOf(today))];
 
   if (selected.length === 0) {
     return (
@@ -385,7 +389,6 @@ function Week({
     );
   }
 
-  const classes = selected.flatMap((s) => s.course.blocks.filter((b) => !b.async).map((block) => ({ ...s, block })));
   const ofDay = classes.filter((c) => c.block.day === day).sort((a, b) => a.block.start - b.block.start || a.block.end - b.block.end);
   const dayWarnings = warnings.filter((w) => w.day === day);
 

@@ -769,8 +769,9 @@ function SubjectCard(props: {
 
   return (
     <div
-      role="dialog"
-      aria-label={name}
+      // Dentro de la hoja del celular el diálogo es la hoja: la ficha no repite el rol.
+      role={sheet ? undefined : "dialog"}
+      aria-label={sheet ? undefined : name}
       className={
         sheet
           ? "flex w-full flex-col gap-2 text-left text-sm leading-[1.3] text-ink"
