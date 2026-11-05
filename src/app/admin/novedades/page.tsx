@@ -19,7 +19,7 @@ export default async function AdminNewsPage() {
   const today = buenosAiresDate();
 
   return (
-    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-6 pt-8 pb-14">
+    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div>
         <h1 className="text-[30px] font-semibold">Novedades</h1>
         <div className="text-muted">Los avisos se ven arriba de todo en Novedades, los fijados primero.</div>

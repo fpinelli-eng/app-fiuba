@@ -23,6 +23,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Administración: cuatrimestre actual, fecha de reseñas, cargar la oferta del SIU por plan (procesar, resumen, materias fuera del plan, publicar) y ver la oferta publicada | `src/app/admin/`, `src/lib/admin/` | En `main` (PR #33) |
 | Lógica del plan: cursos elegibles, superposiciones, traslados | `src/lib/plan/` | En `main` (#11, PR #12) |
 | Pantalla del plan del cuatrimestre (PR #14); ahora lee la oferta de la base, solo materias habilitadas, con puntajes y guardado de Opción A / B | `src/app/(app)/plan/`, `src/lib/plan/data.ts`, `supabase/migrations/20261016170000_plan_choices.sql` | En `main` (PR #38) |
+| Plan del cuatrimestre en celular: Materias / Semana, hoja para elegir el curso, agenda por día y barra con totales y "Me inscribí"; escritorio sin cambios | `src/app/(app)/plan/PlanMobile.tsx` | PR abierto |
 | Base de datos: esquema con seguridad por fila, los 24 planes cargados, pruebas de seguridad y aplicación automática en Supabase; paso de elegir carrera y plan | `supabase/`, `tools/db-test/`, `tools/plans-seed/`, `src/app/carrera/` | En `main` (#3, PR #15) |
 | Mapa de la carrera y primera carga de materias, guardando en la base | `src/lib/map/`, `src/app/(app)/mapa/` | En `main` (#17, PR #18) |
 | Inicio: avance, promedio, materias, cursando y finales pendientes | `src/app/(app)/page.tsx` | En `main` (#24, PR #25) |
@@ -32,6 +33,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Reseñas libres: cualquier alumno reseña cualquier curso desde su ficha ("Tu reseña"); una reseña por alumno y curso, que se edita | `supabase/migrations/20261016140000_free_reviews.sql`, `src/app/(app)/resenas/curso/[id]/MyReview.tsx` | En `main` (#34, PR #35) |
 | Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | En `main` (#8, PR #36) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
+| Versión para celular (360–430 px): barra de pestañas abajo, barra superior compacta, calendario del inicio día por día y pantallas sin desborde. Desde 768 px queda igual que en la computadora. El mapa y el plan se adaptan en PRs aparte | `src/components/Header.tsx`, `src/components/icons.tsx`, `src/lib/app.ts`, `src/app/(app)/HomeDayView.tsx` | PR abierto |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
 

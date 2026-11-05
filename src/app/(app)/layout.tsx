@@ -11,6 +11,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <>
       <Header profile={profile} pendingReviews={pendingReviews} />
       {children}
+      {/* Celular: lugar para la barra de pestañas fija de abajo (60 px + borde + zona segura del iPhone). */}
+      <div aria-hidden="true" className="h-[calc(61px+env(safe-area-inset-bottom))] md:hidden" />
     </>
   );
 }

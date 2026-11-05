@@ -60,7 +60,7 @@ export function ReviewForm({
               aria-label={`${n} ${n === 1 ? "estrella" : "estrellas"}`}
               onClick={() => setStars(n)}
               onMouseEnter={() => setHover(n)}
-              className="grid size-9 place-items-center rounded-md"
+              className="grid size-11 place-items-center rounded-md md:size-9"
             >
               <svg width="30" height="30" viewBox="0 0 24 24" strokeWidth="1.4" strokeLinejoin="round" aria-hidden="true" className={n <= shown ? "fill-star stroke-star" : "fill-none stroke-line-strong"}>
                 <path d={STAR} />
@@ -83,7 +83,8 @@ export function ReviewForm({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="¿Qué le dirías a alguien que está por elegir este curso?"
-            className={`resize-y rounded-[10px] border bg-surface px-3 py-2.5 text-sm leading-snug text-ink ${problem ? "border-peach-ink/50" : "border-line-strong"}`}
+            // 16 px en el celular: con menos, el iPhone hace zoom al tocar el campo.
+            className={`resize-y rounded-[10px] border bg-surface px-3 py-2.5 text-base leading-snug text-ink md:text-sm ${problem ? "border-peach-ink/50" : "border-line-strong"}`}
           />
           <div className="flex items-start justify-between gap-3">
             {problem ? (
@@ -110,7 +111,7 @@ export function ReviewForm({
         {withComment ? (
           <span />
         ) : (
-          <button type="button" onClick={() => setWithComment(true)} className="text-sm font-semibold text-accent">
+          <button type="button" onClick={() => setWithComment(true)} className="py-2.5 text-sm font-semibold text-accent md:py-0">
             + Agregar un comentario
           </button>
         )}
@@ -118,7 +119,7 @@ export function ReviewForm({
           type="button"
           onClick={submit}
           aria-disabled={!canSend}
-          className={`h-[42px] rounded-[10px] px-5 text-sm font-semibold ${canSend ? "bg-accent text-on-accent" : "cursor-not-allowed bg-disabled text-disabled-ink"}`}
+          className={`h-11 rounded-[10px] px-5 text-sm font-semibold md:h-[42px] ${canSend ? "bg-accent text-on-accent" : "cursor-not-allowed bg-disabled text-disabled-ink"}`}
         >
           {pending ? "Enviando…" : "Enviar reseña"}
         </button>

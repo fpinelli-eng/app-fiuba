@@ -1,21 +1,13 @@
 import Link from "next/link";
-import { CALENDAR_DAYS, layoutWeek, type PlacedBlock } from "@/lib/home/calendar";
+import { CALENDAR_DAYS, calendarDayIndex, firstDayToShow, layoutWeek, type PlacedBlock } from "@/lib/home/calendar";
 import type { HomeCourses } from "@/lib/home/courses";
 import { formatHour } from "@/lib/plan/format";
+import { HomeDayView } from "./HomeDayView";
+import { CAMPUS_NAME, PALETTE } from "./home-palette";
 
 // Calendario de la cursada del Inicio (prototipo 04-inicio): solo lectura, con los cursos
 // en los que el alumno se inscribió desde el Plan. Misma paleta y orden que el calendario del plan.
-
-const PALETTE = [
-  "bg-lavender text-lavender-ink border-lavender-ink/25",
-  "bg-mint text-mint-ink border-mint-ink/25",
-  "bg-butter text-butter-ink border-butter-ink/25",
-  "bg-sky text-sky-ink border-sky-ink/25",
-  "bg-peach text-peach-ink border-peach-ink/25",
-  "bg-pink text-pink-ink border-pink-ink/25",
-  "bg-teal text-teal-ink border-teal-ink/25",
-];
-const CAMPUS_NAME = { PC: "Paseo Colón", LH: "Las Heras", CU: "Ciudad Universitaria" } as const;
+// En el celular se ve un día por vez (HomeDayView); desde 768 px, la grilla de la semana.
 // La grilla mide siempre más o menos lo mismo: con pocas horas de cursada, cada hora es más alta
 // y los nombres entran enteros.
 const GRID_PX = 420;
@@ -27,9 +19,11 @@ export function HomeCalendar({ data }: { data: HomeCourses }) {
   const hours = Array.from({ length: week.last - week.first }, (_, i) => week.first + i);
   const hourHeight = hourPx(hours.length);
   const height = hours.length * hourHeight;
+  // "Hoy" se calcula en el servidor (en hora de Buenos Aires), así el celular no cambia de día al hidratar.
+  const today = calendarDayIndex(new Date());
 
   return (
-    <section aria-label={`Cursada ${data.term}`} className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-7">
+    <section aria-label={`Cursada ${data.term}`} className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-5 md:p-7">
       <div className="flex flex-wrap justify-between gap-2">
         <div className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           Cursada {data.term} · {week.credits} créditos
@@ -39,7 +33,11 @@ export function HomeCalendar({ data }: { data: HomeCourses }) {
         )}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden">
+        <HomeDayView days={week.days} today={today} initial={firstDayToShow(week.days, today)} />
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <div className="grid min-w-[580px] grid-cols-[34px_repeat(6,minmax(84px,1fr))] gap-x-1">
           <div />
           {CALENDAR_DAYS.map((d) => (

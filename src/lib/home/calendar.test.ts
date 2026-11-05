@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { layoutWeek } from "./calendar";
+import { calendarDayIndex, firstDayToShow, layoutWeek } from "./calendar";
 import type { HomeBlock, HomeCourse } from "./courses";
 
 const block = (weekday: number, from: number, to: number, extra: Partial<HomeBlock> = {}): HomeBlock => ({
@@ -59,5 +59,23 @@ describe("home calendar", () => {
     expect([late.first, late.last]).toEqual([18, 24]);
     const morning = layoutWeek([course("A", 4, [block(1, 9, 11)])]);
     expect([morning.first, morning.last]).toEqual([9, 15]);
+  });
+});
+
+describe("phone day view", () => {
+  it("knows the weekday in Buenos Aires", () => {
+    // Monday 2 Nov 2026 at 01:00 UTC is still Sunday in Buenos Aires.
+    expect(calendarDayIndex(new Date("2026-11-02T01:00:00Z"))).toBe(6);
+    expect(calendarDayIndex(new Date("2026-11-02T15:00:00Z"))).toBe(0);
+    expect(calendarDayIndex(new Date("2026-11-07T15:00:00Z"))).toBe(5);
+  });
+
+  it("starts on today or the next day with classes", () => {
+    const w = layoutWeek([course("A", 4, [block(3, 18, 22), block(5, 18, 22)])]);
+    expect(firstDayToShow(w.days, 2)).toBe(2);
+    expect(firstDayToShow(w.days, 3)).toBe(4);
+    expect(firstDayToShow(w.days, 5)).toBe(2);
+    expect(firstDayToShow(w.days, 6)).toBe(2);
+    expect(firstDayToShow(layoutWeek([]).days, 6)).toBe(0);
   });
 });
