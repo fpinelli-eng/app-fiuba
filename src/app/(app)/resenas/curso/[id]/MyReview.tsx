@@ -18,11 +18,11 @@ export function MyReview({
   const [open, setOpen] = useState(false);
 
   return (
-    <section aria-label="Tu reseña" className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
+    <section aria-label="Tu reseña" className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 md:p-6">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs font-semibold tracking-[0.08em] text-muted">TU RESEÑA</div>
         {mine && !open && (
-          <button type="button" onClick={() => setOpen(true)} className="text-[13px] font-semibold text-accent">
+          <button type="button" onClick={() => setOpen(true)} className="-my-2.5 py-2.5 text-[13px] font-semibold text-accent md:my-0 md:py-0">
             Editar
           </button>
         )}
@@ -46,7 +46,7 @@ export function MyReview({
           <div className="text-[13px] text-muted">{mine.hidden ? "La quitó un administrador." : "Se publica sin tu nombre."}</div>
         </div>
       ) : (
-        <button type="button" onClick={() => setOpen(true)} className="h-[42px] self-start rounded-[10px] bg-accent px-5 text-sm font-semibold text-on-accent">
+        <button type="button" onClick={() => setOpen(true)} className="h-[42px] self-stretch rounded-[10px] bg-accent px-5 text-sm font-semibold text-on-accent md:self-start">
           Reseñar este curso
         </button>
       )}

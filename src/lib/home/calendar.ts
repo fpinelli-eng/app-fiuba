@@ -92,3 +92,22 @@ export function layoutWeek(courses: HomeCourse[]): WeekLayout {
     campuses: order.filter((c) => used.has(c)),
   };
 }
+
+/** Day of the week in Buenos Aires as a calendar column: 0 = Monday … 5 = Saturday, 6 = Sunday. */
+export function calendarDayIndex(date: Date): number {
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "America/Argentina/Buenos_Aires", weekday: "short" }).format(date);
+  return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(weekday);
+}
+
+/**
+ * Day shown first in the phone view: today if it has classes; otherwise the next day with classes
+ * (Sunday counts as before Monday). With no classes at all, today (Monday on Sundays).
+ */
+export function firstDayToShow(days: PlacedBlock[][], today: number): number {
+  const start = today > 5 ? 0 : today;
+  for (let i = 0; i < 6; i++) {
+    const d = (start + i) % 6;
+    if (days[d]?.length) return d;
+  }
+  return start;
+}

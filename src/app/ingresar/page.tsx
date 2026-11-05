@@ -30,8 +30,9 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
   if (data.user && isAllowedEmail(data.user.email)) redirect("/");
 
   return (
-    <main className="flex flex-col items-center px-6 pt-[120px] pb-20 text-center">
-      <div aria-hidden="true" className="relative mb-11 h-[168px] w-[392px]">
+    <main className="flex flex-col items-center px-4 pt-14 pb-10 text-center md:px-6 md:pt-[120px] md:pb-20">
+      {/* El mosaico mide 392 px: en el celular se achica sin cambiar las posiciones. */}
+      <div aria-hidden="true" className="relative mb-8 h-[168px] w-[392px] origin-top scale-[0.8] md:mb-11 md:scale-100">
         {TILES.map((t, i) => (
           <div
             key={i}
@@ -40,27 +41,27 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
           />
         ))}
       </div>
-      <h1 className="text-[88px] leading-none font-bold tracking-[-0.035em]">{APP_NAME}</h1>
-      <p className="mt-[18px] text-[22px] text-muted">Tu carrera de FIUBA en un solo lugar</p>
+      <h1 className="text-[56px] leading-none font-bold tracking-[-0.035em] break-words md:text-[88px]">{APP_NAME}</h1>
+      <p className="mt-3 text-[18px] text-muted md:mt-[18px] md:text-[22px]">Tu carrera de FIUBA en un solo lugar</p>
 
       <LoginButton label={error ? "Probar con otra cuenta" : "Ingresar con tu cuenta @fi.uba.ar"} />
 
       {error === "dominio" && (
-        <div role="alert" className="mt-5 w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
-          <div className="font-semibold">{email ? `${email} no es una cuenta de FIUBA` : "Esa cuenta no es de FIUBA"}</div>
+        <div role="alert" className="mt-5 w-full max-w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
+          <div className="font-semibold break-words">{email ? `${email} no es una cuenta de FIUBA` : "Esa cuenta no es de FIUBA"}</div>
           <div className="mt-0.5">Ingresá con tu mail @fi.uba.ar.</div>
         </div>
       )}
       {error === "login" && (
-        <div role="alert" className="mt-5 w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
+        <div role="alert" className="mt-5 w-full max-w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
           <div className="font-semibold">No pudimos iniciar tu sesión</div>
           <div className="mt-0.5">Probá de nuevo en un momento.</div>
         </div>
       )}
 
-      <footer className="mt-24 text-[13px] text-muted">
+      <footer className="mt-16 text-[13px] text-muted md:mt-24">
         Hecho por estudiantes. No es un sitio oficial de la universidad. ·{" "}
-        <Link href="/privacidad" className="underline">
+        <Link href="/privacidad" className="inline-block py-2 underline md:inline md:py-0">
           Privacidad
         </Link>
       </footer>

@@ -59,6 +59,15 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo #ECEBF4, texto #8A8AA0, cursor `not-allowed`.
 - Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
 
+## Celular (agregado el 2 de noviembre, no está en el prototipo)
+
+- Desde 768 px todo se ve como en la computadora. Debajo, el diseño se adapta en lugar de achicarse.
+- Barra superior compacta (56 px): logo y nombre, Novedades como ícono de campana y el avatar (lleva al perfil). Sin botón de tema: se cambia en Perfil → Apariencia.
+- Barra de pestañas fija abajo, como en una app: Inicio, Mapa, Plan, Reseñas y Finales, con ícono y nombre corto; la activa con el ícono sobre fondo lavanda y el contador de reseñas pendientes en durazno sobre el ícono. Respeta la zona segura del iPhone.
+- Márgenes de 16 px, títulos de 26–28 px, tarjetas de a una, los cuatro números del avance en 2 × 2.
+- Calendario de la cursada del inicio: un día por vez con botones Lun–Sáb (punto si hay clases, hoy con borde) y la lista de clases del día con horario, curso y sede. Arranca en hoy o, si hoy no hay clases, en el próximo día con clases.
+- Administración solo se acomoda para no desbordar: se usa en la computadora.
+
 ## Pantallas
 
 ### Ingreso

@@ -13,7 +13,7 @@ function EventList({ events, label }: { events: AcademicEvent[]; label: (e: Acad
   return (
     <ul className="flex flex-col py-1">
       {events.map((e) => (
-        <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 px-[22px] py-2.5">
+        <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 px-4 py-2.5 md:px-[22px]">
           <span className="min-w-0 text-[15px] text-ink">{e.title}</span>
           <span className="text-sm whitespace-nowrap text-muted tabular-nums">{label(e)}</span>
         </li>
@@ -25,7 +25,7 @@ function EventList({ events, label }: { events: AcademicEvent[]; label: (e: Acad
 function CalendarBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="overflow-hidden rounded-2xl border border-line bg-surface">
-      <h3 className="bg-lavender px-[22px] py-3 text-[17px] font-semibold text-lavender-ink">{title}</h3>
+      <h3 className="bg-lavender px-4 py-3 text-[17px] md:px-[22px] font-semibold text-lavender-ink">{title}</h3>
       {children}
     </section>
   );
@@ -39,8 +39,8 @@ export default async function NovedadesPage() {
   const empty = now.length + soon.length + later.length === 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-6 pt-8 pb-14">
-      <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Novedades</h1>
+    <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
+      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Novedades</h1>
 
       {news.length > 0 && (
         <section aria-labelledby="news-title" className="flex flex-col gap-2.5">
@@ -48,7 +48,7 @@ export default async function NovedadesPage() {
             Avisos
           </h2>
           {news.map((n) => (
-            <article key={n.id} className="rounded-2xl border border-line bg-surface px-[22px] py-4">
+            <article key={n.id} className="rounded-2xl border border-line bg-surface px-4 py-4 md:px-[22px]">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="text-[17px] leading-snug font-semibold">
                   {n.pinned && (
@@ -60,13 +60,13 @@ export default async function NovedadesPage() {
                 </h3>
                 <span className="text-[13px] whitespace-nowrap text-muted tabular-nums">{formatNewsDate(n.publishedAt, today)}</span>
               </div>
-              {n.body && <p className="mt-1.5 text-[15px] whitespace-pre-line text-ink-2">{n.body}</p>}
+              {n.body && <p className="mt-1.5 text-[15px] whitespace-pre-line text-ink-2 break-words">{n.body}</p>}
               {n.url && (
                 <a
                   href={n.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-block text-sm font-semibold text-ink-2 underline"
+                  className="mt-0.5 inline-block py-1.5 text-sm font-semibold text-ink-2 underline md:mt-2 md:py-0"
                 >
                   Ver más
                 </a>
@@ -101,7 +101,7 @@ export default async function NovedadesPage() {
           <CalendarBlock title="Más adelante">
             <ul className="flex flex-col py-1.5">
               {later.map((e) => (
-                <li key={e.id} className="flex gap-3 px-[22px] py-1 text-sm">
+                <li key={e.id} className="flex gap-3 px-4 py-1 text-sm md:px-[22px]">
                   <span className="w-[72px] flex-none text-muted tabular-nums">{formatWeekday(e.startsOn)}</span>
                   <span className="min-w-0 text-ink-2">{e.title}</span>
                 </li>

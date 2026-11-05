@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/ibm-plex-sans/400.css";
 import "@fontsource/ibm-plex-sans/500.css";
 import "@fontsource/ibm-plex-sans/600.css";
@@ -12,13 +12,23 @@ export const metadata: Metadata = {
   description: "Tu carrera de FIUBA en un solo lugar",
 };
 
+// Celular: ancho del dispositivo y "cover" para que la barra de pestañas use env(safe-area-inset-bottom)
+// en los iPhone con barra de gestos. El color de la barra del navegador (theme-color) lo pone el
+// script del tema con el color de la barra superior de globals.css, así sigue al tema elegido.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" data-theme="light" suppressHydrationWarning>
       <head>
+        <meta name="theme-color" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );
 }
