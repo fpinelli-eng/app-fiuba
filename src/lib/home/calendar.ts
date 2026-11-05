@@ -103,7 +103,7 @@ export function calendarDayIndex(date: Date): number {
  * Day shown first in the phone view: today if it has classes; otherwise the next day with classes
  * (Sunday counts as before Monday). With no classes at all, today (Monday on Sundays).
  */
-export function firstDayToShow(days: PlacedBlock[][], today: number): number {
+export function firstDayToShow(days: readonly (readonly unknown[])[], today: number): number {
   const start = today > 5 ? 0 : today;
   for (let i = 0; i < 6; i++) {
     const d = (start + i) % 6;

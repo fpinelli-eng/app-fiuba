@@ -28,6 +28,11 @@ describe("parseSiuExams with the real Industrial 2023 exam dates", () => {
       kind: "Regular",
       enrollFrom: "2026-11-16T08:00",
       enrollTo: "2026-12-09T23:59",
+      startTime: null,
+      endTime: null,
+      room: null,
+      dropUntil: null,
+      teachers: null,
     });
   });
 

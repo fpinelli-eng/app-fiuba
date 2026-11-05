@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 2 de noviembre de 2026.
+Última actualización: 5 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -36,6 +36,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Mapa en el celular: lista por cuatrimestre, pestañas Obligatorias / Electivas y ficha desde abajo (desde 768 px queda igual) | `src/app/(app)/mapa/MobileMap.tsx` | PR #55 abierto |
 | Versión para celular (360–430 px): barra de pestañas abajo, barra superior compacta, calendario del inicio día por día y pantallas sin desborde. Desde 768 px queda igual que en la computadora. El mapa y el plan se adaptan en PRs aparte | `src/components/Header.tsx`, `src/components/icons.tsx`, `src/lib/app.ts`, `src/app/(app)/HomeDayView.tsx` | PR abierto |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
+| Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
 | Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR #54 abierto |
 
@@ -43,12 +44,12 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 **Rediseño visual en curso (desde el 5 de noviembre de 2026, rama `rediseno`).** Francisco eligió la dirección del Inicio: arco de avance por créditos, paleta pastel media (amarillo, azul, coral, verde), Unbounded + Onest, bloques muy redondeados. Referencia: lienzo "App FIUBA · Direcciones visuales", tablero "Inicio ajustado"; contrato en `.impeccable/surfaces/src-app-app-page-tsx.md`. Se diseña con la skill Impeccable (`.claude/skills/impeccable/`, resumen de producto en `PRODUCT.md`). **Mientras dure, nadie cambia estilos de pantallas (clases, colores, tipografía) fuera de esa rama: solo lógica o datos**, para no pisarse.
 
-0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración, PR #50 abierto. Sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador), en el PR #51 (encima del #50). Sección **Novedades** (calendario académico de la FIUBA y avisos de los administradores, que se publican desde Administración → Novedades), en el PR #52 (encima del #51). El calendario se carga una vez por año desde el PDF (`data/calendario/README.md`). Segundo desarrollador; Francisco decide el diseño.
+0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración (PR #50), sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador; PR #51) y sección **Novedades** (calendario académico de la FIUBA y avisos de los administradores, que se publican desde Administración → Novedades; PR #52), ya en `main`. El horario, el aula y los docentes de cada mesa, cargando las fechas con el enlace de la búsqueda del SIU, también (PR #53). El calendario se carga una vez por año desde el PDF (`data/calendario/README.md`). Segundo desarrollador; Francisco decide el diseño.
 1. **Administración, lo que falta:** agregar electivas nuevas al plan. Ya están en `main`: quitar / volver a mostrar cursos y reemplazar la oferta sin borrar (PR #41), emparejar a mano materias (PR #44), cursos con cambios entre cuatrimestres (PR #45) y moderación de reseñas (PR #43). Detalle: un curso que un reemplazo ocultó por no estar en el SIU no vuelve a mostrarse solo si reaparece; se muestra a mano. Segundo desarrollador.
 2. **Plan del cuatrimestre:** completo para la beta ("Me inscribí en esta opción", PR #40; plan bloqueado por reseñas pendientes, PR #42). Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que tocaron "Me inscribí" se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
 3. **Reseñas:** completas para la beta.
-4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). "Cambiar" carrera o plan queda para el final: decidido sin equivalencias, se borran las materias y se cargan de nuevo. Francisco.
-5. **Inicio:** calendario de la cursada en un PR abierto (Francisco). Puede salir de `user_courses` del cuatrimestre actual (lo que el alumno marcó con "Me inscribí en esta opción"), con los horarios de `offering_blocks`.
+4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). Francisco. "Cambiar" carrera o plan: hecho (sin equivalencias: `change_my_plan()` borra materias, requisitos y plan del cuatrimestre; quedan las cursadas y las reseñas; lleva a la carga rápida del mapa).
+5. **Inicio:** hecho, con el calendario de la cursada (PR #47).
 6. **Moderación de reseñas:** hecha (PR #43).
 7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
 8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.

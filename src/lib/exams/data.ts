@@ -21,10 +21,11 @@ export async function getFinalsData(userId: string, planId: string): Promise<Fin
     getMapData(userId, planId),
     supabase
       .from("exam_tables")
-      .select("id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to")
+      .select("id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to, start_time, end_time, room, drop_until, teachers")
       .eq("plan_id", planId)
       .gte("exam_date", today)
       .order("exam_date")
+      .order("start_time", { nullsFirst: true })
       .order("name"),
     supabase.from("exam_tables").select("id", { count: "exact", head: true }).eq("plan_id", planId),
   ]);

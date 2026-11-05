@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { STATE_LABEL, normalizeText, subjectKey, type DisplayState, type MapItem, type Subject } from "@/lib/map/model";
 import { STATE_ICON_LABEL, STATE_STYLE, StateIcon } from "./icons";
 
@@ -273,13 +273,25 @@ function Chevron({ open }: { open: boolean }) {
 
 /** Ficha de la materia en el celular: hoja que sube desde abajo, por encima de la barra de pestañas. */
 export function BottomSheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  // Al abrirse toma el foco; al cerrarse lo devuelve a lo que la abrió (la fila de la materia).
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    ref.current?.focus();
+    return () => {
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
   return (
     <div className="fixed inset-0 z-[60] md:hidden">
       <button type="button" aria-label="Cerrar la ficha" onClick={onClose} className="absolute inset-0 bg-pop-shadow" />
       <div
+        ref={ref}
         role="dialog"
+        aria-modal="true"
         aria-label={label}
-        className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[18px] border-t border-line bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_var(--pop-shadow)]"
+        tabIndex={-1}
+        className="absolute inset-x-0 bottom-0 outline-none max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[18px] border-t border-line bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_var(--pop-shadow)]"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
         {children}
