@@ -1,56 +1,24 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
 import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
-import { WEEK_DAYS, type ClassBlock, type WeekDay } from "@/lib/plan/options";
-import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, Score, SubjectGroup } from "@/lib/plan/data";
+import { WEEK_DAYS, type ClassBlock } from "@/lib/plan/options";
+import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { enrollInCourses, savePlanOption } from "./actions";
+import { PlanMobile } from "./PlanMobile";
+import { CAMPUS_SHORT, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
 // Cada cambio se guarda solo en la base (plan_choices), como en el mapa.
-
-const GROUP_TITLE: Record<SubjectGroup, string> = {
-  obligatorias: "OBLIGATORIAS",
-  electivas: "ELECTIVAS",
-  otras: "OTRAS MATERIAS DE LA OFERTA",
-};
-
-// Un color pastel por materia, en el orden en que entran al plan.
-const PALETTE = [
-  { bg: "bg-lavender", ink: "text-lavender-ink", border: "border-lavender-ink/25" },
-  { bg: "bg-mint", ink: "text-mint-ink", border: "border-mint-ink/25" },
-  { bg: "bg-butter", ink: "text-butter-ink", border: "border-butter-ink/25" },
-  { bg: "bg-sky", ink: "text-sky-ink", border: "border-sky-ink/25" },
-  { bg: "bg-peach", ink: "text-peach-ink", border: "border-peach-ink/25" },
-  { bg: "bg-pink", ink: "text-pink-ink", border: "border-pink-ink/25" },
-  { bg: "bg-teal", ink: "text-teal-ink", border: "border-teal-ink/25" },
-] as const;
-type Color = (typeof PALETTE)[number];
-
-const CAMPUS_SHORT: Record<string, string> = {
-  "Paseo Colón": "PC",
-  "Las Heras": "LH",
-  "Ciudad Universitaria": "CU",
-};
-
-const DAY_LONG: Record<WeekDay, string> = {
-  Lunes: "lunes",
-  Martes: "martes",
-  Miércoles: "miércoles",
-  Jueves: "jueves",
-  Viernes: "viernes",
-  Sábado: "sábado",
-  Domingo: "domingo",
-};
+// Desde md (768 px) se ve la versión de escritorio; en celular, PlanMobile, con el mismo
+// estado y las mismas acciones.
 
 const FIRST_HOUR = 7;
 const LAST_HOUR = 23;
 const HOUR_PX = 38;
 
 const removeAccents = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-
-const overlaps = (a: ClassBlock, b: ClassBlock) => a.day === b.day && a.start < b.end && b.start < a.end;
 
 export function PlanBuilder({ data }: { data: PlanData }) {
   const [active, setActive] = useState<OptionKey>("A");
@@ -123,10 +91,12 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   const warnings = [
     ...analysis.overlaps.map((o) => ({
       kind: "overlap" as const,
+      day: o.day,
       text: `Superposición el ${DAY_LONG[o.day]} de ${formatHour(o.start)} a ${formatHour(o.end)} hs: ${nameOfCourse.get(o.courseIds[0])} y ${nameOfCourse.get(o.courseIds[1])}`,
     })),
     ...analysis.rushedTransfers.map((t) => ({
       kind: "transfer" as const,
+      day: t.day,
       text: `Traslado apurado el ${DAY_LONG[t.day]}: salís de ${t.from} a las ${formatHour(t.leaveAt)} hs y entrás en ${t.to} a las ${formatHour(t.arriveAt)} hs`,
     })),
   ];
@@ -142,10 +112,10 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   if (data.subjects.length === 0) return <NoOffer term={data.term} career={data.career} />;
 
   return (
-    <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-6 pt-6 pb-10">
+    <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 pt-4 pb-40 md:px-6 md:pt-6 md:pb-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-semibold tracking-[-0.01em]">Armá tu {data.term}</h1>
+          <h1 className="text-[26px] font-semibold md:text-[32px] tracking-[-0.01em]">Armá tu {data.term}</h1>
           <p className="text-sm text-muted" aria-live="polite">
             {data.career}
             {saveState === "saving" && " · Guardando…"}
@@ -153,7 +123,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
             {saveState === "error" && <span className="text-danger"> · No pudimos guardar el último cambio</span>}
           </p>
         </div>
-        <div role="tablist" aria-label="Opciones" className="flex gap-1.5 rounded-xl border border-line bg-surface p-1">
+        <div role="tablist" aria-label="Opciones" className="hidden gap-1.5 md:flex rounded-xl border border-line bg-surface p-1">
           {(["A", "B"] as const).map((k) => (
             <button
               key={k}
@@ -173,6 +143,8 @@ export function PlanBuilder({ data }: { data: PlanData }) {
         </div>
       </div>
 
+      {/* Escritorio: display contents, así el contenedor no cambia el diseño de siempre. */}
+      <div className="hidden md:contents">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Pill value={String(analysis.subjects)} label="materias" />
@@ -291,6 +263,26 @@ export function PlanBuilder({ data }: { data: PlanData }) {
           )}
         </section>
       </div>
+      </div>
+
+      <PlanMobile
+        active={active}
+        onOption={setActive}
+        counts={{ A: plans.A.length, B: plans.B.length }}
+        query={query}
+        onQuery={setQuery}
+        groups={groups}
+        plan={plan}
+        selected={selected}
+        colorOf={colorOf}
+        analysis={analysis}
+        warnings={warnings}
+        onPick={pick}
+        onClear={() => setPlan([])}
+        enroll={enroll}
+        enrollState={enrollState}
+        isEnrolledHere={isEnrolledHere}
+      />
     </main>
   );
 }
@@ -300,26 +292,6 @@ function Pill({ value, label }: { value: string; label: string }) {
     <span className="rounded-full border border-line bg-surface px-3.5 py-[7px] text-sm">
       <b>{value}</b> {label}
     </span>
-  );
-}
-
-function Warning({ tone, children }: { tone: "ok" | "overlap" | "transfer"; children: ReactNode }) {
-  const style = {
-    ok: "bg-mint text-mint-ink",
-    overlap: "bg-peach text-peach-ink",
-    transfer: "bg-butter text-butter-ink",
-  }[tone];
-  return (
-    <div className={`flex items-start gap-2 rounded-[10px] px-3 py-2 text-[13px] leading-snug ${style}`}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px flex-none">
-        {tone === "ok" ? (
-          <path d="M20 6L9 17l-5-5" />
-        ) : (
-          <path d="M12 9v4M12 17h.01M10.3 3.9L2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
-        )}
-      </svg>
-      {children}
-    </div>
   );
 }
 
@@ -530,29 +502,16 @@ function CalendarBlock({ placed: p, width }: { placed: Placed; width: number }) 
 
 function NoOffer({ term, career }: { term: string | null; career: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-6 pt-6 pb-10">
+    <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 pt-4 pb-24 md:px-6 md:pt-6 md:pb-10">
       <div>
-        <h1 className="text-[32px] font-semibold tracking-[-0.01em]">{term ? `Armá tu ${term}` : "Plan del cuatrimestre"}</h1>
+        <h1 className="text-[26px] font-semibold md:text-[32px] tracking-[-0.01em]">{term ? `Armá tu ${term}` : "Plan del cuatrimestre"}</h1>
         <p className="text-sm text-muted">{career}</p>
       </div>
-      <div className="rounded-2xl border border-line bg-surface px-6 py-8 text-ink-2">
+      <div className="rounded-2xl border border-line bg-surface px-4 py-6 text-ink-2 md:px-6 md:py-8">
         {term
           ? "Todavía no hay cursos para armar tu plan: la oferta de tu carrera no está cargada o no tenés materias habilitadas en tu mapa."
           : "Todavía no empezó la carga de la oferta del cuatrimestre."}
       </div>
     </main>
-  );
-}
-
-function Rating({ score }: { score: Score | null }) {
-  if (!score) return <span className="text-xs whitespace-nowrap text-muted">Sin reseñas</span>;
-  return (
-    <span className="flex items-center gap-[3px] text-[12.5px] font-semibold whitespace-nowrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" className="fill-star">
-        <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z" />
-      </svg>
-      {score.average.toFixed(1).replace(".", ",")}
-      <span className="font-normal text-muted">({score.count})</span>
-    </span>
   );
 }
