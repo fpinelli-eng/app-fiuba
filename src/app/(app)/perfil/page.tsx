@@ -3,10 +3,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
 import { APP_NAME } from "@/lib/app";
+import { getCareers } from "@/lib/careers";
 import { getMyReviews } from "@/lib/reviews/mine";
 import { countPendingReviews } from "@/lib/reviews/pending";
-import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
+import { CareerChange } from "./CareerChange";
 import { DeleteAccount } from "./DeleteAccount";
 import { MyReviewRow } from "./MyReviewRow";
 import { ThemeChooser } from "./ThemeChooser";
@@ -14,17 +15,10 @@ import { ThemeChooser } from "./ThemeChooser";
 export const metadata: Metadata = { title: `Tu perfil · ${APP_NAME}` };
 
 // Perfil y configuración (prototipo 12-perfil). Falta: subir una foto propia (necesita
-// almacenamiento de archivos) y cambiar de carrera o plan (se hace al final, sin equivalencias).
+// almacenamiento de archivos).
 export default async function PerfilPage() {
   const account = await requireProfile();
-  const supabase = await createClient();
-  const [plan, reviews, pending] = await Promise.all([
-    supabase.from("plans").select("year, careers(short_name)").eq("id", account.planId!).single(),
-    getMyReviews(),
-    countPendingReviews(account.id),
-  ]);
-  const career = plan.data?.careers as unknown as { short_name: string } | { short_name: string }[] | null;
-  const careerName = (Array.isArray(career) ? career[0]?.short_name : career?.short_name) ?? "";
+  const [careers, reviews, pending] = await Promise.all([getCareers(), getMyReviews(), countPendingReviews(account.id)]);
 
   return (
     <main className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 pt-5 pb-8 md:px-6 md:pt-9 md:pb-12">
@@ -41,12 +35,7 @@ export default async function PerfilPage() {
         </form>
       </section>
 
-      <Card>
-        <h2 className="text-[19px] font-semibold">Carrera</h2>
-        <div className="mt-0.5 text-muted">
-          {careerName} · Plan {plan.data?.year}
-        </div>
-      </Card>
+      <CareerChange careers={careers} planId={account.planId!} />
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-[19px] font-semibold">Apariencia</h2>

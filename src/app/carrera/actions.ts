@@ -7,7 +7,7 @@ import { requireAccount } from "@/lib/session";
 export type ChoosePlanState = { error: string | null };
 
 // Paso 2 del ingreso: guarda la carrera y el plan y lleva al mapa para cargar las materias.
-// Cambiar de plan después es otra cosa (perfil, con equivalencias): acá solo se elige la primera vez.
+// Cambiar de plan después es otra cosa (perfil, change_my_plan): acá solo se elige la primera vez.
 export async function choosePlan(_prev: ChoosePlanState, formData: FormData): Promise<ChoosePlanState> {
   const account = await requireAccount();
   if (account.planId) redirect("/");

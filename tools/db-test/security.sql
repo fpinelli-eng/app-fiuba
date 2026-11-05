@@ -268,6 +268,31 @@ reset role;
 
 select test.ok((select count(*) from public.plan_choices) = 1, 'another student cannot delete her plan');
 
+-- Changing career or plan: subjects and the semester plan go, cursadas and reviews stay ------
+
+set role anon;
+select test.fails($$select public.change_my_plan('civil-2023')$$, 'anon changes a plan');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails($$select public.change_my_plan('no-existe')$$, 'student changes to a plan that does not exist');
+create temp table ana_reviews as select count(*) as n from public.my_reviews();
+select public.change_my_plan('industrial-2023');  -- same plan: nothing changes
+select test.ok((select count(*) from public.user_subjects) = 1, 'same plan keeps the subjects');
+select public.change_my_plan('civil-2023');
+select test.ok((select plan_id from public.profiles) = 'civil-2023', 'student changes plan');
+select test.ok((select count(*) from public.user_subjects) = 0, 'changing plan deletes the subjects');
+select test.ok((select count(*) from public.user_requirements) = 0, 'changing plan deletes the requirements');
+select test.ok((select count(*) from public.plan_choices) = 0, 'changing plan deletes the semester plan');
+select test.ok((select count(*) from public.user_courses) = 1, 'changing plan keeps the cursadas');
+select test.ok((select count(*) from public.my_reviews()) = (select n from ana_reviews) and (select n from ana_reviews) > 0, 'changing plan keeps the reviews');
+-- Back to Industrial, with a subject and a plan choice, for the checks below.
+select public.change_my_plan('industrial-2023');
+insert into public.user_subjects (user_id, subject_id, status, grade)
+values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'approved', 9);
+insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 1);
+reset role;
+
 -- Deleting the account keeps the review, without author ---------------------------
 
 set role anon;
