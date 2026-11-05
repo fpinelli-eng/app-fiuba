@@ -9,11 +9,11 @@ export const CONTACT_EMAIL = "[MAIL]";
 // `icon` es el nombre del ícono en src/components/icons.tsx.
 export const NAV = [
   { href: "/", label: "Inicio", icon: "home", mobile: "tab" },
-  { href: "/novedades", label: "Novedades", icon: "bell", mobile: "top" },
   { href: "/mapa", label: "Mapa", icon: "map", mobile: "tab" },
   { href: "/plan", label: "Plan", icon: "calendar", mobile: "tab" },
   { href: "/resenas", label: "Reseñas", icon: "star", mobile: "tab" },
   { href: "/finales", label: "Finales", icon: "exam", mobile: "tab" },
+  { href: "/novedades", label: "Novedades", icon: "bell", mobile: "top" },
 ] as const;
 
 export type NavIcon = (typeof NAV)[number]["icon"];

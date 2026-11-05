@@ -57,7 +57,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Etiquetas de sección en mayúsculas: 11–12 px, 600, espaciado 0,08 em, color `muted`.
 - Radios: tarjetas 16–18 px, botones e inputs 10–12 px, chips 999 px.
 - Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo #ECEBF4, texto #8A8AA0, cursor `not-allowed`.
-- Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
+- Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas · Finales · Novedades al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
 
 ## Celular (agregado el 2 de noviembre, no está en el prototipo)
 
