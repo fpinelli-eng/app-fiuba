@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { STATE_LABEL, normalizeText, subjectKey, type DisplayState, type MapItem, type Subject } from "@/lib/map/model";
 import { STATE_ICON_LABEL, STATE_STYLE, StateIcon } from "./icons";
 
@@ -271,6 +271,8 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 /** Ficha de la materia en el celular: hoja que sube desde abajo, por encima de la barra de pestañas. */
 export function BottomSheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
   // Al abrirse toma el foco; al cerrarse lo devuelve a lo que la abrió (la fila de la materia).
@@ -282,6 +284,25 @@ export function BottomSheet({ label, onClose, children }: { label: string; onClo
       if (opener?.isConnected) opener.focus();
     };
   }, []);
+  // Mientras está abierta, Tab y Shift+Tab dan la vuelta dentro de la hoja en vez de salir a la página.
+  const keepFocusInside = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab" || !ref.current) return;
+    const focusable = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.getClientRects().length > 0);
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === ref.current)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
   return (
     <div className="fixed inset-0 z-[60] md:hidden">
       <button type="button" aria-label="Cerrar la ficha" onClick={onClose} className="absolute inset-0 bg-pop-shadow" />
@@ -291,6 +312,7 @@ export function BottomSheet({ label, onClose, children }: { label: string; onClo
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
+        onKeyDown={keepFocusInside}
         className="absolute inset-x-0 bottom-0 outline-none max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[18px] border-t border-line bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-12px_32px_var(--pop-shadow)]"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
