@@ -39,7 +39,7 @@ Es la única que conecta todo: el avance del alumno, la oferta real del SIU de s
 ## Brand Commitments
 
 - No es un sitio oficial de la universidad: sin logos de la FIUBA ni de la UBA, y se aclara en el pie.
-- Pedido explícito de Francisco (5 de noviembre de 2026): minimalista y sobria, con la legibilidad primero. La información se tiene que leer e interpretar de un vistazo. El diferencial no viene de metáforas del mundo estudiantil (libretas, cuadernos, sellos, resaltadores, correcciones) ni de adornos que dificulten la lectura, sino de la calidad de la tipografía, el color, la jerarquía y el espacio. La estética actual (lavanda, pasteles, IBM Plex Sans, tarjetas muy redondeadas) le gusta pero se ve genérica, "hecha por IA": no tiene que parecerse a eso.
+- Pedido explícito de Francisco (5 de noviembre de 2026): minimalista y sobria, con la legibilidad primero; la información se tiene que leer e interpretar de un vistazo, sin metáforas del mundo estudiantil (libretas, cuadernos, sellos, resaltadores, correcciones). Después de varias rondas decidió **conservar las curvas (bloques muy redondeados) y los colores pasteles**, aunque eso se parezca a la estética habitual de las interfaces hechas con IA: prefiere esa combinación a ganar originalidad. El carácter propio viene de la paleta media (amarillo, azul, coral, verde), de Unbounded + Onest y del arco de avance del Inicio.
 
 ## Evidence on Hand
 
