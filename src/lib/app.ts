@@ -6,9 +6,9 @@ export const CONTACT_EMAIL = "[MAIL]";
 
 export const NAV = [
   { href: "/", label: "Inicio" },
-  { href: "/novedades", label: "Novedades" },
   { href: "/mapa", label: "Mapa" },
   { href: "/plan", label: "Plan" },
   { href: "/resenas", label: "Reseñas" },
   { href: "/finales", label: "Finales" },
+  { href: "/novedades", label: "Novedades" },
 ] as const;
