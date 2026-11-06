@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } 
 import { markIntroSeen } from "@/app/(app)/actions";
 import { NavIcon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
-import { STORY_SECONDS, welcomeStories, type Story } from "@/lib/intro/stories";
+import { STORY_SECONDS, welcomeStories, type Platform, type Story } from "@/lib/intro/stories";
 
 /** Perfil → "Ver la bienvenida" fires this event to open the stories again. */
 export const OPEN_INTRO_EVENT = "fiubi:intro";
@@ -24,6 +24,20 @@ const TONE: Record<Story["tone"], { bg: string; ink: string }> = {
 const TAP_MS = 250;
 
 const noSubscribe = () => () => {};
+
+/** The phone, to show its steps first: iPhone/iPad (also iPadOS, that says Macintosh) or Android. */
+function detectPlatform(): Platform | null {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+  if (/Android/.test(ua)) return "android";
+  return null;
+}
+
+/** Opened from the home screen icon: the "Tenela como app" story is not needed. */
+const isInstalled = () =>
+  window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+const PLATFORM_LABEL: Record<Platform, string> = { ios: "iPhone", android: "Android" };
 const reducedMotionQuery = () => window.matchMedia("(prefers-reduced-motion: reduce)");
 const subscribeReducedMotion = (onChange: () => void) => {
   const media = reducedMotionQuery();
@@ -36,7 +50,11 @@ const subscribeReducedMotion = (onChange: () => void) => {
 // pausa. Con teclado: flechas y Escape. Con "reducir movimiento" no pasan solas.
 export function WelcomeStories({ firstName, open: openAtStart }: { firstName: string; open: boolean }) {
   const router = useRouter();
-  const stories = welcomeStories(firstName);
+  const installed = useSyncExternalStore(noSubscribe, isInstalled, () => false);
+  const detected = useSyncExternalStore(noSubscribe, detectPlatform, () => null);
+  const [platformChoice, setPlatformChoice] = useState<Platform | null>(null);
+  const platform = platformChoice ?? detected ?? "ios";
+  const stories = welcomeStories(firstName).filter((s) => !(installed && s.steps));
   const [opened, setOpened] = useState(openAtStart);
   // ?bienvenida in the address opens them too (handy to show them to someone), until closed.
   const askedByUrl = useSyncExternalStore(noSubscribe, () => new URLSearchParams(window.location.search).has("bienvenida"), () => false);
@@ -142,7 +160,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
                 className={`block h-full rounded-full bg-current ${i < index || (i === index && (reducedMotion || last)) ? "w-full" : i > index ? "w-0" : ""}`}
                 style={
                   i === index && !reducedMotion && !last
-                    ? { animation: `story-fill ${STORY_SECONDS}s linear forwards`, animationPlayState: paused ? "paused" : "running" }
+                    ? { animation: `story-fill ${s.steps ? STORY_SECONDS * 2 : STORY_SECONDS}s linear forwards`, animationPlayState: paused ? "paused" : "running" }
                     : undefined
                 }
                 onAnimationEnd={i === index ? next : undefined}
@@ -180,7 +198,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
                 <NavIcon name={story.icon} size={36} />
               ) : (
                 <span aria-hidden="true" className="font-display text-[34px] font-semibold">
-                  {last ? "✓" : "👋"}
+                  {last ? "✓" : story.steps ? "📲" : "👋"}
                 </span>
               )}
             </span>
@@ -189,6 +207,33 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
               <h2 className="font-display text-[34px] leading-[1.05] font-semibold tracking-[-0.01em]">{story.title}</h2>
               <p className="text-[17px] leading-snug">{story.text}</p>
             </div>
+            {story.steps && (
+              <div className="flex flex-col gap-2.5">
+                <div className="flex gap-2" role="group" aria-label="Tu celular">
+                  {(Object.keys(PLATFORM_LABEL) as Platform[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      aria-pressed={platform === p}
+                      onClick={() => setPlatformChoice(p)}
+                      className={`rounded-full px-4 py-2 text-[14px] font-semibold ${platform === p ? "bg-ink text-bg" : "bg-surface/60"}`}
+                    >
+                      {PLATFORM_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+                <ol className="flex flex-col gap-2.5">
+                  {story.steps[platform].map((step, i) => (
+                    <li key={step} className="flex items-start gap-3 rounded-2xl bg-surface/60 px-3.5 py-2.5 text-[15px] leading-snug">
+                      <span aria-hidden="true" className="grid size-6 flex-none place-items-center rounded-full bg-current/15 text-[13px] font-bold tabular-nums">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
             <ul className="flex flex-col gap-2.5">
               {story.points.map((p) => (
                 <li key={p} className="flex items-start gap-2.5 rounded-2xl bg-surface/60 px-3.5 py-2.5 text-[15px] leading-snug">

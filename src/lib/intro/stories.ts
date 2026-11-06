@@ -12,9 +12,13 @@ export interface Story {
   text: string;
   /** Two or three short things it is useful for. */
   points: string[];
+  /** Step by step to add the app to the phone home screen, instead of the points. */
+  steps?: Record<Platform, string[]>;
   /** Palette of the story: one of the pastel tokens of globals.css. */
   tone: "butter" | "sky" | "mint" | "lavender" | "peach" | "pink" | "teal";
 }
+
+export type Platform = "ios" | "android";
 
 /** Seconds each story stays before going to the next one. */
 export const STORY_SECONDS = 7;
@@ -81,6 +85,19 @@ export function welcomeStories(firstName: string): Story[] {
       tone: "pink",
     },
     ...sections.map((s, i) => ({ ...s, kicker: `Sección ${i + 1} de ${sections.length}` })),
+    {
+      id: "instalar",
+      icon: null,
+      kicker: "Un truco",
+      title: "Tenela como app",
+      text: "Agregá FIUBI a la pantalla de inicio de tu celular y abrila como cualquier app, sin buscarla en el navegador.",
+      points: [],
+      steps: {
+        ios: ["Abrí FIUBI en Safari", "Tocá Compartir: el cuadrado con la flecha para arriba", "Elegí \"Agregar a inicio\" y tocá \"Agregar\""],
+        android: ["Abrí FIUBI en Chrome", "Tocá los tres puntitos ⋮ de arriba a la derecha", "Elegí \"Agregar a la pantalla principal\" o \"Instalar app\" y confirmá"],
+      },
+      tone: "sky",
+    },
     {
       id: "listo",
       icon: null,
