@@ -54,6 +54,9 @@ export async function getFiubaNews(limit = 12): Promise<FiubaNewsItem[]> {
     .select("id, title, summary, url, image_url, published_at")
     .order("published_at", { ascending: false })
     .limit(limit);
+  // Until the migration is applied (a preview on the shared database, or the minutes after merging),
+  // the table does not exist: show no news instead of an error page.
+  if (error?.code === "42P01" || error?.code === "PGRST205") return [];
   if (error) throw new Error(`fiuba_news: ${error.message}`);
   return data.map((n) => ({
     id: n.id as number,
