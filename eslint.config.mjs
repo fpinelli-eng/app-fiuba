@@ -7,6 +7,9 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // Skill de diseño de terceros (Impeccable): no es código de la app.
+    ".claude/**",
+    ".impeccable/**",
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
