@@ -11,8 +11,8 @@ import { requireProfile } from "@/lib/session";
 
 // Inicio (rediseño del 5 de noviembre de 2026, contrato en .impeccable/surfaces/src-app-app-page-tsx.md):
 // el saludo, el arco de avance, el promedio, las materias aprobadas, las reseñas pendientes,
-// la semana y los finales pendientes. La semana sale de la inscripción del Plan; sin inscripción
-// en el cuatrimestre actual, la lista de materias en "Cursando" del mapa.
+// la semana y los finales pendientes. La semana sale de la inscripción del Plan; sin inscripción en el
+// cuatrimestre actual, el calendario se muestra vacío con el camino para cargarla.
 
 const CARD = "rounded-[24px] bg-surface shadow-[0_16px_30px_-28px_var(--card-shadow)] md:rounded-[28px]";
 
@@ -41,7 +41,6 @@ export default async function InicioPage() {
 
   const withStatus = (status: string) => map.subjects.filter((s) => progress.subjects.get(s.id)?.status === status);
   const approved = withStatus("approved");
-  const inProgress = withStatus("in_progress");
   const finals = withStatus("final_pending").map((s) => ({
     subject: s,
     unlocks: map.unlocks(s.id).filter((u) => !progress.subjects.has(u.id)).length,
@@ -124,30 +123,7 @@ export default async function InicioPage() {
       </div>
 
       <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-start md:gap-6">
-        {courses ? (
-          <HomeCalendar data={courses} action={<MoreLink href="/plan">Ver el plan</MoreLink>} />
-        ) : (
-          <section aria-labelledby="cursando" className={`${CARD} px-4 pt-4 pb-2 md:px-[26px] md:py-[22px]`}>
-            <div className="mb-1.5 flex items-baseline justify-between gap-3 md:mb-2">
-              <h2 id="cursando" className="text-base font-semibold md:text-lg">
-                Cursando
-              </h2>
-              <MoreLink href="/plan">Ver el plan</MoreLink>
-            </div>
-            {inProgress.length === 0 ? (
-              <p className="pb-3 text-muted md:pb-0">No tenés materias marcadas como cursando.</p>
-            ) : (
-              <ul>
-                {inProgress.map((s) => (
-                  <li key={s.id} className="flex justify-between gap-3 border-b border-line py-2.5 text-[15px] last:border-b-0 md:text-base">
-                    <span>{s.name}</span>
-                    <span className="flex-none text-muted tabular-nums">{s.credits} C</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+        <HomeCalendar data={courses ?? { term: "", courses: [] }} enrolled={courses !== null} action={<MoreLink href="/plan">Ver el plan</MoreLink>} />
 
         <section aria-labelledby="finales" className={`${CARD} px-4 pt-4 pb-2 md:px-[26px] md:py-[22px]`}>
           <div className="mb-1 flex items-baseline justify-between gap-3 md:mb-2">
