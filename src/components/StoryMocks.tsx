@@ -348,7 +348,55 @@ function Novedades() {
   );
 }
 
+// Web: se recomienda la compu; la misma cuenta en los dos, lo que marcás en uno aparece en el otro.
+function Web() {
+  const s3 = stepAt(3);
+  const subject = (late: number) => (
+    <span className="relative block overflow-hidden rounded-md border border-line-strong bg-surface px-1.5 py-1 text-[9.5px] font-semibold">
+      Física II
+      <span className="absolute inset-0 flex items-center justify-between bg-mint px-1.5 text-mint-ink" style={anim("story-fade", s3 + late, 0.3)}>
+        Física II <span>✓ 8</span>
+      </span>
+    </span>
+  );
+  return (
+    <Screen title="Compu y celular">
+      <div className="flex items-end justify-center gap-3">
+        <div className="relative w-[64%]" style={anim("story-rise", stepAt(1))}>
+          <div className="rounded-t-lg border-[3px] border-b-0 border-ink/80 bg-bg p-1.5">
+            <div className="mb-1 truncate rounded bg-surface px-1 text-[8.5px] text-muted">app-fiuba.vercel.app</div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="rounded-md bg-mint py-2" />
+              {subject(0)}
+              <span className="rounded-md bg-blocked py-2" />
+            </div>
+          </div>
+          <div className="mx-[-8px] h-1.5 rounded-b-md bg-ink/80" />
+          <span className="absolute -top-2.5 right-0 rounded-full bg-mint px-1.5 text-[9px] font-semibold text-mint-ink">Recomendada</span>
+          <Marker n={1} className="-top-2 -left-2" />
+          <Finger at={s3 - 0.4} className="top-6 left-[46%]" />
+        </div>
+        <div className="relative w-[24%]" style={anim("story-rise", stepAt(2))}>
+          <div className="rounded-[12px] border-[3px] border-ink/80 bg-bg p-1 pb-3">
+            <div className="mx-auto mb-1 h-1 w-5 rounded-full bg-ink/60" />
+            <div className="flex flex-col gap-1">
+              <span className="rounded-md bg-mint py-1.5" />
+              {subject(0.6)}
+            </div>
+          </div>
+          <Marker n={2} className="-top-2 -right-2" />
+        </div>
+      </div>
+      <div className="relative mt-2 text-center text-[11px] font-semibold text-mint-ink" style={anim("story-rise", s3 + 0.7)}>
+        ⇄ Se sincroniza solo
+        <Marker n={3} className="-top-1 left-2" />
+      </div>
+    </Screen>
+  );
+}
+
 const MOCKS: Record<string, () => ReactNode> = {
+  web: Web,
   inicio: Inicio,
   mapa: Mapa,
   plan: Plan,
