@@ -48,7 +48,7 @@ jobs:
           user="postgres.$SUPABASE_PROJECT_ID"
           for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
             if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
-                 -v ON_ERROR_STOP=1 -q -v payload="$(cat "$RUNNER_TEMP/news.json")" -f tools/news/upsert.sql 2> "$RUNNER_TEMP/psql.log"; then
+                 -v ON_ERROR_STOP=1 -q -v payload="$(cat "$RUNNER_TEMP/news.json")" -f tools/news/upsert.sql 2>> "$RUNNER_TEMP/psql.log"; then
               echo "ok: $candidate"
               exit 0
             fi
