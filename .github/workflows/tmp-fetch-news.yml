@@ -16,6 +16,7 @@ jobs:
           curl -sS -A "$UA" -o tmp-news/list1.html -w "list1 %{http_code}\n" https://www.fi.uba.ar/noticias/pagina/1 || true
           curl -sS -A "$UA" -o tmp-news/article.html -w "article %{http_code}\n" https://www.fi.uba.ar/noticias/la-fiuba-lanza-la-credencial-estudiantil || true
           curl -sS -A "$UA" -o tmp-news/api.json -w "api %{http_code}\n" "https://cms.fi.uba.ar/api/noticias?pagination%5BpageSize%5D=3&sort=createdAt:desc&populate=*" || true
-          curl -sS -A "$UA" -o tmp-news/robots.txt -w "robots %{http_code}\n" https://www.fi.uba.ar/robots.txt || true
+          curl -sS -A "$UA" -o tmp-news/home.html -w "home %{http_code}\n" https://www.fi.uba.ar/ || true
           git config user.name "github-actions" && git config user.email "github-actions@users.noreply.github.com"
           git add tmp-news && git commit -m "tmp: fetched pages" && git push
+# Fri Nov  6 14:37:48 America 2026
