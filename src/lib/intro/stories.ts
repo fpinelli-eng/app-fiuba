@@ -53,8 +53,8 @@ export function welcomeStories(firstName: string): Story[] {
       id: "resenas",
       icon: "star",
       title: "Reseñas",
-      text: "Lo que opinan otros alumnos de cada curso.",
-      points: ["El puntaje de cada curso", "Lo que comentan otros alumnos", "Cuando terminás de cursar, dejá la tuya: es anónima"],
+      text: "Lo que opinan otros alumnos de cada curso. ¡Subí las tuyas! Cuantas más haya, mejor elige el que viene.",
+      points: ["El puntaje de cada curso", "Lo que comentan otros alumnos", "Reseñá las materias que ya cursaste: es anónimo y tarda un minuto"],
       tone: "peach",
     },
     {
@@ -113,7 +113,7 @@ export function welcomeStories(firstName: string): Story[] {
       kicker: "Listo",
       title: "¡A usarla!",
       text: "Desde el Inicio entrá al Mapa y marcá las materias que ya aprobaste: todo lo demás se acomoda solo.",
-      points: ["Podés volver a ver esto desde Perfil"],
+      points: ["Subí reseñas de las materias que ya cursaste: ayudan a todos", "Podés volver a ver esto desde Perfil"],
       tone: "mint",
     },
   ];
