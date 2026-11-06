@@ -147,6 +147,7 @@ values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.plan_requ
 insert into public.user_extra_credits (name, credits) values ('FIUBATÓN 2025', 2);
 select test.ok((select count(*) from public.user_extra_credits where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'student adds extra credits');
 select test.fails($$insert into public.user_extra_credits (user_id, name, credits) values ('bbbbbbbb-0000-0000-0000-000000000002', 'x', 2)$$, 'extra credits for another student');
+select test.fails($$select * from public.admin_users()$$, 'student lists the users');
 update public.profiles set failed_finals = 3;
 select test.ok((select failed_finals from public.profiles) = 3, 'student sets her aplazos');
 
@@ -262,6 +263,8 @@ update public.reviews set pinned = true, hidden_at = now();
 select test.ok((select bool_and(pinned and hidden_at is not null) from public.reviews), 'admin pins and hides reviews');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
 select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
+select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
+select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select count(*) from public.offerings) = 5, 'admin sees hidden offerings');
 select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
 insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'CB001', 'ANÁLISIS MATEMÁTICO II', 'MESA 01', '2026-12-10', 'Regular');
