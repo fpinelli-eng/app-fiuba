@@ -15,7 +15,7 @@ const time = (p: PlacedBlock) => `${formatHour(p.block.start)}–${formatHour(p.
 const where = (p: PlacedBlock) => (p.block.campus ? CAMPUS_NAME[p.block.campus] : p.block.virtual ? "Virtual" : null);
 const blockKey = (p: PlacedBlock) => `${p.course.offeringId}-${p.block.weekday}-${p.block.start}`;
 
-export function HomeCalendar({ data, action }: { data: HomeCourses; action: ReactNode }) {
+export function HomeCalendar({ data, action, enrolled = true }: { data: HomeCourses; action: ReactNode; enrolled?: boolean }) {
   const week = layoutWeek(data.courses);
   // "Hoy" se calcula en el servidor, en hora de Buenos Aires (domingo = 6: no hay columna de hoy).
   const today = calendarDayIndex(new Date());
@@ -36,7 +36,11 @@ export function HomeCalendar({ data, action }: { data: HomeCourses; action: Reac
         {action}
       </div>
 
-      {upcoming.length === 0 && week.asyncClasses.length === 0 && <p className="pb-3 text-muted md:pb-0">Sin clases presenciales esta semana.</p>}
+      {!enrolled ? (
+        <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Tus horarios aparecen acá cuando te inscribís desde el Plan.</p>
+      ) : (
+        upcoming.length === 0 && week.asyncClasses.length === 0 && <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Sin clases presenciales esta semana.</p>
+      )}
 
       <ul className="md:hidden">
         {upcoming.map(({ p, day, firstOfDay }) => (
@@ -66,6 +70,7 @@ export function HomeCalendar({ data, action }: { data: HomeCourses; action: Reac
               {d === today ? `${DAYS[d]}, hoy` : DAYS[d]}
               <span className="sr-only">{d === today ? "" : ` (${DAY_NAMES[d]})`}</span>
             </h3>
+            {!enrolled && <div aria-hidden="true" className="h-[92px] rounded-[14px] bg-bg" />}
             {blocks.map((p) => (
               <div key={blockKey(p)} className={`rounded-[14px] px-2.5 py-2 text-[13px] leading-[17px] ${PALETTE[p.color % PALETTE.length]}`} title={where(p) ?? undefined}>
                 <strong className="block font-semibold break-words hyphens-auto [hyphenate-limit-chars:10_4_4]">{p.course.subject}</strong>
