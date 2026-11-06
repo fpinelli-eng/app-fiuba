@@ -49,6 +49,17 @@ export interface CourseDetail {
   distribution: [number, number, number, number, number];
   comments: CourseComment[];
   otherCourses: CourseSummary[];
+  /** Opinions from Dolly FIUBA (public.historical_reviews), apart from the app's reviews. */
+  historical: HistoricalOpinions | null;
+}
+
+export interface HistoricalOpinions {
+  average: number;
+  count: number;
+  /** First and last year of the surveys. */
+  years: [number, number];
+  /** With comment, the 30 newest. */
+  comments: { id: number; stars: number; comment: string; teacher: string; termLabel: string }[];
 }
 
 /** "4,2" */
