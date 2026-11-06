@@ -35,6 +35,9 @@ export const requireAccount = cache(async (): Promise<Account> => {
 
   if (!row) {
     const { error: createError } = await supabase.rpc("ensure_profile");
+    // Sesión de una cuenta que ya se borró (por ejemplo, abierta en otro dispositivo): el usuario no
+    // existe más y el perfil no se puede crear (foreign key). Se cierra la sesión y vuelve al ingreso.
+    if (createError?.code === "23503") redirect("/auth/salir");
     if (createError) throw new Error(`ensure_profile: ${createError.message}`);
   }
 
