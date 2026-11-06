@@ -74,10 +74,17 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
   const story = stories[index];
   const tone = TONE[story.tone];
 
+  // La primera vez (se abrieron solas, por ejemplo recién elegida la carrera) al cerrarlas se va al
+  // Inicio. Vueltas a abrir desde Perfil o Inicio, se cierran y se queda donde estaba.
+  const [firstTime, setFirstTime] = useState(openAtStart);
   const close = () => {
     setOpened(false);
     setClosedUrl(true);
     markIntroSeen().catch(() => {});
+    if (firstTime) {
+      setFirstTime(false);
+      router.push("/");
+    }
   };
   const next = () => {
     setStopped(false);
@@ -94,6 +101,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
     const reopen = () => {
       setIndex(0);
       setPaused(false);
+      setFirstTime(false);
       setOpened(true);
     };
     window.addEventListener(OPEN_INTRO_EVENT, reopen);
@@ -132,7 +140,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
   };
 
   return (
-    <div className="fixed inset-0 z-[60] grid place-items-center bg-ink/60 md:p-6">
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/60 md:p-6">
       <div
         ref={dialogRef}
         role="dialog"
@@ -300,13 +308,10 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
           {last ? (
             <button
               type="button"
-              onClick={() => {
-                close();
-                router.push("/mapa");
-              }}
+              onClick={close}
               className="rounded-full bg-ink px-5 py-3 text-[15px] font-semibold text-bg"
             >
-              Ir al Mapa
+              Empezar
             </button>
           ) : (
             <button type="button" onClick={next} aria-label="Siguiente" className="grid size-11 place-items-center rounded-full bg-surface/60 text-xl">

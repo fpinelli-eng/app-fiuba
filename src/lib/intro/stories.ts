@@ -103,7 +103,7 @@ export function welcomeStories(firstName: string): Story[] {
       icon: null,
       kicker: "Listo",
       title: "¡A usarla!",
-      text: "Empezá por el Mapa: marcá las materias que ya aprobaste y todo lo demás se acomoda solo.",
+      text: "Desde el Inicio entrá al Mapa y marcá las materias que ya aprobaste: todo lo demás se acomoda solo.",
       points: ["Podés volver a ver esto desde Perfil"],
       tone: "mint",
     },
