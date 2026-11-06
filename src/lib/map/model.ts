@@ -43,7 +43,27 @@ export interface Progress {
   subjects: Map<number, { status: SubjectStatus; grade: number | null }>;
   /** Approved requirements. */
   requirements: Set<number>;
+  /** Credits that do not come from a subject of the plan (FIUBATÓN, old plan…); they count as electives. */
+  extraCredits?: number;
 }
+
+export type ExtraCreditKind = "activity" | "old_plan" | "other";
+
+/** Map → "Créditos y extras": credits that do not come from a subject of the plan. */
+export interface ExtraCredit {
+  id: number;
+  name: string;
+  credits: number;
+  kind: ExtraCreditKind;
+}
+
+export const EXTRA_KIND_LABEL: Record<ExtraCreditKind, string> = {
+  activity: "Actividad (FIUBATÓN, etc.)",
+  old_plan: "Materia del plan viejo",
+  other: "Otro",
+};
+
+export const sumExtraCredits = (list: { credits: number }[]) => list.reduce((a, e) => a + e.credits, 0);
 
 /** One box in the map or one row in the electives panel. */
 export type MapItem =
@@ -96,9 +116,9 @@ export class CareerMap {
     return this.cbcSubjects.filter((s) => progress.subjects.get(s.id)?.status === "approved").length;
   }
 
-  /** Credits of approved subjects (the CBC included). */
+  /** Credits of approved subjects (the CBC included), plus the extra credits when there is no filter. */
   approvedCredits(progress: Progress, filter?: (s: Subject) => boolean): number {
-    let total = 0;
+    let total = filter ? 0 : (progress.extraCredits ?? 0);
     for (const s of this.subjects) {
       if (s.kind === "cbc") continue;
       if (filter && !filter(s)) continue;
@@ -107,8 +127,9 @@ export class CareerMap {
     return total;
   }
 
+  /** Approved elective credits, the extra credits included. */
   electiveCredits(progress: Progress): number {
-    return this.approvedCredits(progress, (s) => s.kind === "elective");
+    return this.approvedCredits(progress, (s) => s.kind === "elective") + (progress.extraCredits ?? 0);
   }
 
   /** Average of approved grades, CBC included. null if there are none. */
@@ -153,7 +174,7 @@ export class CareerMap {
     return {
       cbc: { done: done(of("cbc_subject")), total: sum(of("cbc_subject")) },
       required: { done: done(of("required")), total: sum(of("required")) },
-      electives: { done: done([...of("elective"), ...of("orientation")]), total: target ? Number(target.split("–").pop()) : null },
+      electives: { done: done([...of("elective"), ...of("orientation")]) + (progress.extraCredits ?? 0), total: target ? Number(target.split("–").pop()) : null },
       final: {
         done: done(finals),
         total: finalProject.length ? sum(finalProject) : finalOptions.length ? Math.min(...finalOptions.map((s) => s.credits)) : 0,

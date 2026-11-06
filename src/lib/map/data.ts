@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Requirement, Subject, SubjectKind, SubjectStatus } from "./model";
+import type { ExtraCredit, ExtraCreditKind, Requirement, Subject, SubjectKind, SubjectStatus } from "./model";
 
 export interface MapData {
   planId: string;
@@ -15,6 +15,32 @@ export interface MapData {
   progress: {
     subjects: { subjectId: number; status: SubjectStatus; grade: number | null }[];
     requirements: number[];
+    extraCredits: ExtraCredit[];
+  };
+  /** Failed finals (aplazos) the student entered. Not used by the average yet. */
+  failedFinals: number;
+}
+
+// Undefined table or column: the migration 20261107140000_extra_credits is not applied yet. Vercel
+// previews use the production database, which only gets it when the branch is merged.
+const NOT_YET = new Set(["42P01", "42703", "PGRST205", "PGRST204"]);
+
+async function getExtras(userId: string): Promise<{ extraCredits: ExtraCredit[]; failedFinals: number }> {
+  const supabase = await createClient();
+  const [extras, profile] = await Promise.all([
+    supabase.from("user_extra_credits").select("id, name, credits, kind").eq("user_id", userId).order("created_at"),
+    supabase.from("profiles").select("failed_finals").eq("id", userId).maybeSingle(),
+  ]);
+  if (extras.error && !NOT_YET.has(extras.error.code)) throw new Error(`user_extra_credits: ${extras.error.message}`);
+  if (profile.error && !NOT_YET.has(profile.error.code)) throw new Error(`profiles: ${profile.error.message}`);
+  return {
+    extraCredits: (extras.data ?? []).map((e) => ({
+      id: e.id as number,
+      name: e.name as string,
+      credits: e.credits as number,
+      kind: e.kind as ExtraCreditKind,
+    })),
+    failedFinals: (profile.data?.failed_finals as number | undefined) ?? 0,
   };
 }
 
@@ -22,7 +48,7 @@ export interface MapData {
 export async function getMapData(userId: string, planId: string): Promise<MapData> {
   const supabase = await createClient();
 
-  const [plan, subjects, requirements, userRequirements, areas] = await Promise.all([
+  const [plan, subjects, requirements, userRequirements, areas, extras] = await Promise.all([
     supabase.from("plans").select("id, year, credit_rules, careers(name)").eq("id", planId).single(),
     supabase
       .from("subjects")
@@ -32,6 +58,7 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
     supabase.from("plan_requirements").select("id, name, short_name").eq("plan_id", planId).order("sort"),
     supabase.from("user_requirements").select("requirement_id").eq("user_id", userId),
     supabase.from("subject_areas").select("id, name, sort").eq("plan_id", planId),
+    getExtras(userId),
   ]);
   if (plan.error) throw new Error(`plans: ${plan.error.message}`);
   if (subjects.error) throw new Error(`subjects: ${subjects.error.message}`);
@@ -96,6 +123,8 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
       requirements: userRequirements.data
         .map((r) => r.requirement_id as number)
         .filter((id) => requirementIds.has(id)),
+      extraCredits: extras.extraCredits,
     },
+    failedFinals: extras.failedFinals,
   };
 }

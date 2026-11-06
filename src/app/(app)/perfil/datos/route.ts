@@ -30,6 +30,8 @@ export async function GET() {
       nota: s.grade,
     })),
     requisitos_aprobados: map.requirements.filter((r) => map.progress.requirements.includes(r.id)).map((r) => r.name),
+    creditos_extra: map.progress.extraCredits.map((e) => ({ nombre: e.name, creditos: e.credits })),
+    aplazos: map.failedFinals,
     cursadas: courses.data,
     resenas: reviews.map((r) => ({ materia: r.subjectName, curso: r.detail, estrellas: r.stars, comentario: r.comment })),
   };

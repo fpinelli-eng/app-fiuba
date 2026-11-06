@@ -16,12 +16,14 @@ import {
   totalCredits,
   type DisplayState,
   type MapItem,
+  sumExtraCredits,
   type Progress,
   type Subject,
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
 import { CloseIcon, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
+import { ExtrasDialog } from "./ExtrasDialog";
 import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 
 // Mapa de la carrera (prototipo 06-mapa) y primera carga de materias (prototipo 03-primera-carga).
@@ -49,6 +51,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [progress, setProgress] = useState<Progress>(() => ({
     subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
     requirements: new Set(data.progress.requirements),
+    extraCredits: sumExtraCredits(data.progress.extraCredits),
   }));
   const sequence = useMemo(() => map.loadSequence(), [map]);
   const [sel, setSel] = useState<string | null>(firstLoad ? (sequence[0] ?? null) : null);
@@ -57,6 +60,9 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [cbcOpenChoice, setCbcOpenChoice] = useState<boolean | null>(firstLoad ? true : null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [extras, setExtras] = useState(data.progress.extraCredits);
+  const [failedFinals, setFailedFinals] = useState(data.failedFinals);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
@@ -84,6 +90,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   // Cálculos ------------------------------------------------------------------
 
   const credits = map.approvedCredits(progress);
+  const englishReq = map.requirements.find((r) => /ingl[eé]s/i.test(`${r.name} ${r.shortName}`)) ?? null;
   const cbcComplete = map.cbcComplete(progress);
   const cbcOpen = cbcOpenChoice ?? !cbcComplete;
   const { cbc, terms } = useMemo(() => map.columns(), [map]);
@@ -304,6 +311,13 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               className="h-[42px] w-full md:w-[280px] rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm text-ink"
             />
           </div>
+          <button
+            type="button"
+            onClick={() => setExtrasOpen(true)}
+            className="inline-flex h-[42px] shrink-0 items-center rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-semibold md:px-[18px]"
+          >
+            Extras
+          </button>
           {!firstLoad && (
             <Link
               href="/mapa?carga=1"
@@ -324,6 +338,24 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       </div>
 
       <Legend />
+
+      {extrasOpen && (
+        <ExtrasDialog
+          supabase={supabase}
+          userId={userId}
+          english={englishReq ? { id: englishReq.id, approved: progress.requirements.has(englishReq.id) } : null}
+          onEnglish={(on) => englishReq && void saveRequirement(englishReq.id, on)}
+          extras={extras}
+          onExtras={(list) => {
+            setExtras(list);
+            setProgress((p) => ({ ...p, extraCredits: sumExtraCredits(list) }));
+          }}
+          failedFinals={failedFinals}
+          onFailedFinals={setFailedFinals}
+          onSaved={refreshSoon}
+          onClose={() => setExtrasOpen(false)}
+        />
+      )}
 
       {saveError && (
         <p role="alert" className="rounded-xl bg-peach px-4 py-2.5 text-sm text-peach-ink">
