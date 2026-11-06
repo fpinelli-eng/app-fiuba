@@ -8,13 +8,14 @@ import { requireProfile } from "@/lib/session";
 export async function GET() {
   const account = await requireProfile();
   const supabase = await createClient();
-  const [map, reviews, courses] = await Promise.all([
+  const [map, reviews, courses, reminders] = await Promise.all([
     getMapData(account.id, account.planId!),
     getMyReviews(),
     supabase
       .from("user_courses")
       .select("created_at, offerings(term_id, siu_subject_code, siu_subject_name, label)")
       .eq("user_id", account.id),
+    supabase.from("reminders").select("kind, subject_name, academic_events(title), created_at, sent_at"),
   ]);
   if (courses.error) return NextResponse.json({ error: courses.error.message }, { status: 500 });
 
@@ -31,6 +32,7 @@ export async function GET() {
     })),
     requisitos_aprobados: map.requirements.filter((r) => map.progress.requirements.includes(r.id)).map((r) => r.name),
     cursadas: courses.data,
+    recordatorios: reminders.error ? [] : reminders.data,
     resenas: reviews.map((r) => ({ materia: r.subjectName, curso: r.detail, estrellas: r.stars, comentario: r.comment })),
   };
 

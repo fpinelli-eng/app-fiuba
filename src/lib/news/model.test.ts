@@ -135,6 +135,12 @@ describe("nextDates", () => {
     const got = nextDates({ now: [ev(1, "Clases")], soon: [ev(2, "Inscripción"), ev(3, "Exámenes"), ev(4, "Receso")], later: [ev(5, "Verano"), ev(6, "x")] });
     expect(got.map((d) => [d.event.title, d.now])).toEqual([["Clases", true], ["Inscripción", false], ["Exámenes", false], ["Receso", false], ["Verano", false]]);
   });
+  it("como mucho dos en curso cuando hay fechas por venir", () => {
+    const got = nextDates({ now: [ev(1, "a"), ev(2, "b"), ev(3, "c"), ev(4, "d")], soon: [ev(5, "e")], later: [] });
+    expect(got.map((d) => d.event.title)).toEqual(["a", "b", "c", "d", "e"]);
+    const many = nextDates({ now: [ev(1, "a"), ev(2, "b"), ev(3, "c")], soon: [ev(4, "d"), ev(5, "e"), ev(6, "f"), ev(7, "g")], later: [] });
+    expect(many.map((d) => d.event.title)).toEqual(["a", "b", "d", "e", "f"]);
+  });
   it("fechas y cuenta regresiva", () => {
     expect(dateBadge("2026-11-09")).toEqual({ day: "9", month: "nov" });
     expect(daysUntil("2026-11-06", "2026-11-09")).toBe(3);

@@ -31,12 +31,14 @@ export interface FiubaNewsItem {
   publishedAt: string;
 }
 
-/** The next calendar dates of Novedades: what is going on now, then what starts soonest. */
-export function nextDates(groups: CalendarGroups, max = 5): { event: AcademicEvent; now: boolean }[] {
-  return [
-    ...groups.now.map((event) => ({ event, now: true })),
-    ...[...groups.soon, ...groups.later].map((event) => ({ event, now: false })),
-  ].slice(0, max);
+/**
+ * The next calendar dates of Novedades: up to `maxNow` of what is going on now, then what starts
+ * soonest (the ones worth a reminder), `max` in all.
+ */
+export function nextDates(groups: CalendarGroups, max = 5, maxNow = 2): { event: AcademicEvent; now: boolean }[] {
+  const upcoming = [...groups.soon, ...groups.later].map((event) => ({ event, now: false }));
+  const now = groups.now.slice(0, Math.max(maxNow, max - upcoming.length)).map((event) => ({ event, now: true }));
+  return [...now, ...upcoming].slice(0, max);
 }
 
 /** "2026-11-09" → { day: "9", month: "nov" } */
