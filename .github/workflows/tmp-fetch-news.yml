@@ -2,19 +2,20 @@ name: tmp fetch news
 on:
   push:
     branches: [tmp-fetch-news]
+    paths: [".github/workflows/tmp-fetch-news.yml"]
+permissions:
+  contents: write
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - run: |
-          mkdir out
+          mkdir -p tmp-news
           UA="FIUBI-news-reader (+https://app-fiuba.vercel.app)"
-          curl -sS -A "$UA" -o out/list1.html -w "list1 %{http_code}\n" https://www.fi.uba.ar/noticias/pagina/1
-          curl -sS -A "$UA" -o out/article.html -w "article %{http_code}\n" https://www.fi.uba.ar/noticias/la-fiuba-lanza-la-credencial-estudiantil
-          curl -sS -A "$UA" -o out/api.json -w "api %{http_code}\n" "https://cms.fi.uba.ar/api/noticias?pagination%5BpageSize%5D=3&sort=createdAt:desc&populate=*"
-          curl -sS -A "$UA" -o out/robots.txt -w "robots %{http_code}\n" https://www.fi.uba.ar/robots.txt
-          ls -la out
-      - uses: actions/upload-artifact@v4
-        with:
-          name: news
-          path: out
+          curl -sS -A "$UA" -o tmp-news/list1.html -w "list1 %{http_code}\n" https://www.fi.uba.ar/noticias/pagina/1 || true
+          curl -sS -A "$UA" -o tmp-news/article.html -w "article %{http_code}\n" https://www.fi.uba.ar/noticias/la-fiuba-lanza-la-credencial-estudiantil || true
+          curl -sS -A "$UA" -o tmp-news/api.json -w "api %{http_code}\n" "https://cms.fi.uba.ar/api/noticias?pagination%5BpageSize%5D=3&sort=createdAt:desc&populate=*" || true
+          curl -sS -A "$UA" -o tmp-news/robots.txt -w "robots %{http_code}\n" https://www.fi.uba.ar/robots.txt || true
+          git config user.name "github-actions" && git config user.email "github-actions@users.noreply.github.com"
+          git add tmp-news && git commit -m "tmp: fetched pages" && git push
