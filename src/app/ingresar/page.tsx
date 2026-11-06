@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { APP_NAME } from "@/lib/app";
+import { Logo } from "@/components/Logo";
 import { isAllowedEmail } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginButton } from "@/components/LoginButton";
 
-// Mosaico decorativo con los colores de los estados del mapa (prototipo 01-ingreso).
+// Mosaico decorativo (la forma del mapa, prototipo 01-ingreso). Todos los bloques son tintes de los
+// colores del arco, los mismos de la U del logo, así el logo y el mosaico son de la misma familia.
 const TILES = [
-  { l: 0, t: 40, h: 52, c: "bg-mint" },
-  { l: 0, t: 104, h: 52, c: "bg-mint" },
-  { l: 82, t: 12, h: 52, c: "bg-mint" },
-  { l: 82, t: 76, h: 52, c: "bg-butter" },
-  { l: 164, t: 0, h: 52, c: "bg-sky" },
-  { l: 164, t: 64, h: 52, c: "bg-lavender" },
-  { l: 164, t: 128, h: 40, c: "bg-peach" },
-  { l: 246, t: 30, h: 52, c: "bg-surface border-[1.5px] border-enabled-line" },
-  { l: 246, t: 94, h: 52, c: "bg-sky" },
-  { l: 328, t: 54, h: 52, c: "bg-blocked border border-dashed border-blocked-line" },
+  { l: 0, t: 40, h: 52, c: "bg-cat-required/30" },
+  { l: 0, t: 104, h: 52, c: "bg-cat-cbc/35" },
+  { l: 82, t: 12, h: 52, c: "bg-cat-elective/30" },
+  { l: 82, t: 76, h: 52, c: "bg-cat-required/30" },
+  { l: 164, t: 0, h: 52, c: "bg-cat-cbc/35" },
+  { l: 164, t: 64, h: 52, c: "bg-cat-final/30" },
+  { l: 164, t: 128, h: 40, c: "bg-cat-elective/30" },
+  { l: 246, t: 30, h: 52, c: "bg-cat-required/30" },
+  { l: 246, t: 94, h: 52, c: "bg-cat-cbc/35" },
+  { l: 328, t: 54, h: 52, c: "bg-cat-elective/30" },
 ];
 
 export default async function IngresarPage({ searchParams }: PageProps<"/ingresar">) {
@@ -41,8 +42,10 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
           />
         ))}
       </div>
-      <h1 className="text-[56px] leading-none font-bold tracking-[-0.035em] break-words md:text-[88px]">{APP_NAME}</h1>
-      <p className="mt-3 text-[18px] text-muted md:mt-[18px] md:text-[22px]">Tu carrera de FIUBA en un solo lugar</p>
+      <h1>
+        <Logo tone="soft" className="h-[46px] md:h-[70px]" />
+      </h1>
+      <p className="mt-3 text-[18px] text-muted md:mt-[18px] md:text-[22px]">Tu carrera de ingeniería en un solo lugar</p>
 
       <LoginButton label={error ? "Probar con otra cuenta" : "Ingresar con tu cuenta @fi.uba.ar"} />
 

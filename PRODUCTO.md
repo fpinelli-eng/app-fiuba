@@ -53,8 +53,8 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 
 ### Dirección visual
 
-- Fondo lavanda muy suave (#F3F2F9), tarjetas blancas, paleta pastel sin colores estridentes; acento violeta suave (#5B5BD6). Texto #24243A, texto secundario #5D5E76, bordes #E2E0EE.
-- Tipografía: IBM Plex Sans, con números de ancho fijo. Sin tipografías monoespaciadas.
+- **Rediseño del 5 de noviembre de 2026:** paleta pastel media y coherente (amarillo, azul, coral, verde) sobre fondo gris azulado muy claro, acento azul; los valores exactos están en `docs/DISENO.md`. Lo que sigue describe la dirección original: fondo lavanda muy suave (#F3F2F9), tarjetas blancas, paleta pastel sin colores estridentes; acento violeta suave (#5B5BD6). Texto #24243A, texto secundario #5D5E76, bordes #E2E0EE.
+- Tipografía: Onest para el texto y Unbounded para títulos y números grandes (rediseño del 5 de noviembre de 2026; antes IBM Plex Sans), con números de ancho fijo. Sin tipografías monoespaciadas.
 - Colores de estado: aprobada = verde menta (#D6F1E3 / #1F4D36); final pendiente = amarillo manteca (#FFF1C7 / #5A4310); cursando = celeste (#DCEBFB / #2F4F73); habilitada = blanco con borde #8F8DAE; bloqueada = gris #EEEDF3 con borde punteado. Pendientes y avisos = durazno (#FFE3D3 / #8A3A18). Estrellas #E8B23A.
 - Calendario semanal de lunes a sábado, de 7 a 23 h. Cada materia recibe un color pastel distinto, que se mantiene en toda la app.
 - Mapa de la carrera: diagrama por columnas de cuatrimestre (estilo FIUBA Map) sin flechas. Al tocar una materia se abre una ficha con lo que necesita, lo que habilita, el estado y la nota; las correlativas se resaltan y el resto se atenúa. Créditos con la etiqueta "C". Para aprobar una materia hay que elegir la nota. Electivas en un panel lateral lavanda agrupadas por área. El CBC se puede compactar en un solo módulo (compactado por defecto cuando está completo). La prueba de inglés es un requisito marcable (Aprobada / Pendiente) en la columna del 8.º cuatrimestre, sin créditos ni nota.

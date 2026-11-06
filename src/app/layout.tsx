@@ -1,15 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/500.css";
-import "@fontsource/ibm-plex-sans/600.css";
-import "@fontsource/ibm-plex-sans/700.css";
+// Onest para el texto y Unbounded para títulos y números grandes, servidas desde el proyecto.
+import "@fontsource-variable/onest";
+import "@fontsource-variable/unbounded";
 import "./globals.css";
 import { APP_NAME } from "@/lib/app";
 import { themeScript } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Tu carrera de FIUBA en un solo lugar",
+  description: "Tu carrera de ingeniería en un solo lugar",
 };
 
 // Celular: ancho del dispositivo y "cover" para que la barra de pestañas use env(safe-area-inset-bottom)

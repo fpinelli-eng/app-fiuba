@@ -1,5 +1,5 @@
-// Nombre de la app: cuando se defina, se cambia solo acá.
-export const APP_NAME = "[NOMBRE]";
+// Nombre de la app (decidido el 6 de noviembre de 2026). El logo dibujado está en src/components/Logo.tsx.
+export const APP_NAME = "FIUBI";
 
 // Mail de contacto de la política de privacidad (/privacidad). Cuando se defina, se cambia solo acá.
 export const CONTACT_EMAIL = "[MAIL]";
