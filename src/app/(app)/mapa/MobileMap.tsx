@@ -277,11 +277,19 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 export function BottomSheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
   // Al abrirse toma el foco; al cerrarse lo devuelve a lo que la abrió (la fila de la materia).
   const ref = useRef<HTMLDivElement>(null);
+  // Mientras está abierta, la página de atrás queda quieta: ni el foco ni arrastrar el dedo la mueven
+  // (en el iPhone, overflow: hidden no alcanza; se fija el body en su lugar y al cerrar se vuelve ahí).
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    ref.current?.focus();
+    const y = window.scrollY;
+    const body = document.body.style;
+    const before = { position: body.position, top: body.top, width: body.width, overflow: body.overflow };
+    Object.assign(body, { position: "fixed", top: `-${y}px`, width: "100%", overflow: "hidden" });
+    ref.current?.focus({ preventScroll: true });
     return () => {
-      if (opener?.isConnected) opener.focus();
+      Object.assign(body, before);
+      window.scrollTo(0, y);
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
   // Mientras está abierta, Tab y Shift+Tab dan la vuelta dentro de la hoja en vez de salir a la página.

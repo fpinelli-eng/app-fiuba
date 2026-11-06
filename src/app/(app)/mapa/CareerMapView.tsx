@@ -876,6 +876,16 @@ function SubjectCard(props: {
               {gradeButtons(false)}
             </>
           )}
+          {/* Celular: con el estado (y la nota) ya elegidos, un tilde cierra la hoja sin tocar afuera. */}
+          {sheet && current !== "none" && !pending && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-1.5 flex h-11 items-center justify-center gap-2 rounded-lg bg-accent text-sm font-semibold text-on-accent"
+            >
+              <span aria-hidden="true">✓</span> Listo
+            </button>
+          )}
           {sheet && props.related && props.items && props.onPick && (
             <Related related={props.related} items={props.items} stateOf={stateOf} onPick={props.onPick} />
           )}
