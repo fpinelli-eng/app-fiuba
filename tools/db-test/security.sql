@@ -50,6 +50,7 @@ values (1, 1, 540, 660, 'PC'), (2, 2, 540, 660, 'PC');
 insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to, start_time, end_time)
 values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00', '17:00', '20:00');
 insert into public.news (title, body) values ('Inscripción a cursos de verano', 'Del 9 al 14 de noviembre.');
+insert into public.fiuba_news (id, title, url, published_at) values (1, 'La FIUBA lanza la Credencial Estudiantil', 'https://www.fi.uba.ar/noticias/la-fiuba-lanza-la-credencial-estudiantil', '2026-11-02 12:30+00');
 
 -- Seed ------------------------------------------------------------------------------
 
@@ -103,6 +104,7 @@ select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account
 select test.ok((select count(*) from public.exam_tables) = 0, 'gmail account reads exam tables');
 select test.ok((select count(*) from public.academic_events) = 0, 'gmail account reads the academic calendar');
 select test.ok((select count(*) from public.news) = 0, 'gmail account reads news');
+select test.ok((select count(*) from public.fiuba_news) = 0, 'gmail account reads FIUBA news');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -150,6 +152,8 @@ select test.ok((select count(*) from public.exam_imports) = 0, 'student reads ex
 select test.ok((select count(*) from public.academic_events) = 70, 'students read the academic calendar');
 select test.ok((select count(*) from public.news) = 1, 'students read news');
 select test.fails($$insert into public.news (title) values ('x')$$, 'student publishes news');
+select test.ok((select count(*) from public.fiuba_news) = 1, 'students read FIUBA news');
+select test.fails($$insert into public.fiuba_news (id, title, url, published_at) values (2, 'x', 'https://www.fi.uba.ar/noticias/x', now())$$, 'student adds a FIUBA news item');
 select test.fails($$insert into public.academic_events (calendar, title, starts_on, ends_on) values ('2026-2027', 'x', '2026-11-02', '2026-11-07')$$, 'student adds an academic event');
 update public.news set pinned = true;
 select test.ok((select not pinned from public.news), 'student pins news');

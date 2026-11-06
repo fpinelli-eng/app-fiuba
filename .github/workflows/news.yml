@@ -1,0 +1,54 @@
+# Copies the featured news of www.fi.uba.ar into public.fiuba_news, for Novedades.
+# Every two hours it downloads the FIUBA home page, reads its news (tools/news/sync.mjs, which uses
+# src/lib/news/fiuba.ts) and upserts them. Only counts go to the log. If the FIUBA site changes and
+# the news cannot be read, the job fails and GitHub emails the repository owner.
+# Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
+name: Noticias de la FIUBA
+
+on:
+  schedule:
+    - cron: "41 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fiuba-news
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Copiar las noticias
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check secrets
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Read the FIUBA home page
+        run: node --experimental-strip-types tools/news/sync.mjs > "$RUNNER_TEMP/news.json"
+      - name: Save the news
+        # Same connection as "Base de datos" and "Mantener Supabase activo" (IPv4 session pooler).
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -v ON_ERROR_STOP=1 -q -v payload="$(cat "$RUNNER_TEMP/news.json")" -f tools/news/upsert.sql 2>> "$RUNNER_TEMP/psql.log"; then
+              echo "ok: $candidate"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudieron guardar las noticias::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"
+          exit 1
