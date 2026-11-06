@@ -93,11 +93,20 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
                 prefetch
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                className={`grid size-10 place-items-center rounded-full md:hidden ${
+                className={`flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 md:hidden ${
                   active ? "bg-lavender text-lavender-ink" : "border border-line bg-surface text-muted"
                 }`}
               >
                 <NavIcon name={item.icon} size={20} />
+                {/* Al entrar, el nombre se despliega un momento al lado del ícono y se vuelve a cerrar. */}
+                {active && (
+                  <span
+                    aria-hidden="true"
+                    className="max-w-0 overflow-hidden text-[14px] font-semibold whitespace-nowrap opacity-0 motion-safe:animate-[peek-label_2.4s_ease-in-out]"
+                  >
+                    {item.label}
+                  </span>
+                )}
               </Link>
             );
           })}

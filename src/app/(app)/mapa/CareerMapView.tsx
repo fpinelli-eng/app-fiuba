@@ -609,7 +609,7 @@ function Legend() {
   return (
     <div
       aria-label="Referencias"
-      className="-mx-4 flex items-center gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0"
+      className="flex flex-wrap items-center gap-1.5 md:gap-2"
     >
       {states.map((s) => (
         <span
