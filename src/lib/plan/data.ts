@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMapData } from "@/lib/map/data";
-import { CareerMap, normalizeText, type Progress, type SubjectKind } from "@/lib/map/model";
+import { CareerMap, normalizeText, sumExtraCredits, type Progress, type SubjectKind } from "@/lib/map/model";
 import type { Campus } from "@/lib/siu/parser";
 import { shortTeacherList, surname } from "./format";
 import type { ClassBlock, CourseOption, WeekDay } from "./options";
@@ -95,6 +95,7 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   const progress: Progress = {
     subjects: new Map(map.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
     requirements: new Set(map.progress.requirements),
+    extraCredits: sumExtraCredits(map.progress.extraCredits),
   };
   const credits = careerMap.approvedCredits(progress);
   const available = map.subjects.filter((s) => {

@@ -8,6 +8,7 @@ import {
   normalizeText,
   requirementKey,
   subjectKey,
+  sumExtraCredits,
   type Progress,
   type Subject,
   type SubjectKind,
@@ -97,6 +98,15 @@ describe("credits and average", () => {
     const elective = subjects.find((s) => s.kind === "elective")!;
     const p: Progress = { subjects: new Map([[elective.id, { status: "approved", grade: 9 }]]), requirements: new Set() };
     expect(map.electiveCredits(p)).toBe(elective.credits);
+  });
+
+  it("adds the extra credits (FIUBATÓN, old plan) to the total and to the electives", () => {
+    const elective = subjects.find((s) => s.kind === "elective")!;
+    const p: Progress = { subjects: new Map([[elective.id, { status: "approved", grade: 9 }]]), requirements: new Set(), extraCredits: 4 };
+    expect(map.approvedCredits(p)).toBe(elective.credits + 4);
+    expect(map.electiveCredits(p)).toBe(elective.credits + 4);
+    expect(map.approvedCredits(p, (s) => s.kind === "elective")).toBe(elective.credits);
+    expect(sumExtraCredits([{ credits: 2 }, { credits: 4 }])).toBe(6);
   });
 });
 

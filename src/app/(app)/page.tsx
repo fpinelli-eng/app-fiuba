@@ -6,7 +6,7 @@ import { arcStations } from "@/lib/home/arc";
 import { getHomeCourses } from "@/lib/home/courses";
 import { getMapData } from "@/lib/map/data";
 import { getReviewRound } from "@/lib/reviews/pending";
-import { CareerMap, formatAverage, totalCredits, type Progress } from "@/lib/map/model";
+import { CareerMap, formatAverage, sumExtraCredits, totalCredits, type Progress } from "@/lib/map/model";
 import { requireProfile } from "@/lib/session";
 
 // Inicio (rediseño del 5 de noviembre de 2026, contrato en .impeccable/surfaces/src-app-app-page-tsx.md):
@@ -25,6 +25,7 @@ export default async function InicioPage() {
   const progress: Progress = {
     subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
     requirements: new Set(data.progress.requirements),
+    extraCredits: sumExtraCredits(data.progress.extraCredits),
   };
 
   const total = totalCredits(data.creditRules) ?? map.subjects.reduce((a, s) => a + s.credits, 0);

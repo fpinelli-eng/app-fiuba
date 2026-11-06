@@ -142,6 +142,12 @@ select test.fails($$insert into public.user_subjects values ('bbbbbbbb-0000-0000
 insert into public.user_requirements (user_id, requirement_id)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.plan_requirements where plan_id = 'industrial-2023'));
 
+insert into public.user_extra_credits (name, credits) values ('FIUBATÓN 2025', 2);
+select test.ok((select count(*) from public.user_extra_credits where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'student adds extra credits');
+select test.fails($$insert into public.user_extra_credits (user_id, name, credits) values ('bbbbbbbb-0000-0000-0000-000000000002', 'x', 2)$$, 'extra credits for another student');
+update public.profiles set failed_finals = 3;
+select test.ok((select failed_finals from public.profiles) = 3, 'student sets her aplazos');
+
 select test.fails($$insert into public.careers values ('x', 'x', 'x', 0)$$, 'student edits the catalog');
 select test.fails($$insert into public.subject_areas (plan_id, name) values ('industrial-2023', 'x')$$, 'student adds an elective area');
 select test.ok((select count(*) from public.subject_areas) > 0, 'students read the elective areas');
@@ -238,6 +244,8 @@ set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
 select test.ok((select count(*) from public.user_subjects) = 0, 'another student does not see her subjects');
 select test.ok((select count(*) from public.user_requirements) = 0, 'another student does not see her requirements');
+select test.ok((select count(*) from public.user_extra_credits) = 0, 'another student does not see her extra credits');
+delete from public.user_extra_credits;  -- RLS: deletes nothing of hers
 select test.ok((select count(*) from public.user_courses) = 0, 'another student does not see her courses');
 select test.ok((select count(*) from public.plan_choices) = 0, 'another student does not see her plan');
 delete from public.plan_choices;  -- RLS: deletes nothing
