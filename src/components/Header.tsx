@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { APP_NAME, NAV } from "@/lib/app";
+import { NAV } from "@/lib/app";
+import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { NavIcon } from "@/components/icons";
@@ -49,8 +50,8 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
   return (
     <>
       <header className="flex min-h-[56px] items-center justify-between gap-3 bg-header px-4 md:min-h-[72px] md:gap-6 md:px-8">
-        <Link href="/" className="font-display text-[17px] font-semibold md:text-[18px]">
-          {APP_NAME}
+        <Link href="/" className="-my-1.5 py-1.5">
+          <Logo className="h-[15px] md:h-[16px]" />
         </Link>
 
         <nav aria-label="Principal" className="hidden items-center gap-7 md:flex">

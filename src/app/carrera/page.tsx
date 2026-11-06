@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { APP_NAME } from "@/lib/app";
+import { Logo } from "@/components/Logo";
 import { getCareers } from "@/lib/careers";
 import { requireAccount } from "@/lib/session";
 import { CareerPicker } from "./CareerPicker";
@@ -17,10 +18,7 @@ export default async function CarreraPage() {
     <>
       <header className="flex min-h-[56px] items-center justify-between gap-3 border-b border-line bg-header px-4 md:min-h-[68px] md:gap-6 md:px-8">
         <div className="flex flex-none items-center gap-3 md:flex-initial">
-          <span className="grid size-[30px] place-items-center rounded-lg bg-lavender text-sm font-bold text-lavender-ink">
-            F
-          </span>
-          <span className="font-bold tracking-[0.02em]">{APP_NAME}</span>
+          <Logo className="h-[15px] md:h-[16px]" />
         </div>
         <span className="min-w-0 truncate text-[13px] text-muted md:min-w-auto md:overflow-visible md:whitespace-normal">{account.email}</span>
       </header>
