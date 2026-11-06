@@ -1,0 +1,43 @@
+# "Relevamiento de usuarios": how many students use the app (totals, new ones, by career, by day,
+# what they use). Manual (Actions → "Relevamiento de usuarios" → Run workflow); the result is in the
+# run's summary. Only counts: no mails or names leave the database (tools/stats/users.sql).
+# Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
+name: Relevamiento de usuarios
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stats:
+    name: Contar usuarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secrets
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Count
+        # Same connection as "Base de datos" (IPv4 session pooler).
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -v ON_ERROR_STOP=1 -q -f tools/stats/users.sql > "$RUNNER_TEMP/stats.md" 2>> "$RUNNER_TEMP/psql.log"; then
+              { echo "## Relevamiento de usuarios"; echo; echo "$(TZ=America/Argentina/Buenos_Aires date '+%d/%m/%Y %H:%M') (hora argentina)"; echo; cat "$RUNNER_TEMP/stats.md"; } >> "$GITHUB_STEP_SUMMARY"
+              cat "$RUNNER_TEMP/stats.md"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudo leer la base::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"
+          exit 1
