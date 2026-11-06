@@ -34,7 +34,7 @@ Es la única que conecta todo: el avance del alumno, la oferta real del SIU de s
 - Todo el detalle en `PRODUCTO.md`, `docs/ESTADO.md` y `CLAUDE.md`.
 - Next.js + Tailwind; los colores se definen una sola vez como variables en `src/app/globals.css`, en tema claro y oscuro.
 - Reseñas siempre anónimas. Una sola carrera y un solo plan por cuenta.
-- Pendiente: nombre y dominio de la app (hoy "[NOMBRE]") y mail de contacto.
+- Nombre: **FIUBI** (6 de noviembre de 2026), con la U dibujada como el arco de avance; ícono: la columna dórica de la sede Paseo Colón sobre azul noche. Pendientes: dominio y mail de contacto.
 
 ## Brand Commitments
 

@@ -45,6 +45,13 @@ Estados del mapa: mismos tokens (`mint`, `butter`, `sky` con sus `*-line`; habil
 
 Cada materia del calendario recibe un color pastel distinto, asignado en orden de una paleta fija para que nunca se repitan, y lo mantiene en toda la app.
 
+## Marca
+
+- **Nombre:** FIUBI (decidido el 6 de noviembre de 2026). En el código, `APP_NAME` de `src/lib/app.ts`.
+- **Logo:** "FIUBI" en Unbounded 600, con la U dibujada como el arco de avance del Inicio: tramo izquierdo amarillo, curva azul y tramo derecho coral. Tokens `brand-u1`, `brand-u2` y `brand-u3`: en claro, los tonos intensos #E59E1F / #3F63D6 / #E2654F, para que la U se lea sobre el fondo; en oscuro, los mismos del arco (#F3C46A / #7E9BF0 / #F2A193). Componente `src/components/Logo.tsx`: el alto se pone con una clase `h-…` y el ancho sale solo.
+- **Ícono:** la columna dórica de la entrada de Paseo Colón (fuste acanalado, capitel y dos escalones), en crema #FBF6EC sobre azul noche #1F2537. Archivos: `src/app/icon.svg` (pestaña), `src/app/apple-icon.png` (iPhone) y `public/icons/` (Android, por `src/app/manifest.ts`). El dibujo y las versiones descartadas están en el lienzo de diseño, página "Logo FIUBI".
+- No es el logo de la facultad: la columna es parte del edificio. Se mantiene la aclaración "no es oficial".
+
 ## Tipografía y forma
 
 - **Onest** (variable) para todo el texto y **Unbounded** (variable) para títulos de página (`h1`, regla global) y números grandes (clase `font-display`). Las dos servidas desde el proyecto (`@fontsource-variable/onest`, `@fontsource-variable/unbounded`). Nada de tipografías monoespaciadas.
@@ -53,7 +60,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 - Etiquetas de sección en mayúsculas: 11–12 px, 600, espaciado 0,08 em, color `muted` (se revisan pantalla por pantalla en el rediseño).
 - Radios: tarjetas 16–18 px, botones e inputs 10–12 px, chips 999 px. En las pantallas rediseñadas, bloques de 24–32 px.
 - Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo `disabled`, texto `disabled-ink`, cursor `not-allowed`.
-- Barra superior de 72 px sobre el fondo de la página, sin borde: el nombre de la app en Unbounded a la izquierda; al centro Inicio · Mapa · Plan · Reseñas · Finales · Novedades como texto, la activa en `ink` con un punto `accent` debajo; a la derecha, botón de modo oscuro y avatar.
+- Barra superior de 72 px sobre el fondo de la página, sin borde: el logo FIUBI a la izquierda (`src/components/Logo.tsx`); al centro Inicio · Mapa · Plan · Reseñas · Finales · Novedades como texto, la activa en `ink` con un punto `accent` debajo; a la derecha, botón de modo oscuro y avatar.
 
 ## Celular (agregado el 2 de noviembre, no está en el prototipo)
 
@@ -67,7 +74,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 ## Pantallas
 
 ### Ingreso
-- Pantalla 1: mosaico decorativo de bloques pastel, nombre de la app en grande (88 px, 700), "Tu carrera de FIUBA en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
+- Pantalla 1: mosaico decorativo de bloques pastel, el logo FIUBI en grande, "Tu carrera de FIUBA en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
 - Cuenta rechazada: debajo del botón, recuadro durazno con "<mail> no es una cuenta de FIUBA" + "Ingresá con tu mail @fi.uba.ar"; el botón pasa a "Probar con otra cuenta".
 - Pantalla 2: "¿Qué carrera estudiás?", las 13 carreras en grilla de dos columnas y, si la carrera tiene más de un plan, los planes (el vigente marcado y con la etiqueta "Vigente"; los viejos de carreras que cambiaron de nombre muestran el nombre anterior). "Continuar" lleva al mapa en modo de primera carga.
 

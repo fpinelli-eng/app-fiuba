@@ -66,6 +66,10 @@
   --arc-track: #e6e9f0;
   /* Sombra suave de las tarjetas del Inicio rediseñado (sin borde). */
   --card-shadow: rgb(31 37 55 / 0.45);
+  /* La U del logo FIUBI: los colores del arco, más intensos en claro para que se lea sobre el fondo. */
+  --brand-u1: #e59e1f;
+  --brand-u2: #3f63d6;
+  --brand-u3: #e2654f;
 }
 
 [data-theme="dark"] {
@@ -123,6 +127,9 @@
   --cat-final: #86c9b1;
   --arc-track: #2a3040;
   --card-shadow: rgb(0 0 0 / 0.55);
+  --brand-u1: #f3c46a;
+  --brand-u2: #7e9bf0;
+  --brand-u3: #f2a193;
 }
 
 @theme inline {
@@ -177,6 +184,9 @@
   --color-cat-final: var(--cat-final);
   --color-arc-track: var(--arc-track);
   --color-card-shadow: var(--card-shadow);
+  --color-brand-u1: var(--brand-u1);
+  --color-brand-u2: var(--brand-u2);
+  --color-brand-u3: var(--brand-u3);
 
   --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
   /* Títulos y números grandes */

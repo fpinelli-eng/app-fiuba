@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { APP_NAME } from "@/lib/app";
+import { Logo } from "@/components/Logo";
 import { isAllowedEmail } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginButton } from "@/components/LoginButton";
@@ -41,7 +41,9 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
           />
         ))}
       </div>
-      <h1 className="text-[56px] leading-none font-bold tracking-[-0.035em] break-words md:text-[88px]">{APP_NAME}</h1>
+      <h1>
+        <Logo className="h-[46px] md:h-[70px]" />
+      </h1>
       <p className="mt-3 text-[18px] text-muted md:mt-[18px] md:text-[22px]">Tu carrera de FIUBA en un solo lugar</p>
 
       <LoginButton label={error ? "Probar con otra cuenta" : "Ingresar con tu cuenta @fi.uba.ar"} />

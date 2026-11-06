@@ -52,7 +52,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 5. **Inicio:** hecho, con el calendario de la cursada (PR #47).
 6. **Moderación de reseñas:** hecha (PR #43).
 7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
-8. Abiertas en `PRODUCTO.md` (sección 13): nombre y dominio, plan 2014 de Sistemas, áreas de electivas de los demás planes.
+8. Abiertas en `PRODUCTO.md` (sección 13): dominio (el nombre ya está: FIUBI), plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
 **Beta (decidido el 16 de octubre):** primero con tres carreras, Industrial, Química e Informática, cargadas con la oferta completa del SIU con sesión (prácticas, docentes y horarios de cada práctica). La prueban alumnos de confianza de esas carreras. Las demás carreras se suman después pegando su oferta en `/admin`, sin cambiar código; la tabla pública del SIU también sirve, con menos detalle. En la beta lo primero que se usa son las reseñas libres: las pendientes y el plan dependen de que el alumno haya armado su plan en la app.
 
