@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
+import { WelcomeStories } from "@/components/WelcomeStories";
 import { countPendingReviews } from "@/lib/reviews/pending";
 import { requireProfile } from "@/lib/session";
 
@@ -10,6 +11,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Header profile={profile} pendingReviews={pendingReviews} />
+      {/* La primera vez se abren solas; después, desde Perfil → "Ver la bienvenida". */}
+      <WelcomeStories firstName={profile.firstName} open={!profile.introSeen} />
       {children}
       {/* Celular: lugar para la barra de pestañas fija de abajo (60 px + borde + zona segura del iPhone). */}
       <div aria-hidden="true" className="h-[calc(61px+env(safe-area-inset-bottom))] md:hidden" />

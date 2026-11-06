@@ -8,6 +8,8 @@ export type Account = Profile & {
   /** null until the student picks a career and plan (/carrera). */
   planId: string | null;
   isAdmin: boolean;
+  /** Saw (or skipped) the welcome stories. */
+  introSeen: boolean;
 };
 
 // Verificación definitiva de la sesión, del lado del servidor.
@@ -28,7 +30,7 @@ export const requireAccount = cache(async (): Promise<Account> => {
 
   const { data: row, error } = await supabase
     .from("profiles")
-    .select("plan_id, is_admin")
+    .select("plan_id, is_admin, intro_seen_at")
     .eq("id", user.id)
     .maybeSingle();
   if (error) throw new Error(`profiles: ${error.message}`);
@@ -43,6 +45,7 @@ export const requireAccount = cache(async (): Promise<Account> => {
     id: user.id,
     planId: (row?.plan_id as string | null | undefined) ?? null,
     isAdmin: row?.is_admin === true,
+    introSeen: Boolean(row?.intro_seen_at),
   };
 });
 

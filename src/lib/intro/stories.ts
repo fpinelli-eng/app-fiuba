@@ -1,0 +1,94 @@
+// Content of the welcome stories (src/components/WelcomeStories.tsx): a welcome, one story per
+// section of the app and a last one with where to start. Pure data, so it is easy to edit.
+import type { NavIcon as NavIconName } from "@/lib/app";
+
+export interface Story {
+  id: string;
+  /** Icon of the section (the same as in the menu), or null for the welcome and the last one. */
+  icon: NavIconName | null;
+  /** Small label over the title ("Sección 1 de 6"). */
+  kicker: string;
+  title: string;
+  text: string;
+  /** Two or three short things it is useful for. */
+  points: string[];
+  /** Palette of the story: one of the pastel tokens of globals.css. */
+  tone: "butter" | "sky" | "mint" | "lavender" | "peach" | "pink" | "teal";
+}
+
+/** Seconds each story stays before going to the next one. */
+export const STORY_SECONDS = 7;
+
+export function welcomeStories(firstName: string): Story[] {
+  const sections: Omit<Story, "kicker">[] = [
+    {
+      id: "inicio",
+      icon: "home",
+      title: "Inicio",
+      text: "Tu avance de un vistazo, cada vez que entrás.",
+      points: ["Créditos aprobados y cuánto te falta", "Tu promedio", "Lo que estás cursando y los finales pendientes"],
+      tone: "sky",
+    },
+    {
+      id: "mapa",
+      icon: "map",
+      title: "Mapa",
+      text: "Todas las materias de tu plan y cómo se encadenan.",
+      points: ["Tocá una materia para marcarla aprobada, cursando o con final pendiente", "Ves al toque qué tenés habilitado", "Cargá tus notas y se calcula el promedio"],
+      tone: "mint",
+    },
+    {
+      id: "plan",
+      icon: "calendar",
+      title: "Plan",
+      text: "Armá tu cuatrimestre con la oferta del SIU.",
+      points: ["Elegís materias y cursos con sus horarios", "Ves si algo se superpone", "Comparás opciones antes de inscribirte"],
+      tone: "butter",
+    },
+    {
+      id: "resenas",
+      icon: "star",
+      title: "Reseñas",
+      text: "Lo que opinan otros alumnos de cada curso.",
+      points: ["Puntaje y comentarios de cada curso", "Cuando terminás de cursar, dejá la tuya", "Son anónimas y le sirven al que viene"],
+      tone: "peach",
+    },
+    {
+      id: "finales",
+      icon: "exam",
+      title: "Finales",
+      text: "Las fechas de examen de tus materias.",
+      points: ["Día y horario de cada mesa", "Cuándo abre y cierra la inscripción", "Hasta cuándo te podés dar de baja"],
+      tone: "lavender",
+    },
+    {
+      id: "novedades",
+      icon: "bell",
+      title: "Novedades",
+      text: "Lo que pasa en la facultad. En el celular está en la campanita de arriba.",
+      points: ["Avisos importantes", "El calendario académico: lo de ahora y lo que se viene", "Noticias de la FIUBA"],
+      tone: "teal",
+    },
+  ];
+  return [
+    {
+      id: "bienvenida",
+      icon: null,
+      kicker: "Bienvenida",
+      title: firstName ? `¡Hola, ${firstName}!` : "¡Hola!",
+      text: "Te damos la bienvenida a FIUBI: tu carrera en la FIUBA, en un solo lugar.",
+      points: ["En un minuto te mostramos qué hay en cada sección", "Tocá a la derecha para avanzar y a la izquierda para volver", "Mantené apretado para pausar"],
+      tone: "pink",
+    },
+    ...sections.map((s, i) => ({ ...s, kicker: `Sección ${i + 1} de ${sections.length}` })),
+    {
+      id: "listo",
+      icon: null,
+      kicker: "Listo",
+      title: "¡A usarla!",
+      text: "Empezá por el Mapa: marcá las materias que ya aprobaste y todo lo demás se acomoda solo.",
+      points: ["Podés volver a ver esto desde Perfil"],
+      tone: "mint",
+    },
+  ];
+}

@@ -11,6 +11,7 @@ import { CareerChange } from "./CareerChange";
 import { DeleteAccount } from "./DeleteAccount";
 import { MyReviewRow } from "./MyReviewRow";
 import { ThemeChooser } from "./ThemeChooser";
+import { IntroButton } from "./IntroButton";
 
 export const metadata: Metadata = { title: `Tu perfil · ${APP_NAME}` };
 
@@ -40,6 +41,14 @@ export default async function PerfilPage() {
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-[19px] font-semibold">Apariencia</h2>
         <ThemeChooser />
+      </Card>
+
+      <Card className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[19px] font-semibold">Bienvenida</h2>
+          <p className="text-sm text-muted">Qué hay en cada sección de la app, en un minuto.</p>
+        </div>
+        <IntroButton />
       </Card>
 
       <section aria-label="Mis reseñas" className="overflow-hidden rounded-[18px] border border-line bg-surface">
