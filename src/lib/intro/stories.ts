@@ -78,10 +78,10 @@ export function welcomeStories(firstName: string): Story[] {
     {
       id: "bienvenida",
       icon: null,
-      kicker: "Bienvenida",
+      kicker: "",
       title: firstName ? `¡Hola, ${firstName}!` : "¡Hola!",
       text: "Te damos la bienvenida a FIUBI: tu carrera en la FIUBA, en un solo lugar.",
-      points: ["En un minuto te mostramos qué hay en cada sección", "Tocá a la derecha para avanzar y a la izquierda para volver", "Mantené apretado para pausar"],
+      points: ["En un minuto te mostramos qué hay en cada sección"],
       tone: "pink",
     },
     ...sections.map((s, i) => ({ ...s, kicker: `Sección ${i + 1} de ${sections.length}` })),

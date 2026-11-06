@@ -8,6 +8,8 @@ import { getMapData } from "@/lib/map/data";
 import { getReviewRound } from "@/lib/reviews/pending";
 import { CareerMap, formatAverage, sumExtraCredits, totalCredits, type Progress } from "@/lib/map/model";
 import { requireProfile } from "@/lib/session";
+import { isFirstDay } from "@/lib/intro/data";
+import { IntroButton } from "./perfil/IntroButton";
 
 // Inicio (rediseño del 5 de noviembre de 2026, contrato en .impeccable/surfaces/src-app-app-page-tsx.md):
 // el saludo, el arco de avance, el promedio, las materias aprobadas, las reseñas pendientes,
@@ -18,7 +20,11 @@ const CARD = "rounded-[24px] bg-surface shadow-[0_16px_30px_-28px_var(--card-sha
 
 export default async function InicioPage() {
   const account = await requireProfile();
-  const [data, round] = await Promise.all([getMapData(account.id, account.planId!), getReviewRound(account.id, null)]);
+  const [data, round, firstDay] = await Promise.all([
+    getMapData(account.id, account.planId!),
+    getReviewRound(account.id, null),
+    isFirstDay(account.id),
+  ]);
   const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
   const courses = await getHomeCourses(account.id, data.subjects);
   const map = new CareerMap(data.subjects, data.requirements);
@@ -57,6 +63,19 @@ export default async function InicioPage() {
         </p>
       </div>
 
+      {/* El primer día: para volver a ver las historias de bienvenida. Después quedan en Perfil. */}
+      {firstDay && (
+        <section aria-labelledby="bienvenida" className={`${CARD} flex flex-wrap items-center justify-between gap-3 p-4 md:px-7 md:py-5`}>
+          <div>
+            <h2 id="bienvenida" className="text-base font-semibold md:text-lg">
+              ¿Te perdiste algo?
+            </h2>
+            <p className="text-[15px] text-muted">Volvé a ver en un minuto qué hay en cada sección.</p>
+          </div>
+          <IntroButton />
+        </section>
+      )}
+
       <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] md:gap-6">
         <section aria-labelledby="avance" className={`${CARD} p-4 md:rounded-[32px] md:px-7 md:pt-6 md:pb-[22px]`}>
           <div className="flex items-baseline justify-between gap-4">
@@ -76,7 +95,7 @@ export default async function InicioPage() {
             <div className="font-display text-[40px] leading-[48px] font-medium tracking-[-0.03em] tabular-nums md:text-[76px] md:leading-[88px]">
               {formatAverage(average)}
             </div>
-            <p className="text-[13px] text-mint-ink md:text-base">{average === null ? "Sin notas todavía" : "Sin aplazos"}</p>
+            <p className="text-[13px] text-mint-ink md:text-base">{average === null ? "Sin notas todavía" : data.failedFinals ? `${data.failedFinals} ${data.failedFinals === 1 ? "aplazo" : "aplazos"}` : "Sin aplazos"}</p>
           </section>
 
           <section

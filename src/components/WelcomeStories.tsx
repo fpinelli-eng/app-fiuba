@@ -225,7 +225,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
               )}
             </span>
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold tracking-[0.08em] uppercase opacity-75">{story.kicker}</span>
+              {story.kicker && <span className="text-[13px] font-semibold tracking-[0.08em] uppercase opacity-75">{story.kicker}</span>}
               <h2 className={`font-display leading-[1.05] font-semibold tracking-[-0.01em] ${mock ? "text-[28px]" : "text-[34px]"}`}>{story.title}</h2>
               <p className={`leading-snug ${mock ? "text-[15px]" : "text-[17px]"}`}>{story.text}</p>
             </div>
