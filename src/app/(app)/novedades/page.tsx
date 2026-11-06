@@ -1,12 +1,76 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/app";
 import { getNewsPage } from "@/lib/news/data";
-import { dateBadge, daysUntil, formatCountdown, formatNewsDate, groupCalendar, nextDates, type FiubaNewsItem } from "@/lib/news/model";
+import {
+  calendarHighlights,
+  dateBadge,
+  formatCountdown,
+  formatNewsDate,
+  formatRemaining,
+  formatWeekday,
+  groupCalendar,
+  type DateHighlight,
+  type FiubaNewsItem,
+} from "@/lib/news/model";
 import { requireProfile } from "@/lib/session";
 
 export const metadata: Metadata = { title: `Novedades · ${APP_NAME}` };
 
 const FIUBA_URL = "https://www.ingenieria.uba.ar";
+
+// Las fechas van en una fila que se desliza en el celular (así las noticias quedan a mano, sin
+// bajar tanto) y en una grilla en la computadora.
+const DATE_ROW =
+  "-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-4 md:gap-3 md:overflow-visible md:px-0 md:pb-0";
+const DATE_CARD = "flex w-[78%] max-w-[300px] shrink-0 snap-start flex-col rounded-2xl md:w-auto md:max-w-none";
+
+const range = (e: DateHighlight["event"]) =>
+  e.startsOn === e.endsOn ? formatWeekday(e.startsOn) : `${formatWeekday(e.startsOn)} → ${formatWeekday(e.endsOn)}`;
+
+// En curso: cuánto falta para que termine y una barra con lo que ya pasó del período.
+function NowCard({ date }: { date: DateHighlight }) {
+  const { event, days, progress } = date;
+  return (
+    <li className={`${DATE_CARD} gap-3 bg-mint p-4 text-mint-ink`}>
+      <span className="line-clamp-3 text-[15px] leading-snug font-semibold">{event.title}</span>
+      <span className="mt-auto flex flex-col gap-1.5">
+        <span aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-surface/70">
+          <span className="block h-full rounded-full bg-mint-ink" style={{ width: `${Math.max(6, Math.round(progress * 100))}%` }} />
+        </span>
+        <span className="flex items-baseline justify-between gap-2 text-[13px] tabular-nums">
+          <span className="font-semibold">{formatRemaining(days)}</span>
+          <span className="opacity-80">hasta {formatWeekday(event.endsOn)}</span>
+        </span>
+      </span>
+    </li>
+  );
+}
+
+// Por empezar: el día en grande y la cuenta regresiva, resaltada cuando falta poco.
+function UpcomingCard({ date }: { date: DateHighlight }) {
+  const { event, days } = date;
+  const badge = dateBadge(event.startsOn);
+  const close = days <= 3;
+  return (
+    <li className={`${DATE_CARD} gap-3 border border-line bg-surface p-4`}>
+      <span className="flex items-start justify-between gap-3">
+        <span className="flex w-[54px] flex-none flex-col items-center rounded-xl bg-lavender py-1.5 leading-none text-lavender-ink">
+          <span className="text-[11px] font-semibold uppercase">{badge.month}</span>
+          <span className="font-display text-[24px] font-semibold tabular-nums">{badge.day}</span>
+        </span>
+        <span
+          className={`rounded-full px-2.5 py-1 text-[12px] font-semibold whitespace-nowrap ${
+            close ? "bg-peach text-peach-ink" : "bg-sky text-sky-ink"
+          }`}
+        >
+          {formatCountdown(days)}
+        </span>
+      </span>
+      <span className="line-clamp-3 text-[15px] leading-snug font-semibold text-ink">{event.title}</span>
+      <span className="mt-auto text-[13px] text-muted tabular-nums">{range(event)}</span>
+    </li>
+  );
+}
 
 function FiubaNewsCard({ item, today }: { item: FiubaNewsItem; today: string }) {
   return (
@@ -37,7 +101,7 @@ function FiubaNewsCard({ item, today }: { item: FiubaNewsItem; today: string }) 
 export default async function NovedadesPage() {
   await requireProfile();
   const { today, news, fiuba, events } = await getNewsPage();
-  const dates = nextDates(groupCalendar(events, today));
+  const dates = calendarHighlights(groupCalendar(events, today), today);
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
@@ -77,40 +141,42 @@ export default async function NovedadesPage() {
         </section>
       )}
 
-      {dates.length > 0 && (
-        <section aria-labelledby="calendar-title" className="flex flex-col gap-2.5">
+      {(dates.now.length > 0 || dates.upcoming.length > 0) && (
+        <section aria-labelledby="calendar-title" className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="calendar-title" className="text-[22px] font-semibold">
-              Próximas fechas
+              Calendario
             </h2>
             <a href={FIUBA_URL} target="_blank" rel="noopener noreferrer" className="py-1 text-sm text-muted underline">
               Calendario completo
             </a>
           </div>
-          <ul className="grid gap-2.5 md:grid-cols-5 md:gap-3">
-            {dates.map(({ event, now }) => {
-              const badge = dateBadge(now ? event.endsOn : event.startsOn);
-              return (
-                <li key={event.id} className="flex items-center gap-3.5 rounded-2xl border border-line bg-surface p-3 md:flex-col md:items-start md:gap-3 md:p-4">
-                  <span
-                    className={`flex w-[62px] flex-none flex-col items-center rounded-xl py-1.5 leading-none md:w-[68px] ${
-                      now ? "bg-mint text-mint-ink" : "bg-lavender text-lavender-ink"
-                    }`}
-                  >
-                    <span className="text-[11px] font-semibold uppercase">{now ? "hasta" : badge.month}</span>
-                    <span className="font-display text-[26px] font-semibold tabular-nums">{badge.day}</span>
-                    {now && <span className="text-[11px] font-semibold uppercase">{badge.month}</span>}
-                  </span>
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-[15px] leading-snug font-semibold text-ink md:line-clamp-4">{event.title}</span>
-                    <span className="text-[13px] text-muted tabular-nums">
-                      {now ? "En curso" : formatCountdown(daysUntil(today, event.startsOn))}
-                    </span>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          {dates.now.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <h3 className="flex items-center gap-2 text-[15px] font-semibold">
+                <span aria-hidden="true" className="relative flex size-2.5">
+                  <span className="absolute inline-flex size-full rounded-full bg-mint-ink opacity-60 motion-safe:animate-ping" />
+                  <span className="relative inline-flex size-2.5 rounded-full bg-mint-ink" />
+                </span>
+                Ahora
+              </h3>
+              <ul className={DATE_ROW}>
+                {dates.now.map((d) => (
+                  <NowCard key={d.event.id} date={d} />
+                ))}
+              </ul>
+            </div>
+          )}
+          {dates.upcoming.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[15px] font-semibold">Se viene</h3>
+              <ul className={DATE_ROW}>
+                {dates.upcoming.map((d) => (
+                  <UpcomingCard key={d.event.id} date={d} />
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

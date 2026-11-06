@@ -5,7 +5,8 @@ import {
   formatNewsDate,
   formatWeekday,
   groupCalendar,
-  nextDates,
+  calendarHighlights,
+  formatRemaining,
   dateBadge,
   daysUntil,
   formatCountdown,
@@ -129,11 +130,22 @@ describe("validateNews", () => {
   });
 });
 
-describe("nextDates", () => {
-  const ev = (id: number, title: string) => ({ id, title, startsOn: "2026-11-09", endsOn: "2026-11-14", sort: id });
-  it("primero lo que pasa ahora, después lo que empieza antes, hasta cinco", () => {
-    const got = nextDates({ now: [ev(1, "Clases")], soon: [ev(2, "Inscripción"), ev(3, "Exámenes"), ev(4, "Receso")], later: [ev(5, "Verano"), ev(6, "x")] });
-    expect(got.map((d) => [d.event.title, d.now])).toEqual([["Clases", true], ["Inscripción", false], ["Exámenes", false], ["Receso", false], ["Verano", false]]);
+describe("calendarHighlights", () => {
+  const ev = (id: number, title: string, startsOn = "2026-11-09", endsOn = "2026-11-14") => ({ id, title, startsOn, endsOn, sort: id });
+  it("lo que pasa ahora, con lo que falta y cuánto pasó; después lo que empieza, hasta cuatro de cada uno", () => {
+    const got = calendarHighlights(
+      {
+        now: [ev(1, "Clases", "2026-11-02", "2026-11-11")],
+        soon: [ev(2, "Inscripción"), ev(3, "Exámenes", "2026-11-20")],
+        later: [ev(4, "Receso", "2026-12-20"), ev(5, "Verano", "2027-01-05"), ev(6, "x", "2027-02-01")],
+      },
+      "2026-11-06",
+    );
+    expect(got.now).toEqual([{ event: expect.objectContaining({ title: "Clases" }), now: true, days: 5, progress: 0.5 }]);
+    expect(got.upcoming.map((d) => [d.event.title, d.days])).toEqual([["Inscripción", 3], ["Exámenes", 14], ["Receso", 45], ["Verano", 61]]);
+  });
+  it("lo que falta para que termine", () => {
+    expect([0, 1, 5, 13, 20].map(formatRemaining)).toEqual(["Termina hoy", "Termina mañana", "Quedan 5 días", "Quedan 13 días", "Quedan 3 semanas"]);
   });
   it("fechas y cuenta regresiva", () => {
     expect(dateBadge("2026-11-09")).toEqual({ day: "9", month: "nov" });
