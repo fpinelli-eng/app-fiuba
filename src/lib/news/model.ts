@@ -31,12 +31,44 @@ export interface FiubaNewsItem {
   publishedAt: string;
 }
 
-/** The next calendar dates of Novedades: what is going on now, then what starts soonest. */
-export function nextDates(groups: CalendarGroups, max = 5): { event: AcademicEvent; now: boolean }[] {
-  return [
-    ...groups.now.map((event) => ({ event, now: true })),
-    ...[...groups.soon, ...groups.later].map((event) => ({ event, now: false })),
-  ].slice(0, max);
+/** A calendar date shown in Novedades, with what it takes to draw it. */
+export interface DateHighlight {
+  event: AcademicEvent;
+  /** Going on today. */
+  now: boolean;
+  /** now: days until it ends (0 = ends today). Upcoming: days until it starts. */
+  days: number;
+  /** now: share of the period already gone, from 0 to 1 (today counts). Upcoming: 0. */
+  progress: number;
+}
+
+/**
+ * What Novedades shows of the calendar: what is going on now (the ones that end first first) and
+ * what is about to start (the next four weeks first, topped up with what comes later).
+ */
+export function calendarHighlights(
+  groups: CalendarGroups,
+  today: string,
+  max: { now: number; upcoming: number } = { now: 4, upcoming: 4 },
+): { now: DateHighlight[]; upcoming: DateHighlight[] } {
+  return {
+    now: groups.now.slice(0, max.now).map((event) => {
+      const total = daysUntil(event.startsOn, event.endsOn) + 1;
+      const gone = daysUntil(event.startsOn, today) + 1;
+      return { event, now: true, days: daysUntil(today, event.endsOn), progress: Math.min(1, Math.max(0, gone / total)) };
+    }),
+    upcoming: [...groups.soon, ...groups.later]
+      .slice(0, max.upcoming)
+      .map((event) => ({ event, now: false, days: daysUntil(today, event.startsOn), progress: 0 })),
+  };
+}
+
+/** "Termina hoy", "Termina mañana", "Quedan 3 días", "Quedan 2 semanas". */
+export function formatRemaining(days: number): string {
+  if (days <= 0) return "Termina hoy";
+  if (days === 1) return "Termina mañana";
+  if (days < 14) return `Quedan ${days} días`;
+  return `Quedan ${Math.round(days / 7)} semanas`;
 }
 
 /** "2026-11-09" → { day: "9", month: "nov" } */
