@@ -196,7 +196,10 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       });
     apply(approved);
     const { error } = approved
-      ? await supabase.from("user_requirements").upsert({ user_id: userId, requirement_id: id }, { onConflict: "user_id,requirement_id" })
+      ? // Solo alta (on conflict do nothing): la tabla no da permiso de update, y un upsert común lo pide.
+        await supabase
+          .from("user_requirements")
+          .upsert({ user_id: userId, requirement_id: id }, { onConflict: "user_id,requirement_id", ignoreDuplicates: true })
       : await supabase.from("user_requirements").delete().eq("user_id", userId).eq("requirement_id", id);
     if (!error) refreshSoon();
     if (error) {
