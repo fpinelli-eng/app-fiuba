@@ -1,0 +1,1372 @@
+{
+ "mappings": [
+  {
+   "old": "6201",
+   "oldName": "FISICA I A",
+   "surveys2019": 1581,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "FSP",
+     "name": "Física de los Sistemas de Partículas",
+     "confidence": "official",
+     "source": "62.01 Fisica I A -> Fisica de los Sistemas de Particulas (+2 cr Optica is a credit grant, not mapped). https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    },
+    {
+     "plan": "industrial-2023",
+     "code": "FSP",
+     "name": "Física de los Sistemas de Partículas",
+     "confidence": "high",
+     "source": "Dolly files this course under 6201; the Industrial course 82.01 Fisica I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 82.01 Fisica I is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "62.01 Fisica I A -> Fisica de los Sistemas de Particulas (+2 cr Optica is a credit grant, not mapped). https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado) | Dolly files this course under 6201; the Industrial course 82.01 Fisica I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 82.01 Fisica I is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6103",
+   "oldName": "ANALISIS MATEMATICO II A",
+   "surveys2019": 880,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AMII",
+     "name": "Análisis Matemático II",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    },
+    {
+     "plan": "quimica-2023",
+     "code": "AM2",
+     "name": "Análisis Matemático II",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    },
+    {
+     "plan": "industrial-2023",
+     "code": "AMII",
+     "name": "Análisis Matemático II",
+     "confidence": "high",
+     "source": "Dolly files this course under 6103; the Industrial course 81.01 Analisis Matematico II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.01 Analisis Matematico II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215) | https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado) | Dolly files this course under 6103; the Industrial course 81.01 Analisis Matematico II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.01 Analisis Matematico II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6203",
+   "oldName": "FISICA II A",
+   "surveys2019": 477,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "FPI",
+     "name": "Física para Informática",
+     "confidence": "official",
+     "source": "62.03 Fisica II A -> Fisica para Informatica. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    },
+    {
+     "plan": "industrial-2023",
+     "code": "EYM",
+     "name": "Electricidad y Magnetismo",
+     "confidence": "high",
+     "source": "Dolly files this course under 6203; the Industrial course 82.02 Fisica II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 82.02 Fisica II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    },
+    {
+     "plan": "quimica-2023",
+     "code": "EM",
+     "name": "Electricidad y Magnetismo",
+     "confidence": "high",
+     "source": "Dolly files this course under 6203; the Quimica course 62.04 Fisica II B is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 62.04 Fisica II B is in the official table: https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "high",
+   "source": "62.03 Fisica II A -> Fisica para Informatica. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215) | Dolly files this course under 6203; the Industrial course 82.02 Fisica II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 82.02 Fisica II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011) | Dolly files this course under 6203; the Quimica course 62.04 Fisica II B is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 62.04 Fisica II B is in the official table: https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "6108",
+   "oldName": "ALGEBRA II A",
+   "surveys2019": 469,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AL",
+     "name": "Álgebra Lineal",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    },
+    {
+     "plan": "quimica-2023",
+     "code": "AL",
+     "name": "Álgebra Lineal",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    },
+    {
+     "plan": "industrial-2023",
+     "code": "AL",
+     "name": "Álgebra Lineal",
+     "confidence": "high",
+     "source": "Dolly files this course under 6108; the Industrial course 81.02 Algebra II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.02 Algebra II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215) | https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado) | Dolly files this course under 6108; the Industrial course 81.02 Algebra II is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.02 Algebra II is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6301",
+   "oldName": "QUIMICA",
+   "surveys2019": 384,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "QB",
+     "name": "Química Básica",
+     "confidence": "high",
+     "source": "Dolly files this course under 6301; the Industrial course 83.01 Quimica is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 83.01 Quimica is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Dolly files this course under 6301; the Industrial course 83.01 Quimica is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 83.01 Quimica is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6109",
+   "oldName": "PROBABILIDAD Y ESTADISTICA B",
+   "surveys2019": 369,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "PYE",
+     "name": "Probabilidad y Estadística",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    },
+    {
+     "plan": "quimica-2023",
+     "code": "PROBA",
+     "name": "Probabilidad y Estadística",
+     "confidence": "high",
+     "source": "Dolly files this course under 6109; the Quimica course 61.06 Probabilidad y Estadistica A is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 61.06 Probabilidad y Estadistica A is in the official table: https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    },
+    {
+     "plan": "industrial-2023",
+     "code": "PROBA",
+     "name": "Probabilidad",
+     "confidence": "high",
+     "source": "Dolly files this course under 6109; the Industrial course 81.16 Probabilidad is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.16 Probabilidad is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215) | Dolly files this course under 6109; the Quimica course 61.06 Probabilidad y Estadistica A is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 61.06 Probabilidad y Estadistica A is in the official table: https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado) | Dolly files this course under 6109; the Industrial course 81.16 Probabilidad is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 81.16 Probabilidad is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6302",
+   "oldName": "QUIMICA I",
+   "surveys2019": 301,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "QG",
+     "name": "Química General",
+     "confidence": "official",
+     "source": "63.02 Quimica I -> Quimica General (+ Introduccion a Ing. Quimica is a credit grant for a different course, not mapped). https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "63.02 Quimica I -> Quimica General (+ Introduccion a Ing. Quimica is a credit grant for a different course, not mapped). https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7512",
+   "oldName": "ANALISIS NUMERICO I",
+   "surveys2019": 206,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "MODNUM",
+     "name": "Modelación Numérica",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    },
+    {
+     "plan": "quimica-2023",
+     "code": "MN",
+     "name": "Modelación Numérica",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215) | https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7540",
+   "oldName": "ALGORITMOS Y PROGRAMACION I",
+   "surveys2019": 193,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "FDP",
+     "name": "Fundamentos de Programación",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7507",
+   "oldName": "ALGORITMOS Y PROGRAMACION III",
+   "surveys2019": 183,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "PDP",
+     "name": "Paradigmas de Programación",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7541",
+   "oldName": "ALGORITMOS Y PROGRAMACION II",
+   "surveys2019": 159,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AED",
+     "name": "Algoritmos y Estructuras de Datos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "8405",
+   "oldName": "ESTÁTICA Y RESISTENCIA DE MATERIALES",
+   "surveys2019": 112,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "ERM",
+     "name": "Estática y Resistencia de Materiales",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6670",
+   "oldName": "ESTRUCTURA DEL COMPUTADOR",
+   "surveys2019": 103,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "ORGCOMPU",
+     "name": "Organización del Computador",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7506",
+   "oldName": "ORGANIZACION DE DATOS",
+   "surveys2019": 90,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "CDD",
+     "name": "Ciencia de Datos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7502",
+   "oldName": "ALGORITMOS Y PROGRAMACION I",
+   "surveys2019": 89,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "FDP",
+     "name": "Fundamentos de Programación",
+     "confidence": "medium",
+     "source": "Older code of Algoritmos y Programacion I (dept. Computacion, first programming course); 6 of 19 Dolly docentes also teach 75.40 (Essaya, Santisi, Azcurra...). Not in the official table."
+    }
+   ],
+   "confidence": "medium",
+   "source": "Older code of Algoritmos y Programacion I (dept. Computacion, first programming course); 6 of 19 Dolly docentes also teach 75.40 (Essaya, Santisi, Azcurra...). Not in the official table."
+  },
+  {
+   "old": "6313",
+   "oldName": "QUÍMICA INORGÁNICA",
+   "surveys2019": 87,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "QI",
+     "name": "Química Inorgánica",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7509",
+   "oldName": "ANALISIS DE LA INFORMACION",
+   "surveys2019": 76,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "INGSOFTI",
+     "name": "Ingeniería de Software I",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "8538",
+   "oldName": "ELECTROTECNIA GENERAL",
+   "surveys2019": 75,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "EMIE",
+     "name": "Electrotecnia, Máquinas e Instalaciones Eléctricas",
+     "confidence": "official",
+     "source": "85.38 Electrotecnia General -> Electrotecnia, Maquinas e Instalaciones Electricas. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "85.38 Electrotecnia General -> Electrotecnia, Maquinas e Instalaciones Electricas. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6110",
+   "oldName": "ANALISIS MATEMATICO III A",
+   "surveys2019": 65,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AMIII",
+     "name": "Análisis Matemático III",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7542",
+   "oldName": "TALLER DE PROGRAMACION I",
+   "surveys2019": 60,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "TDP",
+     "name": "Taller de Programación",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7503",
+   "oldName": "ORGANIZACION DEL COMPUTADOR",
+   "surveys2019": 52,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "ORGCOMPU",
+     "name": "Organización del Computador",
+     "confidence": "medium",
+     "source": "75.03 Organizacion del Computador (Lic. Sistemas 1986) has the same name and role as the 2023 subject; the official table only lists 66.70. Docentes barely overlap with 66.70."
+    }
+   ],
+   "confidence": "medium",
+   "source": "75.03 Organizacion del Computador (Lic. Sistemas 1986) has the same name and role as the 2023 subject; the official table only lists 66.70. Docentes barely overlap with 66.70."
+  },
+  {
+   "old": "9203",
+   "oldName": "INTRODUCCIÓN A LA INGENIERÍA INDUSTRIAL",
+   "surveys2019": 50,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "PII",
+     "name": "Principios de Ingeniería Industrial",
+     "confidence": "high",
+     "source": "92.03 Introduccion a la Ingenieria Industrial is half of the official combined equivalence (87.13 Medios de Representacion + 92.03) for Principios de Ingenieria Industrial; same introductory role. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "92.03 Introduccion a la Ingenieria Industrial is half of the official combined equivalence (87.13 Medios de Representacion + 92.03) for Principios de Ingenieria Industrial; same introductory role. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7201",
+   "oldName": "MATERIALES INDUSTRIALES I",
+   "surveys2019": 47,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "MAI",
+     "name": "Materiales y Aplicaciones I",
+     "confidence": "high",
+     "source": "Dolly files this course under 7201; the Industrial course 92.01 Materiales Industriales I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 92.01 Materiales Industriales I is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Dolly files this course under 7201; the Industrial course 92.01 Materiales Industriales I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 92.01 Materiales Industriales I is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7504",
+   "oldName": "ALGORITMOS Y PROGRAMACION II",
+   "surveys2019": 47,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AED",
+     "name": "Algoritmos y Estructuras de Datos",
+     "confidence": "high",
+     "source": "Older/alias code of Algoritmos y Programacion II: 8 of 9 Dolly docentes teach 75.41 in the 2023/24 horarios; 75.41 -> AED is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Older/alias code of Algoritmos y Programacion II: 8 of 9 Dolly docentes teach 75.41 in the 2023/24 horarios; 75.41 -> AED is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "9514",
+   "oldName": "ALGORITMOS Y PROGRAMACIÓN I",
+   "surveys2019": 43,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "FDP",
+     "name": "Fundamentos de Programación",
+     "confidence": "high",
+     "source": "95.14 Algoritmos y Programacion I (Lic. Sistemas) shares cursos/docentes with 75.40 (13 of 18 Dolly docentes in 2023/24 horarios); 75.40 -> FDP is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "95.14 Algoritmos y Programacion I (Lic. Sistemas) shares cursos/docentes with 75.40 (13 of 18 Dolly docentes in 2023/24 horarios); 75.40 -> FDP is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "6314",
+   "oldName": "QUÍMICA ORGÁNICA",
+   "surveys2019": 39,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "QO",
+     "name": "Química Orgánica",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7645",
+   "oldName": "TERMODINÁMICA DE LOS PROCESOS",
+   "surveys2019": 30,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "TP",
+     "name": "Termodinámica de los Procesos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9103",
+   "oldName": "ESTADÍSTICA APLICADA I",
+   "surveys2019": 30,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "EA",
+     "name": "Estadística Aplicada",
+     "confidence": "high",
+     "source": "91.03 Estadistica Aplicada I is part of the official combined equivalence (91.03 + 91.30 Estadistica Aplicada II) for Estadistica Aplicada; same subject line. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "91.03 Estadistica Aplicada I is part of the official combined equivalence (91.03 + 91.30 Estadistica Aplicada II) for Estadistica Aplicada; same subject line. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6713",
+   "oldName": "CONOCIMIENTO DE MATERIALES I",
+   "surveys2019": 30,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "CM1",
+     "name": "Conocimiento de Materiales I",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "8105",
+   "oldName": "ANÁLISIS MATEMÁTICO III A",
+   "surveys2019": 28,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "AMIII",
+     "name": "Análisis Matemático III",
+     "confidence": "high",
+     "source": "81.05 Analisis Matematico III A is the same course as 61.10 (same docentes in the 2023/24 horarios); 61.10 -> AMIII is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "81.05 Analisis Matematico III A is the same course as 61.10 (same docentes in the 2023/24 horarios); 61.10 -> AMIII is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7508",
+   "oldName": "SISTEMAS OPERATIVOS",
+   "surveys2019": 24,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "SISOPS",
+     "name": "Sistemas Operativos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7526",
+   "oldName": "SIMULACION",
+   "surveys2019": 24,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "SIM",
+     "name": "Simulación",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7515",
+   "oldName": "BASE DE DATOS",
+   "surveys2019": 21,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "BDD",
+     "name": "Base de Datos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7529",
+   "oldName": "TEORIA DE ALGORITMOS I",
+   "surveys2019": 19,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "TDA",
+     "name": "Teoría de Algoritmos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "9133",
+   "oldName": "MICROECONOMÍA APLICADA",
+   "surveys2019": 19,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "ECO",
+     "name": "Economía",
+     "confidence": "medium",
+     "source": "Official combined equivalence: Economia + Desarrollo Economico <- 91.33 Microeconomia Aplicada + 91.24 Macroeconomia y EEA; microeconomics maps naturally to Economia. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "medium",
+   "source": "Official combined equivalence: Economia + Desarrollo Economico <- 91.33 Microeconomia Aplicada + 91.24 Macroeconomia y EEA; microeconomics maps naturally to Economia. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7533",
+   "oldName": "REDES Y TELEPROCESAMIENTOS I",
+   "surveys2019": 18,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "REDES",
+     "name": "Redes",
+     "confidence": "medium",
+     "source": "75.33 Redes y Teleprocesamiento I (Lic. Sistemas 1986, dept. Computacion) is that plan's networks course; the official table only lists 75.43 Intro. a los Sistemas Distribuidos -> Redes."
+    }
+   ],
+   "confidence": "medium",
+   "source": "75.33 Redes y Teleprocesamiento I (Lic. Sistemas 1986, dept. Computacion) is that plan's networks course; the official table only lists 75.43 Intro. a los Sistemas Distribuidos -> Redes."
+  },
+  {
+   "old": "7202",
+   "oldName": "INDUSTRIAS I",
+   "surveys2019": 17,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "INDEXT",
+     "name": "Industrias Extractivas",
+     "confidence": "high",
+     "source": "Dolly files this course under 7202; the Industrial course 92.02 Industrias I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 92.02 Industrias I is in the official table: 92.02 Industrias I -> Industrias Extractivas. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Dolly files this course under 7202; the Industrial course 92.02 Industrias I is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 92.02 Industrias I is in the official table: 92.02 Industrias I -> Industrias Extractivas. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "9548",
+   "oldName": "LENGUAJES FORMALES",
+   "surveys2019": 17,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "LYCI",
+     "name": "Lenguajes y Compiladores I",
+     "confidence": "high",
+     "source": "95.48 Lenguajes Formales shares cursos with 75.14 Lenguajes Formales (same docentes in horarios); 75.14 -> Lenguajes y Compiladores I is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "95.48 Lenguajes Formales shares cursos with 75.14 Lenguajes Formales (same docentes in horarios); 75.14 -> Lenguajes y Compiladores I is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "9701",
+   "oldName": "HIGIENE Y SEGURIDAD INDUSTRIAL",
+   "surveys2019": 15,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "HYS",
+     "name": "Higiene y Seguridad",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7657",
+   "oldName": "DISEÑO DE PROCESOS",
+   "surveys2019": 14,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "DP",
+     "name": "Diseño de Procesos",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9520",
+   "oldName": "MÉTODOS Y MODELOS EN LA INGENIERÍA DE SOFTWARE I",
+   "surveys2019": 13,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "INGSOFTI",
+     "name": "Ingeniería de Software I",
+     "confidence": "high",
+     "source": "95.20 Metodos y Modelos en la Ing. de Software I shares cursos with 75.09 Analisis de la Informacion (4 of 4 Dolly docentes in 2023/24 horarios); 75.09 -> Ingenieria de Software I is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "95.20 Metodos y Modelos en la Ing. de Software I shares cursos with 75.09 Analisis de la Informacion (4 of 4 Dolly docentes in 2023/24 horarios); 75.09 -> Ingenieria de Software I is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "9110",
+   "oldName": "ORGANIZACIÓN INDUSTRIAL I",
+   "surveys2019": 12,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "GICV",
+     "name": "Gestión Integral de la Cadena de Valor",
+     "confidence": "medium",
+     "source": "Official combined equivalence: Gestion Integral de la Cadena de Valor <- 91.10 Organizacion Industrial I + 91.12 Organizacion Industrial II. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "medium",
+   "source": "Official combined equivalence: Gestion Integral de la Cadena de Valor <- 91.10 Organizacion Industrial I + 91.12 Organizacion Industrial II. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7649",
+   "oldName": "OPER. UNIT. TRANSF. CANT. MOV. Y ENERGÍA",
+   "surveys2019": 12,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "OUPTCM",
+     "name": "Operaciones Unitarias de Transferencia de Cantidad de Movimiento y Energía",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9524",
+   "oldName": "ADMINISTRACIÓN Y CONTROL DE PROYECTOS INFORMÁTICOS I",
+   "surveys2019": 11,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "GDSI",
+     "name": "Gestión del Desarrollo de Sistemas Informáticos",
+     "confidence": "high",
+     "source": "95.24 shares cursos with 75.44 Administracion y Control de Proyectos Informaticos I (5 of 6 Dolly docentes); 75.44 -> GDSI is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "95.24 shares cursos with 75.44 Administracion y Control de Proyectos Informaticos I (5 of 6 Dolly docentes); 75.44 -> GDSI is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7653",
+   "oldName": "DISEÑO DE REACTORES",
+   "surveys2019": 10,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "DR",
+     "name": "Diseño de Reactores",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9124",
+   "oldName": "MACROECONOMÍA Y ESTRUCTURA ECONÓMICA ARGENTINA",
+   "surveys2019": 8,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "DE",
+     "name": "Desarrollo Económico",
+     "confidence": "medium",
+     "source": "Official combined equivalence: Economia + Desarrollo Economico <- 91.33 + 91.24 Macroeconomia y Estructura Economica Argentina; macro/structure maps naturally to Desarrollo Economico. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "medium",
+   "source": "Official combined equivalence: Economia + Desarrollo Economico <- 91.33 + 91.24 Macroeconomia y Estructura Economica Argentina; macro/structure maps naturally to Desarrollo Economico. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "9705",
+   "oldName": "GESTIÓN AMBIENTAL",
+   "surveys2019": 7,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "IASCP",
+     "name": "Ingeniería Ambiental, Sustentabilidad y Cuidado del Planeta",
+     "confidence": "official",
+     "source": "97.05 Gestion Ambiental -> Ingenieria Ambiental, Sustentabilidad y Cuidado del Planeta. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "97.05 Gestion Ambiental -> Ingenieria Ambiental, Sustentabilidad y Cuidado del Planeta. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7510",
+   "oldName": "TECNICAS DE DISEÑO",
+   "surveys2019": 6,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "INGSOFTII",
+     "name": "Ingeniería de Software II",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "9112",
+   "oldName": "ORGANIZACIÓN INDUSTRIAL II",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "GICV",
+     "name": "Gestión Integral de la Cadena de Valor",
+     "confidence": "medium",
+     "source": "Official combined equivalence: Gestion Integral de la Cadena de Valor <- 91.10 + 91.12 Organizacion Industrial II. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "medium",
+   "source": "Official combined equivalence: Gestion Integral de la Cadena de Valor <- 91.10 + 91.12 Organizacion Industrial II. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7108",
+   "oldName": "ORGANIZACION INDUSTRIAL III",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "ODE",
+     "name": "Organización y Dirección Empresaria",
+     "confidence": "high",
+     "source": "Dolly files this course under 7108; the Industrial course 91.08 Organizacion Industrial III is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 91.08 Organizacion Industrial III is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Dolly files this course under 7108; the Industrial course 91.08 Organizacion Industrial III is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 91.08 Organizacion Industrial III is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7112",
+   "oldName": "ESTRUCTURA DE LAS ORGANIZACIONES",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "EBTII",
+     "name": "Empresas de Base Tecnológica II",
+     "confidence": "official",
+     "source": "71.12 Estructura de las Organizaciones -> Empresas de Base Tecnologica II. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "71.12 Estructura de las Organizaciones -> Empresas de Base Tecnologica II. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7144",
+   "oldName": "RECURSOS HUMANOS",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "CHCO",
+     "name": "Capital Humano y Comportamiento Organizacional",
+     "confidence": "high",
+     "source": "Dolly files this course under 7144; the Industrial course 91.17 Recursos Humanos is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 91.17 Recursos Humanos is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "Dolly files this course under 7144; the Industrial course 91.17 Recursos Humanos is the same course (identical docentes in the 2023/2024 horarios and in Dolly reviews), and 91.17 Recursos Humanos is in the official table: https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "6315",
+   "oldName": "QUÍMICA ANALÍTICA INSTRUMENTAL",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "QAI",
+     "name": "Química Analítica Instrumental",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9509",
+   "oldName": "TÉCNICAS DE PROGRAMACIÓN CONCURRENTE I",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "PROGC",
+     "name": "Programación Concurrente",
+     "confidence": "high",
+     "source": "95.09 Tecnicas de Programacion Concurrente I shares cursos with 75.59 (same docente in horarios); 75.59 -> Programacion Concurrente is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "high",
+   "source": "95.09 Tecnicas de Programacion Concurrente I shares cursos with 75.59 (same docente in horarios); 75.59 -> Programacion Concurrente is official. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7531",
+   "oldName": "TEORIA DE LENGUAJE",
+   "surveys2019": 5,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "LYCI",
+     "name": "Lenguajes y Compiladores I",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "6669",
+   "oldName": "CRIPTOGRAFIA Y SEGURIDAD INFORMATICA",
+   "surveys2019": 4,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "TDSINF",
+     "name": "Taller de Seguridad Informática",
+     "confidence": "official",
+     "source": "66.69 Criptografia y Seguridad Informatica -> Taller de Seguridad Informatica. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "66.69 Criptografia y Seguridad Informatica -> Taller de Seguridad Informatica. https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7647",
+   "oldName": "FENÓMENOS DE TRANSPORTE",
+   "surveys2019": 4,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "FT",
+     "name": "Fenómenos de Transporte",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9122",
+   "oldName": "INGENIERÍA LEGAL PARA LA INGENIERÍA INDUSTRIAL",
+   "surveys2019": 4,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "EJPROF",
+     "name": "Legislación y Ejercicio Profesional",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7612",
+   "oldName": "MICROBIOLOGIA INDUSTRIAL",
+   "surveys2019": 4,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "MI",
+     "name": "Microbiología Industrial",
+     "confidence": "medium",
+     "source": "76.12 Microbiologia Industrial shares docentes with 76.55 Microbiologia Industrial (3 of 4); Quimica 2023 elective of the same name. The official table maps 76.55 (+76.61) to Ingenieria de Bioprocesos instead, so this is not official."
+    }
+   ],
+   "confidence": "medium",
+   "source": "76.12 Microbiologia Industrial shares docentes with 76.55 Microbiologia Industrial (3 of 4); Quimica 2023 elective of the same name. The official table maps 76.55 (+76.61) to Ingenieria de Bioprocesos instead, so this is not official."
+  },
+  {
+   "old": "9130",
+   "oldName": "ESTADÍSTICA APLICADA II",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "EA",
+     "name": "Estadística Aplicada",
+     "confidence": "high",
+     "source": "91.30 Estadistica Aplicada II is part of the official combined equivalence (91.03 + 91.30) for Estadistica Aplicada. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "high",
+   "source": "91.30 Estadistica Aplicada II is part of the official combined equivalence (91.03 + 91.30) for Estadistica Aplicada. https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7573",
+   "oldName": "ARQUITECTURA DEL SOFTWARE",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "ARQSOFT",
+     "name": "Arquitectura de Software",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7574",
+   "oldName": "SISTEMAS DISTRIBUIDOS I",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "informatica-2023",
+     "code": "SDI",
+     "name": "Sistemas Distribuidos I",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_526_Informatica_Plan_2023_Aprobacion_15d3cee700.pdf (sec. 13, tabla de equivalencias Plan 1986; idem RESCS-2023-1215)"
+  },
+  {
+   "old": "7652",
+   "oldName": "OPER. UNIT. DE TRANSF. DE MATERIA",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "OUTM",
+     "name": "Operaciones Unitarias de Transferencia de Materia",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "9132",
+   "oldName": "INVESTIGACIÓN OPERATIVA III",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "INVOPS",
+     "name": "Investigación Operativa Superior",
+     "confidence": "official",
+     "source": "91.32 Investigacion Operativa III -> Investigacion Operativa Superior (elective). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "91.32 Investigacion Operativa III -> Investigacion Operativa Superior (elective). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "8715",
+   "oldName": "TALLER A",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "TALL",
+     "name": "Taller de Manufactura",
+     "confidence": "official",
+     "source": "87.15 Taller A -> Taller de Manufactura (elective). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "official",
+   "source": "87.15 Taller A -> Taller de Manufactura (elective). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "9204",
+   "oldName": "PROCESOS DE MANUFACTURA I",
+   "surveys2019": 2,
+   "targets": [
+    {
+     "plan": "industrial-2023",
+     "code": "TDM",
+     "name": "Transformación de Materiales",
+     "confidence": "medium",
+     "source": "Official combined equivalence: Transformacion de Materiales <- 92.04 Procesos de Manufactura I + 92.19 Procesos de Manufactura II (same manufacturing-processes content). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+    }
+   ],
+   "confidence": "medium",
+   "source": "Official combined equivalence: Transformacion de Materiales <- 92.04 Procesos de Manufactura I + 92.19 Procesos de Manufactura II (same manufacturing-processes content). https://cms.fi.uba.ar/uploads/RESCS_2024_63_Industrial_Plan_2023_Modificacion_b6f5d44f65_7e4ff9c5bb.pdf (sec. 14, tabla de equivalencias Plan 2011)"
+  },
+  {
+   "old": "7646",
+   "oldName": "INTRODUCCIÓN A LA INGENIERÍA QUÍMICA",
+   "surveys2019": 1,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "FPSQ",
+     "name": "Fundamentos de Procesos Químicos",
+     "confidence": "official",
+     "source": "76.46 Introduccion a la Ingenieria Quimica -> Fundamentos de Procesos Quimicos. https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "76.46 Introduccion a la Ingenieria Quimica -> Fundamentos de Procesos Quimicos. https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7616",
+   "oldName": "ELECTROQUIMICA",
+   "surveys2019": 1,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "EQ",
+     "name": "Electroquímica",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  },
+  {
+   "old": "7651",
+   "oldName": "INTROD. A LA PLANIFICACIÓN INT",
+   "surveys2019": 1,
+   "targets": [
+    {
+     "plan": "quimica-2023",
+     "code": "IPI",
+     "name": "Introducción a la Planificación Interactiva",
+     "confidence": "official",
+     "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+    }
+   ],
+   "confidence": "official",
+   "source": "https://cms.fi.uba.ar/uploads/RESCD_2023_880_Quimica_Plan_2023_507cc321e0_a6609a29e5.pdf (sec. 14, tabla de equivalencias Plan 1986 Modificado)"
+  }
+ ],
+ "skipped": [
+  {
+   "old": "7003",
+   "oldName": "MEDIOS DE REPRESENTACION A",
+   "surveys2019": 172,
+   "reason": "Medios de Representacion A (70.03). Dolly docentes match 87.13 Medios de Representacion, which is only half of the combined equivalence for Principios de Ingenieria Industrial; drawing content does not continue in PII."
+  },
+  {
+   "old": "7501",
+   "oldName": "COMPUTACIÓN",
+   "surveys2019": 162,
+   "reason": "Computacion (75.01 / 95.01): only grants elective credits in Quimica and Industrial; no subject continues it."
+  },
+  {
+   "old": "8302",
+   "oldName": "QUÍMICA APLICADA",
+   "surveys2019": 131,
+   "reason": "Quimica Aplicada (83.02): only grants elective credits in Industrial 2023."
+  },
+  {
+   "old": "8917",
+   "oldName": "MECÁNICA DE LOS FLUIDOS",
+   "surveys2019": 74,
+   "reason": "Mecanica de los Fluidos (89.17): one of three subjects combined into Transformacion de la Energia (87.14+87.17+89.17); the new subject merges different content and its department is unclear."
+  },
+  {
+   "old": "6602",
+   "oldName": "LABORATORIO",
+   "surveys2019": 73,
+   "reason": "Laboratorio (66.02, Electronica): not in these plans."
+  },
+  {
+   "old": "6401",
+   "oldName": "ESTABILIDAD I A",
+   "surveys2019": 67,
+   "reason": "Estabilidad I A (64.01): Civil/Mecanica subject; not in any of the three 2023 tables (Industrial ERM comes from 84.05)."
+  },
+  {
+   "old": "6107",
+   "oldName": "MATEMATICA DISCRETA",
+   "surveys2019": 67,
+   "reason": "Matematica Discreta: no 2023 subject in these three plans (the Informatica table does not list it)."
+  },
+  {
+   "old": "7101",
+   "oldName": "INTRODUCCIÓN A LA ECONOMÍA Y ORGANIZACIÓN DE LA EMPRESA",
+   "surveys2019": 66,
+   "reason": "Introduccion a la Economia y Organizacion de la Empresa (71.01): not in any of the three tables."
+  },
+  {
+   "old": "8714",
+   "oldName": "TERMODINÁMICA",
+   "surveys2019": 61,
+   "reason": "Termodinamica (87.14): one of three subjects combined into Transformacion de la Energia (TDE); candidate \"medium\" if merged subjects are acceptable."
+  },
+  {
+   "old": "8670",
+   "oldName": "INTRODUCCION AL DISEÑO ASISTIDO POR COMPUTADORA",
+   "surveys2019": 61,
+   "reason": "Introduccion al Diseno Asistido por Computadora: no target."
+  },
+  {
+   "old": "6205",
+   "oldName": "FISICA III",
+   "surveys2019": 46,
+   "reason": "Fisica III (62.05): no target in these plans."
+  },
+  {
+   "old": "7114",
+   "oldName": "MODELOS Y OPTIMIZACION I",
+   "surveys2019": 40,
+   "reason": "Modelos y Optimizacion I (71.14): not in the Informatica 2023 table; Industrial Investigacion Operativa comes from 91.07+91.31."
+  },
+  {
+   "old": "8712",
+   "oldName": "MECANISMOS",
+   "surveys2019": 37,
+   "reason": "Mecanismos (87.12): combined with 92.06 Automatizacion Industrial y Robotica into Equipos y Sistemas para Automatizacion Industrial; content only partially continues."
+  },
+  {
+   "old": "8637",
+   "oldName": "ORGANIZACIÓN DE COMPUTADORAS",
+   "surveys2019": 32,
+   "reason": "Organizacion de Computadoras (86.37 = 66.20): the official table grants Taller de Seguridad Informatica for 66.20, a credit equivalence between unrelated contents."
+  },
+  {
+   "old": "7123",
+   "oldName": "ECONOMIA",
+   "surveys2019": 26,
+   "reason": "Economia (71.23, Civil/Naval): Dolly docentes match 91.09, not 91.33; no clear target."
+  },
+  {
+   "old": "6411",
+   "oldName": "ESTABILIDAD I B",
+   "surveys2019": 21,
+   "reason": "Estabilidad I B: not in any of the three tables."
+  },
+  {
+   "old": "6114",
+   "oldName": "MATEMATICA ESPECIAL PARA ING. QUIMICA",
+   "surveys2019": 17,
+   "reason": "Matematica Especial para Ing. Quimica (61.14): only elective credits in Quimica 2023."
+  },
+  {
+   "old": "6215",
+   "oldName": "FISICA III D",
+   "surveys2019": 13,
+   "reason": "Fisica III D: no target."
+  },
+  {
+   "old": "9140",
+   "oldName": "LEGISLACIÓN Y EJERCICIO PROFESIONAL EN SISTEMAS E INFORMÁTICA",
+   "surveys2019": 12,
+   "reason": "Legislacion y Ej. Prof. en Sistemas e Informatica (alias of 71.40): only part of the combined equivalence for Empresas de Base Tecnologica I."
+  },
+  {
+   "old": "7106",
+   "oldName": "ESTRUCTURA ECONOMICA ARGENTINA",
+   "surveys2019": 10,
+   "reason": "Estructura Economica Argentina (71.06): not 71.18 (the code in the Informatica combo); Dolly docentes do not match Industrial 91.24."
+  },
+  {
+   "old": "6213",
+   "oldName": "FISICA III C",
+   "surveys2019": 9,
+   "reason": "Fisica III C: only elective credits (Industrial and Quimica)."
+  },
+  {
+   "old": "7545",
+   "oldName": "TALLER DE DESARROLLO DE PROYECTOS I",
+   "surveys2019": 8,
+   "reason": "Taller de Desarrollo de Proyectos I: not in the table."
+  },
+  {
+   "old": "9139",
+   "oldName": "ESTRUCTURAS Y PROCESOS ORGANIZACIONALES",
+   "surveys2019": 8,
+   "reason": "Estructuras y Procesos Organizacionales: not in the table."
+  },
+  {
+   "old": "7550",
+   "oldName": "INTRODUCCION A LOS SISTEMAS INTELIGENTES",
+   "surveys2019": 6,
+   "reason": "Introduccion a los Sistemas Inteligentes: no target in the Informatica 2023 table."
+  },
+  {
+   "old": "9105",
+   "oldName": "MODELOS Y OPTIMIZACIÓN II",
+   "surveys2019": 6,
+   "reason": "Modelos y Optimizacion II: not in the table."
+  },
+  {
+   "old": "9521",
+   "oldName": "MÉTODOS Y MODELOS EN LA INGENIERIA DE SOFTWARE II",
+   "surveys2019": 6,
+   "reason": "Metodos y Modelos en la Ing. de Software II: not in the table; Ingenieria de Software II comes from 75.10."
+  },
+  {
+   "old": "7648",
+   "oldName": "EVALUACIÓN DE PROPIEDADES FÍSICAS",
+   "surveys2019": 4,
+   "reason": "Evaluacion de Propiedades Fisicas (76.48): the official table grants Introduccion a la Ciencia de Datos, but that is a credit equivalence between unrelated contents; mapping reviews would be wrong."
+  },
+  {
+   "old": "7708",
+   "oldName": "SEGURIDAD AMBIENTAL Y DEL TRABAJO B",
+   "surveys2019": 4,
+   "reason": "Seguridad Ambiental y del Trabajo B (77.08): only part of the combined equivalence (76.58 + 77.08) for Emisiones de Contaminantes Quimicos y Biologicos; content differs."
+  },
+  {
+   "old": "7546",
+   "oldName": "ADM. Y CONTROL DE PROY. INFORMATICOS II",
+   "surveys2019": 4,
+   "reason": "Adm. y Control de Proy. Informaticos II: not in the table (only part I -> GDSI)."
+  },
+  {
+   "old": "7613",
+   "oldName": "BIOINGENIERIA INDUSTRIAL",
+   "surveys2019": 3,
+   "reason": "Bioingenieria Industrial (76.13): unclear relation to 76.61 Bioingenieria; Ingenieria de Bioprocesos requires 76.55 + 76.61."
+  },
+  {
+   "old": "7146",
+   "oldName": "INGENIERIA ECONOMICA",
+   "surveys2019": 3,
+   "reason": "Ingenieria Economica (71.46): only part of combined equivalences for Empresas de Base Tecnologica I (with 71.40); Dolly docentes do not match Industrial 91.29 Ingenieria Economica A."
+  },
+  {
+   "old": "9205",
+   "oldName": "EDIFICIOS INDUSTRIALES",
+   "surveys2019": 2,
+   "reason": "Edificios Industriales (92.05): combined with 92.07 into Proyecto Industrial; content only partially continues."
+  }
+ ]
+}
