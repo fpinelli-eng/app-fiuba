@@ -1,114 +1,91 @@
-import Link from "next/link";
-import { CALENDAR_DAYS, calendarDayIndex, firstDayToShow, layoutWeek, type PlacedBlock } from "@/lib/home/calendar";
+import type { ReactNode } from "react";
+import { calendarDayIndex, layoutWeek, type PlacedBlock } from "@/lib/home/calendar";
 import type { HomeCourses } from "@/lib/home/courses";
 import { formatHour } from "@/lib/plan/format";
-import { HomeDayView } from "./HomeDayView";
-import { CAMPUS_NAME, PALETTE } from "./home-palette";
+import { CAMPUS_NAME, DOT, PALETTE } from "./home-palette";
 
-// Calendario de la cursada del Inicio (prototipo 04-inicio): solo lectura, con los cursos
-// en los que el alumno se inscribió desde el Plan. Misma paleta y orden que el calendario del plan.
-// En el celular se ve un día por vez (HomeDayView); desde 768 px, la grilla de la semana.
-// La grilla mide siempre más o menos lo mismo: con pocas horas de cursada, cada hora es más alta
-// y los nombres entran enteros.
-const GRID_PX = 420;
-const hourPx = (hours: number) => Math.round(Math.min(56, Math.max(26, GRID_PX / hours)));
+// "Esta semana" del Inicio: los cursos que el alumno confirmó en el Plan ("Confirmar mi cursada"), solo lectura.
+// En la computadora, una columna por día (lunes a viernes, y el sábado si hay clases); en el celular,
+// una lista que arranca hoy y sigue con los próximos días. Misma paleta y orden que el plan.
 
+const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const DAY_NAMES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
-export function HomeCalendar({ data }: { data: HomeCourses }) {
+const time = (p: PlacedBlock) => `${formatHour(p.block.start)}–${formatHour(p.block.end)} hs`;
+const where = (p: PlacedBlock) => (p.block.campus ? CAMPUS_NAME[p.block.campus] : p.block.virtual ? "Virtual" : null);
+const blockKey = (p: PlacedBlock) => `${p.course.offeringId}-${p.block.weekday}-${p.block.start}`;
+
+export function HomeCalendar({ data, action, enrolled = true }: { data: HomeCourses; action: ReactNode; enrolled?: boolean }) {
   const week = layoutWeek(data.courses);
-  const hours = Array.from({ length: week.last - week.first }, (_, i) => week.first + i);
-  const hourHeight = hourPx(hours.length);
-  const height = hours.length * hourHeight;
-  // "Hoy" se calcula en el servidor (en hora de Buenos Aires), así el celular no cambia de día al hidratar.
+  // "Hoy" se calcula en el servidor, en hora de Buenos Aires (domingo = 6: no hay columna de hoy).
   const today = calendarDayIndex(new Date());
+  const shown = week.days[5].length ? 6 : 5;
+
+  // Celular: desde hoy (el domingo, desde el lunes), los días con clases en orden.
+  const start = today > 5 ? 0 : today;
+  const upcoming = Array.from({ length: 6 }, (_, i) => (start + i) % 6).flatMap((d) =>
+    week.days[d].map((p, i) => ({ p, day: d, firstOfDay: i === 0 })),
+  );
 
   return (
-    <section aria-label={`Cursada ${data.term}`} className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-2xl border border-line bg-surface p-5 md:p-7">
-      <div className="flex flex-wrap justify-between gap-2">
-        <div className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-          Cursada {data.term} · {week.credits} créditos
-        </div>
-        {week.campuses.length > 0 && (
-          <div className="text-xs text-muted">{week.campuses.map((c) => `${c} ${CAMPUS_NAME[c]}`).join(" · ")}</div>
-        )}
+    <section aria-labelledby="semana" className="flex min-w-0 flex-col rounded-[24px] bg-surface px-4 pt-4 pb-2 shadow-[0_16px_30px_-28px_var(--card-shadow)] md:rounded-[28px] md:px-[26px] md:py-[22px]">
+      <div className="mb-1.5 flex items-baseline justify-between gap-3 md:mb-3.5">
+        <h2 id="semana" className="text-base font-semibold md:text-lg">
+          Esta semana
+        </h2>
+        {action}
       </div>
 
-      <div className="md:hidden">
-        <HomeDayView days={week.days} today={today} initial={firstDayToShow(week.days, today)} />
-      </div>
+      {!enrolled ? (
+        <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Tus horarios aparecen acá cuando confirmás tu cursada en el Plan.</p>
+      ) : (
+        upcoming.length === 0 && week.asyncClasses.length === 0 && <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Sin clases presenciales esta semana.</p>
+      )}
 
-      <div className="hidden overflow-x-auto md:block">
-        <div className="grid min-w-[580px] grid-cols-[34px_repeat(6,minmax(84px,1fr))] gap-x-1">
-          <div />
-          {CALENDAR_DAYS.map((d) => (
-            <div key={d} className="pb-2 text-xs font-semibold text-muted">
-              {d}
-            </div>
-          ))}
-          <div className="flex flex-col text-[11px] leading-none text-muted tabular-nums">
-            {hours.map((h) => (
-              <div key={h} style={{ height: hourHeight }}>
-                {h}
+      <ul className="md:hidden">
+        {upcoming.map(({ p, day, firstOfDay }) => (
+          <li key={blockKey(p)} className="flex items-center gap-3 border-b border-line py-[9px] text-[15px] last:border-b-0">
+            <span className={`w-[46px] flex-none text-sm ${day === today ? "font-bold text-accent" : "font-medium text-muted"}`}>
+              {firstOfDay ? (day === today ? "Hoy" : DAYS[day]) : <span className="sr-only">{DAYS[day]}</span>}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span aria-hidden="true" className={`mr-2 inline-block size-2 rounded-full align-[1px] ${DOT[p.color % DOT.length]}`} />
+              <span className="font-semibold">{p.course.subject}</span>
+            </span>
+            <span className="flex-none text-sm text-muted tabular-nums" title={where(p) ?? undefined}>
+              {time(p)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden gap-2.5 md:grid" style={{ gridTemplateColumns: `repeat(${shown}, minmax(0, 1fr))` }}>
+        {week.days.slice(0, shown).map((blocks, d) => (
+          <div key={DAYS[d]} className="flex flex-col gap-2">
+            <h3
+              className={`text-sm ${
+                d === today ? "font-bold text-ink underline decoration-accent decoration-[3px] underline-offset-[6px]" : "font-medium text-muted"
+              }`}
+            >
+              {d === today ? `${DAYS[d]}, hoy` : DAYS[d]}
+              <span className="sr-only">{d === today ? "" : ` (${DAY_NAMES[d]})`}</span>
+            </h3>
+            {!enrolled && <div aria-hidden="true" className="h-[92px] rounded-[14px] bg-bg" />}
+            {blocks.map((p) => (
+              <div key={blockKey(p)} className={`rounded-[14px] px-2.5 py-2 text-[13px] leading-[17px] ${PALETTE[p.color % PALETTE.length]}`} title={where(p) ?? undefined}>
+                <strong className="block font-semibold break-words hyphens-auto [hyphenate-limit-chars:10_4_4]">{p.course.subject}</strong>
+                <span className="tabular-nums">{time(p)}</span>
               </div>
             ))}
           </div>
-          {week.days.map((blocks, i) => (
-            <div key={CALENDAR_DAYS[i]} className="relative rounded-lg bg-bg" style={{ height }}>
-              {blocks.map((p) => (
-                <Block key={`${p.course.offeringId}-${p.block.start}`} placed={p} first={week.first} hourHeight={hourHeight} />
-              ))}
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
 
       {week.asyncClasses.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
-          Asincrónicas:
-          {week.asyncClasses.map(({ course, color }) => (
-            <span key={course.offeringId} className={`rounded-full border px-2.5 py-0.5 font-semibold ${PALETTE[color % PALETTE.length]}`}>
-              {course.subject} · {course.code}
-            </span>
-          ))}
-        </div>
+        <p className="py-3 text-[13px] text-muted md:pt-4 md:pb-0">
+          Asincrónicas: {week.asyncClasses.map(({ course }) => course.subject).join(", ")}
+        </p>
       )}
-
-      <Link href="/plan" className="self-start font-semibold text-accent">
-        Ver el plan →
-      </Link>
     </section>
-  );
-}
-
-// Alto de una línea de texto en un bloque (12 px con interlineado 1,25) y relleno vertical.
-const LINE_PX = 15;
-const PAD_PX = 12;
-
-function Block({ placed: p, first, hourHeight }: { placed: PlacedBlock; first: number; hourHeight: number }) {
-  const { block } = p;
-  const top = ((block.start - first * 60) / 60) * hourHeight + 1;
-  const height = ((block.end - block.start) / 60) * hourHeight - 2;
-  const width = 100 / p.lanes;
-  const where = block.campus ?? (block.virtual ? "Virtual" : null);
-  const details = [p.course.code, where, `${formatHour(block.start)}–${formatHour(block.end)}`].filter(Boolean).join(" · ");
-  // El nombre usa todo el alto que haya; la línea de curso y horario solo entra si sobra lugar
-  // (si no, queda en el texto que aparece al pasar el mouse).
-  const lines = Math.max(1, Math.floor((height - PAD_PX) / LINE_PX));
-  const showDetails = lines >= 3;
-  const titleLines = showDetails ? lines - 1 : lines;
-  return (
-    <div
-      className={`absolute overflow-hidden rounded-lg border px-2 py-1.5 leading-tight ${p.lanes > 1 ? "text-[11px]" : "text-xs"} ${PALETTE[p.color % PALETTE.length]}`}
-      style={{ top, height, left: `calc(${p.lane * width}% + 3px)`, width: `calc(${width}% - 6px)` }}
-      title={`${p.course.subject} · ${details}`}
-    >
-      <div
-        className="overflow-hidden font-semibold hyphens-auto"
-        style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: titleLines }}
-      >
-        {p.course.subject}
-      </div>
-      {showDetails && <div className="truncate opacity-90 tabular-nums">{details}</div>}
-    </div>
   );
 }

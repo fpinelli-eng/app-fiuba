@@ -64,6 +64,8 @@
   --cat-elective: #ee8b7b;
   --cat-final: #67b39a;
   --arc-track: #e6e9f0;
+  /* Sombra suave de las tarjetas del Inicio rediseñado (sin borde). */
+  --card-shadow: rgb(31 37 55 / 0.45);
 }
 
 [data-theme="dark"] {
@@ -120,6 +122,7 @@
   --cat-elective: #f2a193;
   --cat-final: #86c9b1;
   --arc-track: #2a3040;
+  --card-shadow: rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
@@ -173,6 +176,7 @@
   --color-cat-elective: var(--cat-elective);
   --color-cat-final: var(--cat-final);
   --color-arc-track: var(--arc-track);
+  --color-card-shadow: var(--card-shadow);
 
   --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
   /* Títulos y números grandes */
