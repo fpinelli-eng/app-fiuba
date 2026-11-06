@@ -61,7 +61,7 @@ export function ReviewsDateForm({ date }: { date: string | null }) {
   const [state, action, pending] = useActionState(setReviewsDate, initial);
   return (
     <form action={action} className="flex flex-col items-end gap-2">
-      <label className="flex items-center gap-2.5 text-sm text-muted">
+      <label className="flex flex-wrap items-center justify-end gap-2.5 text-sm text-muted">
         Reseñas pendientes desde
         <input name="date" type="date" defaultValue={date ?? ""} className={input} />
         <button type="submit" disabled={pending} className={secondary}>

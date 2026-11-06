@@ -34,7 +34,7 @@ function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
 /** Room, examiners and drop deadline, when the dates were loaded with the SIU link. */
 function tableDetails(t: ExamTableView): string {
   const room = t.room && (/^aula\b/i.test(t.room) ? t.room : `Aula ${t.room}`);
-  const drop = t.dropUntil && `Baja hasta el ${formatEnrollMoment(t.dropUntil)}`;
+  const drop = t.dropUntil && `Te podés dar de baja hasta el ${formatEnrollMoment(t.dropUntil)}`;
   return [room, formatTeachers(t.teachers), drop].filter(Boolean).join(" · ");
 }
 

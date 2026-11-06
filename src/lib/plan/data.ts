@@ -39,7 +39,7 @@ export interface PlanData {
   career: string;
   subjects: PlanSubject[];
   saved: Record<OptionKey, Entry[]>;
-  /** Courses of this term the student said they enrolled in ("Me inscribí en esta opción"). */
+  /** Courses of this term the student confirmed ("Confirmar mi cursada"). */
   enrolled: string[];
 }
 

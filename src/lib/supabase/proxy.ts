@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseEnv } from "./env";
 
 // Rutas que se pueden ver sin sesión.
-const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad"];
+const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest"];
 
 // Refresca la sesión en cada pedido y manda a /ingresar a quien no la tiene.
 // Es un control rápido: la verificación definitiva (incluido el dominio) está en el layout de (app).

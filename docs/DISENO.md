@@ -8,56 +8,59 @@ El código fuente de cada pantalla está en [`docs/diseno/prototipos/`](diseno/p
 
 ## Colores
 
+**Rediseño del 5 de noviembre de 2026.** La paleta lavanda original se reemplazó por una paleta pastel media y coherente (amarillo, azul, coral, verde) sobre un fondo gris azulado muy claro; en oscuro, azul noche (nunca negro). Los nombres de los tokens no cambiaron, solo sus valores: así el cambio llegó a todas las pantallas desde `globals.css`. Referencia visual: lienzo de Claude Design "App FIUBA · Direcciones visuales" (tableros "Inicio ajustado" y "Inicio · oscuro y celular"). Contraste AA verificado en claro y oscuro.
+
 Definirlos una sola vez como variables de tema. Nunca usar un hexadecimal suelto en un componente.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `bg` | #F3F2F9 | #111117 | Fondo de página |
-| `surface` | #FFFFFF | #1A1A23 | Tarjetas |
-| `header` | #FFFFFF | #17171F | Barra superior |
-| `border` | #E2E0EE | #2A2A37 | Bordes de tarjetas |
-| `border-strong` | #D4D2E3 | #363645 | Bordes de inputs y botones secundarios |
-| `ink` | #24243A | #ECECF3 | Texto principal |
-| `ink-2` | #3A3A52 | #CFCFDC | Texto de comentarios y docentes |
-| `muted` | #5D5E76 | #A3A3B8 | Texto secundario |
-| `accent` | #5B5BD6 | #A3A1FA | Botones principales, selección, foco |
-| `accent-soft` | #EFEDFF | — | Fondo de una opción elegida |
+| `bg` | #F6F7FA | #12151F | Fondo de página |
+| `surface` | #FFFFFF | #1B1F2C | Tarjetas, barra de pestañas del celular |
+| `header` | #F6F7FA | #12151F | Barra superior (igual al fondo: el menú queda sobre la página) |
+| `line` | #E6E9F0 | #2A3040 | Bordes de tarjetas |
+| `line-strong` | #C9CFDB | #3A4152 | Bordes de inputs y botones secundarios |
+| `ink` | #1F2537 | #ECEEF5 | Texto principal |
+| `ink-2` | #3B4357 | #C9CEDB | Texto de comentarios y docentes |
+| `muted` | #5E667A | #A3A9BA | Texto secundario |
+| `accent` | #3B5BD0 | #9DB4F7 | Botones principales, links, selección, foco, punto del menú |
+| `accent-soft` | #E4ECFC | #22304F | Fondo de una opción elegida |
 | `star` | #E8B23A | #E8B23A | Estrellas |
 | `danger` | #B3261E | #F2867D | Eliminar, borrar cuenta |
 
-Pasteles (fondo / texto). En oscuro se usan versiones apagadas.
+Pasteles (fondo / texto). En oscuro, tintes apagados del mismo tono.
 
-| Nombre | Claro | Oscuro | Uso |
+| Nombre (token) | Claro | Oscuro | Uso |
 |---|---|---|---|
-| Lavanda | #E3DEFF / #2E2A6E | #2B2850 / #C9C4FF | Navegación activa, encabezado de materia, panel de electivas (#F1EEFD) |
-| Menta | #D6F1E3 / #1F4D36 | #1D3A2C / #BDEBD2 | Aprobada, éxito |
-| Manteca | #FFF1C7 / #5A4310 | #3A3220 / #F3DDA0 | Final pendiente, advertencias suaves |
-| Celeste | #DCEBFB / #2F4F73 | — | Cursando, "Nuevo" |
-| Durazno | #FFE3D3 / #8A3A18 | #3D2A20 / #FFC9A8 | Pendientes, errores de validación, contador de reseñas |
-| Rosa | #F9DDEB / #6E2348 | #3D2333 / #F5C3DB | Solo calendario del plan (6.ª materia) |
-| Verde agua | #D3F0EE / #1E5450 | #1B3634 / #B2E6E1 | Solo calendario del plan (7.ª materia) |
+| Celeste UI (`lavender`) | #E4ECFC / #22408F | #22304F / #C9D6FB | Navegación activa del celular, encabezado de materia, materias aprobadas del Inicio; panel de electivas `lavender-panel` #EEF2FB |
+| Verde (`mint`) | #DFF2E9 / #245C48 | #1D3A2F / #BFE6D3 | Aprobada, éxito, promedio del Inicio |
+| Amarillo (`butter`) | #FFF0D3 / #5C4510 | #3A3220 / #F3DDA0 | Final pendiente, advertencias suaves |
+| Celeste estado (`sky`) | #DDEEFA / #1F4F72 | #1C3346 / #B9DCF5 | Cursando, "Nuevo" |
+| Coral (`peach`) | #FCEBE7 / #7A2A1E | #3D2622 / #F6C1B6 | Pendientes, errores de validación, contador de reseñas |
+| Rosa (`pink`) | #F9E3EE / #6E2348 | #3D2333 / #F5C3DB | Solo calendario del plan (6.ª materia) |
+| Verde agua (`teal`) | #DDF0EC / #1E5450 | #1B3634 / #B2E6E1 | Solo calendario del plan (7.ª materia) |
 
-Estados del mapa:
+Categorías del arco de avance del Inicio (tokens `cat-*`): CBC #F0B54A (oscuro #F3C46A), obligatorias #5B7FE3 (#7E9BF0), electivas #EE8B7B (#F2A193), trabajo final #67B39A (#86C9B1); el tramo sin hacer, `arc-track` #E6E9F0 (#2A3040). El arco no depende solo del color: la leyenda repite cada categoría con sus créditos.
 
-| Estado | Fondo | Borde | Texto |
-|---|---|---|---|
-| Aprobada | #D6F1E3 | 1px #BFE3CF | #1F4D36 |
-| Final pendiente | #FFF1C7 | 1px #F0DC9C | #5A4310 |
-| Cursando | #DCEBFB | 1px #BCD6F2 | #2F4F73 |
-| Habilitada | #FFFFFF | 1.5px #8F8DAE | #24243A |
-| Bloqueada | #EEEDF3 | 1px punteado #B9B7CC | #5F5F75 |
+Estados del mapa: mismos tokens (`mint`, `butter`, `sky` con sus `*-line`; habilitada con borde `enabled-line` #8F96AD; bloqueada `blocked` #EEF0F4, borde punteado `blocked-line` #B9BFCC, texto `blocked-ink` #5F6578).
 
 Cada materia del calendario recibe un color pastel distinto, asignado en orden de una paleta fija para que nunca se repitan, y lo mantiene en toda la app.
 
+## Marca
+
+- **Nombre:** FIUBI (decidido el 6 de noviembre de 2026). En el código, `APP_NAME` de `src/lib/app.ts`.
+- **Logo:** "FIUBI" en Unbounded 600, con la U dibujada como el arco de avance del Inicio: tramo izquierdo amarillo, curva azul y tramo derecho coral. Tokens `brand-u1`, `brand-u2` y `brand-u3`: en claro, los tonos intensos #E59E1F / #3F63D6 / #E2654F, para que la U se lea sobre el fondo; en oscuro, los mismos del arco (#F3C46A / #7E9BF0 / #F2A193). Componente `src/components/Logo.tsx`: el alto se pone con una clase `h-…` y el ancho sale solo. En el ingreso va con `tone="soft"` (los colores del arco, `cat-*`), para que no choque con los pasteles del mosaico.
+- **Ícono:** la columna dórica de la entrada de Paseo Colón (fuste acanalado, capitel y dos escalones), en crema #FBF6EC sobre azul noche #1F2537. Archivos: `src/app/icon.svg` (pestaña), `src/app/apple-icon.png` (iPhone) y `public/icons/` (Android, por `src/app/manifest.ts`). El dibujo y las versiones descartadas están en el lienzo de diseño, página "Logo FIUBI".
+- No es el logo de la facultad: la columna es parte del edificio. Se mantiene la aclaración "no es oficial".
+
 ## Tipografía y forma
 
-- IBM Plex Sans (400, 500, 600, 700). Nada de tipografías monoespaciadas.
+- **Onest** (variable) para todo el texto y **Unbounded** (variable) para títulos de página (`h1`, regla global) y números grandes (clase `font-display`). Las dos servidas desde el proyecto (`@fontsource-variable/onest`, `@fontsource-variable/unbounded`). Nada de tipografías monoespaciadas.
 - Números con `tabular-nums lining-nums`.
 - Títulos de página 30–32 px / 600. Títulos de tarjeta 19 px / 600. Texto 15 px. Secundario 13–14 px.
-- Etiquetas de sección en mayúsculas: 11–12 px, 600, espaciado 0,08 em, color `muted`.
-- Radios: tarjetas 16–18 px, botones e inputs 10–12 px, chips 999 px.
-- Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo #ECEBF4, texto #8A8AA0, cursor `not-allowed`.
-- Barra superior de 68 px: logo + nombre a la izquierda; navegación Inicio · Mapa · Plan · Reseñas · Finales · Novedades al centro (la activa con fondo lavanda); a la derecha, botón de modo oscuro y avatar.
+- Etiquetas de sección en mayúsculas: 11–12 px, 600, espaciado 0,08 em, color `muted` (se revisan pantalla por pantalla en el rediseño).
+- Radios: tarjetas 16–18 px, botones e inputs 10–12 px, chips 999 px. En las pantallas rediseñadas, bloques de 24–32 px.
+- Botón principal: fondo `accent`, texto blanco, 40–46 px de alto. Secundario: fondo `surface`, borde `border-strong`. Deshabilitado: fondo `disabled`, texto `disabled-ink`, cursor `not-allowed`.
+- Barra superior de 72 px sobre el fondo de la página, sin borde: el logo FIUBI a la izquierda (`src/components/Logo.tsx`); al centro Inicio · Mapa · Plan · Reseñas · Finales · Novedades como texto, la activa en `ink` con un punto `accent` debajo; a la derecha, botón de modo oscuro y avatar.
 
 ## Celular (agregado el 2 de noviembre, no está en el prototipo)
 
@@ -71,7 +74,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 ## Pantallas
 
 ### Ingreso
-- Pantalla 1: mosaico decorativo de bloques pastel, nombre de la app en grande (88 px, 700), "Tu carrera de FIUBA en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
+- Pantalla 1: mosaico decorativo de bloques en tintes de los colores del arco (sin bordes ni bloques blancos o punteados), el logo FIUBI en grande, "Tu carrera de ingeniería en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
 - Cuenta rechazada: debajo del botón, recuadro durazno con "<mail> no es una cuenta de FIUBA" + "Ingresá con tu mail @fi.uba.ar"; el botón pasa a "Probar con otra cuenta".
 - Pantalla 2: "¿Qué carrera estudiás?", las 13 carreras en grilla de dos columnas y, si la carrera tiene más de un plan, los planes (el vigente marcado y con la etiqueta "Vigente"; los viejos de carreras que cambiaron de nombre muestran el nombre anterior). "Continuar" lleva al mapa en modo de primera carga.
 

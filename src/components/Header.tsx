@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { APP_NAME, NAV } from "@/lib/app";
+import { NAV } from "@/lib/app";
+import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar } from "@/components/Avatar";
 import { NavIcon } from "@/components/icons";
@@ -48,15 +49,12 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
 
   return (
     <>
-      <header className="flex min-h-[56px] items-center justify-between gap-3 border-b border-line bg-header px-4 md:min-h-[68px] md:gap-6 md:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="grid size-[30px] place-items-center rounded-lg bg-lavender text-sm font-bold text-lavender-ink">
-            F
-          </span>
-          <span className="font-bold tracking-[0.02em]">{APP_NAME}</span>
+      <header className="flex min-h-[56px] items-center justify-between gap-3 bg-header px-4 md:min-h-[72px] md:gap-6 md:px-8">
+        <Link href="/" className="-my-1.5 py-1.5">
+          <Logo className="h-[15px] md:h-[16px]" />
         </Link>
 
-        <nav aria-label="Principal" className="hidden gap-1.5 md:flex">
+        <nav aria-label="Principal" className="hidden items-center gap-7 md:flex">
           {NAV.map((item) => {
             const active = isActive(item.href);
             return (
@@ -67,17 +65,17 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
                 // Lo que se guarda en el mapa, el plan o las reseñas refresca estas precargas.
                 prefetch
                 aria-current={active ? "page" : undefined}
-                className={
-                  active
-                    ? "rounded-[10px] bg-lavender px-4 py-2 font-semibold text-lavender-ink"
-                    : "rounded-[10px] px-4 py-2 text-muted hover:text-ink"
-                }
+                className={`relative py-2 ${active ? "font-semibold text-ink" : "text-muted hover:text-ink"}`}
               >
                 {item.label}
                 {badge(item.href) > 0 && (
-                  <span className="ml-2 rounded-full bg-peach px-2 py-px text-xs font-semibold text-peach-ink" aria-label={`${pendingReviews} pendientes`}>
+                  <span className="ml-1.5 font-bold text-peach-ink">
                     {pendingReviews}
+                    <span className="sr-only"> pendientes</span>
                   </span>
+                )}
+                {active && (
+                  <span aria-hidden="true" className="absolute -bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-accent" />
                 )}
               </Link>
             );
@@ -115,7 +113,7 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
       {/* Celular: pestañas fijas abajo, como en una app. El layout deja ese lugar libre al final de la página. */}
       <nav
         aria-label="Secciones"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-header pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="mx-auto grid h-[60px] max-w-[520px] grid-cols-5">
           {NAV.filter((item) => item.mobile === "tab").map((item) => {
@@ -134,11 +132,9 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
                 <span className={`relative grid h-7 w-12 place-items-center rounded-full ${active ? "bg-lavender text-lavender-ink" : ""}`}>
                   <NavIcon name={item.icon} />
                   {count > 0 && (
-                    <span
-                      className="absolute -top-1 right-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-peach px-1 text-[11px] font-semibold text-peach-ink"
-                      aria-label={`${count} pendientes`}
-                    >
+                    <span className="absolute -top-1 right-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-peach px-1 text-[11px] font-semibold text-peach-ink">
                       {count}
+                      <span className="sr-only"> pendientes</span>
                     </span>
                   )}
                 </span>
