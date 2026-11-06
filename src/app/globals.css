@@ -1,112 +1,125 @@
 @import "tailwindcss";
 
 /*
- * Colores del diseño (docs/DISENO.md). Se definen UNA sola vez acá.
+ * Colores del diseño (docs/DISENO.md; rediseño del 5 de noviembre de 2026). Se definen UNA sola vez acá.
  * En los componentes se usan solo las clases de Tailwind que salen de estos tokens
  * (bg-bg, bg-surface, text-ink, text-muted, border-line, bg-accent, bg-mint…),
  * nunca un color hexadecimal suelto.
  */
 :root,
 [data-theme="light"] {
-  --bg: #f3f2f9;
+  --bg: #f6f7fa;
   --surface: #ffffff;
-  --header: #ffffff;
-  --line: #e2e0ee;
-  --line-strong: #d4d2e3;
-  --ink: #24243a;
-  --ink-2: #3a3a52;
-  --muted: #5d5e76;
-  --accent: #5b5bd6;
+  --header: #f6f7fa;
+  --line: #e6e9f0;
+  --line-strong: #c9cfdb;
+  --ink: #1f2537;
+  --ink-2: #3b4357;
+  --muted: #5e667a;
+  --accent: #3b5bd0;
   --on-accent: #ffffff;
-  --accent-soft: #efedff;
-  --disabled: #ecebf4;
-  --disabled-ink: #8a8aa0;
+  --accent-soft: #e4ecfc;
+  --disabled: #eceff4;
+  --disabled-ink: #858ca0;
   --star: #e8b23a;
   --danger: #b3261e;
   --danger-line: #ebc3bf;
   --danger-soft: #fdecea;
   --danger-ink: #7a1d17;
 
-  --lavender: #e3deff;
-  --lavender-ink: #2e2a6e;
-  --lavender-panel: #f1eefd;
-  --mint: #d6f1e3;
-  --mint-ink: #1f4d36;
-  --butter: #fff1c7;
-  --butter-ink: #5a4310;
-  --sky: #dcebfb;
-  --sky-ink: #2f4f73;
-  --peach: #ffe3d3;
-  --peach-ink: #8a3a18;
+  --lavender: #e4ecfc;
+  --lavender-ink: #22408f;
+  --lavender-panel: #eef2fb;
+  --mint: #dff2e9;
+  --mint-ink: #245c48;
+  --butter: #fff0d3;
+  --butter-ink: #5c4510;
+  --sky: #ddeefa;
+  --sky-ink: #1f4f72;
+  --peach: #fcebe7;
+  --peach-ink: #7a2a1e;
   /* Solo para el calendario del plan: 7 colores para que las materias no se repitan */
-  --pink: #f9ddeb;
+  --pink: #f9e3ee;
   --pink-ink: #6e2348;
-  --teal: #d3f0ee;
+  --teal: #ddf0ec;
   --teal-ink: #1e5450;
 
   /* Estados del mapa que no son pasteles */
-  --enabled-line: #8f8dae;
-  --blocked: #eeedf3;
-  --blocked-line: #b9b7cc;
-  --blocked-ink: #5f5f75;
-  --progress-cbc: #9ec3ee;
-  --mint-line: #bfe3cf;
-  --butter-line: #f0dc9c;
-  --sky-line: #bcd6f2;
-  --lavender-line: #e2dcf7;
-  --map-cbc-col: #f4faf6;
-  --map-col-alt: #faf9fd;
-  --pop-shadow: rgb(36 36 58 / 0.16);
+  --enabled-line: #8f96ad;
+  --blocked: #eef0f4;
+  --blocked-line: #b9bfcc;
+  --blocked-ink: #5f6578;
+  --progress-cbc: #f0b54a;
+  --mint-line: #bfe3d1;
+  --butter-line: #f2dca6;
+  --sky-line: #b9d9f0;
+  --lavender-line: #d6e0f7;
+  --map-cbc-col: #f3f7fc;
+  --map-col-alt: #f9fafc;
+  --pop-shadow: rgb(31 37 55 / 0.16);
+
+  /* Inicio: tramos del arco de avance por categoría */
+  --cat-cbc: #f0b54a;
+  --cat-required: #5b7fe3;
+  --cat-elective: #ee8b7b;
+  --cat-final: #67b39a;
+  --arc-track: #e6e9f0;
 }
 
 [data-theme="dark"] {
-  --bg: #111117;
-  --surface: #1a1a23;
-  --header: #17171f;
-  --line: #2a2a37;
-  --line-strong: #363645;
-  --ink: #ececf3;
-  --ink-2: #cfcfdc;
-  --muted: #a3a3b8;
-  --accent: #a3a1fa;
-  --on-accent: #111117;
-  --accent-soft: #24223f;
-  --disabled: #23232e;
-  --disabled-ink: #6c6c80;
+  --bg: #12151f;
+  --surface: #1b1f2c;
+  --header: #12151f;
+  --line: #2a3040;
+  --line-strong: #3a4152;
+  --ink: #eceef5;
+  --ink-2: #c9cedb;
+  --muted: #a3a9ba;
+  --accent: #9db4f7;
+  --on-accent: #12151f;
+  --accent-soft: #22304f;
+  --disabled: #232837;
+  --disabled-ink: #6f768a;
   --star: #e8b23a;
   --danger: #f2867d;
   --danger-line: #5a2b28;
   --danger-soft: #2e1a19;
   --danger-ink: #f7c2bc;
 
-  --lavender: #2b2850;
-  --lavender-ink: #c9c4ff;
-  --lavender-panel: #1d1b33;
-  --mint: #1d3a2c;
-  --mint-ink: #bdebd2;
+  --lavender: #22304f;
+  --lavender-ink: #c9d6fb;
+  --lavender-panel: #181d2b;
+  --mint: #1d3a2f;
+  --mint-ink: #bfe6d3;
   --butter: #3a3220;
   --butter-ink: #f3dda0;
-  --sky: #1e2e42;
-  --sky-ink: #b9d6f5;
-  --peach: #3d2a20;
-  --peach-ink: #ffc9a8;
+  --sky: #1c3346;
+  --sky-ink: #b9dcf5;
+  --peach: #3d2622;
+  --peach-ink: #f6c1b6;
   --pink: #3d2333;
   --pink-ink: #f5c3db;
   --teal: #1b3634;
   --teal-ink: #b2e6e1;
 
-  --enabled-line: #6c6a8f;
-  --blocked: #20202a;
-  --blocked-line: #3d3d4e;
-  --blocked-ink: #8e8ea3;
-  --progress-cbc: #6f9bd1;
-  --mint-line: #2f5a45;
+  --enabled-line: #6c7390;
+  --blocked: #1f2330;
+  --blocked-line: #3d4354;
+  --blocked-ink: #8e95a8;
+  --progress-cbc: #f3c46a;
+  --mint-line: #2f5a48;
   --butter-line: #5c4d2b;
-  --sky-line: #33506f;
-  --lavender-line: #2f2b52;
-  --map-cbc-col: #172119;
-  --map-col-alt: #1e1e28;
+  --sky-line: #2f5470;
+  --lavender-line: #2c3a5c;
+  --map-cbc-col: #181c27;
+  --map-col-alt: #171b26;
   --pop-shadow: rgb(0 0 0 / 0.5);
+
+  --cat-cbc: #f3c46a;
+  --cat-required: #7e9bf0;
+  --cat-elective: #f2a193;
+  --cat-final: #86c9b1;
+  --arc-track: #2a3040;
 }
 
 @theme inline {
@@ -155,8 +168,15 @@
   --color-map-cbc-col: var(--map-cbc-col);
   --color-map-col-alt: var(--map-col-alt);
   --color-pop-shadow: var(--pop-shadow);
+  --color-cat-cbc: var(--cat-cbc);
+  --color-cat-required: var(--cat-required);
+  --color-cat-elective: var(--cat-elective);
+  --color-cat-final: var(--cat-final);
+  --color-arc-track: var(--arc-track);
 
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Títulos y números grandes */
+  --font-display: "Unbounded Variable", "Onest Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -178,6 +198,11 @@ body {
 
 /* Tailwind 4 deja los botones con la flecha: la manito avisa que se puede tocar. */
 @layer base {
+  /* Títulos de página con la tipografía de títulos (rediseño del 5 de noviembre de 2026). */
+  h1 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;

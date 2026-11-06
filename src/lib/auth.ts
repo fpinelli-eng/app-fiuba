@@ -15,12 +15,31 @@ export type Profile = {
   avatarUrl: string | null;
 };
 
+const LOWERCASE_PARTICLES = new Set(["de", "del", "la", "las", "los", "y", "da", "di", "van", "von"]);
+
+// Las cuentas @fi.uba.ar traen el nombre en mayúsculas ("FRANCISCO PEREZ"): si viene todo en
+// mayúsculas o todo en minúsculas se pasa a "Francisco Perez"; si ya trae mayúsculas y minúsculas
+// se respeta tal cual ("McDonald").
+export function properName(name: string): string {
+  const trimmed = name.trim().replace(/\s+/g, " ");
+  if (trimmed !== trimmed.toUpperCase() && trimmed !== trimmed.toLowerCase()) return trimmed;
+  return trimmed
+    .toLocaleLowerCase("es")
+    .split(" ")
+    .map((word, i) =>
+      i > 0 && LOWERCASE_PARTICLES.has(word)
+        ? word
+        : word.replace(/(^|[-'’])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toLocaleUpperCase("es")),
+    )
+    .join(" ");
+}
+
 // Nombre y foto vienen de la cuenta de Google.
 export function profileFromUser(user: Pick<User, "email" | "user_metadata">): Profile {
   const meta = user.user_metadata ?? {};
   const email = user.email ?? "";
-  const fullName: string = (meta.full_name || meta.name || email.split("@")[0]).trim();
-  const firstName: string = (meta.given_name || fullName.split(" ")[0] || "").trim();
+  const fullName: string = properName(meta.full_name || meta.name || email.split("@")[0]);
+  const firstName: string = properName(meta.given_name || fullName.split(" ")[0] || "");
   const parts = fullName.split(/\s+/).filter(Boolean);
   const initials = ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
   return {

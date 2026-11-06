@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/500.css";
-import "@fontsource/ibm-plex-sans/600.css";
-import "@fontsource/ibm-plex-sans/700.css";
+// Onest para el texto y Unbounded para títulos y números grandes, servidas desde el proyecto.
+import "@fontsource-variable/onest";
+import "@fontsource-variable/unbounded";
 import "./globals.css";
 import { APP_NAME } from "@/lib/app";
 import { themeScript } from "@/lib/theme";
