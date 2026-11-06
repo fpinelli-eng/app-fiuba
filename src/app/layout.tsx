@@ -8,7 +8,7 @@ import { themeScript } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Tu carrera de FIUBA en un solo lugar",
+  description: "Tu carrera de ingeniería en un solo lugar",
 };
 
 // Celular: ancho del dispositivo y "cover" para que la barra de pestañas use env(safe-area-inset-bottom)

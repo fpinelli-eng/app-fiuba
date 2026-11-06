@@ -48,7 +48,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 ## Marca
 
 - **Nombre:** FIUBI (decidido el 6 de noviembre de 2026). En el código, `APP_NAME` de `src/lib/app.ts`.
-- **Logo:** "FIUBI" en Unbounded 600, con la U dibujada como el arco de avance del Inicio: tramo izquierdo amarillo, curva azul y tramo derecho coral. Tokens `brand-u1`, `brand-u2` y `brand-u3`: en claro, los tonos intensos #E59E1F / #3F63D6 / #E2654F, para que la U se lea sobre el fondo; en oscuro, los mismos del arco (#F3C46A / #7E9BF0 / #F2A193). Componente `src/components/Logo.tsx`: el alto se pone con una clase `h-…` y el ancho sale solo.
+- **Logo:** "FIUBI" en Unbounded 600, con la U dibujada como el arco de avance del Inicio: tramo izquierdo amarillo, curva azul y tramo derecho coral. Tokens `brand-u1`, `brand-u2` y `brand-u3`: en claro, los tonos intensos #E59E1F / #3F63D6 / #E2654F, para que la U se lea sobre el fondo; en oscuro, los mismos del arco (#F3C46A / #7E9BF0 / #F2A193). Componente `src/components/Logo.tsx`: el alto se pone con una clase `h-…` y el ancho sale solo. En el ingreso va con `tone="soft"` (los colores del arco, `cat-*`), para que no choque con los pasteles del mosaico.
 - **Ícono:** la columna dórica de la entrada de Paseo Colón (fuste acanalado, capitel y dos escalones), en crema #FBF6EC sobre azul noche #1F2537. Archivos: `src/app/icon.svg` (pestaña), `src/app/apple-icon.png` (iPhone) y `public/icons/` (Android, por `src/app/manifest.ts`). El dibujo y las versiones descartadas están en el lienzo de diseño, página "Logo FIUBI".
 - No es el logo de la facultad: la columna es parte del edificio. Se mantiene la aclaración "no es oficial".
 
@@ -74,7 +74,7 @@ Cada materia del calendario recibe un color pastel distinto, asignado en orden d
 ## Pantallas
 
 ### Ingreso
-- Pantalla 1: mosaico decorativo de bloques pastel, el logo FIUBI en grande, "Tu carrera de FIUBA en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
+- Pantalla 1: mosaico decorativo de bloques en tintes de los colores del arco (sin bordes ni bloques blancos o punteados), el logo FIUBI en grande, "Tu carrera de ingeniería en un solo lugar" y el botón "Ingresar con tu cuenta @fi.uba.ar". Nada más.
 - Cuenta rechazada: debajo del botón, recuadro durazno con "<mail> no es una cuenta de FIUBA" + "Ingresá con tu mail @fi.uba.ar"; el botón pasa a "Probar con otra cuenta".
 - Pantalla 2: "¿Qué carrera estudiás?", las 13 carreras en grilla de dos columnas y, si la carrera tiene más de un plan, los planes (el vigente marcado y con la etiqueta "Vigente"; los viejos de carreras que cambiaron de nombre muestran el nombre anterior). "Continuar" lleva al mapa en modo de primera carga.
 
