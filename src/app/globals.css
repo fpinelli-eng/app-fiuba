@@ -263,3 +263,71 @@ body {
     opacity: 0;
   }
 }
+
+/* Pantallas dibujadas de las historias (StoryMocks): cada una se anima en tres pasos, como un video.
+   El estado final es el de los estilos normales, así que con "reducir movimiento" se ve completa. */
+@keyframes story-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes story-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes story-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes story-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes story-arc {
+  from {
+    stroke-dashoffset: 120;
+  }
+}
+@keyframes story-tap {
+  0% {
+    opacity: 0;
+    transform: translate(14px, 18px);
+  }
+  35% {
+    opacity: 1;
+    transform: none;
+  }
+  55% {
+    transform: scale(0.78);
+  }
+  75% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes story-sheet {
+  0% {
+    transform: translateY(110%);
+  }
+  18%,
+  82% {
+    transform: none;
+  }
+  100% {
+    transform: translateY(110%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-mock,
+  .story-mock * {
+    animation: none !important;
+  }
+}
