@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const [pendingReviews, introSeen] = await Promise.all([countPendingReviews(profile.id), getIntroSeen(profile.id)]);
   return (
     <>
-      <Header profile={profile} pendingReviews={pendingReviews} />
+      <Header profile={profile} pendingReviews={pendingReviews} isAdmin={profile.isAdmin} />
       {/* La primera vez se abren solas; después, desde Perfil → "Ver la bienvenida" o con ?bienvenida en la dirección. */}
       <WelcomeStories firstName={profile.firstName} open={!introSeen} />
       {children}

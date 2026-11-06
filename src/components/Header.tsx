@@ -40,7 +40,7 @@ function useFreshPrefetches() {
 
 // Barra superior. En la computadora tiene todo el menú; en el celular queda compacta (logo,
 // Novedades como ícono y avatar) y las secciones principales pasan a la barra de pestañas de abajo.
-export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pendingReviews?: number }) {
+export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profile: Profile; pendingReviews?: number; isAdmin?: boolean }) {
   const pathname = usePathname();
   useFreshPrefetches();
   const isActive = (href: string) =>
@@ -80,9 +80,23 @@ export function Header({ profile, pendingReviews = 0 }: { profile: Profile; pend
               </Link>
             );
           })}
+          {/* Solo para administradores: entrada directa a Administración. */}
+          {isAdmin && (
+            <Link href="/admin" className="relative py-2 text-muted hover:text-ink">
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2.5">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex h-10 items-center rounded-full border border-line bg-surface px-3 text-[13px] font-semibold text-muted md:hidden"
+            >
+              Admin
+            </Link>
+          )}
           {/* Celular: Novedades como ícono. El tema se cambia desde Perfil → Apariencia. */}
           {NAV.filter((item) => item.mobile === "top").map((item) => {
             const active = isActive(item.href);
