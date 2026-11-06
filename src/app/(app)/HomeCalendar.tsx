@@ -4,7 +4,7 @@ import type { HomeCourses } from "@/lib/home/courses";
 import { formatHour } from "@/lib/plan/format";
 import { CAMPUS_NAME, DOT, PALETTE } from "./home-palette";
 
-// "Esta semana" del Inicio: los cursos en los que el alumno se inscribió desde el Plan, solo lectura.
+// "Esta semana" del Inicio: los cursos que el alumno confirmó en el Plan ("Confirmar mi cursada"), solo lectura.
 // En la computadora, una columna por día (lunes a viernes, y el sábado si hay clases); en el celular,
 // una lista que arranca hoy y sigue con los próximos días. Misma paleta y orden que el plan.
 
@@ -37,7 +37,7 @@ export function HomeCalendar({ data, action, enrolled = true }: { data: HomeCour
       </div>
 
       {!enrolled ? (
-        <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Tus horarios aparecen acá cuando te inscribís desde el Plan.</p>
+        <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Tus horarios aparecen acá cuando confirmás tu cursada en el Plan.</p>
       ) : (
         upcoming.length === 0 && week.asyncClasses.length === 0 && <p className="pb-3 text-muted md:order-last md:pt-4 md:pb-0">Sin clases presenciales esta semana.</p>
       )}
