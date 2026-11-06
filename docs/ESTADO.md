@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 5 de noviembre de 2026.
+Última actualización: 6 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -44,7 +44,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 
 0. **Fechas de examen y novedades** (acordado el 2 de noviembre): carga de fechas de examen en Administración (PR #50), sección **Finales** para los alumnos (sus finales pendientes primero, todas las mesas con buscador; PR #51) y sección **Novedades** (calendario académico de la FIUBA y avisos de los administradores, que se publican desde Administración → Novedades; PR #52), ya en `main`. En un PR abierto: el horario, el aula y los docentes de cada mesa, cargando las fechas con el enlace de la búsqueda del SIU. El calendario se carga una vez por año desde el PDF (`data/calendario/README.md`). Segundo desarrollador; Francisco decide el diseño.
 1. **Administración, lo que falta:** agregar electivas nuevas al plan. Ya están en `main`: quitar / volver a mostrar cursos y reemplazar la oferta sin borrar (PR #41), emparejar a mano materias (PR #44), cursos con cambios entre cuatrimestres (PR #45) y moderación de reseñas (PR #43). Detalle: un curso que un reemplazo ocultó por no estar en el SIU no vuelve a mostrarse solo si reaparece; se muestra a mano. Segundo desarrollador.
-2. **Plan del cuatrimestre:** completo para la beta ("Me inscribí en esta opción", PR #40; plan bloqueado por reseñas pendientes, PR #42). Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que tocaron "Me inscribí" se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
+2. **Plan del cuatrimestre:** completo para la beta (plan bloqueado por reseñas pendientes, PR #42). Las opciones A y B son borradores; lo que el alumno cursa de verdad lo confirma aparte con **"Confirmar mi cursada"** (reemplaza a "Me inscribí en esta opción" del PR #40, decidido el 6 de noviembre): elige en cada materia el curso en el que quedó, y eso pasa al Inicio y al mapa sin tocar las opciones. Industrial, Química e Informática 2023 ya tienen publicada la oferta completa del 2C 2026. **Ojo con "Reseñas pendientes desde"** del cuatrimestre actual: con una fecha ya pasada, a todos los que confirmaron su cursada se les bloquea el Plan al instante. Tiene que ser una fecha de fin de cursada.
 3. **Reseñas:** completas para la beta.
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). Francisco. "Cambiar" carrera o plan: hecho (sin equivalencias: `change_my_plan()` borra materias, requisitos y plan del cuatrimestre; quedan las cursadas y las reseñas; lleva a la carga rápida del mapa).
 5. **Inicio:** hecho, con el calendario de la cursada (PR #47).
