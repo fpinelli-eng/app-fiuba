@@ -40,9 +40,8 @@ export function PlanMobile({
   warnings,
   onPick,
   onClear,
-  enroll,
-  enrollState,
-  isEnrolledHere,
+  cursadaCount,
+  onConfirm,
 }: {
   active: OptionKey;
   onOption: (k: OptionKey) => void;
@@ -57,9 +56,9 @@ export function PlanMobile({
   warnings: PlanWarning[];
   onPick: (subject: string, course: string) => void;
   onClear: () => void;
-  enroll: () => void;
-  enrollState: "idle" | "saving" | "error";
-  isEnrolledHere: boolean;
+  /** Subjects of the confirmed cursada (0 if not confirmed yet). */
+  cursadaCount: number;
+  onConfirm: () => void;
 }) {
   const [view, setView] = useState<View>(() => (plan.length > 0 ? "semana" : "materias"));
   const [sheet, setSheet] = useState<string | null>(null);
@@ -120,7 +119,7 @@ export function PlanMobile({
         />
       )}
 
-      {plan.length > 0 && (
+      {(plan.length > 0 || cursadaCount > 0) && (
         <div
           className={`fixed inset-x-0 ${ABOVE_TAB_BAR} z-30 flex items-center justify-between gap-3 border-t border-line bg-surface px-4 py-2.5 shadow-[0_-4px_16px_var(--pop-shadow)]`}
         >
@@ -132,21 +131,24 @@ export function PlanMobile({
               <b className="text-ink">{formatHours(analysis.weeklyMinutes)}</b> h por semana
               {analysis.asyncMinutes > 0 && ` + ${formatHours(analysis.asyncMinutes)} asinc.`}
             </div>
-            {enrollState === "error" && <div className="text-danger">No pudimos guardar tu cursada</div>}
           </div>
-          {isEnrolledHere ? (
-            <span className="inline-flex h-10 flex-none items-center gap-1.5 rounded-[10px] bg-mint px-3 text-[13.5px] font-semibold text-mint-ink">
+          {cursadaCount > 0 ? (
+            <button
+              onClick={onConfirm}
+              aria-haspopup="dialog"
+              aria-label="Cursada confirmada: editar"
+              className="inline-flex h-10 flex-none items-center gap-1.5 rounded-[10px] bg-mint px-3 text-[13.5px] font-semibold text-mint-ink"
+            >
               <Check size={14} />
-              Te inscribiste
-            </span>
+              Confirmada
+            </button>
           ) : (
             <button
-              onClick={enroll}
-              disabled={enrollState === "saving"}
-              aria-label="Me inscribí en esta opción"
-              className="h-10 flex-none rounded-[10px] bg-accent px-3.5 text-[13.5px] font-semibold text-on-accent disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink"
+              onClick={onConfirm}
+              aria-haspopup="dialog"
+              className="h-10 flex-none rounded-[10px] bg-accent px-3.5 text-[13.5px] font-semibold text-on-accent"
             >
-              {enrollState === "saving" ? "Guardando…" : "Me inscribí"}
+              Confirmar cursada
             </button>
           )}
         </div>

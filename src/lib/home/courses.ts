@@ -3,7 +3,7 @@ import { normalizeText, type Subject } from "@/lib/map/model";
 import { titleCase } from "@/lib/plan/format";
 
 // The student's courses of the current term, for the home calendar (prototype 04-inicio).
-// They come from user_courses, which "Me inscribí en esta opción" fills in the Plan.
+// They come from user_courses, which "Confirmar mi cursada" fills in the Plan.
 
 export type Campus = "PC" | "LH" | "CU";
 

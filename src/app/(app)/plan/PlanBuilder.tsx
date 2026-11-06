@@ -5,12 +5,15 @@ import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
 import { WEEK_DAYS, type ClassBlock } from "@/lib/plan/options";
 import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, SubjectGroup } from "@/lib/plan/data";
-import { enrollInCourses, savePlanOption } from "./actions";
+import { enrolledEntries, startingEntries } from "@/lib/plan/cursada";
+import { confirmCourses, savePlanOption } from "./actions";
+import { ConfirmCourses } from "./ConfirmCourses";
 import { PlanMobile } from "./PlanMobile";
-import { CAMPUS_SHORT, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
+import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
-// Cada cambio se guarda solo en la base (plan_choices), como en el mapa.
+// Cada cambio se guarda solo en la base (plan_choices), como en el mapa: las opciones A y B son
+// borradores. Lo que de verdad cursa el alumno lo confirma aparte ("Confirmar mi cursada").
 // Desde md (768 px) se ve la versión de escritorio; en celular, PlanMobile, con el mismo
 // estado y las mismas acciones.
 
@@ -27,7 +30,9 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   // Los guardados van en fila: así el último cambio es el que queda.
   const saving = useRef<Promise<void>>(Promise.resolve());
   const [enrolled, setEnrolled] = useState<string[]>(data.enrolled);
-  const [enrollState, setEnrollState] = useState<"idle" | "saving" | "error">("idle");
+  // Cursos de la cursada que se está confirmando (null: el diálogo está cerrado).
+  const [confirming, setConfirming] = useState<Entry[] | null>(null);
+  const [justConfirmed, setJustConfirmed] = useState(false);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [hover, setHover] = useState<Entry | null>(null);
@@ -61,24 +66,21 @@ export function PlanBuilder({ data }: { data: PlanData }) {
     else setPlan([...plan, { subject, course }]);
     setHover(null);
   };
-  const planCourses = plan.map((e) => e.course);
-  const isEnrolledHere =
-    planCourses.length > 0 && planCourses.length === enrolled.length && planCourses.every((c) => enrolled.includes(c));
-  // Subjects of the courses enrolled before, to unmark them in the map if they are no longer taken.
-  const droppedSubjects = data.subjects
-    .filter((s) => s.courses.some((c) => enrolled.includes(c.id)))
-    .map((s) => s.code);
-  const enroll = () => {
-    setEnrollState("saving");
-    // After any pending save, so both go in order.
-    saving.current = saving.current
-      .then(() => enrollInCourses(plan, droppedSubjects))
-      .then((r) => {
-        if (r.error) return setEnrollState("error");
-        setEnrolled(planCourses);
-        setEnrollState("idle");
-      })
-      .catch(() => setEnrollState("error"));
+  const cursada = enrolledEntries(enrolled, data.subjects);
+  const openConfirm = () => {
+    setJustConfirmed(false);
+    setConfirming(startingEntries(cursada, plan));
+  };
+  const saveCursada = async (entries: Entry[]): Promise<boolean> => {
+    // Subjects confirmed before, to unmark them in the map if they are no longer taken.
+    const dropped = cursada.map((e) => e.subject);
+    // After any pending save of the options, so both go in order.
+    await saving.current;
+    const r = await confirmCourses(entries, dropped);
+    if (r.error) return false;
+    setEnrolled(entries.map((e) => e.course));
+    setJustConfirmed(true);
+    return true;
   };
 
   const toggleOpen = (code: string) => {
@@ -121,6 +123,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
             {saveState === "saving" && " · Guardando…"}
             {saveState === "saved" && " · Guardado"}
             {saveState === "error" && <span className="text-danger"> · No pudimos guardar el último cambio</span>}
+            {justConfirmed && " · Cursada confirmada"}
           </p>
         </div>
         <div role="tablist" aria-label="Opciones" className="hidden gap-1.5 md:flex rounded-xl border border-line bg-surface p-1">
@@ -155,24 +158,24 @@ export function PlanBuilder({ data }: { data: PlanData }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {enrollState === "error" && <span className="text-[13px] text-danger">No pudimos guardar tu cursada</span>}
-          {isEnrolledHere ? (
-            <span className="inline-flex h-[38px] items-center gap-1.5 rounded-[10px] bg-mint px-3.5 text-[13.5px] font-semibold text-mint-ink">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              Te inscribiste en esta opción
-            </span>
+          {cursada.length > 0 ? (
+            <button
+              onClick={openConfirm}
+              aria-haspopup="dialog"
+              className="inline-flex h-[38px] items-center gap-1.5 rounded-[10px] bg-mint px-3.5 text-[13.5px] font-semibold text-mint-ink"
+            >
+              <Check size={14} />
+              Cursada confirmada · {cursada.length} mat.
+              <span className="ml-1 font-normal underline underline-offset-2">Editar</span>
+            </button>
           ) : (
-            planCourses.length > 0 && (
-              <button
-                onClick={enroll}
-                disabled={enrollState === "saving"}
-                className="h-[38px] rounded-[10px] bg-accent px-3.5 text-[13.5px] font-semibold text-on-accent disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-ink"
-              >
-                {enrollState === "saving" ? "Guardando…" : "Me inscribí en esta opción"}
-              </button>
-            )
+            <button
+              onClick={openConfirm}
+              aria-haspopup="dialog"
+              className="h-[38px] rounded-[10px] bg-accent px-3.5 text-[13.5px] font-semibold text-on-accent"
+            >
+              Confirmar mi cursada
+            </button>
           )}
           <button
             onClick={() => setPlan([])}
@@ -279,10 +282,21 @@ export function PlanBuilder({ data }: { data: PlanData }) {
         warnings={warnings}
         onPick={pick}
         onClear={() => setPlan([])}
-        enroll={enroll}
-        enrollState={enrollState}
-        isEnrolledHere={isEnrolledHere}
+        cursadaCount={cursada.length}
+        onConfirm={openConfirm}
       />
+
+      {confirming && (
+        <ConfirmCourses
+          initial={confirming}
+          subjects={data.subjects}
+          options={plans}
+          term={data.term}
+          confirmed={cursada.map((e) => e.course)}
+          onSave={saveCursada}
+          onClose={() => setConfirming(null)}
+        />
+      )}
     </main>
   );
 }

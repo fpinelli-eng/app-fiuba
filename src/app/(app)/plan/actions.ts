@@ -27,20 +27,19 @@ export async function savePlanOption(option: OptionKey, courseIds: string[]): Pr
   return { error: null };
 }
 
-// "Me inscribí en esta opción": esos cursos pasan a ser la cursada del cuatrimestre actual
-// (user_courses), de donde salen las reseñas pendientes. Reemplaza la cursada de este
-// cuatrimestre; las de cuatrimestres anteriores no se tocan.
+// "Confirmar mi cursada": los cursos en los que el alumno quedó pasan a ser la cursada del
+// cuatrimestre actual (user_courses), de donde salen el calendario del Inicio y las reseñas
+// pendientes. Reemplaza la cursada de este cuatrimestre (sin cursos, la borra); las de
+// cuatrimestres anteriores no se tocan. Las opciones A y B (plan_choices) tampoco: son borradores.
 // En el mapa, sus materias quedan "Cursando", y las de la cursada anterior que ya no están
 // vuelven a quedar sin marcar (solo si estaban en "Cursando": nunca toca aprobadas ni finales).
-export async function enrollInCourses(entries: Entry[], droppedSubjects: string[]): Promise<SaveResult> {
+export async function confirmCourses(entries: Entry[], droppedSubjects: string[]): Promise<SaveResult> {
   const account = await requireProfile();
   const ids = entries.map((e) => Number(e.course));
   const subjectIds = entries.map((e) => Number(e.subject));
   const dropped = droppedSubjects.map(Number).filter((id) => !subjectIds.includes(id));
   if ([...subjectIds, ...dropped].some((id) => !Number.isInteger(id) || id <= 0)) return { error: "Materias inválidas." };
-  if (ids.length === 0 || ids.length > 40 || ids.some((id) => !Number.isInteger(id) || id <= 0)) {
-    return { error: "Elegí al menos un curso." };
-  }
+  if (ids.length > 40 || ids.some((id) => !Number.isInteger(id) || id <= 0)) return { error: "Cursos inválidos." };
 
   const supabase = await createClient();
   const term = await supabase.from("terms").select("id").eq("is_current", true).maybeSingle();
@@ -59,7 +58,9 @@ export async function enrollInCourses(entries: Entry[], droppedSubjects: string[
     const removed = await supabase.from("user_courses").delete().eq("user_id", account.id).in("offering_id", previous);
     if (removed.error) return { error: "No pudimos guardar tu cursada." };
   }
-  const added = await supabase.from("user_courses").insert(ids.map((offering_id) => ({ user_id: account.id, offering_id })));
+  const added = ids.length
+    ? await supabase.from("user_courses").insert(ids.map((offering_id) => ({ user_id: account.id, offering_id })))
+    : { error: null };
   if (added.error) {
     // Put back what was there, so a failure does not leave the student without courses.
     if (previous.length) {
