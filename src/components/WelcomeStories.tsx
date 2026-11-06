@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import { markIntroSeen } from "@/app/(app)/actions";
 import { NavIcon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
@@ -23,16 +23,28 @@ const TONE: Record<Story["tone"], { bg: string; ink: string }> = {
 // A press shorter than this is a tap (next / previous); a longer one only pauses, like Instagram.
 const TAP_MS = 250;
 
+const noSubscribe = () => () => {};
+const reducedMotionQuery = () => window.matchMedia("(prefers-reduced-motion: reduce)");
+const subscribeReducedMotion = (onChange: () => void) => {
+  const media = reducedMotionQuery();
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+};
+
 // Historias de bienvenida: se abren solas la primera vez que el alumno entra a la app y pasan
 // solas (STORY_SECONDS cada una) o tocando: a la derecha avanza, a la izquierda vuelve, apretado
 // pausa. Con teclado: flechas y Escape. Con "reducir movimiento" no pasan solas.
 export function WelcomeStories({ firstName, open: openAtStart }: { firstName: string; open: boolean }) {
   const router = useRouter();
   const stories = welcomeStories(firstName);
-  const [open, setOpen] = useState(openAtStart);
+  const [opened, setOpened] = useState(openAtStart);
+  // ?bienvenida in the address opens them too (handy to show them to someone), until closed.
+  const askedByUrl = useSyncExternalStore(noSubscribe, () => new URLSearchParams(window.location.search).has("bienvenida"), () => false);
+  const [closedUrl, setClosedUrl] = useState(false);
+  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, () => reducedMotionQuery().matches, () => false);
+  const open = opened || (askedByUrl && !closedUrl);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const pressedAt = useRef(0);
@@ -41,30 +53,23 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
   const story = stories[index];
   const tone = TONE[story.tone];
 
-  const close = useCallback(() => {
-    setOpen(false);
+  const close = () => {
+    setOpened(false);
+    setClosedUrl(true);
     markIntroSeen().catch(() => {});
-  }, []);
-  const next = useCallback(() => setIndex((i) => Math.min(i + 1, stories.length - 1)), [stories.length]);
-  const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
+  };
+  const next = () => setIndex((i) => Math.min(i + 1, stories.length - 1));
+  const prev = () => setIndex((i) => Math.max(i - 1, 0));
 
   // Reopen from Perfil.
   useEffect(() => {
     const reopen = () => {
       setIndex(0);
       setPaused(false);
-      setOpen(true);
+      setOpened(true);
     };
     window.addEventListener(OPEN_INTRO_EVENT, reopen);
     return () => window.removeEventListener(OPEN_INTRO_EVENT, reopen);
-  }, []);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(media.matches);
-    const onChange = () => setReducedMotion(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
   }, []);
 
   // While open: focus inside, no page scroll behind, and focus back where it was when it closes.
