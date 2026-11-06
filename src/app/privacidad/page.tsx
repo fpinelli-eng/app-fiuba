@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { APP_NAME, CONTACT_EMAIL } from "@/lib/app";
+import { APP_NAME, CONTACT_EMAILS } from "@/lib/app";
 
 export const metadata: Metadata = { title: `Política de privacidad · ${APP_NAME}` };
 
@@ -11,9 +11,16 @@ const UPDATED = "16 de octubre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
-    <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold break-words text-accent underline">
-      {CONTACT_EMAIL}
-    </a>
+    <>
+      {CONTACT_EMAILS.map((email, i) => (
+        <span key={email}>
+          {i > 0 && " o "}
+          <a href={`mailto:${email}`} className="font-semibold break-words text-accent underline">
+            {email}
+          </a>
+        </span>
+      ))}
+    </>
   );
 
   return (
