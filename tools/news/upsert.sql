@@ -11,3 +11,7 @@ on conflict (id) do update set
   image_url = excluded.image_url,
   published_at = excluded.published_at,
   fetched_at = now();
+
+-- Only the 12 newest stay: when the FIUBA publishes a new one, the oldest goes away.
+delete from public.fiuba_news
+where id not in (select id from public.fiuba_news order by published_at desc, id desc limit 12);

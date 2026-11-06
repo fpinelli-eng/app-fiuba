@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/app";
 import { getNewsPage } from "@/lib/news/data";
-import { formatNewsDate, formatWeekday, groupCalendar, nextDates, type FiubaNewsItem } from "@/lib/news/model";
+import { dateBadge, daysUntil, formatCountdown, formatNewsDate, groupCalendar, nextDates, type FiubaNewsItem } from "@/lib/news/model";
 import { requireProfile } from "@/lib/session";
 
 export const metadata: Metadata = { title: `Novedades · ${APP_NAME}` };
@@ -78,23 +78,39 @@ export default async function NovedadesPage() {
       )}
 
       {dates.length > 0 && (
-        <section aria-labelledby="calendar-title" className="rounded-2xl border border-line bg-surface px-4 py-3.5 md:px-[22px]">
-          <h2 id="calendar-title" className="text-[15px] font-semibold text-muted">
-            Próximas fechas
-          </h2>
-          <ul className="mt-1.5 flex flex-col gap-1.5">
-            {dates.map(({ event, now }) => (
-              <li key={event.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-                <span className="min-w-0 text-[15px] text-ink">{event.title}</span>
-                <span className="text-sm whitespace-nowrap text-muted tabular-nums">
-                  {now ? `hasta el ${formatWeekday(event.endsOn)}` : `desde el ${formatWeekday(event.startsOn)}`}
-                </span>
-              </li>
-            ))}
+        <section aria-labelledby="calendar-title" className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="calendar-title" className="text-[22px] font-semibold">
+              Próximas fechas
+            </h2>
+            <a href={FIUBA_URL} target="_blank" rel="noopener noreferrer" className="py-1 text-sm text-muted underline">
+              Calendario completo
+            </a>
+          </div>
+          <ul className="grid gap-2.5 md:grid-cols-5 md:gap-3">
+            {dates.map(({ event, now }) => {
+              const badge = dateBadge(now ? event.endsOn : event.startsOn);
+              return (
+                <li key={event.id} className="flex items-center gap-3.5 rounded-2xl border border-line bg-surface p-3 md:flex-col md:items-start md:gap-3 md:p-4">
+                  <span
+                    className={`flex w-[62px] flex-none flex-col items-center rounded-xl py-1.5 leading-none md:w-[68px] ${
+                      now ? "bg-mint text-mint-ink" : "bg-lavender text-lavender-ink"
+                    }`}
+                  >
+                    <span className="text-[11px] font-semibold uppercase">{now ? "hasta" : badge.month}</span>
+                    <span className="font-display text-[26px] font-semibold tabular-nums">{badge.day}</span>
+                    {now && <span className="text-[11px] font-semibold uppercase">{badge.month}</span>}
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-[15px] leading-snug font-semibold text-ink md:line-clamp-4">{event.title}</span>
+                    <span className="text-[13px] text-muted tabular-nums">
+                      {now ? "En curso" : formatCountdown(daysUntil(today, event.startsOn))}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
           </ul>
-          <a href={FIUBA_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block py-1 text-[13px] text-muted underline">
-            Calendario académico de la FIUBA
-          </a>
         </section>
       )}
 

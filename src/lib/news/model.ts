@@ -31,9 +31,32 @@ export interface FiubaNewsItem {
   publishedAt: string;
 }
 
-/** The next calendar dates worth a glance: what is going on now, then what starts soonest. */
-export function nextDates(groups: CalendarGroups, max = 3): { event: AcademicEvent; now: boolean }[] {
-  return [...groups.now.map((event) => ({ event, now: true })), ...groups.soon.map((event) => ({ event, now: false }))].slice(0, max);
+/** The next calendar dates of Novedades: what is going on now, then what starts soonest. */
+export function nextDates(groups: CalendarGroups, max = 5): { event: AcademicEvent; now: boolean }[] {
+  return [
+    ...groups.now.map((event) => ({ event, now: true })),
+    ...[...groups.soon, ...groups.later].map((event) => ({ event, now: false })),
+  ].slice(0, max);
+}
+
+/** "2026-11-09" → { day: "9", month: "nov" } */
+export function dateBadge(date: string): { day: string; month: string } {
+  const [, m, d] = date.split("-").map(Number);
+  return { day: String(d), month: MONTH[m - 1] };
+}
+
+/** Whole days from today to date (both "YYYY-MM-DD"). */
+export function daysUntil(today: string, date: string): number {
+  const t = (s: string) => Date.UTC(...(s.split("-").map(Number) as [number, number, number]));
+  return Math.round((t(date) - t(today)) / 86400000);
+}
+
+/** "Mañana", "En 3 días", "En 2 semanas". */
+export function formatCountdown(days: number): string {
+  if (days <= 0) return "Hoy";
+  if (days === 1) return "Mañana";
+  if (days < 14) return `En ${days} días`;
+  return `En ${Math.round(days / 7)} semanas`;
 }
 
 export interface CalendarGroups {

@@ -9,9 +9,6 @@ on:
   schedule:
     - cron: "41 */2 * * *"
   workflow_dispatch:
-  # TEMPORARY: loads the news from this branch so the PR preview can show them. Remove before merging.
-  push:
-    branches: [noticias]
 
 permissions:
   contents: read

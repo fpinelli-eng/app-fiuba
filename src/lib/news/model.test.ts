@@ -6,6 +6,9 @@ import {
   formatWeekday,
   groupCalendar,
   nextDates,
+  dateBadge,
+  daysUntil,
+  formatCountdown,
   sortNews,
   validateNews,
   type AcademicEvent,
@@ -128,8 +131,14 @@ describe("validateNews", () => {
 
 describe("nextDates", () => {
   const ev = (id: number, title: string) => ({ id, title, startsOn: "2026-11-09", endsOn: "2026-11-14", sort: id });
-  it("primero lo que pasa ahora, después lo que empieza antes, hasta tres", () => {
-    const got = nextDates({ now: [ev(1, "Clases")], soon: [ev(2, "Inscripción"), ev(3, "Exámenes"), ev(4, "Receso")], later: [ev(5, "x")] });
-    expect(got.map((d) => [d.event.title, d.now])).toEqual([["Clases", true], ["Inscripción", false], ["Exámenes", false]]);
+  it("primero lo que pasa ahora, después lo que empieza antes, hasta cinco", () => {
+    const got = nextDates({ now: [ev(1, "Clases")], soon: [ev(2, "Inscripción"), ev(3, "Exámenes"), ev(4, "Receso")], later: [ev(5, "Verano"), ev(6, "x")] });
+    expect(got.map((d) => [d.event.title, d.now])).toEqual([["Clases", true], ["Inscripción", false], ["Exámenes", false], ["Receso", false], ["Verano", false]]);
+  });
+  it("fechas y cuenta regresiva", () => {
+    expect(dateBadge("2026-11-09")).toEqual({ day: "9", month: "nov" });
+    expect(daysUntil("2026-11-06", "2026-11-09")).toBe(3);
+    expect(daysUntil("2026-12-30", "2027-01-02")).toBe(3);
+    expect([0, 1, 3, 13, 21].map(formatCountdown)).toEqual(["Hoy", "Mañana", "En 3 días", "En 13 días", "En 3 semanas"]);
   });
 });
