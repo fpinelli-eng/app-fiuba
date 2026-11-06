@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { addDays, buenosAiresDate, LATER_DAYS, sortNews, type AcademicEvent, type NewsItem } from "./model";
+import { addDays, buenosAiresDate, LATER_DAYS, sortNews, type AcademicEvent, type FiubaNewsItem, type NewsItem } from "./model";
 
 // Server-only queries of the Novedades section. The database only lets FIUBA accounts read.
 
@@ -46,11 +46,30 @@ export async function getNews(): Promise<NewsItem[]> {
   );
 }
 
+/** The latest FIUBA news, newest first. */
+export async function getFiubaNews(limit = 12): Promise<FiubaNewsItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("fiuba_news")
+    .select("id, title, summary, url, image_url, published_at")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`fiuba_news: ${error.message}`);
+  return data.map((n) => ({
+    id: n.id as number,
+    title: n.title as string,
+    summary: (n.summary as string | null) ?? null,
+    url: n.url as string,
+    imageUrl: (n.image_url as string | null) ?? null,
+    publishedAt: n.published_at as string,
+  }));
+}
+
 /** Data for /novedades: avisos and the events of the latest calendar that are not over and start within LATER_DAYS. */
-export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; events: AcademicEvent[] }> {
+export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; fiuba: FiubaNewsItem[]; events: AcademicEvent[] }> {
   const today = buenosAiresDate();
-  const [news, calendar] = await Promise.all([getNews(), latestCalendar()]);
-  if (!calendar) return { today, news, events: [] };
+  const [news, fiuba, calendar] = await Promise.all([getNews(), getFiubaNews(), latestCalendar()]);
+  if (!calendar) return { today, news, fiuba, events: [] };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -69,7 +88,7 @@ export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; 
     endsOn: e.ends_on as string,
     sort: e.sort as number,
   }));
-  return { today, news, events };
+  return { today, news, fiuba, events };
 }
 
 /** For the admin screen: what calendar is loaded. */

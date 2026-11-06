@@ -20,6 +20,22 @@ export interface NewsItem {
   publishedAt: string;
 }
 
+/** A featured news item of www.fi.uba.ar (public.fiuba_news, copied by the "Noticias de la FIUBA" workflow). */
+export interface FiubaNewsItem {
+  id: number;
+  title: string;
+  summary: string | null;
+  url: string;
+  imageUrl: string | null;
+  /** ISO timestamp */
+  publishedAt: string;
+}
+
+/** The next calendar dates worth a glance: what is going on now, then what starts soonest. */
+export function nextDates(groups: CalendarGroups, max = 3): { event: AcademicEvent; now: boolean }[] {
+  return [...groups.now.map((event) => ({ event, now: true })), ...groups.soon.map((event) => ({ event, now: false }))].slice(0, max);
+}
+
 export interface CalendarGroups {
   /** starts_on <= today <= ends_on, the ones that end first first. */
   now: AcademicEvent[];

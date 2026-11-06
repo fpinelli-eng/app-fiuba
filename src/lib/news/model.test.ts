@@ -5,6 +5,7 @@ import {
   formatNewsDate,
   formatWeekday,
   groupCalendar,
+  nextDates,
   sortNews,
   validateNews,
   type AcademicEvent,
@@ -122,5 +123,13 @@ describe("validateNews", () => {
     });
     expect(validateNews({ title: "a", body: "", url: "javascript:alert(1)" }).error).toBeTruthy();
     expect(validateNews({ title: "a", body: "", url: "www.fi.uba.ar" }).error).toBeTruthy();
+  });
+});
+
+describe("nextDates", () => {
+  const ev = (id: number, title: string) => ({ id, title, startsOn: "2026-11-09", endsOn: "2026-11-14", sort: id });
+  it("primero lo que pasa ahora, después lo que empieza antes, hasta tres", () => {
+    const got = nextDates({ now: [ev(1, "Clases")], soon: [ev(2, "Inscripción"), ev(3, "Exámenes"), ev(4, "Receso")], later: [ev(5, "x")] });
+    expect(got.map((d) => [d.event.title, d.now])).toEqual([["Clases", true], ["Inscripción", false], ["Exámenes", false]]);
   });
 });
