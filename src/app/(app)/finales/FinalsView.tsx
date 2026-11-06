@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ReminderButton } from "@/components/ReminderButton";
 import { normalizeText } from "@/lib/map/model";
+import type { MyReminders } from "@/lib/reminders/types";
 import {
   enrollmentStatus,
   formatEnrollMoment,
@@ -59,7 +61,7 @@ function TableRow({ table, now, timed }: { table: ExamTableView; now: string; ti
   );
 }
 
-export function FinalsView({ data }: { data: FinalsData }) {
+export function FinalsView({ data, reminders }: { data: FinalsData; reminders: MyReminders }) {
   const [query, setQuery] = useState("");
   const q = normalizeText(query);
   const { now, pending, all } = data;
@@ -110,7 +112,13 @@ export function FinalsView({ data }: { data: FinalsData }) {
               <div className="flex flex-col pb-2">
                 {pending.map((s) => (
                   <div key={s.key} className="border-t border-line first:border-t-0">
-                    <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">{s.name}</h3>
+                    <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-1 md:px-[22px]">
+                      <h3 className="text-[15px] font-semibold">{s.name}</h3>
+                      {/* Recordarme: hasta que abra la próxima inscripción (si ya está abierta, no hace falta). */}
+                      {s.code && !s.tables.some((t) => enrollmentStatus(t, now).kind === "open") && (
+                        <ReminderButton target={{ kind: "exam", subject: s.name, siuCodes: [s.code] }} reminderId={reminders.exams[s.name] ?? null} label={`inscripción al final de ${s.name}`} />
+                      )}
+                    </div>
                     {s.tables.length === 0 ? (
                       <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">Sin mesas cargadas.</div>
                     ) : (

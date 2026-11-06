@@ -179,6 +179,16 @@ select test.fails($$insert into public.plan_choices (user_id, option, offering_i
 delete from public.plan_choices where option = 'B';
 select test.ok((select count(*) from public.plan_choices) = 1, 'student removes a course from an option');
 
+-- Reminders ("Recordarme").
+insert into public.reminders (kind, subject_name, siu_codes) values ('exam', 'Álgebra Lineal', array['CB002']);
+insert into public.reminders (kind, academic_event_id) values ('calendar', (select min(id) from public.academic_events));
+select test.ok((select count(*) from public.reminders) = 2, 'student creates reminders');
+select test.fails($$insert into public.reminders (kind, subject_name, siu_codes) values ('exam', 'Álgebra Lineal', array['CB002'])$$, 'student repeats a pending reminder');
+select test.fails($$insert into public.reminders (user_id, kind, subject_name, siu_codes) values ('bbbbbbbb-0000-0000-0000-000000000002', 'exam', 'Física I', array['CB003'])$$, 'student creates a reminder for another student');
+select test.fails($$insert into public.reminders (kind, subject_name, siu_codes, sent_at) values ('exam', 'Física I', array['CB003'], now())$$, 'student creates a reminder already sent');
+select test.fails($$insert into public.reminders (kind) values ('exam')$$, 'exam reminder without a subject');
+select test.fails($$update public.reminders set sent_at = now()$$, 'student marks a reminder as sent');
+
 -- Reviews ---------------------------------------------------------------------------
 
 select test.fails('select public.submit_review(1, 5::smallint, null)', 'review before the review date');
@@ -240,6 +250,8 @@ select test.ok((select count(*) from public.user_subjects) = 0, 'another student
 select test.ok((select count(*) from public.user_requirements) = 0, 'another student does not see her requirements');
 select test.ok((select count(*) from public.user_courses) = 0, 'another student does not see her courses');
 select test.ok((select count(*) from public.plan_choices) = 0, 'another student does not see her plan');
+select test.ok((select count(*) from public.reminders) = 0, 'another student does not see her reminders');
+delete from public.reminders;  -- RLS: deletes nothing
 delete from public.plan_choices;  -- RLS: deletes nothing
 select test.ok((select count(*) from public.my_reviews()) = 0, 'another student does not get her review in my_reviews');
 select test.fails('select 1 from public.review_authors', 'admin reads review_authors');
@@ -312,5 +324,6 @@ select test.ok((select count(*) from public.reviews) = 2, 'reviews stay after de
 select test.ok((select count(*) from public.review_authors) = 0, 'authorship is deleted with the account');
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
 select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
+select test.ok((select count(*) from public.reminders) = 0, 'reminders are deleted with the account');
 
 \echo 'All security checks passed.'

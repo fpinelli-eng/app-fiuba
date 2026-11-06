@@ -47,6 +47,10 @@ export default function PrivacidadPage() {
             <b>Tus reseñas:</b> las estrellas y el comentario de cada curso que reseñás.
           </li>
           <li>
+            <b>Tus recordatorios:</b> los finales y las fechas del calendario para los que tocaste «Recordarme». Te mandamos un solo mail a tu cuenta @fi.uba.ar
+            cuando abre cada uno, y nada más: no usamos tu mail para otra cosa.
+          </li>
+          <li>
             <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada y tu preferencia de tema (claro u oscuro).
           </li>
         </ul>

@@ -1,0 +1,62 @@
+# "Recordarme": every hour, sends the reminders that are due (an enrollment to a final opened in the
+# SIU, or an academic calendar date started) and marks them as sent. One email per reminder.
+# Secrets: SUPABASE_DB_PASSWORD (same as "Base de datos") and the app's mail account: SMTP_HOST,
+# SMTP_PORT, SMTP_USER, SMTP_PASS (for Gmail, an app password) and MAIL_FROM ("FIUBI <…@gmail.com>").
+# Without the mail secrets it only counts the waiting reminders. Nothing personal goes to the log.
+name: Recordatorios
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: Mandar recordatorios
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the mail client
+        run: npm install --no-save --no-audit --no-fund nodemailer@6.9.16
+      - name: Find the pooler
+        # Same connection as "Base de datos" (IPv4 session pooler: aws-1 or aws-0).
+        run: |
+          if [ -z "$PGPASSWORD" ]; then echo "::error::Falta el secreto SUPABASE_DB_PASSWORD."; exit 1; fi
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            conn="host=$candidate port=5432 user=postgres.$SUPABASE_PROJECT_ID dbname=postgres sslmode=require connect_timeout=15"
+            if psql "$conn" -Atc "select 1" > /dev/null 2>> "$RUNNER_TEMP/psql.log"; then
+              echo "PGCONN=$conn" >> "$GITHUB_ENV"; exit 0
+            fi
+          done
+          echo "::error title=No se pudo conectar a Supabase::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"; exit 1
+      - name: Due reminders
+        run: psql "$PGCONN" -v ON_ERROR_STOP=1 -Atq -f tools/reminders/due.sql > "$RUNNER_TEMP/due.json"
+      - name: Send
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+        run: node --experimental-strip-types tools/reminders/send.mjs "$RUNNER_TEMP/due.json" "$RUNNER_TEMP/sent.json"
+      - name: Mark as sent
+        if: always()
+        run: |
+          if [ -s "$RUNNER_TEMP/sent.json" ] && [ "$(cat "$RUNNER_TEMP/sent.json")" != "[]" ]; then
+            psql "$PGCONN" -v ON_ERROR_STOP=1 -q -v ids="$(cat "$RUNNER_TEMP/sent.json")" -f tools/reminders/sent.sql
+          fi

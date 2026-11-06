@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/app";
+import { ReminderButton } from "@/components/ReminderButton";
 import { getNewsPage } from "@/lib/news/data";
+import { getMyReminders } from "@/lib/reminders/data";
 import { dateBadge, daysUntil, formatCountdown, formatNewsDate, groupCalendar, nextDates, type FiubaNewsItem } from "@/lib/news/model";
 import { requireProfile } from "@/lib/session";
 
@@ -36,7 +38,7 @@ function FiubaNewsCard({ item, today }: { item: FiubaNewsItem; today: string }) 
 // www.fi.uba.ar (copied every two hours by the "Noticias de la FIUBA" workflow).
 export default async function NovedadesPage() {
   await requireProfile();
-  const { today, news, fiuba, events } = await getNewsPage();
+  const [{ today, news, fiuba, events }, reminders] = await Promise.all([getNewsPage(), getMyReminders()]);
   const dates = nextDates(groupCalendar(events, today));
 
   return (
@@ -101,12 +103,17 @@ export default async function NovedadesPage() {
                     <span className="font-display text-[26px] font-semibold tabular-nums">{badge.day}</span>
                     {now && <span className="text-[11px] font-semibold uppercase">{badge.month}</span>}
                   </span>
-                  <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-[15px] leading-snug font-semibold text-ink md:line-clamp-4">{event.title}</span>
                     <span className="text-[13px] text-muted tabular-nums">
                       {now ? "En curso" : formatCountdown(daysUntil(today, event.startsOn))}
                     </span>
                   </span>
+                  {!now && (
+                    <span className="md:mt-auto">
+                      <ReminderButton target={{ kind: "calendar", eventId: event.id }} reminderId={reminders.events[String(event.id)] ?? null} label={event.title} />
+                    </span>
+                  )}
                 </li>
               );
             })}
