@@ -24,3 +24,4 @@ npm-debug.log*
 
 # Supabase local para pruebas
 tools/local-supabase/.bin/
+tools/reviews-dolly/out.sql

@@ -51,6 +51,7 @@ insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, nam
 values ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'MESA 01', '2026-12-09', 'Regular', '2026-11-30 14:00', '2026-12-07 14:00', '17:00', '20:00');
 insert into public.news (title, body) values ('Inscripción a cursos de verano', 'Del 9 al 14 de noviembre.');
 insert into public.fiuba_news (id, title, url, published_at) values (1, 'La FIUBA lanza la Credencial Estudiantil', 'https://www.fi.uba.ar/noticias/la-fiuba-lanza-la-credencial-estudiantil', '2026-11-02 12:30+00');
+insert into public.historical_reviews (course_id, teacher, term_label, year, stars, comment) values (1, 'Pérez', '2C 2021', 2021, 4, 'Explica muy bien.');
 
 -- Seed ------------------------------------------------------------------------------
 
@@ -105,6 +106,7 @@ select test.ok((select count(*) from public.exam_tables) = 0, 'gmail account rea
 select test.ok((select count(*) from public.academic_events) = 0, 'gmail account reads the academic calendar');
 select test.ok((select count(*) from public.news) = 0, 'gmail account reads news');
 select test.ok((select count(*) from public.fiuba_news) = 0, 'gmail account reads FIUBA news');
+select test.ok((select count(*) from public.historical_reviews) = 0, 'gmail account reads Dolly opinions');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -160,6 +162,10 @@ select test.ok((select count(*) from public.news) = 1, 'students read news');
 select test.fails($$insert into public.news (title) values ('x')$$, 'student publishes news');
 select test.ok((select count(*) from public.fiuba_news) = 1, 'students read FIUBA news');
 select test.fails($$insert into public.fiuba_news (id, title, url, published_at) values (2, 'x', 'https://www.fi.uba.ar/noticias/x', now())$$, 'student adds a FIUBA news item');
+select test.ok((select count(*) from public.historical_reviews) = 1, 'students read Dolly opinions');
+select test.fails($$insert into public.historical_reviews (course_id, teacher, term_label, year, stars) values (1, 'x', '1C 2020', 2020, 5)$$, 'student adds a Dolly opinion');
+update public.historical_reviews set hidden_at = now();
+select test.ok((select count(*) from public.historical_reviews where hidden_at is not null) = 0, 'student hides a Dolly opinion');
 select test.fails($$insert into public.academic_events (calendar, title, starts_on, ends_on) values ('2026-2027', 'x', '2026-11-02', '2026-11-07')$$, 'student adds an academic event');
 update public.news set pinned = true;
 select test.ok((select not pinned from public.news), 'student pins news');
@@ -255,6 +261,7 @@ select test.fails('select 1 from public.review_authors', 'admin reads review_aut
 update public.reviews set pinned = true, hidden_at = now();
 select test.ok((select bool_and(pinned and hidden_at is not null) from public.reviews), 'admin pins and hides reviews');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
+select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
 select test.ok((select count(*) from public.offerings) = 5, 'admin sees hidden offerings');
 select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
 insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'CB001', 'ANÁLISIS MATEMÁTICO II', 'MESA 01', '2026-12-10', 'Regular');

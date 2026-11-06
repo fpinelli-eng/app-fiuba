@@ -1,0 +1,58 @@
+# Loads the historical opinions of Dolly FIUBA (github.com/lugfi/dolly, GPL-3.0) into
+# public.historical_reviews. Manual only (Actions → "Reseñas de Dolly" → Run workflow): run it after
+# publishing a new term's offer, so the opinions follow the current courses. It replaces every Dolly
+# opinion each time. Details in tools/reviews-dolly/README.md.
+# Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
+name: Reseñas de Dolly
+
+on:
+  workflow_dispatch:
+    inputs:
+      min_year:
+        description: "Desde qué año se cargan las encuestas"
+        default: "2019"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dolly-reviews
+  cancel-in-progress: false
+
+jobs:
+  load:
+    name: Cargar las reseñas de Dolly
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      MIN_YEAR: ${{ inputs.min_year }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check secrets
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Read the Dolly surveys
+        run: node --experimental-strip-types tools/reviews-dolly/build.mjs > tools/reviews-dolly/out.sql
+      - name: Load them
+        # Same connection as "Base de datos" and "Noticias de la FIUBA" (IPv4 session pooler).
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -q -f tools/reviews-dolly/out.sql 2>> "$RUNNER_TEMP/psql.log"; then
+              echo "ok: $candidate"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudieron cargar las reseñas::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"
+          exit 1

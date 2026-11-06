@@ -4,7 +4,7 @@ import type { ClassBlock, WeekDay } from "@/lib/plan/options";
 import type { Campus } from "@/lib/siu/parser";
 import { normalizeText } from "@/lib/map/model";
 import { termLabel } from "./mine";
-import type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews } from "./types";
+import type { CourseDetail, CourseSummary, HistoricalOpinions, ReviewCatalog, Score, SubjectReviews } from "./types";
 
 export type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews };
 
@@ -174,7 +174,7 @@ export async function getCourse(courseId: number, planId: string): Promise<Cours
   if (!offerings.length) return null;
   const latest = offerings.filter((o) => o.term_id === offerings[0].term_id) as OfferingRow[];
 
-  const [catalog, reviews] = await Promise.all([
+  const [catalog, reviews, historical] = await Promise.all([
     getReviewCatalog(planId),
     supabase
       .from("reviews")
@@ -182,8 +182,16 @@ export async function getCourse(courseId: number, planId: string): Promise<Cours
       .eq("course_id", courseId)
       .is("hidden_at", null)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("historical_reviews")
+      .select("id, stars, comment, teacher, term_label, year")
+      .eq("course_id", courseId)
+      .is("hidden_at", null)
+      .order("year", { ascending: false })
+      .order("term_label", { ascending: false }),
   ]);
   if (reviews.error) throw new Error(`reviews: ${reviews.error.message}`);
+  if (historical.error) throw new Error(`historical_reviews: ${historical.error.message}`);
 
   const subject =
     catalog.subjects.find((s) => s.courses.some((c) => c.courseId === courseId)) ??
@@ -212,5 +220,23 @@ export async function getCourse(courseId: number, planId: string): Promise<Cours
       }))
       .sort((a, b) => Number(b.pinned) - Number(a.pinned)),
     otherCourses: (subject?.courses ?? []).filter((c) => c.courseId !== courseId),
+    historical: historicalOpinions(historical.data),
+  };
+}
+
+type HistoricalRow = { id: number; stars: number; comment: string | null; teacher: string; term_label: string; year: number };
+
+function historicalOpinions(rows: HistoricalRow[]): HistoricalOpinions | null {
+  if (!rows.length) return null;
+  const years = rows.map((r) => r.year);
+  return {
+    average: rows.reduce((a, r) => a + r.stars, 0) / rows.length,
+    count: rows.length,
+    years: [Math.min(...years), Math.max(...years)],
+    // The 30 newest: a popular course can have hundreds.
+    comments: rows
+      .filter((r) => r.comment)
+      .slice(0, 30)
+      .map((r) => ({ id: r.id, stars: r.stars, comment: r.comment as string, teacher: r.teacher, termLabel: r.term_label })),
   };
 }

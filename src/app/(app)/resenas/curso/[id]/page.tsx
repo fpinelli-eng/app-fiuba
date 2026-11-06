@@ -126,6 +126,41 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
             </article>
           ))}
         </section>
+
+        {/* Opiniones de Dolly FIUBA (GPL-3.0, LUGFi): aparte, no suman al puntaje del curso. Markup sin estilos
+            nuevos, reusa los de Comentarios; el diseño queda para el rediseño. */}
+        {course.historical && (
+          <section aria-labelledby="dolly-title" className="flex min-w-0 flex-[999_1_520px] flex-col rounded-2xl border border-line bg-surface p-5 md:p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3">
+              <h2 id="dolly-title" className="text-xs font-semibold tracking-[0.08em] text-muted">
+                OPINIONES HISTÓRICAS DE DOLLY
+              </h2>
+              <span className="text-[13px] text-muted">
+                {formatScore(course.historical.average)} ★ · {course.historical.count}{" "}
+                {course.historical.count === 1 ? "encuesta" : "encuestas"} ·{" "}
+                {course.historical.years[0] === course.historical.years[1]
+                  ? course.historical.years[0]
+                  : `${course.historical.years[0]}–${course.historical.years[1]}`}
+              </span>
+            </div>
+            <p className="text-[13px] text-muted">
+              Encuestas sobre los docentes de este curso hechas en{" "}
+              <a href="https://github.com/lugfi/dolly" target="_blank" rel="noopener noreferrer" className="underline">
+                Dolly FIUBA
+              </a>
+              , de LUGFi. No suman al puntaje de arriba.
+            </p>
+            {course.historical.comments.map((c) => (
+              <article key={c.id} className="flex flex-col gap-1.5 border-t border-disabled py-4">
+                <span className="flex items-center gap-1.5 text-[13px] font-semibold">
+                  <Stars value={c.stars} size={14} />
+                  {c.teacher} · {c.termLabel}
+                </span>
+                <p className="text-[15px]">{c.comment}</p>
+              </article>
+            ))}
+          </section>
+        )}
       </div>
     </main>
   );
