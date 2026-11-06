@@ -21,12 +21,13 @@ export function Logo({ className = "", tone = "strong" }: { className?: string; 
         <tspan x="76.3">I</tspan>
         <tspan x="284.6">I</tspan>
       </text>
-      {/* La B también va dibujada: la de Unbounded tiene el palo cortado en diagonal, y acá va recto. */}
+      {/* La B también va dibujada: la de Unbounded tiene el palo cortado en diagonal y los trazos horizontales
+          más finos (13,5); acá el palo es recto y los tres trazos miden 16, como los de la F. */}
       <path
         transform="translate(197.2 0)"
         fillRule="evenodd"
         className="fill-ink"
-        d="M7.5 -75 H59.5 C71.5 -75 78.5 -68.5 78.5 -59 C78.5 -51.5 74.5 -46.5 68.5 -44 C77.5 -42 84.2 -35.5 84.2 -23.5 C84.2 -9 74.5 0 60.5 0 H7.5 Z M26 -64.4 H53.5 A5.8 5.8 0 0 1 59.3 -58.6 V-50.4 A5.8 5.8 0 0 1 53.5 -44.6 H26 Z M26 -33.1 H58.8 A6 6 0 0 1 64.8 -27.1 V-18.9 A6 6 0 0 1 58.8 -12.9 H26 Z"
+        d="M7.5 -75 H59.5 C71.5 -75 78.5 -68 78.5 -58 C78.5 -50.5 75 -45 69 -42 C78 -39.5 84.2 -33 84.2 -21.5 C84.2 -7.5 74.5 0 60.5 0 H7.5 Z M26 -59 H54 A5.3 5.3 0 0 1 59.3 -53.7 V-51.8 A5.3 5.3 0 0 1 54 -46.5 H26 Z M26 -30.5 H58.3 A6.5 6.5 0 0 1 64.8 -24 V-22.5 A6.5 6.5 0 0 1 58.3 -16 H26 Z"
       />
       <g fill="none" strokeWidth="18.5">
         <path d="M125.55 -75 V-39.7" className={u1} />
