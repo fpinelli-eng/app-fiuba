@@ -21,7 +21,7 @@ export interface Story {
 export type Platform = "ios" | "android";
 
 /** Seconds each story stays before going to the next one. */
-export const STORY_SECONDS = 7;
+export const STORY_SECONDS = 9;
 
 export function welcomeStories(firstName: string): Story[] {
   const sections: Omit<Story, "kicker">[] = [
@@ -38,7 +38,7 @@ export function welcomeStories(firstName: string): Story[] {
       icon: "map",
       title: "Mapa",
       text: "Todas las materias de tu plan y cómo se encadenan.",
-      points: ["Tocá una materia para marcarla aprobada, cursando o con final pendiente", "Ves al toque qué tenés habilitado", "Cargá tus notas y se calcula el promedio"],
+      points: ["Tocá una materia", "Elegí cómo la tenés (aprobada, cursando, final) y tu nota", "Se pinta de su color y se habilitan las que siguen"],
       tone: "mint",
     },
     {
@@ -46,7 +46,7 @@ export function welcomeStories(firstName: string): Story[] {
       icon: "calendar",
       title: "Plan",
       text: "Armá tu cuatrimestre con la oferta del SIU.",
-      points: ["Elegís materias y cursos con sus horarios", "Ves si algo se superpone", "Comparás opciones antes de inscribirte"],
+      points: ["Tocá los cursos que te interesan de la oferta del SIU", "Mirá cómo queda tu semana", "Si dos cursos se pisan, te avisa"],
       tone: "butter",
     },
     {
@@ -54,7 +54,7 @@ export function welcomeStories(firstName: string): Story[] {
       icon: "star",
       title: "Reseñas",
       text: "Lo que opinan otros alumnos de cada curso.",
-      points: ["Puntaje y comentarios de cada curso", "Cuando terminás de cursar, dejá la tuya", "Son anónimas y le sirven al que viene"],
+      points: ["El puntaje de cada curso", "Lo que comentan otros alumnos", "Cuando terminás de cursar, dejá la tuya: es anónima"],
       tone: "peach",
     },
     {
@@ -78,10 +78,10 @@ export function welcomeStories(firstName: string): Story[] {
     {
       id: "bienvenida",
       icon: null,
-      kicker: "Bienvenida",
+      kicker: "",
       title: firstName ? `¡Hola, ${firstName}!` : "¡Hola!",
       text: "Te damos la bienvenida a FIUBI: tu carrera en la FIUBA, en un solo lugar.",
-      points: ["En un minuto te mostramos qué hay en cada sección", "Tocá a la derecha para avanzar y a la izquierda para volver", "Mantené apretado para pausar"],
+      points: ["En un minuto te mostramos qué hay en cada sección"],
       tone: "pink",
     },
     ...sections.map((s, i) => ({ ...s, kicker: `Sección ${i + 1} de ${sections.length}` })),

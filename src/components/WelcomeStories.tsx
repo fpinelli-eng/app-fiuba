@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } 
 import { markIntroSeen } from "@/app/(app)/actions";
 import { NavIcon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
+import { hasStoryMock, StoryMock, stepAt } from "@/components/StoryMocks";
 import { STORY_SECONDS, welcomeStories, type Platform, type Story } from "@/lib/intro/stories";
 
 /** Perfil → "Ver la bienvenida" fires this event to open the stories again. */
@@ -62,7 +63,9 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, () => reducedMotionQuery().matches, () => false);
   const open = opened || (askedByUrl && !closedUrl);
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(false); // dedo apretado
+  const [stopped, setStopped] = useState(false); // botón de pausa
+  const halted = paused || stopped;
   const dialogRef = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const pressedAt = useRef(0);
@@ -76,8 +79,15 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
     setClosedUrl(true);
     markIntroSeen().catch(() => {});
   };
-  const next = () => setIndex((i) => Math.min(i + 1, stories.length - 1));
-  const prev = () => setIndex((i) => Math.max(i - 1, 0));
+  const next = () => {
+    setStopped(false);
+    setIndex((i) => Math.min(i + 1, stories.length - 1));
+  };
+  const prev = () => {
+    setStopped(false);
+    setIndex((i) => Math.max(i - 1, 0));
+  };
+  const mock = hasStoryMock(story.id);
 
   // Reopen from Perfil.
   useEffect(() => {
@@ -160,7 +170,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
                 className={`block h-full rounded-full bg-current ${i < index || (i === index && (reducedMotion || last)) ? "w-full" : i > index ? "w-0" : ""}`}
                 style={
                   i === index && !reducedMotion && !last
-                    ? { animation: `story-fill ${s.steps ? STORY_SECONDS * 2 : STORY_SECONDS}s linear forwards`, animationPlayState: paused ? "paused" : "running" }
+                    ? { animation: `story-fill ${s.steps ? STORY_SECONDS * 2 : STORY_SECONDS}s linear forwards`, animationPlayState: halted ? "paused" : "running" }
                     : undefined
                 }
                 onAnimationEnd={i === index ? next : undefined}
@@ -171,6 +181,18 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
 
         <div className="flex items-center justify-between px-4 pt-3">
           <Logo className="h-[14px]" />
+          <span className="flex-1" />
+          {!last && !reducedMotion && (
+            <button
+              type="button"
+              onClick={() => setStopped((s) => !s)}
+              aria-label={stopped ? "Seguir" : "Pausar"}
+              aria-pressed={stopped}
+              className="grid size-9 place-items-center rounded-full bg-surface/60 text-[13px] font-bold"
+            >
+              {stopped ? "▶" : "❚❚"}
+            </button>
+          )}
           <button type="button" onClick={close} className="rounded-full px-3 py-2 text-sm font-semibold underline-offset-2 hover:underline">
             {last ? "Cerrar" : "Saltar"}
           </button>
@@ -178,7 +200,7 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
 
         {/* Zona para tocar: a la derecha avanza, a la izquierda vuelve, apretado pausa. */}
         <div
-          className="flex flex-1 touch-none flex-col justify-center gap-5 px-7 pb-6"
+          className={`flex flex-1 touch-none flex-col justify-center gap-5 px-6 pb-4 ${halted ? "[&_*]:[animation-play-state:paused]!" : ""}`}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => {
@@ -192,8 +214,8 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
             }
           }}
         >
-          <div key={story.id} className="flex flex-col gap-5 motion-safe:animate-[story-in_0.45s_ease-out]" aria-live="polite">
-            <span className="grid size-[72px] place-items-center rounded-[22px] bg-surface/70">
+          <div key={story.id} className={`flex flex-col ${mock ? "gap-3.5" : "gap-5"} motion-safe:animate-[story-in_0.45s_ease-out]`} aria-live="polite">
+            <span className={`place-items-center rounded-[22px] bg-surface/70 ${mock ? "hidden" : "grid size-[72px]"}`}>
               {story.icon ? (
                 <NavIcon name={story.icon} size={36} />
               ) : (
@@ -203,10 +225,11 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
               )}
             </span>
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold tracking-[0.08em] uppercase opacity-75">{story.kicker}</span>
-              <h2 className="font-display text-[34px] leading-[1.05] font-semibold tracking-[-0.01em]">{story.title}</h2>
-              <p className="text-[17px] leading-snug">{story.text}</p>
+              {story.kicker && <span className="text-[13px] font-semibold tracking-[0.08em] uppercase opacity-75">{story.kicker}</span>}
+              <h2 className={`font-display leading-[1.05] font-semibold tracking-[-0.01em] ${mock ? "text-[28px]" : "text-[34px]"}`}>{story.title}</h2>
+              <p className={`leading-snug ${mock ? "text-[15px]" : "text-[17px]"}`}>{story.text}</p>
             </div>
+            {mock && <StoryMock id={story.id} />}
             {story.steps && (
               <div className="flex flex-col gap-2.5">
                 <div className="flex gap-2" role="group" aria-label="Tu celular">
@@ -234,15 +257,29 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
                 </ol>
               </div>
             )}
-            <ul className="flex flex-col gap-2.5">
-              {story.points.map((p) => (
-                <li key={p} className="flex items-start gap-2.5 rounded-2xl bg-surface/60 px-3.5 py-2.5 text-[15px] leading-snug">
-                  <span aria-hidden="true" className="mt-0.5 font-bold">
-                    ✓
-                  </span>
-                  {p}
-                </li>
-              ))}
+            <ul className={`flex flex-col ${mock ? "gap-1.5" : "gap-2.5"}`}>
+              {story.points.map((p, i) =>
+                mock ? (
+                  // Cada punto aparece junto con su número en la pantalla dibujada.
+                  <li
+                    key={p}
+                    className="flex items-start gap-2.5 rounded-2xl bg-surface/60 px-3 py-2 text-[14px] leading-snug"
+                    style={{ animation: `story-rise 0.45s ease-out ${stepAt(i + 1)}s both` }}
+                  >
+                    <span aria-hidden="true" className="grid size-5 flex-none place-items-center rounded-full bg-ink text-[11px] font-bold text-bg">
+                      {i + 1}
+                    </span>
+                    {p}
+                  </li>
+                ) : (
+                  <li key={p} className="flex items-start gap-2.5 rounded-2xl bg-surface/60 px-3.5 py-2.5 text-[15px] leading-snug">
+                    <span aria-hidden="true" className="mt-0.5 font-bold">
+                      ✓
+                    </span>
+                    {p}
+                  </li>
+                ),
+              )}
             </ul>
           </div>
         </div>
