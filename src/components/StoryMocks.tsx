@@ -7,7 +7,7 @@ import type { CSSProperties, ReactNode } from "react";
 // Los estilos normales son el estado final: con "reducir movimiento" se ven completas y quietas.
 
 /** When step n starts (seconds). */
-export const stepAt = (n: number) => 0.6 + (n - 1) * 2;
+export const stepAt = (n: number) => 0.5 + (n - 1) * 1.6;
 
 /** Inline animation that starts at a given second and keeps its first frame until then. */
 const anim = (name: string, at: number, seconds = 0.45, easing = "ease-out"): CSSProperties => ({
@@ -148,7 +148,7 @@ function Mapa() {
       {/* La ficha de la materia sube, se elige "Aprobada" y la nota, y baja. */}
       <div
         className="absolute inset-x-0 bottom-0 z-10 translate-y-[110%] rounded-t-2xl border-t border-line bg-surface p-2.5 shadow-[0_-8px_20px_var(--pop-shadow)]"
-        style={anim("story-sheet", s2 - 0.3, 3)}
+        style={anim("story-sheet", s2 - 0.3, 2.4)}
       >
         <div className="text-[12px] font-semibold">Física II</div>
         <div className="mt-1.5 grid grid-cols-2 gap-1 text-[10.5px]">

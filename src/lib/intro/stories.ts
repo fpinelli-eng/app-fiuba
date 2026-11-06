@@ -21,7 +21,7 @@ export interface Story {
 export type Platform = "ios" | "android";
 
 /** Seconds each story stays before going to the next one. */
-export const STORY_SECONDS = 9;
+export const STORY_SECONDS = 7;
 
 export function welcomeStories(firstName: string): Story[] {
   const sections: Omit<Story, "kicker">[] = [
