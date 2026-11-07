@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enrolledEntries, sameCourses, startingEntries } from "./cursada";
+import { enrolledEntries, inPlan, sameCourses, startingEntries } from "./cursada";
 
 const subjects = [
   { code: "1", courses: [{ id: "10" }, { id: "11" }] },
@@ -37,5 +37,20 @@ describe("startingEntries", () => {
     expect(start).toEqual(option);
     start[0].course = "x";
     expect(option[0].course).toBe("20");
+  });
+});
+
+describe("inPlan", () => {
+  it("shows what the map lets the student take", () => {
+    expect(inPlan("enabled", false)).toBe(true);
+    expect(inPlan("in_progress", false)).toBe(true);
+    expect(inPlan("blocked", false)).toBe(false);
+    expect(inPlan("final_pending", false)).toBe(false);
+    expect(inPlan("approved", false)).toBe(false);
+  });
+  it("keeps a subject chosen this term after the map moves on", () => {
+    // Cursada aprobada a mitad de cuatrimestre: las clases siguen hasta que termina.
+    expect(inPlan("final_pending", true)).toBe(true);
+    expect(inPlan("approved", true)).toBe(true);
   });
 });

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMapData } from "@/lib/map/data";
 import { CareerMap, normalizeText, sumExtraCredits, type Progress, type SubjectKind } from "@/lib/map/model";
 import type { Campus } from "@/lib/siu/parser";
+import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
 import type { ClassBlock, CourseOption, WeekDay } from "./options";
 
@@ -90,7 +91,6 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   if (!termRow.data) return empty(null, career);
   const term = { id: termRow.data.id as string, label: `${termRow.data.half}C ${termRow.data.year}` };
 
-  // What the student can take: enabled by their map, or already taking it.
   const careerMap = new CareerMap(map.subjects, map.requirements);
   const progress: Progress = {
     subjects: new Map(map.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
@@ -98,11 +98,6 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
     extraCredits: sumExtraCredits(map.progress.extraCredits),
   };
   const credits = careerMap.approvedCredits(progress);
-  const available = map.subjects.filter((s) => {
-    if (!GROUP_OF[s.kind]) return false;
-    const state = careerMap.displayState(progress, s.id, credits);
-    return state === "enabled" || state === "in_progress";
-  });
 
   const [codes, offerings] = await Promise.all([
     supabase.from("subject_siu_codes").select("subject_id, siu_code").in("subject_id", map.subjects.map((s) => s.id)),
@@ -141,6 +136,19 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
     s.count += 1;
     scoreOf.set(r.course_id as number, s);
   }
+
+  // What the student can take: enabled by their map, or already taking it; plus what they already
+  // chose or confirmed this term, even if the map moved on ("Final pendiente" before the classes end).
+  const rowById = new Map(rows.map((o) => [o.id, o]));
+  const chosen = new Set<number>();
+  for (const c of [...choices.data, ...taken.data]) {
+    const row = rowById.get(c.offering_id as number);
+    const subjectId = row && subjectOf(row);
+    if (subjectId !== undefined) chosen.add(subjectId);
+  }
+  const available = map.subjects.filter(
+    (s) => !!GROUP_OF[s.kind] && inPlan(careerMap.displayState(progress, s.id, credits), chosen.has(s.id)),
+  );
 
   const coursesBy = new Map<number, PlanCourse[]>();
   for (const o of rows) {
