@@ -420,9 +420,11 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       <section
         aria-label="Plan de estudios"
         className="relative hidden rounded-2xl md:flex border border-line bg-surface"
-        style={{ height: height + 32 }}
+        style={{ height: height + 32 + 2 /* py-4 + border */ }}
       >
-        <div className="min-w-0 flex-1 overflow-x-auto px-3 py-4">
+        {/* Solo se desplaza a lo ancho: si también pudiera a lo alto (la barra horizontal de Windows le come
+            ~15 px), la rueda del mouse sobre el mapa movería esos píxeles en vez de bajar la página. */}
+        <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-3 py-4">
           <div className="relative" style={{ width, height }}>
             {/* Columnas */}
             <div className="absolute top-0 bottom-0 rounded-xl bg-map-cbc-col" style={{ left: 0, width: cbcOpen ? NODE_W + 5 : CBC_CLOSED_W + 5 }} />
