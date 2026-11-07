@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 6 de noviembre de 2026.
+Última actualización: 7 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -34,6 +34,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | En `main` (#8, PR #36) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Mapa en el celular: lista por cuatrimestre, pestañas Obligatorias / Electivas y ficha desde abajo (desde 768 px queda igual) | `src/app/(app)/mapa/MobileMap.tsx` | PR #55 abierto |
+| Plan: una materia elegida o confirmada en el cuatrimestre sigue en el Plan (y en "Confirmar mi cursada", así no se borra del Inicio) aunque en el mapa pase a "Final pendiente" o "Aprobada" | `src/lib/plan/data.ts`, `src/lib/plan/cursada.ts` | PR abierto (rama `plan-keeps-final-pending`) |
 | Versión para celular (360–430 px): barra de pestañas abajo, barra superior compacta, calendario del inicio día por día y pantallas sin desborde. Desde 768 px queda igual que en la computadora. El mapa y el plan se adaptan en PRs aparte | `src/components/Header.tsx`, `src/components/icons.tsx`, `src/lib/app.ts`, `src/app/(app)/HomeDayView.tsx` | PR abierto |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 | Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |

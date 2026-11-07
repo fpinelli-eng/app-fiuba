@@ -1,3 +1,4 @@
+import type { DisplayState } from "@/lib/map/model";
 import type { Entry } from "./data";
 
 // "Confirmar mi cursada": lógica pura del paso que pasa al Inicio lo que el alumno
@@ -22,4 +23,14 @@ export function enrolledEntries(enrolled: string[], subjects: { code: string; co
 /** What the confirmation starts from: the confirmed cursada if there is one, otherwise the option on screen. */
 export function startingEntries(enrolled: Entry[], option: Entry[]): Entry[] {
   return (enrolled.length ? enrolled : option).map((e) => ({ ...e }));
+}
+
+/**
+ * Whether a subject shows up in the Plan: enabled or in progress in the map, or already part of
+ * this term (in option A or B, or in the confirmed cursada) whatever the map says now. Passing the
+ * cursada ("Final pendiente") or approving it does not end the classes: the subject stays until
+ * the term changes.
+ */
+export function inPlan(state: DisplayState, chosenThisTerm: boolean): boolean {
+  return chosenThisTerm || state === "enabled" || state === "in_progress";
 }
