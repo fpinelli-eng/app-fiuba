@@ -279,16 +279,33 @@ export function BottomSheet({ label, onClose, children }: { label: string; onClo
   const ref = useRef<HTMLDivElement>(null);
   // Mientras está abierta, la página de atrás queda quieta: ni el foco ni arrastrar el dedo la mueven
   // (en el iPhone, overflow: hidden no alcanza; se fija el body en su lugar y al cerrar se vuelve ahí).
+  // La hoja también se monta en la computadora (oculta con md:hidden, junto a la ficha flotante):
+  // ahí no se traba nada, o el mapa no se puede bajar mientras hay una ficha abierta.
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const y = window.scrollY;
+    const phone = window.matchMedia("(max-width: 767px)");
     const body = document.body.style;
-    const before = { position: body.position, top: body.top, width: body.width, overflow: body.overflow };
-    Object.assign(body, { position: "fixed", top: `-${y}px`, width: "100%", overflow: "hidden" });
+    let unlock: (() => void) | null = null;
+    const sync = () => {
+      if (phone.matches && !unlock) {
+        const y = window.scrollY;
+        const before = { position: body.position, top: body.top, width: body.width, overflow: body.overflow };
+        Object.assign(body, { position: "fixed", top: `-${y}px`, width: "100%", overflow: "hidden" });
+        unlock = () => {
+          Object.assign(body, before);
+          window.scrollTo(0, y);
+        };
+      } else if (!phone.matches && unlock) {
+        unlock();
+        unlock = null;
+      }
+    };
+    sync();
+    phone.addEventListener("change", sync);
     ref.current?.focus({ preventScroll: true });
     return () => {
-      Object.assign(body, before);
-      window.scrollTo(0, y);
+      phone.removeEventListener("change", sync);
+      unlock?.();
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
