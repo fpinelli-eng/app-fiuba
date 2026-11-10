@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 7 de noviembre de 2026.
+Última actualización: 10 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -37,6 +37,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Mapa en el celular: lista por cuatrimestre, pestañas Obligatorias / Electivas y ficha desde abajo (desde 768 px queda igual) | `src/app/(app)/mapa/MobileMap.tsx` | PR #55 abierto |
 | Mapa en la computadora: la página se puede bajar con una ficha abierta (también en "Carga rápida"; antes la hoja del celular, montada oculta, trababa el `body`) y la rueda del mouse sobre la grilla baja la página (la grilla solo se desplaza a lo ancho) | `src/app/(app)/mapa/MobileMap.tsx`, `src/app/(app)/mapa/CareerMapView.tsx` | PR abierto (rama `fix-desktop-scroll-lock`) |
 | Versión para celular (360–430 px): barra de pestañas abajo, barra superior compacta, calendario del inicio día por día y pantallas sin desborde. Desde 768 px queda igual que en la computadora. El mapa y el plan se adaptan en PRs aparte | `src/components/Header.tsx`, `src/components/icons.tsx`, `src/lib/app.ts`, `src/app/(app)/HomeDayView.tsx` | PR abierto |
+| Administración → Usuarios cuenta solo las materias aprobadas (no "Cursando" ni "Final pendiente"); el filtro de electivas del mapa (Todas / Habilitadas / Bloqueadas) entra en su marco con la tipografía Onest | `supabase/migrations/20261110120000_admin_users_approved.sql`, `src/app/admin/usuarios/`, `src/app/(app)/mapa/CareerMapView.tsx` | PR abierto (rama `admin-approved-and-electives-filter`) |
 | Colores extra del calendario del plan (rosa y verde agua) | `src/app/globals.css` | En `main` (PR #19) |
 | Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |

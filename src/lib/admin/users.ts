@@ -7,6 +7,7 @@ export interface AdminUser {
   planId: string | null;
   createdAt: string;
   introSeen: boolean;
+  /** Subjects marked as approved in the map. */
   subjects: number;
   planCourses: number;
 }

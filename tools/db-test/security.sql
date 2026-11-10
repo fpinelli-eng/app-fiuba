@@ -265,6 +265,13 @@ select test.fails('update public.reviews set stars = 1', 'admin edits the stars 
 select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
+reset role;
+insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
+set role authenticated;
+select test.ok((select subjects from public.admin_users() where email = 'ana@fi.uba.ar') = 1, 'admin counts only approved subjects');
+reset role;
+delete from public.user_subjects where status = 'in_progress' and user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
 select test.ok((select count(*) from public.offerings) = 5, 'admin sees hidden offerings');
 select test.ok((select count(*) from public.offering_blocks) = 2, 'admin sees schedules of hidden offerings');
 insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind) values ('industrial-2023', 'CB001', 'ANÁLISIS MATEMÁTICO II', 'MESA 01', '2026-12-10', 'Regular');

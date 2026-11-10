@@ -560,7 +560,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                     type="button"
                     aria-pressed={filter === f}
                     onClick={() => setFilter(f)}
-                    className={`flex-auto rounded-md px-1.5 text-xs whitespace-nowrap ${filter === f ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
+                    className={`flex-auto rounded-md px-1 text-[11px] whitespace-nowrap ${filter === f ? "bg-lavender font-semibold text-lavender-ink" : "text-muted"}`}
                   >
                     {label} {count(f)}
                   </button>
