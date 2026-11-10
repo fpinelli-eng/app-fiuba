@@ -44,6 +44,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Fechas de examen con horario: el administrador pega el enlace de la búsqueda del SIU y se cargan hora, aula, docentes y fecha tope para bajas de cada mesa; Finales los muestra | `src/lib/siu/exams-html.ts`, `src/lib/siu/exams-fetch.ts`, `src/app/admin/examenes/`, `src/app/(app)/finales/`, `supabase/migrations/20261102170000_exam_tables_details.sql` | PR abierto |
 | Planes de la beta (Industrial, Informática y Química 2023) verificados contra sus resoluciones oficiales, con las correcciones en una migración. Los demás planes hay que verificarlos igual antes de sumar su carrera | `data/planes/README.md`, `supabase/migrations/20261016180000_verified_plans_fixes.sql` | En `main` (PR #39) |
 | Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR #54 abierto |
+| Seguridad: Next.js 16.4.6 (corrige tres vulnerabilidades publicadas), cabeceras de seguridad en todas las páginas y revisión completa con lo que falta antes del lanzamiento | `next.config.ts`, `package.json`, `docs/SEGURIDAD.md` | PR abierto (rama `security-hardening`) |
 
 ## Qué falta, en orden
 
