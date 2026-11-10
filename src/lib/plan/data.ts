@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMapData } from "@/lib/map/data";
 import { CareerMap, normalizeText, sumExtraCredits, type Progress, type SubjectKind } from "@/lib/map/model";
+import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
 import type { Campus } from "@/lib/siu/parser";
 import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
@@ -154,7 +155,12 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   for (const o of rows) {
     const subjectId = subjectOf(o);
     if (subjectId === undefined) continue;
-    const blocks: ClassBlock[] = o.offering_blocks.map((b) => ({
+    const teachers = o.teachers ?? [];
+    const placed = withCampus(
+      o.offering_blocks.map((b) => ({ ...b, campus: b.campus as CampusCode | null, async: b.is_async })),
+      campusQuery(planId, o),
+    );
+    const blocks: ClassBlock[] = placed.map((b) => ({
       day: DAYS[b.weekday - 1],
       start: b.starts_at,
       end: b.ends_at,
@@ -163,7 +169,6 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
       campus: b.campus ? CAMPUS[b.campus] : null,
       async: b.is_async,
     }));
-    const teachers = o.teachers ?? [];
     const list = coursesBy.get(subjectId) ?? [];
     list.push({
       id: String(o.id),
