@@ -70,6 +70,15 @@
   --brand-u1: #e59e1f;
   --brand-u2: #3f63d6;
   --brand-u3: #e2654f;
+  /* Presentación: la columna del ícono (crema sobre azul noche, src/app/icon.svg) y la fachada de Paseo Colón
+     de la animación (ColumnIntro). Iguales en claro y oscuro: el dibujo es de noche. */
+  --column-bg: #1f2537;
+  --column-fg: #fbf6ec;
+  --facade-wall: #283049;
+  --facade-door: #181c2a;
+  --facade-attic: #e9e2d3;
+  --facade-shade: #e3daca;
+  --facade-step: #efe7d8;
 }
 
 [data-theme="dark"] {
@@ -328,6 +337,52 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .story-mock,
   .story-mock * {
+    animation: none !important;
+  }
+}
+
+/* Presentación (ColumnIntro): la cámara se acerca a la fachada de Paseo Colón hasta la columna central, que
+   queda como el ícono. El estado final es el de los estilos normales: con "reducir movimiento" se ve el ícono. */
+.intro-cam,
+.intro-stars {
+  transform-box: view-box;
+}
+.intro-cam {
+  transform-origin: 300px 262px;
+  transform: scale(1.8) translateY(-22.8px);
+  animation: intro-dolly 3.4s cubic-bezier(0.6, 0.05, 0.25, 1) 0.5s both;
+}
+.intro-stars {
+  transform-origin: 300px 200px;
+  transform: scale(1.2);
+  opacity: 0;
+  animation: intro-stars 3.4s cubic-bezier(0.6, 0.05, 0.25, 1) 0.5s both;
+}
+.intro-fade {
+  opacity: 0;
+  animation: intro-fade 3.4s ease 0.5s both;
+}
+@keyframes intro-dolly {
+  from {
+    transform: scale(0.62) translateY(-81px);
+  }
+}
+@keyframes intro-stars {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+@keyframes intro-fade {
+  from,
+  45% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-cam,
+  .intro-stars,
+  .intro-fade {
     animation: none !important;
   }
 }

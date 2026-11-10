@@ -12,10 +12,23 @@ const U_COLORS = {
   soft: ["stroke-cat-cbc", "stroke-cat-required", "stroke-cat-elective"],
 } as const;
 
-export function Logo({ className = "", tone = "strong" }: { className?: string; tone?: keyof typeof U_COLORS }) {
+export function Logo({
+  className = "",
+  tone = "strong",
+  decorative = false,
+}: {
+  className?: string;
+  tone?: keyof typeof U_COLORS;
+  /** The name is already written next to it (e.g. as hidden text in an h1): screen readers skip the drawing. */
+  decorative?: boolean;
+}) {
   const [u1, u2, u3] = U_COLORS[tone];
   return (
-    <svg viewBox="0 -80 320 82" role="img" aria-label={APP_NAME} className={`block w-auto overflow-visible ${className}`}>
+    <svg
+      viewBox="0 -80 320 82"
+      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": APP_NAME })}
+      className={`block w-auto overflow-visible ${className}`}
+    >
       <text y="0" fontSize="100" fontWeight="600" className="fill-ink" style={{ fontFamily: "var(--font-display)" }}>
         <tspan x="0">F</tspan>
         <tspan x="76.3">I</tspan>

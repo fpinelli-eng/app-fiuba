@@ -3,9 +3,10 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseEnv } from "./env";
 
 // Rutas que se pueden ver sin sesión.
-const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest"];
+const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest", "/robots.txt", "/sitemap.xml"];
 
-// Refresca la sesión en cada pedido y manda a /ingresar a quien no la tiene.
+// Refresca la sesión en cada pedido y manda a /ingresar a quien no la tiene. En la raíz, sin sesión, se ve
+// la presentación (la página de /ingresar) sin cambiar la dirección: es la página que indexan los buscadores.
 // Es un control rápido: la verificación definitiva (incluido el dominio) está en el layout de (app).
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -36,6 +37,11 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
+  if (!loggedIn && path === "/") {
+    const rewrite = NextResponse.rewrite(new URL(`/ingresar${request.nextUrl.search}`, request.url));
+    response.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
+    return rewrite;
+  }
   if (!loggedIn && !isPublic) {
     const to = request.nextUrl.clone();
     to.pathname = "/ingresar";
