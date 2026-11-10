@@ -4,11 +4,15 @@ import "@fontsource-variable/onest";
 import "@fontsource-variable/unbounded";
 import "./globals.css";
 import { APP_NAME } from "@/lib/app";
+import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { themeScript } from "@/lib/theme";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: APP_NAME,
-  description: "Tu carrera de ingeniería en un solo lugar",
+  description: SITE_DESCRIPTION,
+  openGraph: { type: "website", siteName: APP_NAME, locale: "es_AR" },
+  twitter: { card: "summary_large_image" },
 };
 
 // Celular: ancho del dispositivo y "cover" para que la barra de pestañas use env(safe-area-inset-bottom)
