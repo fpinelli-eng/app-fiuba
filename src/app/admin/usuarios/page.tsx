@@ -22,7 +22,7 @@ export default async function AdminUsersPage() {
     ["Últimas 24 h", since(DAY)],
     ["Últimos 7 días", since(7 * DAY)],
     ["Sin carrera", users.filter((u) => !u.planId).length],
-    ["Cargaron materias", users.filter((u) => u.subjects > 0).length],
+    ["Con aprobadas", users.filter((u) => u.subjects > 0).length],
     ["Armaron el Plan", users.filter((u) => u.planCourses > 0).length],
   ] as const;
 
@@ -50,7 +50,7 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-2.5 font-semibold">Mail</th>
               <th className="px-4 py-2.5 font-semibold">Carrera</th>
               <th className="px-4 py-2.5 font-semibold">Alta</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Materias</th>
+              <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
               <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
               <th className="px-4 py-2.5 font-semibold">Historias</th>
             </tr>
