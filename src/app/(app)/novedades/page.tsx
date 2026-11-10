@@ -18,6 +18,10 @@ export const metadata: Metadata = { title: `Novedades · ${APP_NAME}` };
 
 const FIUBA_URL = "https://www.ingenieria.uba.ar";
 
+// Oculto por ahora (10/11/2026): las fechas del calendario académico cargado tienen errores.
+// Para volver a mostrarlo, true. Los datos y la lógica siguen igual.
+const SHOW_ACADEMIC_CALENDAR = false;
+
 // Las fechas van en una fila que se desliza en el celular (así las noticias quedan a mano, sin
 // bajar tanto) y en una grilla en la computadora.
 const DATE_ROW =
@@ -141,7 +145,7 @@ export default async function NovedadesPage() {
         </section>
       )}
 
-      {(dates.now.length > 0 || dates.upcoming.length > 0) && (
+      {SHOW_ACADEMIC_CALENDAR && (dates.now.length > 0 || dates.upcoming.length > 0) && (
         <section aria-labelledby="calendar-title" className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="calendar-title" className="text-[22px] font-semibold">
