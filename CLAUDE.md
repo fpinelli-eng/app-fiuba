@@ -15,6 +15,7 @@ Antes de tocar algo, leé:
 - `docs/DISENO.md`: colores, tipografía, componentes y comportamiento de cada pantalla.
 - `docs/diseno/prototipos/`: el código de cada pantalla del diseño. **Antes de programar una pantalla, leé su prototipo.**
 - `docs/COLABORACION.md`: cómo trabajamos de a dos con ramas y pull requests.
+- `docs/SEGURIDAD.md`: qué se revisó de seguridad, qué falta antes del lanzamiento y qué implica que el repo sea público o privado.
 
 ## Stack
 
