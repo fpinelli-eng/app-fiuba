@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { describeSchedule, shortTeacherList, surname, titleCase } from "@/lib/plan/format";
 import type { ClassBlock, WeekDay } from "@/lib/plan/options";
+import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
 import type { Campus } from "@/lib/siu/parser";
 import { normalizeText } from "@/lib/map/model";
 import { termLabel } from "./mine";
@@ -79,27 +80,33 @@ async function scores(courseIds: number[]) {
   return out;
 }
 
-async function schedules(offeringIds: number[]) {
+async function schedules(offerings: OfferingRow[], planId: string) {
   const supabase = await createClient();
   const out = new Map<number, ClassBlock[]>();
-  if (!offeringIds.length) return out;
+  if (!offerings.length) return out;
   const { data, error } = await supabase
     .from("offering_blocks")
     .select("offering_id, weekday, starts_at, ends_at, class_type, room, campus, is_async")
-    .in("offering_id", offeringIds);
+    .in("offering_id", offerings.map((o) => o.id));
   if (error) throw new Error(`offering_blocks: ${error.message}`);
+  const raw = new Map<number, (Omit<ClassBlock, "campus"> & { campus: CampusCode | null })[]>();
   for (const b of data) {
-    const list = out.get(b.offering_id as number) ?? [];
+    const list = raw.get(b.offering_id as number) ?? [];
     list.push({
       day: DAYS[(b.weekday as number) - 1],
       start: b.starts_at as number,
       end: b.ends_at as number,
       type: (b.class_type as string | null) ?? "",
       room: (b.room as string | null) ?? null,
-      campus: b.campus ? CAMPUS[b.campus as string] : null,
+      campus: (b.campus as CampusCode | null) ?? null,
       async: b.is_async === true,
     });
-    out.set(b.offering_id as number, list);
+    raw.set(b.offering_id as number, list);
+  }
+  // The SIU leaves some classes without a campus: they are filled from the campus table (data/sedes/).
+  for (const o of offerings) {
+    const list = raw.get(o.id);
+    if (list) out.set(o.id, withCampus(list, campusQuery(planId, o)).map((b) => ({ ...b, campus: b.campus ? CAMPUS[b.campus] : null })));
   }
   return out;
 }
@@ -129,7 +136,7 @@ export async function getReviewCatalog(planId: string): Promise<ReviewCatalog> {
 
   const [scoreOf, blocksOf] = await Promise.all([
     scores([...new Set(offerings.map((o) => o.course_id))]),
-    schedules(offerings.map((o) => o.id)),
+    schedules(offerings, planId),
   ]);
 
   const coursesBySubject = new Map<number, Map<number, OfferingRow[]>>();

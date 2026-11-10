@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { normalizeText, type Subject } from "@/lib/map/model";
 import { titleCase } from "@/lib/plan/format";
+import { campusQuery, withCampus } from "@/lib/campus/infer";
 
 // The student's courses of the current term, for the home calendar (prototype 04-inicio).
 // They come from user_courses, which "Confirmar mi cursada" fills in the Plan.
@@ -43,6 +44,8 @@ type Row = {
     practice: string | null;
     label: string;
     visible: boolean;
+    plan_id: string;
+    teachers: { nombre: string }[] | null;
     offering_blocks: {
       weekday: number;
       starts_at: number;
@@ -67,7 +70,7 @@ export async function getHomeCourses(userId: string, subjects: Subject[]): Promi
     supabase
       .from("user_courses")
       .select(
-        "offerings!inner(id, term_id, siu_subject_code, siu_subject_name, course_number, practice, label, visible, offering_blocks(weekday, starts_at, ends_at, room, campus, is_async))",
+        "offerings!inner(id, term_id, plan_id, siu_subject_code, siu_subject_name, course_number, practice, label, teachers, visible, offering_blocks(weekday, starts_at, ends_at, room, campus, is_async))",
       )
       .eq("user_id", userId)
       .eq("offerings.term_id", term.data.id as string),
@@ -92,14 +95,18 @@ export async function getHomeCourses(userId: string, subjects: Subject[]): Promi
         subject: subject?.name ?? titleCase(o.siu_subject_name),
         credits: subject?.credits ?? 0,
         code: o.practice ? `${number} ${o.practice}` : number,
-        blocks: o.offering_blocks.map((b) => ({
-          weekday: b.weekday,
-          start: b.starts_at,
-          end: b.ends_at,
-          campus: b.campus && CAMPUS.has(b.campus) ? (b.campus as Campus) : null,
-          virtual: b.room !== null && /virtual|remot/i.test(b.room),
-          async: b.is_async === true,
-        })),
+        blocks: withCampus(
+          o.offering_blocks.map((b) => ({
+            weekday: b.weekday,
+            start: b.starts_at,
+            end: b.ends_at,
+            campus: b.campus && CAMPUS.has(b.campus) ? (b.campus as Campus) : null,
+            virtual: b.room !== null && /virtual|remot/i.test(b.room),
+            async: b.is_async === true,
+            room: b.room,
+          })),
+          campusQuery(o.plan_id, o),
+        ).map((b) => ({ weekday: b.weekday, start: b.start, end: b.end, campus: b.campus, virtual: b.virtual, async: b.async })),
       };
     })
     .sort((a, b) => a.subject.localeCompare(b.subject, "es"));
