@@ -5,16 +5,30 @@
   "plans": [
     { "planId": "bioingenieria-2024", "career": { "id": "ca45910864176afbff7a6444d36b5f2607309893", "name": "Bioingeniería" }, "plan": { "id": "d3a577be7b7f5e0933b46d44a37827f17b681fb5", "name": "2024" } },
     { "planId": "civil-2023", "career": { "id": "3b5e0365f0c2299dfd89eb3852a8ebb566382194", "name": "Ingeniería Civil" }, "plan": { "id": "fd3648d22ed9664683521f7d50ceac523f800c5f", "name": "2023" } },
+    { "planId": "civil-2009", "career": { "id": "3b5e0365f0c2299dfd89eb3852a8ebb566382194", "name": "Ingeniería Civil" }, "plan": { "id": "574c4d0ca1e2d0a814c545f0966bde773ca9d30f", "name": "2009" } },
     { "planId": "electronica-2023", "career": { "id": "c7311607a3de9ef25c3a49a5210c608119d43db5", "name": "Ingeniería Electrónica" }, "plan": { "id": "6ffc54e899f0a85919bd1fa5864402d9c760eaa4", "name": "2023" } },
+    { "planId": "electronica-2009", "career": { "id": "c7311607a3de9ef25c3a49a5210c608119d43db5", "name": "Ingeniería Electrónica" }, "plan": { "id": "574c4d0ca1e2d0a814c545f0966bde773ca9d30f", "name": "2009" } },
     { "planId": "agrimensura-2023", "career": { "id": "f2cb75fea0b81038b09937b8756c9ecf56c5b0f5", "name": "Ingeniería en Agrimensura" }, "plan": { "id": "f930aee818f3f1dae243c50f4378653143bc2633", "name": "2023" } },
+    { "planId": "agrimensura-2006", "career": { "id": "f2cb75fea0b81038b09937b8756c9ecf56c5b0f5", "name": "Ingeniería en Agrimensura" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } },
     { "planId": "alimentos-2024", "career": { "id": "ae102407acdb2f147e2b25a9f7d1a35feefcdd69", "name": "Ingeniería de Alimentos" }, "plan": { "id": "37e95922bac099629efcfe3945563b216a7df33c", "name": "2024" } },
+    { "planId": "alimentos-2001", "career": { "id": "ae102407acdb2f147e2b25a9f7d1a35feefcdd69", "name": "Ingeniería de Alimentos" }, "plan": { "id": "09ccfee0fdcec562d4df64433fcb272bbeee76a8", "name": "2001" } },
     { "planId": "energia-electrica-2024", "career": { "id": "02d32a3edf178eb496240f89feed9443d2b8429d", "name": "Ingeniería en Energía Eléctrica" }, "plan": { "id": "4633581877335ea829e5669e64a892511bdb9cbb", "name": "2024" } },
+    { "planId": "energia-electrica-2009", "career": { "id": "7e60f4c2680fa5ef3d9315c766798decfb6848af", "name": "Ingeniería Electricista" }, "plan": { "id": "574c4d0ca1e2d0a814c545f0966bde773ca9d30f", "name": "2009" } },
     { "planId": "informatica-2023", "career": { "id": "9220d714727dbe74790a6782a5241e56f7034064", "name": "Ingeniería en Informática" }, "plan": { "id": "8c8fad417550bd6933f59f505569c7c5e5125b5d", "name": "2023" } },
+    { "planId": "informatica-1986", "career": { "id": "9220d714727dbe74790a6782a5241e56f7034064", "name": "Ingeniería en Informática" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } },
     { "planId": "petroleo-2023", "career": { "id": "8dcc241dbc57134d0915a3cae0b7bd3f80efce8b", "name": "Ingeniería en Petróleo" }, "plan": { "id": "28073d53d1dc18bd1a99f492edbbd69dae4f7452", "name": "2023" } },
+    { "planId": "petroleo-2015", "career": { "id": "8dcc241dbc57134d0915a3cae0b7bd3f80efce8b", "name": "Ingeniería en Petróleo" }, "plan": { "id": "76502928be970c7799f9fd698568494968af4191", "name": "2015" } },
     { "planId": "industrial-2023", "career": { "id": "74fc1130669c477e394f0fbe153f60695719f487", "name": "Ingeniería Industrial" }, "plan": { "id": "f05dbadc669a65f8f48d2562f5b0242a3c2bef3d", "name": "2023" } },
+    { "planId": "industrial-2011", "career": { "id": "74fc1130669c477e394f0fbe153f60695719f487", "name": "Ingeniería Industrial" }, "plan": { "id": "4499a38d851b7dc71e045264f7b4fdc910ad8f2a", "name": "2011" } },
     { "planId": "mecanica-2024", "career": { "id": "bbf8c306d3193391fdc372192c7a20b218916f35", "name": "Ingeniería Mecánica" }, "plan": { "id": "1fe744336b89bd26240183af40dd97bcf204b439", "name": "2024" } },
+    { "planId": "mecanica-1986", "career": { "id": "bbf8c306d3193391fdc372192c7a20b218916f35", "name": "Ingeniería Mecánica" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } },
+    { "planId": "mecanica-1986", "career": { "id": "bbf8c306d3193391fdc372192c7a20b218916f35", "name": "Ingeniería Mecánica" }, "plan": { "id": "871feb41acb535ae7da99450f7a24c037652ec95", "name": "1986M" } },
     { "planId": "naval-2024", "career": { "id": "6822af450f78820df7db0a8f64738afe9daa5ae4", "name": "Ingeniería Naval" }, "plan": { "id": "9aa13de6aca68127335d365b5def6fc610db7d5e", "name": "2024" } },
+    { "planId": "naval-1986", "career": { "id": "33ceeec1ff44f3065fae35676500dae5756d57f4", "name": "Ingeniería Naval y Mecánica" }, "plan": { "id": "5dcfbe4f84c37d702a9bd522427b886906441391", "name": "1986N" } },
     { "planId": "quimica-2023", "career": { "id": "549c760144af0b888c0946f53012b4f244ffec9c", "name": "Ingeniería Química" }, "plan": { "id": "3d475127da410f27a2bf0f634ffd09b067041b23", "name": "2023" } },
-    { "planId": "sistemas-1986", "career": { "id": "f322f9dc30936eed555a4dff142b93c2d36c33d0", "name": "Licenciatura en Análisis de Sistemas" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } }
+    { "planId": "quimica-1986", "career": { "id": "549c760144af0b888c0946f53012b4f244ffec9c", "name": "Ingeniería Química" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } },
+    { "planId": "quimica-1986", "career": { "id": "549c760144af0b888c0946f53012b4f244ffec9c", "name": "Ingeniería Química" }, "plan": { "id": "871feb41acb535ae7da99450f7a24c037652ec95", "name": "1986M" } },
+    { "planId": "sistemas-1986", "career": { "id": "f322f9dc30936eed555a4dff142b93c2d36c33d0", "name": "Licenciatura en Análisis de Sistemas" }, "plan": { "id": "db18b7a19410b52b4a19b63d676606b3003510c9", "name": "1986" } },
+    { "planId": "sistemas-2014", "career": { "id": "f322f9dc30936eed555a4dff142b93c2d36c33d0", "name": "Licenciatura en Análisis de Sistemas" }, "plan": { "id": "6563770ae27c42e864ad39ed2d4ee3659ec259f7", "name": "86V14" } }
   ]
 }

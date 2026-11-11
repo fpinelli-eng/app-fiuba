@@ -56,8 +56,11 @@ insert into public.historical_reviews (course_id, teacher, term_label, year, sta
 -- Seed ------------------------------------------------------------------------------
 
 select test.ok((select count(*) from public.careers) = 13, '13 careers');
-select test.ok((select count(*) from public.plans) = 24, '24 plans');
+select test.ok((select count(*) from public.plans) = 25, '25 plans');
 select test.ok((select count(*) from public.plans where is_current) = 13, 'one current plan per career');
+-- Added later (20261113145000_sistemas_2014.sql): Sistemas 2014 replaces 1986 as the current plan.
+select test.ok((select count(*) from public.subjects where plan_id = 'sistemas-2014') = 58, 'Sistemas 2014 has 58 subjects');
+select test.ok((select id from public.plans where career_id = 'sistemas' and is_current) = 'sistemas-2014', 'Sistemas 2014 is current');
 select test.ok((select count(*) from public.subjects where plan_id = 'industrial-2023') = 66, 'Industrial 2023 has 66 subjects');
 select test.ok(
   (select count(*) from public.subject_prerequisites sp
@@ -86,6 +89,7 @@ select test.fails('select 1 from public.subjects limit 1', 'anon reads subjects'
 select test.fails('select 1 from public.reviews limit 1', 'anon reads reviews');
 select test.fails('select public.ensure_profile()', 'anon creates a profile');
 select test.fails('select public.review_course(1, 4::smallint, null)', 'anon writes a review');
+select test.fails($$select public.choose_my_plan('industrial-2023')$$, 'anon picks a plan');
 reset role;
 
 -- An account from another domain --------------------------------------------------
@@ -93,6 +97,7 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
 select test.fails('select public.ensure_profile()', 'gmail account gets a profile');
+select test.fails($$select public.choose_my_plan('industrial-2023')$$, 'gmail account picks a plan');
 select test.fails($$insert into public.user_subjects values ('cccccccc-0000-0000-0000-000000000003', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'in_progress', null)$$,
   'gmail account saves a subject');
 -- A session is not enough to read: it takes a FIUBA account (a profile).
@@ -119,10 +124,16 @@ select public.ensure_profile();  -- twice is fine
 select test.ok((select count(*) from public.profiles) = 1, 'student sees only their profile');
 select test.ok((select plan_id from public.profiles) is null, 'new profile has no plan');
 
-update public.profiles set plan_id = 'industrial-2023';
+-- The plan is chosen only with choose_my_plan() (once) and changed with change_my_plan().
+select test.fails($$update public.profiles set plan_id = 'industrial-2023'$$, 'student sets their plan directly');
+select test.fails($$select public.choose_my_plan('no-existe')$$, 'student picks a plan that does not exist');
+select public.choose_my_plan('industrial-2023');
 select test.ok((select plan_id from public.profiles) = 'industrial-2023', 'student picks a plan');
+select public.choose_my_plan('industrial-2023');  -- twice (double submit) is fine
+select test.fails($$select public.choose_my_plan('civil-2023')$$, 'student changes plan with choose_my_plan, skipping the cleanup');
+select test.fails($$update public.profiles set plan_id = 'civil-2023'$$, 'student changes their plan directly, skipping the cleanup');
+select test.ok((select plan_id from public.profiles) = 'industrial-2023', 'the plan stays after the failed changes');
 select test.fails('update public.profiles set is_admin = true', 'student makes themselves admin');
-select test.fails($$update public.profiles set plan_id = 'no-existe'$$, 'student picks a plan that does not exist');
 
 insert into public.user_subjects (user_id, subject_id, status, grade)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'approved', 8);
@@ -149,6 +160,9 @@ insert into public.user_extra_credits (name, credits) values ('FIUBATÓN 2025', 
 select test.ok((select count(*) from public.user_extra_credits where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'student adds extra credits');
 select test.fails($$insert into public.user_extra_credits (user_id, name, credits) values ('bbbbbbbb-0000-0000-0000-000000000002', 'x', 2)$$, 'extra credits for another student');
 select test.fails($$select * from public.admin_users()$$, 'student lists the users');
+select public.touch_last_seen();
+select test.ok((select last_seen_at from public.profiles) is not null, 'student marks her last visit');
+select test.fails('update public.profiles set last_seen_at = null', 'student edits her last visit directly');
 update public.profiles set failed_finals = 3;
 select test.ok((select failed_finals from public.profiles) = 3, 'student sets her aplazos');
 
@@ -271,6 +285,7 @@ select test.ok((select count(*) from public.course_star_counts(array[1::bigint])
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
+select test.ok((select last_seen_at from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees when each student last used the app');
 reset role;
 insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
 set role authenticated;

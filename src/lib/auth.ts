@@ -7,6 +7,15 @@ export function isAllowedEmail(email: string | null | undefined): boolean {
   return !!email && email.trim().toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`);
 }
 
+// Motivos por los que el ingreso vuelve con ?error=… La pantalla muestra un texto fijo para cada uno:
+// nunca texto sacado de la dirección (cualquiera puede armar un enlace a la página principal).
+export const LOGIN_ERRORS = ["dominio", "login"] as const;
+export type LoginError = (typeof LOGIN_ERRORS)[number];
+
+export function loginError(value: unknown): LoginError | null {
+  return LOGIN_ERRORS.find((e) => e === value) ?? null;
+}
+
 export type Profile = {
   email: string;
   fullName: string;

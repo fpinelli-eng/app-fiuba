@@ -39,3 +39,14 @@ export async function getOfferNeed(planId: string): Promise<{ needsOffer: boolea
   if (error) throw new Error(`offerings: ${error.message}`);
   return { needsOffer: (count ?? 0) === 0, term: term.label };
 }
+
+// Function not there yet: the migration 20261113140000_last_seen is not applied (Vercel previews use
+// the production database until the branch is merged).
+const MISSING_FUNCTION = new Set(["42883", "PGRST202"]);
+
+/** Marks that the student used the app now (the database only writes it once per hour). */
+export async function touchLastSeen(): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("touch_last_seen");
+  if (error && !MISSING_FUNCTION.has(error.code)) throw new Error(`touch_last_seen: ${error.message}`);
+}

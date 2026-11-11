@@ -18,7 +18,7 @@ import "./ts-resolve.mjs";
 
 const { fetchSiuExamsPage, siuExamsUrl } = await import("../../src/lib/siu/exams-fetch.ts");
 const { parseSiuExamsHtml } = await import("../../src/lib/siu/exams-html.ts");
-const { validateFilters, siuSearchUrl, checkSync, normalizeRow, diffExamRows, hasChanges, summaryMarkdown } =
+const { validateFilters, groupFilters, siuSearchUrl, checkPlanSync, normalizeRow, diffExamRows, hasChanges, summaryMarkdown } =
   await import("../../src/lib/exams/siu-sync.ts");
 
 const { values: args } = parseArgs({
@@ -34,7 +34,8 @@ if (!dryRun && !args.sql) throw new Error("Con --current hace falta --sql");
 
 const filters = validateFilters(JSON.parse(readFileSync(new URL("../../data/siu/exam-filters.json", import.meta.url), "utf8")));
 const only = args.only ? new Set(args.only.split(",")) : null;
-const plans = filters.plans.filter((p) => !only || only.has(p.planId));
+// A plan can have more than one SIU search (exam-filters.json): its tables are the union.
+const plans = [...groupFilters(filters.plans.filter((p) => !only || only.has(p.planId)))];
 
 /** Current rows per plan, in the parser's formats. */
 const current = new Map();
@@ -58,27 +59,33 @@ async function download(url) {
 
 const outcomes = [];
 const writes = [];
-for (const [i, filter] of plans.entries()) {
-  if (i > 0) await wait(2_000); // gentle with the SIU: one page at a time
-  const checked = siuExamsUrl(siuSearchUrl(filters, filter));
-  if ("error" in checked) throw new Error(`${filter.planId}: ${checked.error}`);
-  const page = await download(checked.url);
-  if ("error" in page) {
-    outcomes.push({ planId: filter.planId, skip: "no se pudo bajar la página del SIU" });
+let requests = 0;
+for (const [planId, searches] of plans) {
+  const pages = [];
+  for (const filter of searches) {
+    if (requests++ > 0) await wait(2_000); // gentle with the SIU: one page at a time
+    const checked = siuExamsUrl(siuSearchUrl(filters, filter));
+    if ("error" in checked) throw new Error(`${planId}: ${checked.error}`);
+    const page = await download(checked.url);
+    if ("error" in page) break;
+    pages.push({ parsed: parseSiuExamsHtml(page.html), filter });
+  }
+  if (pages.length < searches.length) {
+    outcomes.push({ planId, skip: "no se pudo bajar la página del SIU" });
     continue;
   }
-  const check = checkSync(parseSiuExamsHtml(page.html), filter);
+  const check = checkPlanSync(pages);
   if ("skip" in check) {
-    outcomes.push({ planId: filter.planId, skip: check.skip });
+    outcomes.push({ planId, skip: check.skip });
     continue;
   }
-  const diff = dryRun ? null : diffExamRows(current.get(filter.planId) ?? [], check.rows);
-  outcomes.push({ planId: filter.planId, tables: check.rows.length, diff });
+  const diff = dryRun ? null : diffExamRows(current.get(planId) ?? [], check.rows);
+  outcomes.push({ planId, tables: check.rows.length, diff });
   if (diff && hasChanges(diff)) {
     const dates = check.rows.map((r) => r.exam_date).sort();
     const subjects = new Set(check.rows.map((r) => r.siu_subject_code)).size;
     const stats = { subjects, tables: check.rows.length, from: dates[0], to: dates.at(-1) };
-    writes.push({ plan_id: filter.planId, stats, rows: check.rows });
+    writes.push({ plan_id: planId, stats, rows: check.rows });
   }
 }
 

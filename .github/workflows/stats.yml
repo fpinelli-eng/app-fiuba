@@ -1,6 +1,8 @@
-# "Relevamiento de usuarios": how many students use the app (totals, new ones, by career, by day,
-# what they use). Manual (Actions → "Relevamiento de usuarios" → Run workflow); the result is in the
-# run's summary. Only counts: no mails or names leave the database (tools/stats/users.sql).
+# "Relevamiento de usuarios": how many students use the app (global totals: new ones, what they use).
+# The repo is public, so the summary is too: no breakdown by career or day (with few users it could
+# point to a person; admins see the details in /admin/usuarios).
+# Manual (Actions → "Relevamiento de usuarios" → Run workflow); the result is in the run's summary.
+# Only counts: no mails or names leave the database (tools/stats/users.sql).
 # Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
 name: Relevamiento de usuarios
 

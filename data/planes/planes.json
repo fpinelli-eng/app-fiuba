@@ -576,14 +576,37 @@
       "id": "sistemas-1986",
       "career": "sistemas",
       "year": 1986,
-      "current": true,
+      "current": false,
       "legacy_name": null,
       "fiuba_map_file": "sistemas-1986.json",
       "credit_rules": {
         "total": 208,
         "electivas": 40
       },
-      "requirements": []
+      "requirements": [],
+      "current_until": "20261113145000_sistemas_2014"
+    },
+    {
+      "id": "sistemas-2014",
+      "career": "sistemas",
+      "year": 2014,
+      "current": true,
+      "legacy_name": null,
+      "fiuba_map_file": "sistemas-2014.json",
+      "migration": "20261113145000_sistemas_2014",
+      "credit_rules": {
+        "total": 214,
+        "electivas": 28,
+        "materias": [
+          "95.61"
+        ]
+      },
+      "requirements": [
+        {
+          "name": "Prueba de nivel de idioma inglés",
+          "short_name": "Inglés"
+        }
+      ]
     }
   ]
 }

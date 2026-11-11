@@ -6,7 +6,7 @@ import { ColumnIntro } from "@/components/ColumnIntro";
 import { LoginButton } from "@/components/LoginButton";
 import { Logo } from "@/components/Logo";
 import { APP_NAME } from "@/lib/app";
-import { isAllowedEmail } from "@/lib/auth";
+import { isAllowedEmail, loginError, type LoginError } from "@/lib/auth";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,6 +15,12 @@ import { createClient } from "@/lib/supabase/server";
 // página que indexan los buscadores: por eso el nombre va como texto real en el h1 y la dirección canónica es "/".
 
 const TITLE = `${APP_NAME} · Tu carrera de ingeniería en un solo lugar`;
+
+// Textos fijos de cada motivo de ?error=… (la dirección la puede armar cualquiera: nunca se muestra lo que trae).
+const LOGIN_ERROR_MESSAGES: Record<LoginError, { title: string; detail: string }> = {
+  dominio: { title: "Esa cuenta no es de FIUBA", detail: "Solo se puede entrar con una cuenta @fi.uba.ar." },
+  login: { title: "No pudimos iniciar tu sesión", detail: "Probá de nuevo en un momento." },
+};
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -96,8 +102,9 @@ const STRUCTURED_DATA = JSON.stringify({
 
 export default async function IngresarPage({ searchParams }: PageProps<"/ingresar">) {
   const params = await searchParams;
-  const error = typeof params.error === "string" ? params.error : null;
-  const email = typeof params.email === "string" ? params.email : "";
+  // Solo motivos conocidos, con texto fijo: nada de lo que trae la dirección se muestra.
+  const error = loginError(params.error);
+  const message = error ? LOGIN_ERROR_MESSAGES[error] : null;
 
   // Si ya tiene una sesión válida, va directo al inicio.
   const supabase = await createClient();
@@ -122,16 +129,10 @@ export default async function IngresarPage({ searchParams }: PageProps<"/ingresa
             className="mt-2 h-[54px] w-full md:h-14 md:w-auto md:px-[26px] md:text-[17px]"
           />
 
-          {error === "dominio" && (
+          {message && (
             <div role="alert" className="mt-1 w-full max-w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
-              <div className="font-semibold break-words">{email ? `${email} no es una cuenta de FIUBA` : "Esa cuenta no es de FIUBA"}</div>
-              <div className="mt-0.5">Ingresá con tu mail @fi.uba.ar.</div>
-            </div>
-          )}
-          {error === "login" && (
-            <div role="alert" className="mt-1 w-full max-w-[360px] rounded-xl bg-peach px-4 py-3.5 text-left text-sm text-peach-ink">
-              <div className="font-semibold">No pudimos iniciar tu sesión</div>
-              <div className="mt-0.5">Probá de nuevo en un momento.</div>
+              <div className="font-semibold">{message.title}</div>
+              <div className="mt-0.5">{message.detail}</div>
             </div>
           )}
         </section>

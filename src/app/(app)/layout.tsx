@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
 import { WelcomeStories } from "@/components/WelcomeStories";
-import { getIntroSeen, getOfferNeed } from "@/lib/intro/data";
+import { getIntroSeen, getOfferNeed, touchLastSeen } from "@/lib/intro/data";
 import { countPendingReviews } from "@/lib/reviews/pending";
 import { requireProfile } from "@/lib/session";
 
@@ -12,6 +12,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     countPendingReviews(profile.id),
     getIntroSeen(profile.id),
     getOfferNeed(profile.planId!),
+    touchLastSeen(),
   ]);
   return (
     <>
