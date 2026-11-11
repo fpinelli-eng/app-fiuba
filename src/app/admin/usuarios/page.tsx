@@ -9,7 +9,8 @@ export const metadata: Metadata = { title: `Usuarios · Administración · ${APP
 const DAY = 24 * 60 * 60 * 1000;
 
 // Usuarios: quiénes usan la app y qué usaron. El layout de /admin ya exige ser administrador y la
-// función de la base lo vuelve a controlar. Las reseñas de cada uno no se muestran: son anónimas.
+// función de la base lo vuelve a controlar. De las reseñas se muestra solo cuántas dejó cada uno,
+// nunca cuáles: siguen siendo anónimas.
 // Markup simple con los estilos que ya hay en Administración.
 export default async function AdminUsersPage() {
   const [{ users, readAt: now }, careers] = await Promise.all([getAdminUsers(), getCareers()]);
@@ -24,16 +25,17 @@ export default async function AdminUsersPage() {
     ["Sin carrera", users.filter((u) => !u.planId).length],
     ["Con aprobadas", users.filter((u) => u.subjects > 0).length],
     ["Armaron el Plan", users.filter((u) => u.planCourses > 0).length],
+    ["Dejaron reseñas", users.filter((u) => u.reviews > 0).length],
   ] as const;
 
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-[26px] font-semibold md:text-[32px]">Usuarios</h1>
-        <p className="text-muted">Quiénes usan la app. Las reseñas de cada uno no se muestran: son anónimas.</p>
+        <p className="text-muted">Quiénes usan la app. De las reseñas se ve solo cuántas dejó cada uno, nunca cuáles: siguen siendo anónimas.</p>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-6">
+      <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-7">
         {stats.map(([label, n]) => (
           <li key={label} className="rounded-2xl border border-line bg-surface p-3">
             <div className="text-[13px] text-muted">{label}</div>
@@ -51,6 +53,7 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-2.5 font-semibold">Carrera</th>
               <th className="px-4 py-2.5 font-semibold">Alta</th>
               <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
+              <th className="px-4 py-2.5 text-right font-semibold">Reseñas</th>
               <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
               <th className="px-4 py-2.5 font-semibold">Historias</th>
             </tr>
@@ -63,6 +66,7 @@ export default async function AdminUsersPage() {
                 <td className="px-4 py-2.5 whitespace-nowrap">{u.planId ? (planName.get(u.planId) ?? u.planId) : "Sin elegir"}</td>
                 <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">{date(u.createdAt)}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.subjects}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums">{u.reviews}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.planCourses}</td>
                 <td className="px-4 py-2.5">{u.introSeen ? "Vistas" : "—"}</td>
               </tr>
