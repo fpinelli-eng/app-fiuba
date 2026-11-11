@@ -79,6 +79,7 @@ Antes de tocar algo, leé:
 
 ## Convenciones
 
+- Commits que Claude hace para Francisco: autor `Francisco <287012235+fpinelli-eng@users.noreply.github.com>`. GitHub rechaza los que llevan su mail institucional (privacidad de mail activada) y Vercel solo despliega commits asociados a su cuenta.
 - Código, nombres de variables, tablas y commits en inglés. Textos de la interfaz en español rioplatense, con voseo ("Elegí", "Tocá", "Tenés").
 - Interfaz minimalista: nada de textos explicativos de relleno. Si una pantalla necesita una explicación para entenderse, el problema es el diseño.
 - Números con ancho fijo (`font-variant-numeric: tabular-nums`). Decimales con coma: "7,76".
