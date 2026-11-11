@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { currentTerm } from "@/lib/reviews/catalog";
 
 // Undefined column: the migration 20261107130000_intro_seen is not applied yet. Vercel previews use
 // the production database, which only gets it when the branch is merged.
@@ -19,6 +20,24 @@ export async function getIntroSeen(userId: string): Promise<boolean> {
   if (error?.code === MISSING_COLUMN) return true;
   if (error) throw new Error(`profiles: ${error.message}`);
   return Boolean(data?.intro_seen_at);
+}
+
+/**
+ * Whether the student's plan has no course offer for the current term (the welcome stories then ask
+ * them to upload it from the SIU). No current term: nothing to ask.
+ */
+export async function getOfferNeed(planId: string): Promise<{ needsOffer: boolean; term: string | null }> {
+  const term = await currentTerm();
+  if (!term) return { needsOffer: false, term: null };
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("offerings")
+    .select("id", { count: "exact", head: true })
+    .eq("plan_id", planId)
+    .eq("term_id", term.id)
+    .eq("visible", true);
+  if (error) throw new Error(`offerings: ${error.message}`);
+  return { needsOffer: (count ?? 0) === 0, term: term.label };
 }
 
 // Function not there yet: the migration 20261113140000_last_seen is not applied (Vercel previews use
