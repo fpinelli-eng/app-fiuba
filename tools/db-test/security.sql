@@ -265,6 +265,7 @@ select test.fails('update public.reviews set stars = 1', 'admin edits the stars 
 select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
+select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
 reset role;
 insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
 set role authenticated;
