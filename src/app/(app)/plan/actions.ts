@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
 import type { Entry, OptionKey } from "@/lib/plan/data";
+import { getPlanCatalog } from "@/lib/admin/catalog";
+import { previewImport } from "@/lib/admin/offer-import";
+import { NOT_YET } from "@/lib/offer/data";
+import { offerPreviewProblem, offerTextProblem } from "@/lib/offer/check";
+import { submissionRefusal, submissionSummary } from "@/lib/offer/submission";
 
 export type SaveResult = { error: string | null };
 
@@ -97,4 +102,45 @@ export async function confirmCourses(entries: Entry[], droppedSubjects: string[]
   revalidatePath("/");
   revalidatePath("/mapa");
   return { error: null };
+}
+
+export type SubmitOfferState = { error: string | null; message: string | null };
+
+// "Enviar" la oferta del SIU cuando el plan del alumno no tiene la del cuatrimestre actual.
+// Se interpreta acá mismo con el intérprete del administrador (para avisar al instante si el
+// texto no sirve) y se guarda pendiente: la publica un administrador desde /admin. La base
+// controla que sea su plan y el cuatrimestre actual, y que no tenga más de 3 pendientes.
+export async function submitOffer(_prev: SubmitOfferState, formData: FormData): Promise<SubmitOfferState> {
+  const account = await requireProfile();
+  const planId = account.planId!;
+  const text = String(formData.get("text") ?? "");
+  const tooLong = offerTextProblem(text);
+  if (tooLong) return { error: tooLong, message: null };
+
+  const supabase = await createClient();
+  const term = await supabase.from("terms").select("id, year, half").eq("is_current", true).maybeSingle();
+  if (term.error || !term.data) return { error: "No hay un cuatrimestre abierto.", message: null };
+  const offer = await supabase.from("offerings").select("id").eq("term_id", term.data.id).eq("plan_id", planId).eq("visible", true).limit(1);
+  if (offer.error) return { error: "No pudimos revisar la oferta de tu plan.", message: null };
+  if (offer.data.length) return { error: submissionRefusal("already_published"), message: null };
+
+  const { subjects, knownCodes } = await getPlanCatalog(planId);
+  const { preview } = previewImport(text, subjects, knownCodes);
+  const problem = offerPreviewProblem(preview, { year: term.data.year as number, half: term.data.half as 1 | 2 });
+  if (problem) return { error: problem, message: null };
+
+  const saved = await supabase.from("offer_submissions").insert({
+    term_id: term.data.id,
+    plan_id: planId,
+    raw_text: text,
+    subjects: preview.stats.subjects,
+    courses: preview.stats.courses,
+    blocks: preview.stats.blocks,
+  });
+  if (saved.error) {
+    if (NOT_YET.has(saved.error.code)) return { error: "Todavía no se puede mandar la oferta desde acá.", message: null };
+    return { error: submissionRefusal(saved.error.hint), message: null };
+  }
+  revalidatePath("/plan");
+  return { error: null, message: `${submissionSummary(preview.stats)} Gracias: la revisamos y en breve todos los de tu plan van a poder armar su cuatrimestre.` };
 }

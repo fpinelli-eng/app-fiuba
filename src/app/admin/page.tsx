@@ -7,14 +7,28 @@ import {
   getAdminOverview,
   getPlanSubjectOptions,
   getPlanImport,
+  getPendingSubmissions,
   getPublishedOffer,
   termLabel,
   type ImportStatus,
+  type PendingSubmission,
   type PlanRow,
   type PublishedCourse,
 } from "@/lib/admin/data";
 import { decisionFor, type ImportPreview } from "@/lib/admin/offer-import";
-import { ChangeChoice, DiscardButton, LinkSubjectForm, ProcessForm, PublishButton, ReplacePanel, ReviewsDateForm, TermForm, VisibilityButton } from "./forms";
+import { shortDate } from "@/lib/offer/submission";
+import {
+  ChangeChoice,
+  DiscardButton,
+  LinkSubjectForm,
+  ProcessForm,
+  PublishButton,
+  ReplacePanel,
+  ReviewsDateForm,
+  SubmissionActions,
+  TermForm,
+  VisibilityButton,
+} from "./forms";
 
 export const metadata: Metadata = { title: `Administración · ${APP_NAME}` };
 
@@ -37,7 +51,7 @@ const planName = (p: PlanRow) => `${p.career} · Plan ${p.year}`;
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const { plan: planParam } = await searchParams;
-  const { term, plans } = await getAdminOverview();
+  const [{ term, plans }, submissions] = await Promise.all([getAdminOverview(), getPendingSubmissions()]);
   const now = new Date();
 
   if (!term) {
@@ -67,6 +81,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div>
         <ReviewsDateForm date={term.reviewsOpenOn} />
       </div>
+
+      {submissions.length > 0 && <Submissions submissions={submissions} plans={plans} />}
 
       <div className="grid grid-cols-1 items-start gap-[18px] md:grid-cols-[300px_minmax(0,1fr)]">
         <aside aria-label="Planes" className="flex flex-col gap-0.5 rounded-[18px] border border-line bg-surface p-2.5">
@@ -119,6 +135,42 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
 function Shell({ children }: { children: ReactNode }) {
   return <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">{children}</main>;
+}
+
+/** Offers sent by students from the Plan screen: the admin publishes them with the same import, or rejects them. */
+function Submissions({ submissions, plans }: { submissions: PendingSubmission[]; plans: PlanRow[] }) {
+  const byId = new Map(plans.map((p) => [p.id, p]));
+  return (
+    <Card
+      flush
+      title={
+        <>
+          <h2 className="text-[19px] font-semibold">Ofertas enviadas por alumnos</h2>
+          <p className="text-sm text-muted">
+            «Procesar y publicar» las procesa y publica como si las pegaras vos. Si ya tiene oferta, no se puede: usá «Reemplazar con otro texto».
+          </p>
+        </>
+      }
+    >
+      {submissions.map((s) => {
+        const plan = byId.get(s.planId);
+        return (
+          <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-6 py-3.5">
+            <div className="min-w-0">
+              <div className="font-semibold">
+                {plan ? <Link href={`/admin?plan=${plan.id}`}>{planName(plan)}</Link> : s.planId}
+                {plan?.status === "published" && <span className="ml-2 text-[13px] font-normal text-muted">Ya publicada</span>}
+              </div>
+              <div className="text-[13px] text-muted">
+                {s.subjects} materias · {s.courses} cursos · {s.blocks} horarios · {s.sentBy || "Cuenta borrada"}, {shortDate(s.createdAt)}
+              </div>
+            </div>
+            <SubmissionActions submissionId={s.id} />
+          </div>
+        );
+      })}
+    </Card>
+  );
 }
 
 function Card({ title, children, flush = false }: { title?: ReactNode; children: ReactNode; flush?: boolean }) {

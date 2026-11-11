@@ -3,6 +3,8 @@ import { getMapData } from "@/lib/map/data";
 import { CareerMap, normalizeText, sumExtraCredits, type Progress, type SubjectKind } from "@/lib/map/model";
 import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
 import type { Campus } from "@/lib/siu/parser";
+import { getMySubmission } from "@/lib/offer/data";
+import type { MySubmission } from "@/lib/offer/submission";
 import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
 import type { ClassBlock, CourseOption, WeekDay } from "./options";
@@ -43,6 +45,11 @@ export interface PlanData {
   saved: Record<OptionKey, Entry[]>;
   /** Courses of this term the student confirmed ("Confirmar mi cursada"). */
   enrolled: string[];
+  /**
+   * The plan has no offer this term: the student can send it from the SIU. With their latest
+   * submission, if any. Absent when there is an offer or no term.
+   */
+  noOffer?: { submission: MySubmission | null };
 }
 
 const DAYS: WeekDay[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -114,7 +121,7 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   if (codes.error) throw new Error(`subject_siu_codes: ${codes.error.message}`);
   if (offerings.error) throw new Error(`offerings: ${offerings.error.message}`);
   const rows = offerings.data as unknown as OfferingRow[];
-  if (rows.length === 0) return empty(term.label, career);
+  if (rows.length === 0) return { ...empty(term.label, career), noOffer: { submission: await getMySubmission(userId, term.id, planId) } };
 
   const byCode = new Map(codes.data.map((c) => [c.siu_code as string, c.subject_id as number]));
   const byName = new Map(map.subjects.map((s) => [normalizeText(s.name), s.id]));

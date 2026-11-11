@@ -160,3 +160,38 @@ export async function getPlanSubjectOptions(planId: string): Promise<{ id: numbe
   if (error) throw new Error(`subjects: ${error.message}`);
   return data.map((s) => ({ id: s.id as number, name: s.name as string }));
 }
+
+/** An offer sent by a student, waiting for an admin (public.admin_offer_submissions). */
+export interface PendingSubmission {
+  id: number;
+  planId: string;
+  subjects: number;
+  courses: number;
+  blocks: number;
+  createdAt: string;
+  /** Name (or mail) of who sent it; empty when the account was deleted. */
+  sentBy: string;
+}
+
+// Undefined table or function: the migration 20261112120000_offer_submissions is not applied yet.
+// Vercel previews use the production database, which only gets it when the branch is merged.
+const NOT_YET = new Set(["42P01", "42883", "PGRST205", "PGRST202"]);
+
+/** Pending offers sent by students for the current term, oldest first. */
+export async function getPendingSubmissions(): Promise<PendingSubmission[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_offer_submissions");
+  if (error) {
+    if (NOT_YET.has(error.code)) return [];
+    throw new Error(`admin_offer_submissions: ${error.message}`);
+  }
+  return (data as Record<string, unknown>[]).map((s) => ({
+    id: Number(s.id),
+    planId: s.plan_id as string,
+    subjects: Number(s.subjects),
+    courses: Number(s.courses),
+    blocks: Number(s.blocks),
+    createdAt: s.created_at as string,
+    sentBy: (s.full_name as string) || (s.email as string) || "",
+  }));
+}
