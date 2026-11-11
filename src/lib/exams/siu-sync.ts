@@ -8,7 +8,11 @@ import type { ExamRow } from "../admin/exams";
 import { normalizeText } from "../map/model";
 import type { ExamParseResult } from "../siu/exams";
 
-/** The SIU filters of one app plan, from data/siu/exam-filters.json. */
+/**
+ * One SIU search of an app plan, from data/siu/exam-filters.json. A plan can have more than one
+ * (the SIU splits some old plans in two, like Química "1986" and "1986M"): its tables are the
+ * union of all its searches.
+ */
 export interface ExamFilter {
   planId: string;
   /** The SIU's ids ("_ID_" of its select options) and the names it shows for them. */
@@ -25,7 +29,7 @@ export interface ExamFilters {
 
 const SIU_ID = /^[0-9a-f]{40}$/;
 
-/** Checks the mapping file: ids look like the SIU's, every plan appears once. Throws otherwise. */
+/** Checks the mapping file: ids look like the SIU's, no search appears twice. Throws otherwise. */
 export function validateFilters(data: unknown): ExamFilters {
   const d = data as Partial<ExamFilters> | null;
   const fail = (msg: string): never => {
@@ -38,14 +42,22 @@ export function validateFilters(data: unknown): ExamFilters {
   for (const p of d!.plans!) {
     const id = p?.planId;
     if (typeof id !== "string" || !/^[a-z-]+-\d{4}$/.test(id)) fail(`planId inválido: ${String(id)}`);
-    if (seen.has(id)) fail(`${id} está dos veces`);
-    seen.add(id);
     for (const key of ["career", "plan"] as const) {
       const f = p[key];
       if (!f || !SIU_ID.test(String(f.id)) || typeof f.name !== "string" || !f.name.trim()) fail(`${id}: ${key} incompleto`);
     }
+    const search = `${id} ${p.career.id} ${p.plan.id}`;
+    if (seen.has(search)) fail(`${id} está dos veces`);
+    seen.add(search);
   }
   return d as ExamFilters;
+}
+
+/** The searches of each plan, in the file's order. */
+export function groupFilters(filters: ExamFilter[]): Map<string, ExamFilter[]> {
+  const groups = new Map<string, ExamFilter[]>();
+  for (const f of filters) groups.set(f.planId, [...(groups.get(f.planId) ?? []), f]);
+  return groups;
 }
 
 /** The address of a plan's search in the SIU, as the page's own form builds it after "Buscar". */
@@ -94,8 +106,34 @@ export function checkSync(parsed: ExamParseResult, filter: ExamFilter): SyncChec
       teachers: t.teachers,
     })),
   );
-  if (rows.length === 0) return { skip: "el SIU no devolvió mesas" };
+  if (rows.length === 0) return { skip: NO_TABLES };
   return { rows };
+}
+
+const NO_TABLES = "el SIU no devolvió mesas";
+
+/**
+ * checkSync() for a plan with one or more SIU searches. A search of another career or plan skips
+ * the whole plan; an empty search is fine while another one has tables. A table listed by two
+ * searches (the same exam, shown in both SIU plans) is kept once.
+ */
+export function checkPlanSync(pages: { parsed: ExamParseResult; filter: ExamFilter }[]): SyncCheck {
+  const kept = new Map<string, { row: SyncRow; count: number }>();
+  for (const { parsed, filter } of pages) {
+    const check = checkSync(parsed, filter);
+    if ("skip" in check) {
+      if (check.skip === NO_TABLES) continue;
+      return check;
+    }
+    const counts = new Map<string, { row: SyncRow; count: number }>();
+    for (const row of check.rows) {
+      const key = JSON.stringify(row);
+      counts.set(key, { row, count: (counts.get(key)?.count ?? 0) + 1 });
+    }
+    for (const [key, c] of counts) if (c.count > (kept.get(key)?.count ?? 0)) kept.set(key, c);
+  }
+  const rows = [...kept.values()].flatMap((c) => Array.from({ length: c.count }, () => c.row));
+  return rows.length ? { rows } : { skip: NO_TABLES };
 }
 
 const DATE_TIME_KEYS = ["enroll_from", "enroll_to", "drop_until"] as const;

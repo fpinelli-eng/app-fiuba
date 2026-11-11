@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { siuExamsUrl } from "../siu/exams-fetch";
 import { parseSiuExamsHtml } from "../siu/exams-html";
 import {
+  checkPlanSync,
   checkSync,
   diffExamRows,
+  groupFilters,
   normalizeRow,
   siuSearchUrl,
   summaryMarkdown,
@@ -15,7 +17,9 @@ import {
 
 const page = readFileSync(new URL("../../../data/siu/examenes_industrial-2023.html", import.meta.url), "latin1");
 const filtersFile = JSON.parse(readFileSync(new URL("../../../data/siu/exam-filters.json", import.meta.url), "utf8"));
-const seed = readFileSync(new URL("../../../supabase/migrations/20261015120100_seed_plans.sql", import.meta.url), "utf8");
+const planes = JSON.parse(readFileSync(new URL("../../../data/planes/planes.json", import.meta.url), "utf8")) as {
+  plans: { id: string; year: number; current: boolean }[];
+};
 
 const industrial: ExamFilter = {
   planId: "industrial-2023",
@@ -26,15 +30,24 @@ const industrial: ExamFilter = {
 describe("data/siu/exam-filters.json", () => {
   const filters = validateFilters(filtersFile);
 
-  it("maps every current plan of the app, and only those", () => {
-    const current = [...seed.matchAll(/\('([a-z-]+-\d{4})', '[a-z-]+', (\d{4}), [^,]+, true,/g)].map((m) => m[1]);
+  // The SIU names some old plans differently: "86V14" is Sistemas 1986 modified in 2014, and the
+  // only old plan of Agrimensura in the SIU is "1986" (FIUBA Map's 2006, same subject codes).
+  const SIU_PLAN_NAMES: Record<string, string> = { "sistemas-2014": "86V14", "agrimensura-2006": "1986" };
+
+  it("maps every current plan of the app, and only plans of the app", () => {
+    const mapped = new Set(filters.plans.map((p) => p.planId));
+    const current = planes.plans.filter((p) => p.current).map((p) => p.id);
     expect(current.length).toBeGreaterThan(10);
-    expect(filters.plans.map((p) => p.planId).sort()).toEqual(current.sort());
+    for (const id of current) expect(mapped).toContain(id);
+    const ids = new Set(planes.plans.map((p) => p.id));
+    for (const id of mapped) expect(ids).toContain(id);
   });
 
   it("asks the SIU for each plan's year", () => {
     for (const p of filters.plans) {
-      if (p.planId !== "sistemas-1986") expect(p.plan.name).toBe(p.planId.slice(-4));
+      // "1986M", "1986N": variants of the 1986 plans.
+      if (SIU_PLAN_NAMES[p.planId]) expect(p.plan.name).toBe(SIU_PLAN_NAMES[p.planId]);
+      else expect(p.plan.name).toMatch(new RegExp(`^${p.planId.slice(-4)}[A-Z]?$`));
     }
   });
 
@@ -60,6 +73,7 @@ describe("validateFilters", () => {
   it("rejects bad ids, repeated plans and missing names", () => {
     expect(() => validateFilters({ ...ok, ra: "3b5e" })).toThrow(/ra o ubicacion/);
     expect(() => validateFilters({ ...ok, plans: [industrial, industrial] })).toThrow(/dos veces/);
+    expect(validateFilters({ ...ok, plans: [industrial, { ...industrial, plan: { id: "c".repeat(40), name: "2011" } }] }).plans).toHaveLength(2);
     expect(() => validateFilters({ ...ok, plans: [{ ...industrial, plan: { id: "c".repeat(40), name: " " } }] })).toThrow(/plan incompleto/);
     expect(() => validateFilters({ ...ok, plans: [] })).toThrow(/no hay planes/);
     expect(() => validateFilters(null)).toThrow();
@@ -91,6 +105,39 @@ describe("checkSync", () => {
   it("never publishes an empty search or an error page", () => {
     expect(checkSync({ ...parsed, subjects: [] }, industrial)).toEqual({ skip: "el SIU no devolvió mesas" });
     expect(checkSync(parseSiuExamsHtml("<html><body>Error</body></html>"), industrial)).toHaveProperty("skip");
+  });
+});
+
+describe("groupFilters and checkPlanSync", () => {
+  const parsed = parseSiuExamsHtml(page);
+  const other: ExamFilter = { ...industrial, plan: { id: "c".repeat(40), name: "2023" } };
+
+  it("groups the searches of each plan", () => {
+    const groups = groupFilters([industrial, { ...industrial, planId: "quimica-2023" }, other]);
+    expect([...groups.keys()]).toEqual(["industrial-2023", "quimica-2023"]);
+    expect(groups.get("industrial-2023")).toEqual([industrial, other]);
+  });
+
+  it("keeps a table shown by two searches once", () => {
+    const one = checkPlanSync([{ parsed, filter: industrial }]) as { rows: SyncRow[] };
+    const both = checkPlanSync([{ parsed, filter: industrial }, { parsed, filter: other }]);
+    expect(one.rows).toHaveLength(131);
+    expect(both).toEqual(one);
+  });
+
+  it("adds the tables of each search", () => {
+    const half = { ...parsed, subjects: parsed.subjects.slice(0, 3) };
+    const rest = { ...parsed, subjects: parsed.subjects.slice(3) };
+    const merged = checkPlanSync([{ parsed: half, filter: industrial }, { parsed: rest, filter: other }]);
+    expect("rows" in merged && merged.rows).toHaveLength(131);
+  });
+
+  it("allows an empty search next to one with tables, never a page of another plan", () => {
+    const empty = { ...parsed, subjects: [] };
+    expect(checkPlanSync([{ parsed: empty, filter: industrial }, { parsed, filter: other }])).toHaveProperty("rows");
+    expect(checkPlanSync([{ parsed: empty, filter: industrial }])).toEqual({ skip: "el SIU no devolvió mesas" });
+    const wrong = { ...industrial, plan: { ...industrial.plan, name: "2011" } };
+    expect(checkPlanSync([{ parsed, filter: industrial }, { parsed, filter: wrong }])).toHaveProperty("skip");
   });
 });
 
