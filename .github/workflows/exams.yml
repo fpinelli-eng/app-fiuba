@@ -1,0 +1,80 @@
+# Copies the exam dates ("mesas de examen") of every plan in data/siu/exam-filters.json from the SIU's
+# public "Fechas de examen" page into public.exam_tables, for Finales (tools/exams/README.md).
+# Once a day it reads the dates now in the database (tools/exams/current.sql), downloads and parses
+# each plan's search (tools/exams/sync.mjs, which uses src/lib/siu/ and src/lib/exams/siu-sync.ts)
+# and replaces only the plans whose dates changed (tools/exams/apply.sql), like "Publicar fechas" in
+# Administración. A plan whose page fails, comes empty or shows another career is skipped and keeps
+# its dates. Only counts go to the log and the summary. If no plan can be read (the SIU is down or
+# changed its page), the job fails and GitHub emails the repository owner.
+# Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
+name: Fechas de examen del SIU
+
+on:
+  schedule:
+    # Daily, at 09:00 UTC = 06:00 in Buenos Aires: before students look at Finales in the morning.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Solo leer el SIU y mostrar las cantidades, sin guardar"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: siu-exams
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Copiar las fechas de examen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check secrets
+        if: env.DRY_RUN != 'true'
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Find the database
+        # Same connection as "Base de datos" and "Noticias de la FIUBA" (IPv4 session pooler).
+        if: env.DRY_RUN != 'true'
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -v ON_ERROR_STOP=1 -q -c "select 1" > /dev/null 2>> "$RUNNER_TEMP/psql.log"; then
+              echo "PGCONN=host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" >> "$GITHUB_ENV"
+              echo "ok: $candidate"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudo conectar con la base::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"
+          exit 1
+      - name: Read the dates in the database
+        if: env.DRY_RUN != 'true'
+        run: psql "$PGCONN" -v ON_ERROR_STOP=1 -q -At -f tools/exams/current.sql > "$RUNNER_TEMP/current.json"
+      - name: Read the SIU
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            node --experimental-strip-types --no-warnings tools/exams/sync.mjs --summary "$GITHUB_STEP_SUMMARY"
+          else
+            node --experimental-strip-types --no-warnings tools/exams/sync.mjs \
+              --current "$RUNNER_TEMP/current.json" --sql "$RUNNER_TEMP/changes.sql" --summary "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save the changes
+        if: env.DRY_RUN != 'true'
+        run: psql "$PGCONN" -v ON_ERROR_STOP=1 -q -f "$RUNNER_TEMP/changes.sql"
