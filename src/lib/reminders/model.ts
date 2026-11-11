@@ -106,6 +106,7 @@ export interface ReminderState {
  * Which mail is due now for a reminder, given its table as it is now (null: the table is no longer
  * in the SIU, so nothing is sent and the reminder stays).
  *
+ * Never before 08:00 (Buenos Aires) of any day.
  * - "first": once the enrollment opened, from 08:00 of its first day (never before it opens). Not
  *   when the student asked with the enrollment already open: they already know.
  * - "last": on the last day (see lastEnrollDay()), from 08:00 and while it is still open. If the
@@ -114,6 +115,7 @@ export interface ReminderState {
  */
 export function dueMail(r: ReminderState, table: Pick<CurrentTable, "enrollFrom" | "enrollTo"> | null, now: string): ReminderMailKind | null {
   if (!table || !table.enrollTo || r.lastSent) return null;
+  if (now.slice(11, 16) < SEND_FROM) return null; // never at night, also when catching up
   const { enrollFrom, enrollTo } = table;
   if (now >= enrollTo) return null;
   if (enrollFrom && now < enrollFrom) return null;

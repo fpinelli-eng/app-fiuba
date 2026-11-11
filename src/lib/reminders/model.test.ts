@@ -76,8 +76,10 @@ describe("dueMail", () => {
     expect(dueMail(fresh, early, "2026-11-30T08:17")).toBe("first");
   });
 
-  it("catches up later in the window if the bot missed the first day", () => {
+  it("catches up later in the window if the bot missed the first day, but not at night", () => {
     expect(dueMail(fresh, t, "2026-12-03T11:17")).toBe("first");
+    expect(dueMail(fresh, t, "2026-12-03T02:17")).toBeNull();
+    expect(dueMail(fresh, t, "2026-12-07T05:17")).toBeNull();
   });
 
   it("does not repeat the first mail", () => {

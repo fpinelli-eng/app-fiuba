@@ -25,7 +25,16 @@ const { values: args } = parseArgs({
 if (!args.dump || !args.sent) throw new Error("Uso: send.mjs --dump due.json --sent sent.json [--summary summary.md]");
 
 const now = args.now ?? buenosAiresMoment(new Date());
-const { mails, counts } = planRun(JSON.parse(readFileSync(args.dump, "utf8")), now);
+let dump;
+try {
+  dump = JSON.parse(readFileSync(args.dump, "utf8"));
+} catch {
+  // No details: a JSON error quotes part of the file, which has the students' mails.
+  console.log("::error::No se pudo leer la lista de recordatorios.");
+  writeFileSync(args.sent, "[]");
+  process.exit(1);
+}
+const { mails, counts } = planRun(dump, now);
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NODEMAILER_DIR } = process.env;
 const configured = Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS && SMTP_FROM);
 
