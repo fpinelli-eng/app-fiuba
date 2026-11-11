@@ -5,13 +5,15 @@ import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
 import type { Campus } from "@/lib/siu/parser";
 import { normalizeText } from "@/lib/map/model";
 import { termLabel } from "./mine";
-import type { CourseDetail, CourseSummary, HistoricalOpinions, ReviewCatalog, Score, SubjectReviews } from "./types";
+import { courseStars, mixComments, type CourseStars, type StarCount } from "./merge";
+import type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews } from "./types";
 
 export type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews };
 
 // Data for the review screens: the plan's subjects with the courses offered this term
 // and their scores. Reviews belong to a course (stable across terms), not to an offering.
 // Hidden reviews and hidden offerings are always left out here, also for admins.
+// Scores and comments mix the app's reviews with the historical Dolly opinions (merge.ts).
 
 type OfferingRow = {
   id: number;
@@ -65,19 +67,25 @@ async function planSubjects(planId: string) {
   return { subjects, subjectOf };
 }
 
-async function scores(courseIds: number[]) {
+/**
+ * Score of each course: app reviews and Dolly opinions, without hidden ones. Counts come grouped
+ * by course from course_star_counts() because there are thousands of Dolly rows (the API returns 1000 at most).
+ * The Plan uses it too.
+ */
+export async function courseScores(courseIds: number[]): Promise<Map<number, CourseStars>> {
+  if (!courseIds.length) return new Map();
   const supabase = await createClient();
-  const out = new Map<number, Score>();
-  if (!courseIds.length) return out;
-  const { data, error } = await supabase.from("reviews").select("course_id, stars").in("course_id", courseIds).is("hidden_at", null);
-  if (error) throw new Error(`reviews: ${error.message}`);
-  for (const r of data) {
-    const s = out.get(r.course_id as number) ?? { average: 0, count: 0 };
-    s.average = (s.average * s.count + (r.stars as number)) / (s.count + 1);
-    s.count += 1;
-    out.set(r.course_id as number, s);
-  }
-  return out;
+  const { data, error } = await supabase.rpc("course_star_counts", { course_ids: courseIds });
+  if (error) throw new Error(`course_star_counts: ${error.message}`);
+  // One row per course: how many gave 1..5 stars (array position 0 = 1 star), for each source.
+  const rows = data as { course_id: number; app: number[] | null; dolly: number[] | null }[];
+  return courseStars(
+    rows.flatMap((r) =>
+      (["app", "dolly"] as const).flatMap((source) =>
+        (r[source] ?? []).map((n, i): StarCount => ({ courseId: Number(r.course_id), source, stars: i + 1, n })),
+      ),
+    ),
+  );
 }
 
 async function schedules(offerings: OfferingRow[], planId: string) {
@@ -135,7 +143,7 @@ export async function getReviewCatalog(planId: string): Promise<ReviewCatalog> {
   }
 
   const [scoreOf, blocksOf] = await Promise.all([
-    scores([...new Set(offerings.map((o) => o.course_id))]),
+    courseScores([...new Set(offerings.map((o) => o.course_id))]),
     schedules(offerings, planId),
   ]);
 
@@ -161,15 +169,22 @@ export async function getReviewCatalog(planId: string): Promise<ReviewCatalog> {
           label: courseLabel(list[0].label),
           teachers: teacherList(list),
           schedule: describeSchedule(list.flatMap((o) => blocksOf.get(o.id) ?? [])),
-          score: scoreOf.get(courseId) ?? null,
+          score: scoreOf.get(courseId)?.score ?? null,
         }))
         .sort((a, b) => a.label.localeCompare(b.label, "es", { numeric: true })),
     })),
   };
 }
 
-/** One course: score, distribution, comments (pinned first, then newest) and the subject's other courses. */
-export async function getCourse(courseId: number, planId: string): Promise<CourseDetail | null> {
+/** Dolly comments shown on the course page; `allComments` raises it (a course can have hundreds). */
+export const DOLLY_COMMENTS = 30;
+const DOLLY_COMMENTS_ALL = 500;
+
+/**
+ * One course: score and distribution (app reviews and Dolly opinions), one comments list (pinned
+ * first, then newest; every app comment and the newest Dolly ones) and the subject's other courses.
+ */
+export async function getCourse(courseId: number, planId: string, { allComments = false } = {}): Promise<CourseDetail | null> {
   const supabase = await createClient();
   const { data: offerings, error } = await supabase
     .from("offerings")
@@ -181,21 +196,26 @@ export async function getCourse(courseId: number, planId: string): Promise<Cours
   if (!offerings.length) return null;
   const latest = offerings.filter((o) => o.term_id === offerings[0].term_id) as OfferingRow[];
 
-  const [catalog, reviews, historical] = await Promise.all([
+  const [catalog, stars, reviews, historical] = await Promise.all([
     getReviewCatalog(planId),
+    courseScores([courseId]),
     supabase
       .from("reviews")
       .select("id, stars, comment, pinned, term_id, created_at")
       .eq("course_id", courseId)
       .is("hidden_at", null)
+      .not("comment", "is", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("historical_reviews")
-      .select("id, stars, comment, teacher, term_label, year")
+      .select("id, stars, comment, teacher, term_label, year", { count: "exact" })
       .eq("course_id", courseId)
       .is("hidden_at", null)
+      .not("comment", "is", null)
       .order("year", { ascending: false })
-      .order("term_label", { ascending: false }),
+      .order("term_label", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(allComments ? DOLLY_COMMENTS_ALL : DOLLY_COMMENTS),
   ]);
   if (reviews.error) throw new Error(`reviews: ${reviews.error.message}`);
   if (historical.error) throw new Error(`historical_reviews: ${historical.error.message}`);
@@ -203,47 +223,35 @@ export async function getCourse(courseId: number, planId: string): Promise<Cours
   const subject =
     catalog.subjects.find((s) => s.courses.some((c) => c.courseId === courseId)) ??
     catalog.subjects.find((s) => normalizeText(s.name) === normalizeText(latest[0].siu_subject_name));
-
-  const distribution: [number, number, number, number, number] = [0, 0, 0, 0, 0];
-  for (const r of reviews.data) distribution[5 - (r.stars as number)] += 1;
-  const count = reviews.data.length;
-  const average = count ? reviews.data.reduce((a, r) => a + (r.stars as number), 0) / count : 0;
+  const own = stars.get(courseId);
 
   return {
     courseId,
     label: courseLabel(latest[0].label),
     teachers: teacherList(latest),
     subject: subject ? { name: subject.name, credits: subject.credits } : { name: titleCase(latest[0].siu_subject_name), credits: 0 },
-    score: count ? { average, count } : null,
-    distribution,
-    comments: reviews.data
-      .filter((r) => r.comment)
-      .map((r) => ({
+    score: own?.score ?? null,
+    distribution: own?.distribution ?? [0, 0, 0, 0, 0],
+    comments: mixComments(
+      reviews.data.map((r) => ({
         id: r.id as number,
         stars: r.stars as number,
         comment: r.comment as string,
         pinned: r.pinned === true,
+        termId: r.term_id as string,
         termLabel: termLabel(r.term_id as string),
-      }))
-      .sort((a, b) => Number(b.pinned) - Number(a.pinned)),
+        createdAt: r.created_at as string,
+      })),
+      historical.data.map((r) => ({
+        id: r.id as number,
+        stars: r.stars as number,
+        comment: r.comment as string,
+        teacher: r.teacher as string,
+        termLabel: r.term_label as string,
+      })),
+    ),
+    commentCount: reviews.data.length + (historical.count ?? historical.data.length),
+    dollyCount: own?.dolly ?? 0,
     otherCourses: (subject?.courses ?? []).filter((c) => c.courseId !== courseId),
-    historical: historicalOpinions(historical.data),
-  };
-}
-
-type HistoricalRow = { id: number; stars: number; comment: string | null; teacher: string; term_label: string; year: number };
-
-function historicalOpinions(rows: HistoricalRow[]): HistoricalOpinions | null {
-  if (!rows.length) return null;
-  const years = rows.map((r) => r.year);
-  return {
-    average: rows.reduce((a, r) => a + r.stars, 0) / rows.length,
-    count: rows.length,
-    years: [Math.min(...years), Math.max(...years)],
-    // The 30 newest: a popular course can have hundreds.
-    comments: rows
-      .filter((r) => r.comment)
-      .slice(0, 30)
-      .map((r) => ({ id: r.id, stars: r.stars, comment: r.comment as string, teacher: r.teacher, termLabel: r.term_label })),
   };
 }

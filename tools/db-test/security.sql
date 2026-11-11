@@ -107,6 +107,7 @@ select test.ok((select count(*) from public.academic_events) = 0, 'gmail account
 select test.ok((select count(*) from public.news) = 0, 'gmail account reads news');
 select test.ok((select count(*) from public.fiuba_news) = 0, 'gmail account reads FIUBA news');
 select test.ok((select count(*) from public.historical_reviews) = 0, 'gmail account reads Dolly opinions');
+select test.ok((select count(*) from public.course_star_counts(array[1::bigint])) = 0, 'gmail account reads course scores');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -164,6 +165,7 @@ select test.fails($$insert into public.news (title) values ('x')$$, 'student pub
 select test.ok((select count(*) from public.fiuba_news) = 1, 'students read FIUBA news');
 select test.fails($$insert into public.fiuba_news (id, title, url, published_at) values (2, 'x', 'https://www.fi.uba.ar/noticias/x', now())$$, 'student adds a FIUBA news item');
 select test.ok((select count(*) from public.historical_reviews) = 1, 'students read Dolly opinions');
+select test.ok((select dolly from public.course_star_counts(array[1::bigint])) = array[0, 0, 0, 1, 0], 'course scores include Dolly opinions');
 select test.fails($$insert into public.historical_reviews (course_id, teacher, term_label, year, stars) values (1, 'x', '1C 2020', 2020, 5)$$, 'student adds a Dolly opinion');
 update public.historical_reviews set hidden_at = now();
 select test.ok((select count(*) from public.historical_reviews where hidden_at is not null) = 0, 'student hides a Dolly opinion');
@@ -263,6 +265,9 @@ update public.reviews set pinned = true, hidden_at = now();
 select test.ok((select bool_and(pinned and hidden_at is not null) from public.reviews), 'admin pins and hides reviews');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
 select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
+update public.historical_reviews set hidden_at = now();
+select test.ok((select count(*) from public.historical_reviews where hidden_at is not null) = 1, 'admin hides a Dolly opinion');
+select test.ok((select count(*) from public.course_star_counts(array[1::bigint])) = 0, 'course scores leave out hidden reviews, also for admins');
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');

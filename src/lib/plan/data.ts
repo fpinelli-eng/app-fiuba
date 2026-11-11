@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMapData } from "@/lib/map/data";
 import { CareerMap, normalizeText, sumExtraCredits, type Progress, type SubjectKind } from "@/lib/map/model";
 import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
+import { courseScores } from "@/lib/reviews/catalog";
 import type { Campus } from "@/lib/siu/parser";
 import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
@@ -121,22 +122,13 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   const subjectOf = (o: OfferingRow) => byCode.get(o.siu_subject_code) ?? byName.get(normalizeText(o.siu_subject_name));
 
   const ids = rows.map((o) => o.id);
-  const [reviews, choices, taken] = await Promise.all([
-    supabase.from("reviews").select("course_id, stars").in("course_id", [...new Set(rows.map((o) => o.course_id))]).is("hidden_at", null),
+  const [scoreOf, choices, taken] = await Promise.all([
+    courseScores([...new Set(rows.map((o) => o.course_id))]), // app reviews and Dolly opinions
     supabase.from("plan_choices").select("option, offering_id").eq("user_id", userId).in("offering_id", ids),
     supabase.from("user_courses").select("offering_id").eq("user_id", userId).in("offering_id", ids),
   ]);
-  if (reviews.error) throw new Error(`reviews: ${reviews.error.message}`);
   if (choices.error) throw new Error(`plan_choices: ${choices.error.message}`);
   if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
-
-  const scoreOf = new Map<number, Score>();
-  for (const r of reviews.data) {
-    const s = scoreOf.get(r.course_id as number) ?? { average: 0, count: 0 };
-    s.average = (s.average * s.count + (r.stars as number)) / (s.count + 1);
-    s.count += 1;
-    scoreOf.set(r.course_id as number, s);
-  }
 
   // What the student can take: enabled by their map, or already taking it; plus what they already
   // chose or confirmed this term, even if the map moved on ("Final pendiente" before the classes end).
@@ -183,7 +175,7 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
       quota: o.quota,
       enrolled: o.enrolled,
       teacherList: shortTeacherList(teachers.map((t) => surname(t.nombre, []))),
-      score: scoreOf.get(o.course_id) ?? null,
+      score: scoreOf.get(o.course_id)?.score ?? null,
     });
     coursesBy.set(subjectId, list);
   }
