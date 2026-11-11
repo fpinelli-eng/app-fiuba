@@ -25,7 +25,7 @@ export async function GET() {
   const account = await requireProfile();
   const supabase = await createClient();
   const offering = "offerings(term_id, siu_subject_code, siu_subject_name, label)";
-  const [map, reviews, profile, courses, choices, submissions] = await Promise.all([
+  const [map, reviews, profile, courses, choices, submissions, reminders] = await Promise.all([
     getMapData(account.id, account.planId!),
     getMyReviews(),
     supabase.from("profiles").select("created_at, intro_seen_at").eq("id", account.id).single(),
@@ -37,6 +37,10 @@ export async function GET() {
       .select("created_at, term_id, plan_id, status, reviewed_at, subjects, courses, blocks, raw_text")
       .eq("submitted_by", account.id)
       .order("created_at"),
+    supabase
+      .from("exam_reminders")
+      .select("subject_name, table_name, kind, exam_date, start_time, enroll_from, enroll_to, created_at, first_sent_at, last_sent_at")
+      .eq("user_id", account.id),
   ]);
   const failed = [profile, courses, choices, submissions].find((r) => r.error);
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
@@ -68,6 +72,7 @@ export async function GET() {
       elegido: c.created_at,
     })),
     cursadas: (courses.data ?? []).map((c) => ({ ...course(c.offerings as unknown as OfferingRef), confirmada: c.created_at })),
+    recordatorios_de_finales: reminders.data ?? [],
     resenas: reviews.map((r) => ({ materia: r.subjectName, curso: r.detail, estrellas: r.stars, comentario: r.comment })),
     ofertas_enviadas: (submissions.data ?? []).map((s) => ({
       enviada: s.created_at,

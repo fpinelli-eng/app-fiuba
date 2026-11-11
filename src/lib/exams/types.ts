@@ -1,9 +1,12 @@
 // Types and formatting of the Finales section. No database access: client components import from here.
 
 import { shortTeacherList, surname } from "../plan/format";
+import type { ExamReminderView } from "../reminders/model";
 
 export interface ExamTableView {
   id: number;
+  /** SIU subject code of this table (a subject may have several). */
+  code: string;
   /** "MESA 01", "Mesa 1 Surace" */
   name: string;
   /** "YYYY-MM-DD" */
@@ -41,6 +44,9 @@ export interface FinalsData {
   pending: ExamSubjectView[];
   /** Every subject of the plan with upcoming exam tables. */
   all: ExamSubjectView[];
+  planId: string;
+  /** "Recordarme": the student's reminders, or null while the database does not have them yet. */
+  reminders: ExamReminderView[] | null;
 }
 
 export type EnrollmentStatus =

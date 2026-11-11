@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { normalizeText } from "@/lib/map/model";
 import {
   enrollmentStatus,
@@ -13,6 +13,8 @@ import {
   type ExamTableView,
   type FinalsData,
 } from "@/lib/exams/types";
+import type { ExamReminderView } from "@/lib/reminders/model";
+import { RemindersDialog } from "./RemindersDialog";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -63,6 +65,11 @@ export function FinalsView({ data }: { data: FinalsData }) {
   const [query, setQuery] = useState("");
   const q = normalizeText(query);
   const { now, pending, all } = data;
+  const [reminders, setReminders] = useState<ExamReminderView[] | null>(data.reminders);
+  const [remindOpen, setRemindOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const remindButton = useRef<HTMLButtonElement>(null);
+  const activeReminders = reminders?.filter((r) => r.planId === data.planId).length ?? 0;
 
   const open = pending.flatMap((s) => {
     const table = s.tables.find((t) => enrollmentStatus(t, now).kind === "open");
@@ -74,7 +81,55 @@ export function FinalsView({ data }: { data: FinalsData }) {
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
-      <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Finales</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Finales</h1>
+        {data.loaded && reminders !== null && (
+          <button
+            ref={remindButton}
+            onClick={() => {
+              setNotice(null);
+              setRemindOpen(true);
+            }}
+            aria-haspopup="dialog"
+            className="h-10 rounded-full border border-line-strong bg-surface px-3.5 text-[13.5px] font-semibold text-ink"
+          >
+            Recordarme
+            {activeReminders > 0 && (
+              <span className="text-muted">
+                {" "}
+                · {activeReminders}
+                <span className="sr-only"> {activeReminders === 1 ? "mesa" : "mesas"}</span>
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Always rendered, out of the flow, so screen readers announce the notice. */}
+      <p role="status" className="sr-only">
+        {notice}
+      </p>
+      {notice && (
+        <div aria-hidden="true" className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]">
+          {notice}
+        </div>
+      )}
+
+      {remindOpen && reminders !== null && (
+        <RemindersDialog
+          data={data}
+          reminders={reminders}
+          onSaved={(saved, active) => {
+            setReminders(saved);
+            if (active > 0) setNotice("Te vamos a mandar un mail el primer día de la inscripción y el último, así no te olvidás.");
+            else if (active === 0) setNotice("Listo, sacamos tus recordatorios.");
+          }}
+          onClose={() => {
+            setRemindOpen(false);
+            remindButton.current?.focus();
+          }}
+        />
+      )}
 
       {!data.loaded && (
         <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">

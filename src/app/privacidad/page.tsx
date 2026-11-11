@@ -54,6 +54,11 @@ export default function PrivacidadPage() {
             <b>Tus reseñas:</b> las estrellas y el comentario de cada curso que reseñás.
           </li>
           <li>
+            <b>Tus recordatorios de finales:</b> las mesas que elegís en «Recordarme» (materia, fecha, hora e inscripción). Por cada una te mandamos dos mails a tu cuenta
+            @fi.uba.ar, el primer día y el último de la inscripción, y nada más: no usamos tu mail para otra cosa. Se borran solos después del examen, y los podés sacar cuando
+            quieras desde Finales.
+          </li>
+          <li>
             <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada y tu preferencia de tema (claro u oscuro).
           </li>
         </ul>
@@ -72,6 +77,10 @@ export default function PrivacidadPage() {
         <p>
           La base de datos y el inicio de sesión están en Supabase, y la web en Vercel, con servidores en San Pablo, Brasil. El inicio de sesión se hace con Google, que solo
           nos informa tu nombre, mail y foto.
+        </p>
+        <p>
+          Los mails de los recordatorios los manda un proceso automático que corre en los servidores de GitHub (GitHub Actions), desde la casilla de mail del proyecto. Lee tu
+          mail de la base solo para mandarlos y no lo guarda en ningún otro lado.
         </p>
       </Section>
 

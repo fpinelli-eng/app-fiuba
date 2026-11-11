@@ -61,6 +61,7 @@ describe("groupExamTables", () => {
     ]);
     expect(all[0].tables[0]).toEqual({
       id: 2,
+      code: "TC010",
       name: "MESA 01",
       date: "2026-12-09",
       kind: "Regular",
