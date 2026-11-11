@@ -157,6 +157,9 @@ insert into public.user_extra_credits (name, credits) values ('FIUBATÓN 2025', 
 select test.ok((select count(*) from public.user_extra_credits where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'student adds extra credits');
 select test.fails($$insert into public.user_extra_credits (user_id, name, credits) values ('bbbbbbbb-0000-0000-0000-000000000002', 'x', 2)$$, 'extra credits for another student');
 select test.fails($$select * from public.admin_users()$$, 'student lists the users');
+select public.touch_last_seen();
+select test.ok((select last_seen_at from public.profiles) is not null, 'student marks her last visit');
+select test.fails('update public.profiles set last_seen_at = null', 'student edits her last visit directly');
 update public.profiles set failed_finals = 3;
 select test.ok((select failed_finals from public.profiles) = 3, 'student sets her aplazos');
 
@@ -279,6 +282,7 @@ select test.ok((select count(*) from public.course_star_counts(array[1::bigint])
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
+select test.ok((select last_seen_at from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees when each student last used the app');
 reset role;
 insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
 set role authenticated;

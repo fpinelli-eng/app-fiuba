@@ -44,7 +44,7 @@ export default function PrivacidadPage() {
         <ul className="flex list-disc flex-col gap-2 pl-5">
           <li>
             <b>De tu cuenta de Google @fi.uba.ar:</b> nombre, mail y foto. Los usamos para identificarte y mostrarlos en tu perfil. Los administradores pueden ver tu nombre, tu mail,
-            tu carrera, tu fecha de alta y cuántas reseñas dejaste para administrar la app (nunca cuáles escribiste ni qué dicen). No accedemos a tus mails, archivos ni a nada más de tu cuenta.
+            tu carrera, tu fecha de alta, la última vez que usaste la app y cuántas reseñas dejaste para administrar la app (nunca cuáles escribiste ni qué dicen). No accedemos a tus mails, archivos ni a nada más de tu cuenta.
           </li>
           <li>
             <b>Lo que cargás:</b> tu carrera y plan, el estado y la nota de cada materia, los requisitos aprobados (como la prueba de inglés) y los cursos que elegís para el
