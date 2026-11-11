@@ -26,6 +26,22 @@ const TAP_MS = 250;
 
 const noSubscribe = () => () => {};
 
+// localStorage puede no estar (modo privado, datos bloqueados): sin él, el pedido de la oferta no se abre.
+const readStorage = (key: string) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return "";
+  }
+};
+const writeStorage = (key: string) => {
+  try {
+    window.localStorage.setItem(key, new Date().toISOString());
+  } catch {
+    // Sin almacenamiento: se cierra igual.
+  }
+};
+
 /** The phone, to show its steps first: iPhone/iPad (also iPadOS, that says Macintosh) or Android. */
 function detectPlatform(): Platform | null {
   const ua = navigator.userAgent;
@@ -49,19 +65,37 @@ const subscribeReducedMotion = (onChange: () => void) => {
 // Historias de bienvenida: se abren solas la primera vez que el alumno entra a la app y pasan
 // solas (STORY_SECONDS cada una) o tocando: a la derecha avanza, a la izquierda vuelve, apretado
 // pausa. Con teclado: flechas y Escape. Con "reducir movimiento" no pasan solas.
-export function WelcomeStories({ firstName, open: openAtStart }: { firstName: string; open: boolean }) {
+export function WelcomeStories({
+  firstName,
+  open: openAtStart,
+  needsOffer = false,
+  term = null,
+}: {
+  firstName: string;
+  open: boolean;
+  /** The plan has no course offer this term: one extra story asks to upload it. */
+  needsOffer?: boolean;
+  term?: string | null;
+}) {
   const router = useRouter();
   const installed = useSyncExternalStore(noSubscribe, isInstalled, () => false);
   const detected = useSyncExternalStore(noSubscribe, detectPlatform, () => null);
   const [platformChoice, setPlatformChoice] = useState<Platform | null>(null);
   const platform = platformChoice ?? detected ?? "ios";
-  const stories = welcomeStories(firstName).filter((s) => !(installed && s.steps));
+  const allStories = welcomeStories(firstName, { needsOffer, term }).filter((s) => !(installed && s.steps));
   const [opened, setOpened] = useState(openAtStart);
+  // Quien ya vio las historias pero su carrera sigue sin oferta este cuatrimestre: una sola vez por
+  // cuatrimestre (en este dispositivo) se abre solo la historia que pide subirla.
+  const askKey = `fiubi-pedir-oferta-${term ?? ""}`;
+  const offerAsked = useSyncExternalStore(noSubscribe, () => readStorage(askKey) !== null, () => true);
+  const [offerClosed, setOfferClosed] = useState(false);
+  const offerOnly = !openAtStart && needsOffer && !offerAsked && !offerClosed;
+  const stories = offerOnly ? allStories.filter((s) => s.id === "oferta") : allStories;
   // ?bienvenida in the address opens them too (handy to show them to someone), until closed.
   const askedByUrl = useSyncExternalStore(noSubscribe, () => new URLSearchParams(window.location.search).has("bienvenida"), () => false);
   const [closedUrl, setClosedUrl] = useState(false);
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, () => reducedMotionQuery().matches, () => false);
-  const open = opened || (askedByUrl && !closedUrl);
+  const open = opened || (askedByUrl && !closedUrl) || offerOnly;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false); // dedo apretado
   const [stopped, setStopped] = useState(false); // botón de pausa
@@ -78,6 +112,11 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
   // Inicio. Vueltas a abrir desde Perfil o Inicio, se cierran y se queda donde estaba.
   const [firstTime, setFirstTime] = useState(openAtStart);
   const close = () => {
+    if (offerOnly) {
+      writeStorage(askKey);
+      setOfferClosed(true);
+      return;
+    }
     setOpened(false);
     setClosedUrl(true);
     markIntroSeen().catch(() => {});
@@ -308,10 +347,14 @@ export function WelcomeStories({ firstName, open: openAtStart }: { firstName: st
           {last ? (
             <button
               type="button"
-              onClick={close}
+              onClick={() => {
+                const toPlan = offerOnly;
+                close();
+                if (toPlan) router.push("/plan");
+              }}
               className="rounded-full bg-ink px-5 py-3 text-[15px] font-semibold text-bg"
             >
-              Empezar
+              {offerOnly ? "Ir al Plan" : "Empezar"}
             </button>
           ) : (
             <button type="button" onClick={next} aria-label="Siguiente" className="grid size-11 place-items-center rounded-full bg-surface/60 text-xl">

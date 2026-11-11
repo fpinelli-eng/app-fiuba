@@ -23,7 +23,11 @@ export type Platform = "ios" | "android";
 /** Seconds each story stays before going to the next one. */
 export const STORY_SECONDS = 7;
 
-export function welcomeStories(firstName: string): Story[] {
+/**
+ * The stories, in order. needsOffer: the student's plan has no course offer for the current term,
+ * so one extra story asks them to upload it from the SIU (only to them).
+ */
+export function welcomeStories(firstName: string, opts: { needsOffer?: boolean; term?: string | null } = {}): Story[] {
   const sections: Omit<Story, "kicker">[] = [
     {
       id: "inicio",
@@ -85,6 +89,32 @@ export function welcomeStories(firstName: string): Story[] {
       tone: "pink",
     },
     ...sections.map((s, i) => ({ ...s, kicker: `Sección ${i + 1} de ${sections.length}` })),
+    {
+      id: "resenar",
+      icon: "star",
+      kicker: "Una mano",
+      title: "Reseñá tus materias",
+      text: "Las reseñas son lo que más ayuda al que viene atrás. Contá cómo fue cada curso que hiciste: con un par de líneas alcanza.",
+      points: ["Entrá a Reseñas, buscá la materia y elegí el curso", "Poné las estrellas y, si querés, un comentario", "Es anónimo: nadie ve quién la escribió"],
+      tone: "peach",
+    },
+    ...(opts.needsOffer
+      ? [
+          {
+            id: "oferta",
+            icon: "calendar" as const,
+            kicker: "Te necesitamos",
+            title: "Subí la oferta de tu carrera",
+            text: `Todavía no tenemos los cursos de tu carrera${opts.term ? ` para el ${opts.term}` : ""}. Si los subís, el Plan anda para vos y para todos los de tu carrera.`,
+            points: [
+              "Desde la compu, entrá al SIU Guaraní y abrí la oferta de comisiones de tu carrera",
+              "Seleccioná toda la página y copiala (Ctrl+A y Ctrl+C)",
+              "En FIUBI, entrá a Plan, pegala y tocá Enviar: la revisamos y la publicamos",
+            ],
+            tone: "butter" as const,
+          },
+        ]
+      : []),
     {
       id: "instalar",
       icon: null,
