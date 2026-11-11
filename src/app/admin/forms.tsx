@@ -7,6 +7,8 @@ import {
   linkSiuSubject,
   processOffer,
   publishOffer,
+  publishSubmission,
+  rejectSubmission,
   setCourseDecision,
   setCurrentTerm,
   setOfferingVisible,
@@ -284,6 +286,33 @@ export function ChangeChoice({ planId, change, chosen }: { planId: string; chang
           );
         })}
       </form>
+    </div>
+  );
+}
+
+/** Oferta enviada por un alumno: procesarla y publicarla con la carga de siempre, o rechazarla. */
+export function SubmissionActions({ submissionId }: { submissionId: number }) {
+  const [published, publish, publishing] = useActionState(publishSubmission, initial);
+  const [rejected, reject, rejecting] = useActionState(rejectSubmission, initial);
+  const busy = publishing || rejecting;
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
+        <form action={reject}>
+          <input type="hidden" name="submissionId" value={submissionId} />
+          <button type="submit" disabled={busy} className={secondary}>
+            {rejecting ? "Rechazando…" : "Rechazar"}
+          </button>
+        </form>
+        <form action={publish}>
+          <input type="hidden" name="submissionId" value={submissionId} />
+          <button type="submit" disabled={busy} className={primary}>
+            {publishing ? "Publicando…" : "Procesar y publicar"}
+          </button>
+        </form>
+      </div>
+      <ErrorText state={published} />
+      <ErrorText state={rejected} />
     </div>
   );
 }

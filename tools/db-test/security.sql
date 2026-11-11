@@ -298,6 +298,69 @@ reset role;
 
 select test.ok((select count(*) from public.plan_choices) = 1, 'another student cannot delete her plan');
 
+-- Offer sent by students (Plan without offer → paste the SIU text) ---------------------
+
+update public.terms set is_current = true where id = '2026-1C';
+insert into public.terms (id, year, half) values ('2026-2C', 2026, 2);
+insert into auth.users values ('dddddddd-0000-0000-0000-000000000004', 'caro@fi.uba.ar');
+insert into public.profiles (id, plan_id) values ('dddddddd-0000-0000-0000-000000000004', 'industrial-2023');
+
+set role anon;
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'x')$$, 'anon sends an offer');
+select test.fails('select 1 from public.offer_submissions limit 1', 'anon reads offer submissions');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'x')$$, 'gmail account sends an offer');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+insert into public.offer_submissions (term_id, plan_id, raw_text, subjects, courses, blocks) values ('2026-1C', 'industrial-2023', 'Actividad: ...', 34, 120, 300);
+select test.ok((select count(*) from public.offer_submissions) = 1, 'student sends the offer of her plan');
+select test.ok((select status = 'pending' and submitted_by = 'aaaaaaaa-0000-0000-0000-000000000001' from public.offer_submissions), 'the submission is pending and hers');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'civil-2023', 'x')$$, 'student sends the offer of another plan');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-2C', 'industrial-2023', 'x')$$, 'student sends the offer of a term that is not the current one');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text, status) values ('2026-1C', 'industrial-2023', 'x', 'published')$$, 'student sends an offer already published');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text, submitted_by) values ('2026-1C', 'industrial-2023', 'x', 'dddddddd-0000-0000-0000-000000000004')$$, 'student sends an offer in the name of another');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', repeat('a', 400001))$$, 'offer text over the size limit');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', '')$$, 'empty offer text');
+update public.offer_submissions set status = 'published';
+select test.ok((select status from public.offer_submissions) = 'pending', 'student publishes her own submission');
+select test.fails('delete from public.offer_submissions', 'student deletes a submission');
+select test.fails('select * from public.admin_offer_submissions()', 'student lists the submissions');
+select test.fails($$insert into public.offerings (term_id, plan_id, course_id, siu_subject_code, siu_subject_name, label) values ('2026-1C', 'industrial-2023', 1, 'CB002', 'x', 'x')$$, 'student publishes the offer directly');
+insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'otra');
+insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'otra más');
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'una cuarta')$$, 'more than 3 pending submissions');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000004","email":"caro@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.offer_submissions) = 0, 'another student does not see her submissions');
+update public.offer_submissions set status = 'rejected';
+reset role;
+select test.ok((select count(*) from public.offer_submissions where status = 'pending') = 3, 'another student cannot reject submissions');
+insert into public.offer_imports (term_id, plan_id, status, raw_text) values ('2026-1C', 'industrial-2023', 'published', 'x');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"dddddddd-0000-0000-0000-000000000004","email":"caro@fi.uba.ar"}', false);
+select test.fails($$insert into public.offer_submissions (term_id, plan_id, raw_text) values ('2026-1C', 'industrial-2023', 'x')$$, 'student sends an offer for a plan that already has one');
+reset role;
+delete from public.offer_imports where term_id = '2026-1C' and plan_id = 'industrial-2023';
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.offer_submissions) = 3, 'admin reads every submission');
+select test.ok((select count(*) from public.admin_offer_submissions() where email = 'ana@fi.uba.ar') = 3, 'admin lists the pending submissions with who sent them');
+update public.offer_submissions set status = 'rejected', reviewed_at = now(), reviewed_by = 'bbbbbbbb-0000-0000-0000-000000000002'
+where id = (select min(id) from public.offer_submissions);
+select test.ok((select count(*) from public.admin_offer_submissions()) = 2, 'admin rejects a submission');
+select test.fails($$update public.offer_submissions set raw_text = 'x'$$, 'admin edits the text of a submission');
+reset role;
+
+update public.terms set is_current = false where id = '2026-1C';
+
 -- Changing career or plan: subjects and the semester plan go, cursadas and reviews stay ------
 
 set role anon;

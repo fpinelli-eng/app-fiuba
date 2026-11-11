@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin, termLabel } from "@/lib/admin/data";
+import { getPlanCatalog } from "@/lib/admin/catalog";
+import { requireAdmin } from "@/lib/admin/data";
+import { offerPreviewProblem, offerTextProblem } from "@/lib/offer/check";
 import {
   commissionKey,
   decisionFor,
@@ -11,7 +13,6 @@ import {
   offeringKey,
   previewImport,
   sameLead,
-  termFromPeriodo,
   type CourseDecision,
   type ImportPreview,
   type OfferingDraft,
@@ -66,20 +67,6 @@ export async function setReviewsDate(_prev: ActionState, formData: FormData): Pr
   return ok;
 }
 
-/** Subjects of the plan and the SIU codes already known for them. */
-async function planCatalog(planId: string) {
-  const supabase = await createClient();
-  const subjects = await supabase.from("subjects").select("id, name").eq("plan_id", planId);
-  if (subjects.error) throw new Error(`subjects: ${subjects.error.message}`);
-  const ids = subjects.data.map((s) => s.id as number);
-  const codes = await supabase.from("subject_siu_codes").select("subject_id, siu_code").in("subject_id", ids);
-  if (codes.error) throw new Error(`subject_siu_codes: ${codes.error.message}`);
-  return {
-    subjects: subjects.data.map((s) => ({ id: s.id as number, name: s.name as string })),
-    knownCodes: new Map(codes.data.map((c) => [c.siu_code as string, c.subject_id as number])),
-  };
-}
-
 /** Commissions of these subjects published in earlier terms (any plan), for "Cursos con cambios". */
 async function previousOfferings(codes: string[], termId: string): Promise<PreviousOffering[]> {
   if (!codes.length) return [];
@@ -102,7 +89,7 @@ async function previousOfferings(codes: string[], termId: string): Promise<Previ
 
 /** The summary of a pasted text for a plan, with the courses that changed since the previous term. */
 async function buildPreview(text: string, planId: string, termId: string) {
-  const { subjects, knownCodes } = await planCatalog(planId);
+  const { subjects, knownCodes } = await getPlanCatalog(planId);
   const { preview, drafts } = previewImport(text, subjects, knownCodes);
   const previous = await previousOfferings([...new Set(drafts.map((d) => d.siu_subject_code))], termId);
   const names = new Map(subjects.map((s) => [s.id, s.name]));
@@ -117,20 +104,21 @@ export async function processOffer(_prev: ActionState, formData: FormData): Prom
   const text = String(formData.get("text") ?? "");
   const term = await currentTerm();
   if (!term) return { error: "Primero elegí el cuatrimestre." };
+  const result = await processText(planId, text, term);
+  if (!result.error) revalidatePath("/admin");
+  return result;
+}
+
+/** The core of "Procesar", also used for an offer sent by a student ("Procesar y publicar"). */
+async function processText(planId: string, text: string, term: { id: string; year: number; half: 1 | 2 }): Promise<ActionState> {
   if (!text.trim()) return { error: "Pegá el texto de la página de horarios del SIU." };
+  const tooLong = offerTextProblem(text);
+  if (tooLong) return { error: tooLong };
 
   const { preview, subjects } = await buildPreview(text, planId, term.id);
   if (subjects.length === 0) return { error: "No encontramos ese plan." };
-  if (!preview.format) {
-    return { error: "No reconocemos el texto. Copiá la página de horarios del SIU completa (Ctrl+A, Ctrl+C) y pegala acá." };
-  }
-  const fromText = termFromPeriodo(preview.periodo);
-  if (fromText && (fromText.year !== term.year || fromText.half !== term.half)) {
-    return { error: `El texto es del ${termLabel(fromText)} y el cuatrimestre actual es el ${termLabel(term)}.` };
-  }
-  if (preview.stats.subjects === 0) {
-    return { error: "Ninguna materia del texto es de este plan. ¿Elegiste la carrera correcta en el SIU?" };
-  }
+  const problem = offerPreviewProblem(preview, term);
+  if (problem) return { error: problem };
 
   const supabase = await createClient();
   // Replacing a published offer: keep it, so "Descartar" can bring it back.
@@ -156,7 +144,6 @@ export async function processOffer(_prev: ActionState, formData: FormData): Prom
     published_at: null,
   });
   if (error) return { error: "No pudimos guardar el texto procesado." };
-  revalidatePath("/admin");
   return ok;
 }
 
@@ -176,7 +163,7 @@ export async function linkSiuSubject(_prev: ActionState, formData: FormData): Pr
     return { error: "Elegí la materia del plan." };
   }
 
-  const { subjects } = await planCatalog(planId);
+  const { subjects } = await getPlanCatalog(planId);
   if (!subjects.some((s) => s.id === subjectId)) return { error: "Esa materia no es de este plan." };
 
   const supabase = await createClient();
@@ -325,6 +312,16 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
   const planId = String(formData.get("planId") ?? "");
   const term = await currentTerm();
   if (!term) return { error: "Primero elegí el cuatrimestre." };
+  const result = await publishPlan(planId, term);
+  if (!result.error) {
+    await closeSubmissions(term.id, planId, null);
+    revalidatePath("/admin");
+  }
+  return result;
+}
+
+/** The core of "Publicar": publishes the processed import of the plan. */
+async function publishPlan(planId: string, term: { id: string }): Promise<ActionState> {
   const supabase = await createClient();
 
   const imp = await supabase
@@ -436,6 +433,99 @@ export async function publishOffer(_prev: ActionState, formData: FormData): Prom
     return { error: "No pudimos publicar todos los cambios. Probá de nuevo: lo que ya se actualizó queda bien." };
   }
 
+  return ok;
+}
+
+// Offer sent by students ---------------------------------------------------------------
+
+// Undefined table or function: the migration 20261112120000_offer_submissions is not applied yet
+// (Vercel previews use the production database, which only gets it when the branch is merged).
+const NOT_YET = new Set(["42P01", "42883", "PGRST205", "PGRST202"]);
+
+/**
+ * Once the plan's offer is published, its pending submissions are done: the one that was used is
+ * "published" and the rest "rejected" (their authors no longer see them: the plan has its offer).
+ */
+async function closeSubmissions(termId: string, planId: string, usedId: number | null) {
+  const supabase = await createClient();
+  const { id: reviewer } = await requireAdmin();
+  const reviewed = { reviewed_at: new Date().toISOString(), reviewed_by: reviewer };
+  if (usedId !== null) {
+    const used = await supabase.from("offer_submissions").update({ status: "published", ...reviewed }).eq("id", usedId).eq("status", "pending");
+    if (used.error && !NOT_YET.has(used.error.code)) console.error("offer_submissions", used.error.message);
+  }
+  const rest = await supabase
+    .from("offer_submissions")
+    .update({ status: "rejected", ...reviewed })
+    .eq("term_id", termId)
+    .eq("plan_id", planId)
+    .eq("status", "pending");
+  if (rest.error && !NOT_YET.has(rest.error.code)) console.error("offer_submissions", rest.error.message);
+}
+
+async function pendingSubmission(formData: FormData) {
+  const id = Number(formData.get("submissionId"));
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("offer_submissions")
+    .select("id, term_id, plan_id, raw_text, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data || data.status !== "pending") return null;
+  return { id: data.id as number, termId: data.term_id as string, planId: data.plan_id as string, rawText: data.raw_text as string };
+}
+
+/**
+ * "Procesar y publicar" an offer sent by a student: the same "Procesar" and "Publicar" of the
+ * admin import, with the student's text, for their plan and the current term.
+ */
+export async function publishSubmission(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const term = await currentTerm();
+  if (!term) return { error: "Primero elegí el cuatrimestre." };
+  const submission = await pendingSubmission(formData);
+  if (!submission) return { error: "Esa oferta ya no está pendiente." };
+  if (submission.termId !== term.id) return { error: "Esa oferta es de otro cuatrimestre: rechazala." };
+
+  const supabase = await createClient();
+  const current = await supabase
+    .from("offer_imports")
+    .select("status")
+    .eq("term_id", term.id)
+    .eq("plan_id", submission.planId)
+    .maybeSingle();
+  if (current.error) return { error: "No pudimos revisar la oferta actual." };
+  if (current.data?.status === "published") {
+    return { error: "Este plan ya tiene la oferta publicada. Para cambiarla, usá «Reemplazar con otro texto»." };
+  }
+  if (current.data?.status === "processed") {
+    return { error: "Este plan tiene un texto procesado sin publicar: publicalo o descartalo primero." };
+  }
+
+  const processed = await processText(submission.planId, submission.rawText, term);
+  if (processed.error) return processed;
+  const published = await publishPlan(submission.planId, term);
+  revalidatePath("/admin");
+  if (published.error) return { error: `Quedó procesada, pero no se publicó: ${published.error}` };
+  await closeSubmissions(term.id, submission.planId, submission.id);
+  revalidatePath("/admin");
+  revalidatePath("/plan");
+  return ok;
+}
+
+/** "Rechazar" an offer sent by a student. Its author sees it and can send another. */
+export async function rejectSubmission(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { id: reviewer } = await requireAdmin();
+  const submission = await pendingSubmission(formData);
+  if (!submission) return { error: "Esa oferta ya no está pendiente." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("offer_submissions")
+    .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: reviewer })
+    .eq("id", submission.id)
+    .eq("status", "pending");
+  if (error) return { error: "No pudimos rechazarla." };
   revalidatePath("/admin");
   return ok;
 }

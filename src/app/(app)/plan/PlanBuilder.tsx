@@ -8,6 +8,7 @@ import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, SubjectGroup 
 import { enrolledEntries, startingEntries } from "@/lib/plan/cursada";
 import { confirmCourses, savePlanOption } from "./actions";
 import { ConfirmCourses } from "./ConfirmCourses";
+import { OfferSubmit } from "./OfferSubmit";
 import { PlanMobile } from "./PlanMobile";
 import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
 
@@ -111,7 +112,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
 
   const ghost = hover && !plan.some((e) => e.subject === hover.subject && e.course === hover.course) ? courseOf(hover) : undefined;
 
-  if (data.subjects.length === 0) return <NoOffer term={data.term} career={data.career} />;
+  if (data.subjects.length === 0) return <NoOffer data={data} />;
 
   return (
     <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 pt-4 pb-40 md:px-6 md:pt-6 md:pb-10">
@@ -514,7 +515,8 @@ function CalendarBlock({ placed: p, width }: { placed: Placed; width: number }) 
   );
 }
 
-function NoOffer({ term, career }: { term: string | null; career: string }) {
+function NoOffer({ data }: { data: PlanData }) {
+  const { term, career, noOffer } = data;
   return (
     <main className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 pt-4 pb-24 md:px-6 md:pt-6 md:pb-10">
       <div>
@@ -522,9 +524,16 @@ function NoOffer({ term, career }: { term: string | null; career: string }) {
         <p className="text-sm text-muted">{career}</p>
       </div>
       <div className="rounded-2xl border border-line bg-surface px-4 py-6 text-ink-2 md:px-6 md:py-8">
-        {term
-          ? "Todavía no hay cursos para armar tu plan: la oferta de tu carrera no está cargada o no tenés materias habilitadas en tu mapa."
-          : "Todavía no empezó la carga de la oferta del cuatrimestre."}
+        {term && noOffer ? (
+          <div className="flex flex-col gap-4">
+            <p>Todavía no está cargada la oferta de tu plan para el {term}.</p>
+            <OfferSubmit term={term} submission={noOffer.submission} />
+          </div>
+        ) : term ? (
+          "Todavía no hay cursos para armar tu plan: no tenés materias habilitadas en tu mapa."
+        ) : (
+          "Todavía no empezó la carga de la oferta del cuatrimestre."
+        )}
       </div>
     </main>
   );
