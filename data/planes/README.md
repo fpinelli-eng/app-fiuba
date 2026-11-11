@@ -29,7 +29,7 @@ FIUBA Map nombra "2020" a los planes nuevos; el nombre oficial es 2023 o 2024. L
 | `naval-1986.json` | Ing. Naval (como Ing. Naval y Mecánica) | 1986 | Sí |
 | `quimica-2020.json` | Ing. Química | 2023 | Sí (vigente) |
 | `quimica-1986.json` | Ing. Química | 1986 | Sí |
-| `sistemas-2014.json` | Lic. en Análisis de Sistemas | 2014 (oficialmente "Plan 1986 modificado en 2014"; en el SIU, "86V14") | Sí (vigente desde el 11 de noviembre de 2026; se suma con `20261113130000_sistemas_2014.sql`) |
+| `sistemas-2014.json` | Lic. en Análisis de Sistemas | 2014 (oficialmente "Plan 1986 modificado en 2014"; en el SIU, "86V14") | Sí (vigente desde el 11 de noviembre de 2026; se suma con `20261113145000_sistemas_2014.sql`) |
 | `sistemas-1986.json` | Lic. en Análisis de Sistemas | 1986 | Sí |
 
 Quedan afuera Ing. Civil 1986 e Ing. Electricista 1986: existen oficialmente, pero FIUBA Map no los tiene cargados.

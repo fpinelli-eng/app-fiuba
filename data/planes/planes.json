@@ -584,7 +584,7 @@
         "electivas": 40
       },
       "requirements": [],
-      "current_until": "20261113130000_sistemas_2014"
+      "current_until": "20261113145000_sistemas_2014"
     },
     {
       "id": "sistemas-2014",
@@ -593,7 +593,7 @@
       "current": true,
       "legacy_name": null,
       "fiuba_map_file": "sistemas-2014.json",
-      "migration": "20261113130000_sistemas_2014",
+      "migration": "20261113145000_sistemas_2014",
       "credit_rules": {
         "total": 214,
         "electivas": 28,
