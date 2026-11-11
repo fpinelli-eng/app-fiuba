@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { profileFromUser, properName } from "./auth";
+import { loginError, profileFromUser, properName } from "./auth";
 
 describe("properName", () => {
   it("pasa a mayúscula inicial los nombres en mayúsculas", () => {
@@ -31,5 +31,15 @@ describe("profileFromUser", () => {
     expect(p.fullName).toBe("Francisco Perez");
     expect(p.firstName).toBe("Francisco");
     expect(p.initials).toBe("FP");
+  });
+});
+
+describe("loginError", () => {
+  it("solo acepta los motivos conocidos", () => {
+    expect(loginError("dominio")).toBe("dominio");
+    expect(loginError("login")).toBe("login");
+    expect(loginError("Tu cuenta fue suspendida, entrá a otro-sitio.com")).toBeNull();
+    expect(loginError(["dominio"])).toBeNull();
+    expect(loginError(undefined)).toBeNull();
   });
 });

@@ -8,7 +8,7 @@ Revisión del 10 de noviembre de 2026, antes del lanzamiento oficial. Se actuali
   - todas las tablas tienen seguridad por fila;
   - nada está abierto a usuarios sin sesión (`anon`) y ninguna política es `true`;
   - las funciones con permisos elevados (`security definer`) fijan `search_path` y verifican quién llama;
-  - `profiles.is_admin` no se puede cambiar desde la app (permisos por columna);
+  - `profiles.is_admin` no se puede cambiar desde la app (permisos por columna) y el plan solo con `choose_my_plan()` (la primera vez) o `change_my_plan()`;
   - el autor de una reseña (`review_authors`) no lo puede leer ningún usuario.
 - **Login.** El dominio @fi.uba.ar se verifica en el servidor tres veces: al volver de Google, en cada página (`requireAccount()`) y en la base (`ensure_profile()`, sin perfil no se lee nada).
 - **Acciones del servidor.** Todas verifican la sesión (y las de Administración, que sea administrador) antes de tocar la base, y la base lo vuelve a verificar.
@@ -22,6 +22,10 @@ Revisión del 10 de noviembre de 2026, antes del lanzamiento oficial. Se actuali
 |---|---|---|
 | Next.js 16.3.8 → 16.4.6 | Tenía tres vulnerabilidades publicadas el 14 de octubre de 2026. La que nos afecta: con pedidos armados a mano contra una server action se podía trabar el servidor (denegación de servicio). Las otras dos (críticas) requieren `next/image` o `use cache`, que la app no usa, pero se corrigen igual | `package.json` |
 | Cabeceras de seguridad | Antes no había ninguna. Ahora nadie puede meter la app dentro de otra página para engañar clics (`frame-ancestors 'none'`), el navegador no adivina tipos de archivo, los enlaces externos no llevan la dirección completa, se fuerza HTTPS y la web no pide cámara, micrófono ni ubicación | `next.config.ts` |
+| Carrera y plan solo por la app | Un alumno podía cambiar `profiles.plan_id` directo por la API y saltear la limpieza de `change_my_plan()` (quedaban materias de un plan en otro). Ahora la primera elección pasa por `choose_my_plan()` (solo si todavía no tiene plan) y los cambios, por `change_my_plan()` | `supabase/migrations/20261113120000_plan_only_by_function.sql`, `src/app/carrera/actions.ts` |
+| Texto de la dirección en la página principal | El mail rechazado viajaba en la dirección (`?error=dominio&email=…`) y la presentación lo mostraba: cualquiera podía armar un enlace a fiubi.com.ar con el texto que quisiera (phishing). Ahora el mail no viaja y cada motivo muestra un texto fijo | `src/app/ingresar/page.tsx`, `src/app/auth/`, `src/lib/session.ts`, `src/lib/auth.ts` |
+| Relevamiento de usuarios sin desglose | El resumen del workflow es público (repo público) y con pocos usuarios las altas por día y por carrera podían señalar a alguien. Quedan solo los totales; el detalle está en Administración → Usuarios | `tools/stats/users.sql` |
+| "Descargar mis datos" completo | Faltaban la fecha de alta, las historias vistas, la Opción A / B del Plan y las ofertas enviadas | `src/app/(app)/perfil/datos/route.ts` |
 
 ## Pendiente antes del lanzamiento
 
@@ -51,4 +55,4 @@ Hoy es público porque Vercel gratis solo publica commits de colaboradores en re
 - **La protección de `main` deja de aplicarse** en repos privados de cuentas gratuitas de GitHub. GitHub Pro la habilita y es gratis para estudiantes con el GitHub Student Developer Pack.
 - **GitHub Actions pasa a tener un tope mensual** (hoy es ilimitado). Los workflows actuales deberían entrar sin problema.
 
-Lo que expone hoy el repo público: el código (sin secretos), el identificador del proyecto de Supabase (también visible en la web), los resúmenes del workflow "Relevamiento de usuarios" (solo conteos) y los respaldos cifrados (sin la frase `BACKUP_PASSPHRASE` no se pueden abrir).
+Lo que expone hoy el repo público: el código (sin secretos), el identificador del proyecto de Supabase (también visible en la web), los resúmenes del workflow "Relevamiento de usuarios" (solo totales generales, sin desglose por carrera ni por día: con pocos usuarios podían señalar a alguien) y los respaldos cifrados (sin la frase `BACKUP_PASSPHRASE` no se pueden abrir).
