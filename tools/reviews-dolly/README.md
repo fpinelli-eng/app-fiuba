@@ -1,6 +1,6 @@
 # Reseñas históricas de Dolly
 
-[Dolly FIUBA](https://github.com/lugfi/dolly), de LUGFi, fue la app de opiniones de la facultad durante más de diez años. Su base es pública (`gente.txt`, licencia GPL-3.0): unas 13.000 encuestas sobre docentes, de 2015 a 2024. La app las muestra en la ficha de cada curso como "Opiniones históricas de Dolly", aparte de las reseñas propias. No suman al puntaje del curso ni cuentan para las reseñas pendientes.
+[Dolly FIUBA](https://github.com/lugfi/dolly), de LUGFi, fue la app de opiniones de la facultad durante más de diez años. Su base es pública (`gente.txt`, licencia GPL-3.0): unas 13.000 encuestas sobre docentes, de 2015 a 2024. La app las mezcla con las reseñas propias al leer (las dos tablas siguen separadas): suman al puntaje del curso (buscador de Reseñas, ficha y Plan, con `course_star_counts()`) y aparecen en los comentarios de la ficha con "vía Dolly" y el docente encuestado. No cuentan para las reseñas pendientes ni aparecen en Administración → Reseñas. La lógica de la mezcla está en `src/lib/reviews/merge.ts`.
 
 ## Qué se carga
 
@@ -24,4 +24,4 @@ Para borrarlas todas: `delete from public.historical_reviews where source = 'dol
 
 ## Licencia y crédito
 
-Los datos de Dolly son GPL-3.0, por eso el repositorio tiene licencia GPL-3.0 (`LICENSE`). La ficha del curso da crédito a Dolly y LUGFi con un link al repositorio original.
+Los datos de Dolly son GPL-3.0, por eso el repositorio tiene licencia GPL-3.0 (`LICENSE`). La ficha del curso da crédito a Dolly y LUGFi con un link al repositorio original, debajo de los comentarios ("Incluye opiniones históricas de Dolly FIUBA, de LUGFi."), y cada opinión lleva "vía Dolly" con el mismo link. Ese crédito no se saca.

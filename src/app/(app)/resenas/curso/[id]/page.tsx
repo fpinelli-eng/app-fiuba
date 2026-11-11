@@ -13,16 +13,20 @@ import { MyReview } from "./MyReview";
 export const metadata: Metadata = { title: `Curso · ${APP_NAME}` };
 
 // Ficha de un curso (prototipo 10-resenas-ficha-curso): puntaje, distribución, otros cursos y comentarios.
-export default async function CursoPage({ params }: PageProps<"/resenas/curso/[id]">) {
+// Puntaje y comentarios suman las reseñas de la app y las opiniones históricas de Dolly FIUBA (GPL-3.0,
+// LUGFi: el crédito debajo de la lista es condición de la licencia). Se muestran todos los comentarios de
+// la app y los de Dolly más nuevos; "Ver todos los comentarios" (?comentarios=todos) trae el resto.
+export default async function CursoPage({ params, searchParams }: PageProps<"/resenas/curso/[id]">) {
   const account = await requireProfile();
   const { id } = await params;
   const courseId = Number(id);
   if (!Number.isInteger(courseId)) notFound();
-  const [course, mine] = await Promise.all([getCourse(courseId, account.planId!), getMyReviewOf(courseId)]);
+  const allComments = (await searchParams).comentarios === "todos";
+  const [course, mine] = await Promise.all([getCourse(courseId, account.planId!, { allComments }), getMyReviewOf(courseId)]);
   if (!course) notFound();
 
   const total = course.score?.count ?? 0;
-  const withComment = course.comments.length;
+  const withComment = course.commentCount;
 
   return (
     <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-5 md:px-6 md:pt-7 md:pb-14">
@@ -107,11 +111,20 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
           </div>
           {withComment === 0 && <div className="border-t border-disabled py-4 text-muted">Todavía no hay comentarios.</div>}
           {course.comments.map((c) => (
-            <article key={c.id} className="flex flex-col gap-1.5 border-t border-disabled py-4">
+            <article key={c.key} className="flex flex-col gap-1.5 border-t border-disabled py-4">
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-1.5 text-[13px] font-semibold">
                   <Stars value={c.stars} size={14} />
-                  {c.termLabel}
+                  {c.source === "dolly" ? (
+                    <span>
+                      {c.teacher} · {c.termLabel} ·{" "}
+                      <a href="https://github.com/lugfi/dolly" target="_blank" rel="noopener noreferrer" className="font-normal text-muted underline">
+                        vía Dolly
+                      </a>
+                    </span>
+                  ) : (
+                    c.termLabel
+                  )}
                 </span>
                 {c.pinned && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-lavender px-2.5 py-0.5 text-xs font-semibold text-lavender-ink">
@@ -125,42 +138,23 @@ export default async function CursoPage({ params }: PageProps<"/resenas/curso/[i
               <p className="text-[15px]">{c.comment}</p>
             </article>
           ))}
-        </section>
-
-        {/* Opiniones de Dolly FIUBA (GPL-3.0, LUGFi): aparte, no suman al puntaje del curso. Markup sin estilos
-            nuevos, reusa los de Comentarios; el diseño queda para el rediseño. */}
-        {course.historical && (
-          <section aria-labelledby="dolly-title" className="flex min-w-0 flex-[999_1_520px] flex-col rounded-2xl border border-line bg-surface p-5 md:p-6">
-            <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3">
-              <h2 id="dolly-title" className="text-xs font-semibold tracking-[0.08em] text-muted">
-                OPINIONES HISTÓRICAS DE DOLLY
-              </h2>
-              <span className="text-[13px] text-muted">
-                {formatScore(course.historical.average)} ★ · {course.historical.count}{" "}
-                {course.historical.count === 1 ? "encuesta" : "encuestas"} ·{" "}
-                {course.historical.years[0] === course.historical.years[1]
-                  ? course.historical.years[0]
-                  : `${course.historical.years[0]}–${course.historical.years[1]}`}
-              </span>
+          {course.comments.length < withComment && (
+            <div className="border-t border-disabled py-4 text-sm">
+              <Link href={`/resenas/curso/${courseId}?comentarios=todos`} className="underline">
+                Ver todos los comentarios
+              </Link>
             </div>
-            <p className="text-[13px] text-muted">
-              Encuestas sobre los docentes de este curso hechas en{" "}
+          )}
+          {course.dollyCount > 0 && (
+            <p className="border-t border-disabled pt-4 text-[13px] text-muted">
+              Incluye opiniones históricas de{" "}
               <a href="https://github.com/lugfi/dolly" target="_blank" rel="noopener noreferrer" className="underline">
                 Dolly FIUBA
               </a>
-              , de LUGFi. No suman al puntaje de arriba.
+              , de LUGFi.
             </p>
-            {course.historical.comments.map((c) => (
-              <article key={c.id} className="flex flex-col gap-1.5 border-t border-disabled py-4">
-                <span className="flex items-center gap-1.5 text-[13px] font-semibold">
-                  <Stars value={c.stars} size={14} />
-                  {c.teacher} · {c.termLabel}
-                </span>
-                <p className="text-[15px]">{c.comment}</p>
-              </article>
-            ))}
-          </section>
-        )}
+          )}
+        </section>
       </div>
     </main>
   );
