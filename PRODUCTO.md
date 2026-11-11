@@ -209,7 +209,7 @@ Otro punto a resolver: los códigos de materia cambian entre planes, y FIUBA Map
 | Reseñas | Propias, generadas por los alumnos | — | Continua |
 | Materias y notas de cada alumno | El propio alumno | — | Continua |
 
-**Planes incluidos (24).** El primero de cada carrera es el vigente. Los nombres son los oficiales; FIUBA Map llama "2020" a los planes 2023/2024.
+**Planes incluidos (25).** El primero de cada carrera es el vigente. Los nombres son los oficiales; FIUBA Map llama "2020" a los planes 2023/2024.
 
 | Carrera | Planes |
 |---|---|
@@ -225,7 +225,7 @@ Otro punto a resolver: los códigos de materia cambian entre planes, y FIUBA Map
 | Ing. Mecánica | 2024, 1986 |
 | Ing. Naval | 2024, 1986 (como Ing. Naval y Mecánica) |
 | Ing. Química | 2023, 1986 |
-| Lic. en Análisis de Sistemas | 1986 |
+| Lic. en Análisis de Sistemas | 2014 (oficialmente "Plan 1986 modificado en 2014"), 1986 |
 
 ## 10. Stack técnico preliminar
 
@@ -262,7 +262,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 
 1. **Nombre y dominio.**
 2. **Criterios de calificación:** ¿solo estrellas generales, o criterios adicionales opcionales?
-3. **Lic. en Análisis de Sistemas:** la web oficial solo muestra el plan 1986 (versión 2016); FIUBA Map tiene además un plan 2014. Confirmar con alguien de la carrera.
+3. ~~**Lic. en Análisis de Sistemas:** la web oficial solo muestra el plan 1986 (versión 2016); FIUBA Map tiene además un plan 2014.~~ Resuelta el 11 de noviembre (ver Decisiones cerradas).
 4. **Google Workspace:** confirmar que las cuentas @fi.uba.ar entregan nombre y foto al iniciar sesión con Google.
 5. **Cursos con sufijo "i":** significado desconocido; mientras tanto se tratan como el mismo curso.
 6. **Áreas de las electivas en los demás planes:** el panel del mapa agrupa las electivas por área, definidas a mano por plan en `data/planes/areas.json` (FIUBA Map no las trae). Industrial 2023 usa las del diseño; los demás planes muestran sus electivas en una sola lista hasta que alguien defina sus áreas.
@@ -280,6 +280,7 @@ Se detalla y justifica en la etapa 3. Punto de partida:
 - **Cambio de carrera o plan (16 de octubre):** sin equivalencias. Al cambiar se borran las materias cargadas y el alumno las carga de nuevo en el plan nuevo; la pantalla avisa antes de confirmar. Se programa al final, con el resto armado.
 - **Reseñas al borrar la cuenta (9 de octubre):** quedan publicadas, anónimas.
 - **Reseñas libres (16 de octubre):** además de las pendientes, cualquiera reseña cualquier curso desde su ficha, sin haberlo cursado según la app (por ejemplo, el curso de una materia recursada). Una por alumno y curso; las reseñas fuera de lugar las elimina el administrador. Una reseña libre de un curso pendiente lo da por hecho.
+- **Sistemas 2014 (11 de noviembre, aprobado por Tomás):** se suma el plan 2014 de la Lic. en Análisis de Sistemas como vigente y el 1986 queda como plan anterior. El PDF de la web oficial es el "Plan 1986 modificado en 2014" (vigente para quienes empezaron el segundo ciclo desde el 2.º cuatrimestre de 2015) y coincide con el plan 2014 de FIUBA Map; en el SIU es el plan "86V14", el que tiene casi todas las mesas de examen de la carrera.
 - **Electivas por área (15 de octubre):** se mantienen las áreas del diseño ("Gestión y negocios", "Energía"…).
 
 ## 14. Próximos pasos

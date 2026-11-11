@@ -49,6 +49,11 @@ jobs:
         run: |
           node tools/plans-seed/build.mjs > /tmp/seed.sql
           diff -q /tmp/seed.sql supabase/migrations/20261015120100_seed_plans.sql
+          # Plans added later, each in its own migration ("migration" in data/planes/planes.json).
+          for entry in $(node -e 'for (const p of require("./data/planes/planes.json").plans) if (p.migration) console.log(p.id + ":" + p.migration)'); do
+            node tools/plans-seed/build.mjs --plan "${entry%%:*}" > /tmp/plan.sql
+            diff -q /tmp/plan.sql "supabase/migrations/${entry#*:}.sql"
+          done
           node tools/plans-seed/areas.mjs > /tmp/areas.sql
           diff -q /tmp/areas.sql supabase/migrations/20261015160100_elective_areas_data.sql
       - name: Apply migrations and run security checks

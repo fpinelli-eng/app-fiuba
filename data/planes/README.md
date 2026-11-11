@@ -29,8 +29,8 @@ FIUBA Map nombra "2020" a los planes nuevos; el nombre oficial es 2023 o 2024. L
 | `naval-1986.json` | Ing. Naval (como Ing. Naval y Mecánica) | 1986 | Sí |
 | `quimica-2020.json` | Ing. Química | 2023 | Sí (vigente) |
 | `quimica-1986.json` | Ing. Química | 1986 | Sí |
-| `sistemas-1986.json` | Lic. en Análisis de Sistemas | 1986 | Sí (vigente) |
-| `sistemas-2014.json` | Lic. en Análisis de Sistemas | 2014 | **No, a confirmar:** la web oficial solo publica el plan 1986 |
+| `sistemas-2014.json` | Lic. en Análisis de Sistemas | 2014 (oficialmente "Plan 1986 modificado en 2014"; en el SIU, "86V14") | Sí (vigente desde el 11 de noviembre de 2026; se suma con `20261113130000_sistemas_2014.sql`) |
+| `sistemas-1986.json` | Lic. en Análisis de Sistemas | 1986 | Sí |
 
 Quedan afuera Ing. Civil 1986 e Ing. Electricista 1986: existen oficialmente, pero FIUBA Map no los tiene cargados.
 
@@ -55,9 +55,14 @@ Cada archivo es una lista de materias con estos campos:
 |---|---|---|
 | Industrial 2023 | RESCS-2023-1216, texto ordenado RCS-2024-63 | Ninguna |
 | Informática 2023 | RESCS-2023-1215 | Empresas de Base Tecnológica II va en el 10.º cuatrimestre (columna 8) |
+| Sistemas 2014 | PDF del plan en fi.uba.ar ("Plan 1986 modificado en 2014", actualización 2016: `cms.fi.uba.ar/uploads/Licenciatura_en_Analisis_de_Sistemas_1986_V2014_2ae2b76148.pdf`) | Ninguna (materias, créditos, correlativas, créditos requeridos, cuatrimestre sugerido, 214 créditos en total con 28 de electivas e inglés) |
 | Química 2023 | RESCS-2023-1927 | "Conocimiento de Materiales I" se llama Conocimiento de Materiales Metálicos (como en el SIU); Microbiología Industrial también pide Ingeniería de Bioprocesos; Emisiones de Contaminantes y Legislación van en el 11.º cuatrimestre (columna 9) |
 
 Se compararon materias, créditos, correlativas, créditos requeridos y cuatrimestre sugerido. Las correcciones están en `supabase/migrations/20261016180000_verified_plans_fixes.sql`. Ninguno de los tres planes agrupa sus electivas por área: las de Química e Informática se muestran en una sola lista (las áreas de Industrial salen del diseño).
+
+## Al sumar un plan
+
+La semilla original (`20261015120100_seed_plans.sql`) no se toca. El plan nuevo se agrega a `planes.json` con `"migration": "<AAAAMMDDHHMMSS_nombre>"` y su migración se genera con `node tools/plans-seed/build.mjs --plan <id> > supabase/migrations/<AAAAMMDDHHMMSS_nombre>.sql`. Si pasa a ser el vigente, el plan anterior queda con `"current": false` y `"current_until": "<AAAAMMDDHHMMSS_nombre>"`: la semilla lo sigue cargando como vigente y la migración nueva le saca la marca. El workflow "Base de datos" comprueba que la semilla y estas migraciones estén al día. Después, sumarlo a `data/siu/exam-filters.json` (fechas de examen) y actualizar los conteos de `tools/db-test/security.sql`.
 
 ## Al sumar una carrera
 
