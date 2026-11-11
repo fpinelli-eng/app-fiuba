@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
 import { WelcomeStories } from "@/components/WelcomeStories";
-import { getIntroSeen } from "@/lib/intro/data";
+import { getIntroSeen, touchLastSeen } from "@/lib/intro/data";
 import { countPendingReviews } from "@/lib/reviews/pending";
 import { requireProfile } from "@/lib/session";
 
 // Todas las secciones de la app exigen una sesión @fi.uba.ar válida.
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const profile = await requireProfile();
-  const [pendingReviews, introSeen] = await Promise.all([countPendingReviews(profile.id), getIntroSeen(profile.id)]);
+  const [pendingReviews, introSeen] = await Promise.all([countPendingReviews(profile.id), getIntroSeen(profile.id), touchLastSeen()]);
   return (
     <>
       <Header profile={profile} pendingReviews={pendingReviews} isAdmin={profile.isAdmin} />

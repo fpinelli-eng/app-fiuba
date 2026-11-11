@@ -12,6 +12,8 @@ export interface AdminUser {
   planCourses: number;
   /** How many reviews they wrote (only the number: reviews stay anonymous). */
   reviews: number;
+  /** Last time they used the app (ISO), or null if never recorded. */
+  lastSeenAt: string | null;
 }
 
 /** The students, newest first, and the moment they were read (to count the new ones). */
@@ -28,6 +30,7 @@ export async function getAdminUsers(): Promise<{ users: AdminUser[]; readAt: num
     subjects: Number(u.subjects),
     planCourses: Number(u.plan_courses),
     reviews: Number(u.reviews ?? 0),
+    lastSeenAt: (u.last_seen_at as string | null) ?? null,
   }));
   return { users, readAt: Date.now() };
 }
