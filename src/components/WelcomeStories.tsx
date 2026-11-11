@@ -247,7 +247,7 @@ export function WelcomeStories({
 
         {/* Zona para tocar: a la derecha avanza, a la izquierda vuelve, apretado pausa. */}
         <div
-          className={`flex flex-1 touch-none flex-col justify-center gap-5 px-6 pb-4 ${halted ? "[&_*]:[animation-play-state:paused]!" : ""}`}
+          className={`flex flex-1 touch-none flex-col justify-center gap-5 px-6 pb-4 ${halted ? "[&_*_*]:[animation-play-state:paused]!" : ""}`}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => {
