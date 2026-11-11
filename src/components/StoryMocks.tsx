@@ -364,7 +364,7 @@ function Web() {
       <div className="flex items-end justify-center gap-3">
         <div className="relative w-[64%]" style={anim("story-rise", stepAt(1))}>
           <div className="rounded-t-lg border-[3px] border-b-0 border-ink/80 bg-bg p-1.5">
-            <div className="mb-1 truncate rounded bg-surface px-1 text-[8.5px] text-muted">app-fiuba.vercel.app</div>
+            <div className="mb-1 truncate rounded bg-surface px-1 text-[8.5px] text-muted">fiubi.com.ar</div>
             <div className="grid grid-cols-3 gap-1">
               <span className="rounded-md bg-mint py-2" />
               {subject(0)}
