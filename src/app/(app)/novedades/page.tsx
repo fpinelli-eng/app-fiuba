@@ -101,7 +101,7 @@ function FiubaNewsCard({ item, today }: { item: FiubaNewsItem; today: string }) 
 }
 
 // Novedades: avisos from the admins, the next dates of the FIUBA academic calendar and the news of
-// www.fi.uba.ar (copied every two hours by the "Noticias de la FIUBA" workflow).
+// www.fi.uba.ar (copied once a day by the "Noticias de la FIUBA" workflow).
 export default async function NovedadesPage() {
   await requireProfile();
   const { today, news, fiuba, events } = await getNewsPage();

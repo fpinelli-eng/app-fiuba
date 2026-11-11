@@ -49,6 +49,6 @@ Hoy es público porque Vercel gratis solo publica commits de colaboradores en re
 
 - **Vercel Hobby no despliega commits de otro autor en un repo privado.** Las vistas previas de los PRs de Jantus dejarían de funcionar, y si Jantus integra un PR, producción no se actualiza (el commit de integración es suyo).
 - **La protección de `main` deja de aplicarse** en repos privados de cuentas gratuitas de GitHub. GitHub Pro la habilita y es gratis para estudiantes con el GitHub Student Developer Pack.
-- **GitHub Actions pasa a tener un tope mensual** (hoy es ilimitado). Los workflows actuales deberían entrar, pero las noticias cada dos horas suman bastante.
+- **GitHub Actions pasa a tener un tope mensual** (hoy es ilimitado). Los workflows actuales deberían entrar sin problema.
 
 Lo que expone hoy el repo público: el código (sin secretos), el identificador del proyecto de Supabase (también visible en la web), los resúmenes del workflow "Relevamiento de usuarios" (solo conteos) y los respaldos cifrados (sin la frase `BACKUP_PASSPHRASE` no se pueden abrir).

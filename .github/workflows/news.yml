@@ -1,5 +1,5 @@
 # Copies the featured news of www.fi.uba.ar into public.fiuba_news, for Novedades.
-# Every two hours it downloads the FIUBA home page, reads its news (tools/news/sync.mjs, which uses
+# Once a day (20:41 in Buenos Aires) it downloads the FIUBA home page, reads its news (tools/news/sync.mjs, which uses
 # src/lib/news/fiuba.ts) and upserts them. Only counts go to the log. If the FIUBA site changes and
 # the news cannot be read, the job fails and GitHub emails the repository owner.
 # Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
@@ -7,7 +7,8 @@ name: Noticias de la FIUBA
 
 on:
   schedule:
-    - cron: "41 */2 * * *"
+    # Daily, at 23:41 UTC = 20:41 in Buenos Aires: FIUBA news are not urgent (Francisco, 10 Nov 2026).
+    - cron: "41 23 * * *"
   workflow_dispatch:
 
 permissions:
