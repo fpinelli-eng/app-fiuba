@@ -11,7 +11,7 @@ if (file) {
   html = readFileSync(file, "utf8");
 } else {
   const res = await fetch(`${FIUBA_SITE}/`, {
-    headers: { "user-agent": "FIUBI-noticias (+https://app-fiuba.vercel.app)" },
+    headers: { "user-agent": "FIUBI-noticias (+https://fiubi.com.ar)" },
     signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`fi.uba.ar respondió ${res.status}`);

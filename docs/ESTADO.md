@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 10 de noviembre de 2026.
+Última actualización: 11 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -34,7 +34,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Reseñas: buscador, ficha del curso, reseñas pendientes con filtro de comentarios, contador en el menú y aviso en el inicio. Solo leen la oferta: hasta que se cargue, el buscador muestra "No se dicta este cuatrimestre" | `src/lib/reviews/`, `src/app/(app)/resenas/`, `tools/local-supabase/sample-offer.mjs` | En `main` (#30, PR #31) |
 | Reseñas libres: cualquier alumno reseña cualquier curso desde su ficha ("Tu reseña"); una reseña por alumno y curso, que se edita | `supabase/migrations/20261016140000_free_reviews.sql`, `src/app/(app)/resenas/curso/[id]/MyReview.tsx` | En `main` (#34, PR #35) |
 | Política de privacidad pública (`/privacidad`, Ley 25.326), enlazada desde el ingreso y el perfil; acceso a Administración desde el perfil (solo administradores). Falta definir el mail de contacto (`CONTACT_EMAIL`) | `src/app/privacidad/`, `src/lib/app.ts` | En `main` (#8, PR #36) |
-| Presentación en la raíz para quien no tiene sesión (animación del ícono, descripción, ingreso visible sin bajar, cuatro funciones) y lo necesario para los buscadores: título, descripción, imagen para compartir, datos estructurados, `robots.txt` y `sitemap.xml` (solo producción se indexa). Falta: dominio `fiubi.ar` en Vercel y Google Search Console | `src/app/ingresar/`, `src/components/ColumnIntro.tsx`, `src/lib/site.ts`, `src/app/robots.ts`, `src/app/sitemap.ts` | PR abierto (rama `landing-page`) |
+| Presentación en la raíz para quien no tiene sesión (animación del ícono, descripción, ingreso visible sin bajar, cuatro funciones) y lo necesario para los buscadores: título, descripción, imagen para compartir, datos estructurados, `robots.txt` y `sitemap.xml` (solo producción se indexa). Dominio `fiubi.com.ar` (NIC Argentina, delegado a Vercel; vence el 11/11/2027) y verificado en Google Search Console desde el 11 de noviembre | `src/app/ingresar/`, `src/components/ColumnIntro.tsx`, `src/lib/site.ts`, `src/app/robots.ts`, `src/app/sitemap.ts` | PR abierto (rama `landing-page`) |
 | Seguridad: leer catálogo, oferta y reseñas exige cuenta FIUBA (no alcanza con una sesión de Google); cursadas solo del propio plan | `supabase/migrations/20261015170000_member_only_reads.sql` | En `main` (PR #20) |
 | Mapa en el celular: lista por cuatrimestre, pestañas Obligatorias / Electivas y ficha desde abajo (desde 768 px queda igual) | `src/app/(app)/mapa/MobileMap.tsx` | PR #55 abierto |
 | Mapa en la computadora: la página se puede bajar con una ficha abierta (también en "Carga rápida"; antes la hoja del celular, montada oculta, trababa el `body`) y la rueda del mouse sobre la grilla baja la página (la grilla solo se desplaza a lo ancho) | `src/app/(app)/mapa/MobileMap.tsx`, `src/app/(app)/mapa/CareerMapView.tsx` | PR abierto (rama `fix-desktop-scroll-lock`) |
@@ -57,7 +57,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 4. **Perfil, lo que falta:** subir una foto propia (necesita almacenamiento de archivos en Supabase). Francisco. "Cambiar" carrera o plan: hecho (sin equivalencias: `change_my_plan()` borra materias, requisitos y plan del cuatrimestre; quedan las cursadas y las reseñas; lleva a la carga rápida del mapa).
 5. **Inicio:** hecho, con el calendario de la cursada (PR #47).
 6. **Moderación de reseñas:** hecha (PR #43).
-7. **#8 · Publicar el login en Google**, antes de la beta: hasta entonces solo entran los usuarios de prueba cargados a mano en Google Cloud. La política de privacidad ya está; falta el mail de contacto y que Francisco cargue la página principal y la de privacidad en Google Cloud (Branding) y publique (Audience). Revisar ahí también la protección de las vistas previas de Vercel.
+7. ~~**#8 · Publicar el login en Google**~~ Hecho el 11 de noviembre: la app está "En producción" en Google Auth Platform (entra cualquier cuenta @fi.uba.ar, sin usuarios de prueba) y la marca verificada, así que la pantalla de Google dice "Ir a FIUBI". Página principal y privacidad en `fiubi.com.ar`. Falta: volver a subir el logo y verificarlo (Google lo revisa de nuevo) y el mail del proyecto en el dominio (`CONTACT_EMAILS`, PR #67).
 8. Abiertas en `PRODUCTO.md` (sección 13): dominio (el nombre ya está: FIUBI), plan 2014 de Sistemas, áreas de electivas de los demás planes.
 
 **Beta (decidido el 16 de octubre):** primero con tres carreras, Industrial, Química e Informática, cargadas con la oferta completa del SIU con sesión (prácticas, docentes y horarios de cada práctica). La prueban alumnos de confianza de esas carreras. Las demás carreras se suman después pegando su oferta en `/admin`, sin cambiar código; la tabla pública del SIU también sirve, con menos detalle. En la beta lo primero que se usa son las reseñas libres: las pendientes y el plan dependen de que el alumno haya armado su plan en la app.

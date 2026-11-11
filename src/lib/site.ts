@@ -1,6 +1,6 @@
 // Public address of the app, for metadata, robots.txt and sitemap.xml (server only: it reads Vercel's
-// build variables). On Vercel, VERCEL_PROJECT_PRODUCTION_URL is the production domain (fiubi.ar once it is
-// added to the project), also in preview builds; NEXT_PUBLIC_SITE_URL overrides it.
+// build variables). On Vercel, VERCEL_PROJECT_PRODUCTION_URL is the production domain (fiubi.com.ar
+// since 11 Nov 2026), also in preview builds; NEXT_PUBLIC_SITE_URL overrides it.
 const vercelDomain = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? (vercelDomain ? `https://${vercelDomain}` : "http://localhost:3000");
 

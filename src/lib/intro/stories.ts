@@ -104,7 +104,7 @@ export function welcomeStories(firstName: string): Story[] {
       kicker: "Un consejo",
       title: "Mejor en la compu",
       text: "FIUBI también es una web. En la pantalla grande el Mapa y el Plan se ven mucho mejor: te recomendamos usarla en la compu, sobre todo para armar el cuatrimestre.",
-      points: ["Entrá a app-fiuba.vercel.app desde cualquier navegador", "Con tu misma cuenta @fi.uba.ar", "Lo que cargás en uno aparece en el otro"],
+      points: ["Entrá a fiubi.com.ar desde cualquier navegador", "Con tu misma cuenta @fi.uba.ar", "Lo que cargás en uno aparece en el otro"],
       tone: "lavender",
     },
     {
