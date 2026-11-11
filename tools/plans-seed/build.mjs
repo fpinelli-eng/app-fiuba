@@ -2,7 +2,7 @@
 // FIUBA Map files in data/planes and the metadata in data/planes/planes.json.
 //
 //   node tools/plans-seed/build.mjs > supabase/migrations/20261015120100_seed_plans.sql
-//   node tools/plans-seed/build.mjs --plan sistemas-2014 > supabase/migrations/20261113130000_sistemas_2014.sql
+//   node tools/plans-seed/build.mjs --plan sistemas-2014 > supabase/migrations/20261113145000_sistemas_2014.sql
 //
 // Migrations never change once applied: to fix a plan later, write a new
 // migration with the change (or edit it from the admin screen).

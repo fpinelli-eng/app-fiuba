@@ -58,7 +58,7 @@ insert into public.historical_reviews (course_id, teacher, term_label, year, sta
 select test.ok((select count(*) from public.careers) = 13, '13 careers');
 select test.ok((select count(*) from public.plans) = 25, '25 plans');
 select test.ok((select count(*) from public.plans where is_current) = 13, 'one current plan per career');
--- Added later (20261113130000_sistemas_2014.sql): Sistemas 2014 replaces 1986 as the current plan.
+-- Added later (20261113145000_sistemas_2014.sql): Sistemas 2014 replaces 1986 as the current plan.
 select test.ok((select count(*) from public.subjects where plan_id = 'sistemas-2014') = 58, 'Sistemas 2014 has 58 subjects');
 select test.ok((select id from public.plans where career_id = 'sistemas' and is_current) = 'sistemas-2014', 'Sistemas 2014 is current');
 select test.ok((select count(*) from public.subjects where plan_id = 'industrial-2023') = 66, 'Industrial 2023 has 66 subjects');
