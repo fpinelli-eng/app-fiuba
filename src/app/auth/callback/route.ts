@@ -12,13 +12,9 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) return NextResponse.redirect(`${origin}/ingresar?error=login`);
 
-  const email = data.user.email ?? "";
-  if (!isAllowedEmail(email)) {
+  if (!isAllowedEmail(data.user.email)) {
     await supabase.auth.signOut();
-    const to = new URL("/ingresar", origin);
-    to.searchParams.set("error", "dominio");
-    to.searchParams.set("email", email);
-    return NextResponse.redirect(to);
+    return NextResponse.redirect(`${origin}/ingresar?error=dominio`);
   }
   return NextResponse.redirect(`${origin}/`);
 }

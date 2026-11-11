@@ -86,6 +86,7 @@ select test.fails('select 1 from public.subjects limit 1', 'anon reads subjects'
 select test.fails('select 1 from public.reviews limit 1', 'anon reads reviews');
 select test.fails('select public.ensure_profile()', 'anon creates a profile');
 select test.fails('select public.review_course(1, 4::smallint, null)', 'anon writes a review');
+select test.fails($$select public.choose_my_plan('industrial-2023')$$, 'anon picks a plan');
 reset role;
 
 -- An account from another domain --------------------------------------------------
@@ -93,6 +94,7 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
 select test.fails('select public.ensure_profile()', 'gmail account gets a profile');
+select test.fails($$select public.choose_my_plan('industrial-2023')$$, 'gmail account picks a plan');
 select test.fails($$insert into public.user_subjects values ('cccccccc-0000-0000-0000-000000000003', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'in_progress', null)$$,
   'gmail account saves a subject');
 -- A session is not enough to read: it takes a FIUBA account (a profile).
@@ -119,10 +121,16 @@ select public.ensure_profile();  -- twice is fine
 select test.ok((select count(*) from public.profiles) = 1, 'student sees only their profile');
 select test.ok((select plan_id from public.profiles) is null, 'new profile has no plan');
 
-update public.profiles set plan_id = 'industrial-2023';
+-- The plan is chosen only with choose_my_plan() (once) and changed with change_my_plan().
+select test.fails($$update public.profiles set plan_id = 'industrial-2023'$$, 'student sets their plan directly');
+select test.fails($$select public.choose_my_plan('no-existe')$$, 'student picks a plan that does not exist');
+select public.choose_my_plan('industrial-2023');
 select test.ok((select plan_id from public.profiles) = 'industrial-2023', 'student picks a plan');
+select public.choose_my_plan('industrial-2023');  -- twice (double submit) is fine
+select test.fails($$select public.choose_my_plan('civil-2023')$$, 'student changes plan with choose_my_plan, skipping the cleanup');
+select test.fails($$update public.profiles set plan_id = 'civil-2023'$$, 'student changes their plan directly, skipping the cleanup');
+select test.ok((select plan_id from public.profiles) = 'industrial-2023', 'the plan stays after the failed changes');
 select test.fails('update public.profiles set is_admin = true', 'student makes themselves admin');
-select test.fails($$update public.profiles set plan_id = 'no-existe'$$, 'student picks a plan that does not exist');
 
 insert into public.user_subjects (user_id, subject_id, status, grade)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'approved', 8);

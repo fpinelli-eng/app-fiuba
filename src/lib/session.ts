@@ -23,7 +23,7 @@ export const requireAccount = cache(async (): Promise<Account> => {
   if (!claims?.sub) redirect("/ingresar");
   const user = { id: claims.sub, email: claims.email, user_metadata: claims.user_metadata ?? {} };
   if (!isAllowedEmail(user.email)) {
-    redirect(`/auth/salir?error=dominio&email=${encodeURIComponent(user.email ?? "")}`);
+    redirect("/auth/salir?error=dominio");
   }
 
   const { data: row, error } = await supabase
