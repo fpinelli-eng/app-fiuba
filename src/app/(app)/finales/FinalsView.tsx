@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
+import { NavIcon } from "@/components/icons";
 import { normalizeText } from "@/lib/map/model";
 import {
   enrollmentStatus,
@@ -16,18 +17,50 @@ import {
 import type { ExamReminderView } from "@/lib/reminders/model";
 import { RemindersDialog } from "./RemindersDialog";
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+// La pista de "Recordarme" se muestra una sola vez en cada dispositivo (si no hay localStorage, nunca).
+const HINT_KEY = "fiubi-recordarme-pista";
+const noSubscribe = () => () => {};
+const hintSeen = () => {
+  try {
+    return window.localStorage.getItem(HINT_KEY) !== null;
+  } catch {
+    return true;
+  }
+};
+const markHintSeen = () => {
+  try {
+    window.localStorage.setItem(HINT_KEY, "1");
+  } catch {
+    // Sin almacenamiento: no pasa nada.
+  }
+};
+
+const plural = (n: number, one: string, many: string) =>
+  `${n} ${n === 1 ? one : many}`;
 
 function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
   const status = enrollmentStatus(table, now);
-  const chip = "rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold md:whitespace-nowrap";
+  const chip =
+    "rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold md:whitespace-nowrap";
   switch (status.kind) {
     case "open":
-      return <span className={`${chip} bg-mint text-mint-ink`}>Inscripción abierta hasta el {formatEnrollMoment(status.until)}</span>;
+      return (
+        <span className={`${chip} bg-mint text-mint-ink`}>
+          Inscripción abierta hasta el {formatEnrollMoment(status.until)}
+        </span>
+      );
     case "soon":
-      return <span className={`${chip} bg-butter text-butter-ink`}>Inscripción desde el {formatEnrollMoment(status.from)}</span>;
+      return (
+        <span className={`${chip} bg-butter text-butter-ink`}>
+          Inscripción desde el {formatEnrollMoment(status.from)}
+        </span>
+      );
     case "closed":
-      return <span className="text-[12.5px] whitespace-nowrap text-muted">Inscripción cerrada</span>;
+      return (
+        <span className="text-[12.5px] whitespace-nowrap text-muted">
+          Inscripción cerrada
+        </span>
+      );
     default:
       return null;
   }
@@ -36,23 +69,37 @@ function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
 /** Room, examiners and drop deadline, when the dates were loaded with the SIU link. */
 function tableDetails(t: ExamTableView): string {
   const room = t.room && (/^aula\b/i.test(t.room) ? t.room : `Aula ${t.room}`);
-  const drop = t.dropUntil && `Te podés dar de baja hasta el ${formatEnrollMoment(t.dropUntil)}`;
+  const drop =
+    t.dropUntil &&
+    `Te podés dar de baja hasta el ${formatEnrollMoment(t.dropUntil)}`;
   return [room, formatTeachers(t.teachers), drop].filter(Boolean).join(" · ");
 }
 
-function TableRow({ table, now, timed }: { table: ExamTableView; now: string; timed: boolean }) {
+function TableRow({
+  table,
+  now,
+  timed,
+}: {
+  table: ExamTableView;
+  now: string;
+  timed: boolean;
+}) {
   const time = formatExamTime(table.startTime, table.endTime);
   const details = tableDetails(table);
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 md:gap-x-4 md:px-[22px]">
-      <span className={`${timed ? "w-auto md:w-[184px]" : "w-[68px] md:w-[76px]"} flex-none text-sm text-ink-2 tabular-nums`}>
+      <span
+        className={`${timed ? "w-auto md:w-[184px]" : "w-[68px] md:w-[76px]"} flex-none text-sm text-ink-2 tabular-nums`}
+      >
         <span className="font-semibold">{formatExamDay(table.date)}</span>
         {time && <span> · {time}</span>}
       </span>
       <span className="flex min-w-0 flex-auto flex-col">
         <span className="text-sm text-ink-2">
           {table.name}
-          {table.kind !== "Regular" && <span className="text-[13px] text-muted"> · {table.kind}</span>}
+          {table.kind !== "Regular" && (
+            <span className="text-[13px] text-muted"> · {table.kind}</span>
+          )}
         </span>
         {details && <span className="text-[12.5px] text-muted">{details}</span>}
       </span>
@@ -65,14 +112,26 @@ export function FinalsView({ data }: { data: FinalsData }) {
   const [query, setQuery] = useState("");
   const q = normalizeText(query);
   const { now, pending, all } = data;
-  const [reminders, setReminders] = useState<ExamReminderView[] | null>(data.reminders);
+  const [reminders, setReminders] = useState<ExamReminderView[] | null>(
+    data.reminders,
+  );
   const [remindOpen, setRemindOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const remindButton = useRef<HTMLButtonElement>(null);
-  const activeReminders = reminders?.filter((r) => r.planId === data.planId).length ?? 0;
+  const activeReminders =
+    reminders?.filter((r) => r.planId === data.planId).length ?? 0;
+  const seenHint = useSyncExternalStore(noSubscribe, hintSeen, () => true);
+  const [hintGone, setHintGone] = useState(false);
+  const showHint = !seenHint && !hintGone;
+  const hideHint = () => {
+    markHintSeen();
+    setHintGone(true);
+  };
 
   const open = pending.flatMap((s) => {
-    const table = s.tables.find((t) => enrollmentStatus(t, now).kind === "open");
+    const table = s.tables.find(
+      (t) => enrollmentStatus(t, now).kind === "open",
+    );
     return table?.enrollTo ? [{ name: s.name, until: table.enrollTo }] : [];
   });
   const shown = q ? all.filter((s) => normalizeText(s.name).includes(q)) : all;
@@ -82,26 +141,53 @@ export function FinalsView({ data }: { data: FinalsData }) {
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">Finales</h1>
+        <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">
+          Finales
+        </h1>
         {data.loaded && reminders !== null && (
-          <button
-            ref={remindButton}
-            onClick={() => {
-              setNotice(null);
-              setRemindOpen(true);
-            }}
-            aria-haspopup="dialog"
-            className="h-10 rounded-full border border-line-strong bg-surface px-3.5 text-[13.5px] font-semibold text-ink"
-          >
-            Recordarme
-            {activeReminders > 0 && (
-              <span className="text-muted">
-                {" "}
-                · {activeReminders}
-                <span className="sr-only"> {activeReminders === 1 ? "mesa" : "mesas"}</span>
-              </span>
+          <div className="relative">
+            <button
+              ref={remindButton}
+              onClick={() => {
+                setNotice(null);
+                hideHint();
+                setRemindOpen(true);
+              }}
+              aria-haspopup="dialog"
+              aria-describedby="recordarme-pista"
+              className="flex h-10 items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 text-[13.5px] font-semibold text-ink"
+            >
+              <NavIcon name="bell" size={17} />
+              Recordarme
+              {activeReminders > 0 && (
+                <span className="text-muted">
+                  {" "}
+                  · {activeReminders}
+                  <span className="sr-only">
+                    {" "}
+                    {activeReminders === 1 ? "mesa" : "mesas"}
+                  </span>
+                </span>
+              )}
+            </button>
+            {/* Pista: se despliega al entrar, explica para qué sirve y se esconde sola (una vez por dispositivo). */}
+            <p id="recordarme-pista" className="sr-only">
+              Te mandamos un mail cuando abre y cuando cierra la inscripción a
+              las mesas que elijas.
+            </p>
+            {showHint && (
+              <div
+                aria-hidden="true"
+                onAnimationEnd={hideHint}
+                onClick={hideHint}
+                className="absolute top-[calc(100%+10px)] right-0 z-20 w-[250px] rounded-2xl bg-ink px-3.5 py-3 text-[13.5px] leading-snug text-bg shadow-[0_10px_24px_var(--pop-shadow)] motion-safe:animate-[hint-life_6s_ease-in-out_both] motion-reduce:hidden"
+              >
+                <span className="absolute -top-1.5 right-6 size-3 rotate-45 bg-ink" />
+                ¿Querés que te mandemos un mail cuando abre la inscripción a un
+                final? Tocá <b>Recordarme</b> y elegí las mesas.
+              </div>
             )}
-          </button>
+          </div>
         )}
       </div>
 
@@ -110,7 +196,10 @@ export function FinalsView({ data }: { data: FinalsData }) {
         {notice}
       </p>
       {notice && (
-        <div aria-hidden="true" className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]">
+        <div
+          aria-hidden="true"
+          className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]"
+        >
           {notice}
         </div>
       )}
@@ -121,8 +210,12 @@ export function FinalsView({ data }: { data: FinalsData }) {
           reminders={reminders}
           onSaved={(saved, active) => {
             setReminders(saved);
-            if (active > 0) setNotice("Te vamos a mandar un mail el primer día de la inscripción y el último, así no te olvidás.");
-            else if (active === 0) setNotice("Listo, sacamos tus recordatorios.");
+            if (active > 0)
+              setNotice(
+                "Te vamos a mandar un mail el primer día de la inscripción y el último, así no te olvidás.",
+              );
+            else if (active === 0)
+              setNotice("Listo, sacamos tus recordatorios.");
           }}
           onClose={() => {
             setRemindOpen(false);
@@ -150,26 +243,51 @@ export function FinalsView({ data }: { data: FinalsData }) {
             </div>
           )}
 
-          <section aria-labelledby="pending-title" className="overflow-hidden rounded-2xl border border-line bg-surface">
-            <h2 id="pending-title" className="px-4 pt-4 pb-2 text-[19px] font-semibold md:px-[22px]">
+          <section
+            aria-labelledby="pending-title"
+            className="overflow-hidden rounded-2xl border border-line bg-surface"
+          >
+            <h2
+              id="pending-title"
+              className="px-4 pt-4 pb-2 text-[19px] font-semibold md:px-[22px]"
+            >
               Tus finales pendientes
             </h2>
             {pending.length === 0 ? (
               <div className="px-4 pb-4 text-sm text-muted md:px-[22px]">
                 No tenés finales pendientes en tu mapa.{" "}
-                <Link href="/mapa" className="font-semibold text-ink-2 underline">
+                <Link
+                  href="/mapa"
+                  className="font-semibold text-ink-2 underline"
+                >
                   Ir al mapa
                 </Link>
               </div>
             ) : (
               <div className="flex flex-col pb-2">
                 {pending.map((s) => (
-                  <div key={s.key} className="border-t border-line first:border-t-0">
-                    <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">{s.name}</h3>
+                  <div
+                    key={s.key}
+                    className="border-t border-line first:border-t-0"
+                  >
+                    <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">
+                      {s.name}
+                    </h3>
                     {s.tables.length === 0 ? (
-                      <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">Sin mesas cargadas.</div>
+                      <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">
+                        Sin mesas cargadas.
+                      </div>
                     ) : (
-                      s.tables.slice(0, 3).map((t) => <TableRow key={t.id} table={t} now={now} timed={timed} />)
+                      s.tables
+                        .slice(0, 3)
+                        .map((t) => (
+                          <TableRow
+                            key={t.id}
+                            table={t}
+                            now={now}
+                            timed={timed}
+                          />
+                        ))
                     )}
                   </div>
                 ))}
@@ -179,7 +297,18 @@ export function FinalsView({ data }: { data: FinalsData }) {
 
           <h2 className="mt-2 text-[22px] font-semibold">Todas las mesas</h2>
           <div className="relative">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="absolute top-[15px] left-4 text-muted">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="absolute top-[15px] left-4 text-muted"
+            >
               <circle cx="11" cy="11" r="7" />
               <path d="M20 20l-3.5-3.5" />
             </svg>
@@ -198,16 +327,26 @@ export function FinalsView({ data }: { data: FinalsData }) {
 
           {shown.length === 0 && (
             <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">
-              {q ? "No encontramos materias con esa búsqueda." : "No hay mesas próximas cargadas."}
+              {q
+                ? "No encontramos materias con esa búsqueda."
+                : "No hay mesas próximas cargadas."}
             </div>
           )}
 
           <div className="flex flex-col gap-2.5">
             {shown.map((s: ExamSubjectView) => (
-              <section key={s.key} aria-label={s.name} className="overflow-hidden rounded-2xl border border-line bg-surface">
+              <section
+                key={s.key}
+                aria-label={s.name}
+                className="overflow-hidden rounded-2xl border border-line bg-surface"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-lavender px-4 py-3 md:px-[22px] md:py-3.5">
-                  <h3 className="text-[17px] leading-snug md:text-[19px] font-semibold text-lavender-ink">{s.name}</h3>
-                  <span className="text-[13px] whitespace-nowrap text-lavender-ink/80">{plural(s.tables.length, "mesa", "mesas")}</span>
+                  <h3 className="text-[17px] leading-snug md:text-[19px] font-semibold text-lavender-ink">
+                    {s.name}
+                  </h3>
+                  <span className="text-[13px] whitespace-nowrap text-lavender-ink/80">
+                    {plural(s.tables.length, "mesa", "mesas")}
+                  </span>
                 </div>
                 <div className="py-1">
                   {s.tables.map((t) => (
