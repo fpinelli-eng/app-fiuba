@@ -1,0 +1,83 @@
+# "Recordarme" in Finales: mails each student on the first and on the last day of the enrollment of
+# the exam tables they picked (tools/reminders/README.md). Every 3 hours it reads the pending
+# reminders and the current exam tables (tools/reminders/due.sql), decides what is due and sends it
+# (tools/reminders/send.mjs, which uses src/lib/reminders/), then marks what went out and deletes
+# the reminders whose exam already happened (tools/reminders/mark.sql).
+# Secrets: SUPABASE_DB_PASSWORD (the same one as "Base de datos") and the app's mailbox: SMTP_HOST,
+# SMTP_PORT (465 or 587), SMTP_USER, SMTP_PASS and SMTP_FROM ("FIUBI <avisos@…>"). Without the mail
+# secrets it only counts and marks nothing. The repository is public: only counts go to the log.
+name: Recordatorios
+
+on:
+  schedule:
+    # Every 3 hours from 08:17 in Buenos Aires (11:17 UTC): 08, 11, 14, 17, 20, 23, 02, 05.
+    # Mails only go out from 08:00 (src/lib/reminders/model.ts).
+    - cron: "17 2-23/3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: Mandar recordatorios
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_PROJECT_ID: solnlrkmkncsntyptjjm
+      SUPABASE_REGION: sa-east-1
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check secrets
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_PASSWORD (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Find the database
+        # Same connection as "Base de datos" and "Fechas de examen del SIU" (IPv4 session pooler).
+        run: |
+          user="postgres.$SUPABASE_PROJECT_ID"
+          for candidate in "aws-1-$SUPABASE_REGION.pooler.supabase.com" "aws-0-$SUPABASE_REGION.pooler.supabase.com"; do
+            if psql "host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" \
+                 -v ON_ERROR_STOP=1 -q -c "select 1" > /dev/null 2>> "$RUNNER_TEMP/psql.log"; then
+              echo "PGCONN=host=$candidate port=5432 user=$user dbname=postgres sslmode=require connect_timeout=15" >> "$GITHUB_ENV"
+              echo "ok: $candidate"
+              exit 0
+            fi
+          done
+          echo "::error title=No se pudo conectar con la base::$(tr '\n' ' ' < "$RUNNER_TEMP/psql.log" | cut -c1-600)"
+          exit 1
+      - name: Read the pending reminders
+        # The file has the students' mails: it stays in the runner and is never printed.
+        run: psql "$PGCONN" -v ON_ERROR_STOP=1 -q -At -f tools/reminders/due.sql > "$RUNNER_TEMP/due.json"
+      - name: Install the mail client
+        # Pinned and outside package.json: only this job uses it.
+        if: env.SMTP_HOST != '' && env.SMTP_USER != '' && env.SMTP_PASS != '' && env.SMTP_FROM != ''
+        run: |
+          npm install --prefix "$RUNNER_TEMP/mailer" --no-save --no-audit --no-fund --loglevel=error nodemailer@10.2.1
+          echo "NODEMAILER_DIR=$RUNNER_TEMP/mailer" >> "$GITHUB_ENV"
+      - name: Send
+        run: |
+          node --experimental-strip-types --no-warnings tools/reminders/send.mjs \
+            --dump "$RUNNER_TEMP/due.json" --sent "$RUNNER_TEMP/sent.json" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Mark as sent
+        # Also after a partial failure: what went out is marked, so it is not sent twice.
+        if: always() && env.PGCONN != ''
+        run: |
+          payload="[]"
+          if [ -s "$RUNNER_TEMP/sent.json" ]; then payload="$(cat "$RUNNER_TEMP/sent.json")"; fi
+          psql "$PGCONN" -v ON_ERROR_STOP=1 -q -v payload="$payload" -f tools/reminders/mark.sql

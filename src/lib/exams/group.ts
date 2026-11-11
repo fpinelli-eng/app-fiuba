@@ -59,6 +59,7 @@ export function groupExamTables(input: {
     }
     const table: ExamTableView = {
       id: r.id,
+      code: r.siu_subject_code,
       name: r.name,
       date: r.exam_date,
       kind: r.kind,

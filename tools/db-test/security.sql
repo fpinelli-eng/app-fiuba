@@ -113,6 +113,7 @@ select test.ok((select count(*) from public.news) = 0, 'gmail account reads news
 select test.ok((select count(*) from public.fiuba_news) = 0, 'gmail account reads FIUBA news');
 select test.ok((select count(*) from public.historical_reviews) = 0, 'gmail account reads Dolly opinions');
 select test.ok((select count(*) from public.course_star_counts(array[1::bigint])) = 0, 'gmail account reads course scores');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) values ('industrial-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-09', 'Álgebra Lineal')$$, 'gmail account creates an exam reminder');
 reset role;
 
 -- A student -------------------------------------------------------------------------
@@ -208,6 +209,32 @@ select test.fails($$insert into public.plan_choices (user_id, option, offering_i
 delete from public.plan_choices where option = 'B';
 select test.ok((select count(*) from public.plan_choices) = 1, 'student removes a course from an option');
 
+-- Exam reminders ("Recordarme" in Finales).
+insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, start_time, enroll_from, enroll_to)
+values ('industrial-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-09', 'Álgebra Lineal', '17:00', '2026-11-30 14:00', '2026-12-07 14:00');
+select test.ok((select count(*) from public.exam_reminders) = 1, 'student creates an exam reminder');
+select test.ok((select user_id from public.exam_reminders) = 'aaaaaaaa-0000-0000-0000-000000000001', 'the reminder is hers');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) values ('industrial-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-09', 'Álgebra Lineal')$$, 'student repeats an exam reminder');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) values ('industrial-2023', 'CB002', 'MESA 02', 'Regular', '2026-12-09', 'Álgebra Lineal')$$, 'student creates a reminder for a table that does not exist');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) values ('civil-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-09', 'Álgebra Lineal')$$, 'student creates a reminder for another plan');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, user_id) values ('industrial-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-09', 'Álgebra Lineal', 'bbbbbbbb-0000-0000-0000-000000000002')$$, 'student creates a reminder for another student');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, first_sent_at) values ('industrial-2023', 'CB002', 'MESA 01', 'Regular', '2026-12-10', 'Álgebra Lineal', now())$$, 'student creates a reminder already sent');
+select test.fails($$update public.exam_reminders set first_sent_at = now(), last_sent_at = now()$$, 'student marks a reminder as sent');
+select test.fails($$update public.exam_reminders set exam_date = '2026-12-10'$$, 'student edits a reminder');
+-- At most 50 per student.
+reset role;
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind)
+select 'industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'LIMITE ' || n, '2026-12-11', 'Regular' from generate_series(1, 50) n;
+set role authenticated;
+insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) select 'industrial-2023', 'CB002', 'LIMITE ' || n, 'Regular', '2026-12-11', 'Álgebra Lineal' from generate_series(1, 49) n;
+select test.ok((select count(*) from public.exam_reminders) = 50, 'student creates 50 exam reminders');
+select test.fails($$insert into public.exam_reminders (plan_id, siu_subject_code, table_name, kind, exam_date, subject_name) values ('industrial-2023', 'CB002', 'LIMITE 50', 'Regular', '2026-12-11', 'Álgebra Lineal')$$, 'student creates more than 50 exam reminders');
+delete from public.exam_reminders where table_name like 'LIMITE %';
+select test.ok((select count(*) from public.exam_reminders) = 1, 'student deletes exam reminders');
+reset role;
+delete from public.exam_tables where name like 'LIMITE %';
+set role authenticated;
+
 -- Reviews ---------------------------------------------------------------------------
 
 select test.fails('select public.submit_review(1, 5::smallint, null)', 'review before the review date');
@@ -272,6 +299,8 @@ delete from public.user_extra_credits;  -- RLS: deletes nothing of hers
 select test.ok((select count(*) from public.user_courses) = 0, 'another student does not see her courses');
 select test.ok((select count(*) from public.plan_choices) = 0, 'another student does not see her plan');
 delete from public.plan_choices;  -- RLS: deletes nothing
+select test.ok((select count(*) from public.exam_reminders) = 0, 'another student does not see her exam reminders');
+delete from public.exam_reminders;  -- RLS: deletes nothing
 select test.ok((select count(*) from public.my_reviews()) = 0, 'another student does not get her review in my_reviews');
 select test.fails('select 1 from public.review_authors', 'admin reads review_authors');
 
@@ -314,6 +343,7 @@ set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
 select test.ok((select count(*) from public.reviews) = 0, 'students do not see hidden reviews');
 select test.ok((select bool_and(hidden) from public.my_reviews()), 'the author sees them as hidden');
+select test.ok((select count(*) from public.exam_reminders) = 1, 'another student cannot delete her exam reminders');
 reset role;
 
 select test.ok((select count(*) from public.plan_choices) = 1, 'another student cannot delete her plan');
@@ -421,5 +451,6 @@ select test.ok((select count(*) from public.reviews) = 2, 'reviews stay after de
 select test.ok((select count(*) from public.review_authors) = 0, 'authorship is deleted with the account');
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
 select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
+select test.ok((select count(*) from public.exam_reminders) = 0, 'exam reminders are deleted with the account');
 
 \echo 'All security checks passed.'

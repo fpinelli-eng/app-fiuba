@@ -1,4 +1,5 @@
 import { getMapData } from "@/lib/map/data";
+import { getMyReminders } from "@/lib/reminders/data";
 import { createClient } from "@/lib/supabase/server";
 import { groupExamTables, type ExamTableRow } from "./group";
 import type { FinalsData } from "./types";
@@ -17,7 +18,7 @@ export async function getFinalsData(userId: string, planId: string): Promise<Fin
   const today = now.slice(0, 10);
   const supabase = await createClient();
 
-  const [map, upcoming, loadedCount] = await Promise.all([
+  const [map, upcoming, loadedCount, reminders] = await Promise.all([
     getMapData(userId, planId),
     supabase
       .from("exam_tables")
@@ -28,6 +29,7 @@ export async function getFinalsData(userId: string, planId: string): Promise<Fin
       .order("start_time", { nullsFirst: true })
       .order("name"),
     supabase.from("exam_tables").select("id", { count: "exact", head: true }).eq("plan_id", planId),
+    getMyReminders(supabase),
   ]);
   if (upcoming.error) throw new Error(`exam_tables: ${upcoming.error.message}`);
   if (loadedCount.error) throw new Error(`exam_tables: ${loadedCount.error.message}`);
@@ -46,5 +48,5 @@ export async function getFinalsData(userId: string, planId: string): Promise<Fin
     pendingIds: map.subjects.filter((s) => pendingIds.has(s.id)).map((s) => s.id),
   });
 
-  return { now, loaded: (loadedCount.count ?? 0) > 0, pending, all };
+  return { now, planId, loaded: (loadedCount.count ?? 0) > 0, pending, all, reminders };
 }
