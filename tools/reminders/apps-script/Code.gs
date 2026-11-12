@@ -4,8 +4,8 @@
  * This file is pasted into the Apps Script of a Google Sheet of avisosfiubi@gmail.com
  * (Extensions → Apps Script). Step-by-step guide: tools/reminders/README.md in the repo.
  *
- * Every hour, hourly():
- *   1. asks the database which reminders exist and which mail is due now
+ * One mail per reminder, when the enrollment opens. Every hour, hourly():
+ *   1. asks the database which reminders exist and whose mail is due now
  *      (avisos_pendientes(), migration 20261114120000_avisos_rpc.sql; it also deletes the
  *      reminders whose exam already happened);
  *   2. from 08:00 (Buenos Aires), mails the due ones and, right after EACH mail, marks it in the
@@ -34,10 +34,7 @@ var LINKS = {
   finales: 'https://fiubi.com.ar/finales',
   logo: 'https://fiubi.com.ar/brand/fiubi-logo-mail.png',
 };
-var HEADERS = [
-  'Creado', 'Aviso (primer día)', 'Aviso (último día)', 'Mail', 'Materia', 'Mesa', 'Fecha del examen', 'Hora',
-  'Inscripción desde', 'Inscripción hasta', 'Primer mail enviado', 'Último mail enviado',
-];
+var HEADERS = ['Creado', 'Aviso', 'Mail', 'Materia', 'Mesa', 'Fecha', 'Hora', 'Inscripción desde', 'Inscripción hasta', 'Mail enviado'];
 
 // ---------------------------------------------------------------------------------------------
 // Functions to run by hand or from the trigger
@@ -68,15 +65,12 @@ function syncSheet() {
   });
 }
 
-/** Sends both mails with sample data to the account running the script. Touches neither the database nor the sheet. */
+/** Sends the mail with sample data to the account running the script. Touches neither the database nor the sheet. */
 function sendTestMail() {
   var to = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail();
-  var samples = sampleRows_();
-  for (var i = 0; i < samples.length; i++) {
-    var mail = buildMail_(samples[i], samples[i].due);
-    MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
-  }
-  Logger.log('Listo: se mandaron 2 mails de prueba a ' + to + '.');
+  var mail = buildMail_(sampleRow_());
+  MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  Logger.log('Listo: se mandó un mail de prueba a ' + to + '.');
 }
 
 /**
@@ -178,18 +172,16 @@ function sendRows_(rows) {
   if (!due.length) return { sent: 0, left: 0 };
   // First check that marking works (reminder 0 does not exist: it answers false). If it did not,
   // the same students would get the same mail every hour.
-  rpc_('avisos_marcar_enviado', { p_reminder_id: 0, p_kind: 'primer_dia' });
+  rpc_('avisos_marcar_enviado', { p_reminder_id: 0 });
   for (var i = 0; i < due.length; i++) {
     if (MailApp.getRemainingDailyQuota() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
     var row = due[i];
-    var mail = buildMail_(row, row.due);
+    var mail = buildMail_(row);
     MailApp.sendEmail({ to: row.email, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
     // Right after each mail. If marking fails, stop here: at most this one could go twice.
-    rpc_('avisos_marcar_enviado', { p_reminder_id: row.reminder_id, p_kind: row.due });
-    var at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
-    if (row.due === 'primer_dia') row.first_sent_at = at;
-    else row.last_sent_at = at;
-    row.due = null;
+    rpc_('avisos_marcar_enviado', { p_reminder_id: row.reminder_id });
+    row.sent_at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
+    row.due = false;
     sent++;
   }
   return { sent: sent, left: due.length - sent };
@@ -211,19 +203,11 @@ function writeSheet_(rows) {
 // Pure functions (no Google services): tested in the repo
 // ---------------------------------------------------------------------------------------------
 
-/**
- * Rows with a mail due now. Last-day mails first, and the enrollments that close sooner first: if
- * the daily quota runs out, what is left can still go later.
- */
+/** Rows whose mail is due now (the database decides), only to @fi.uba.ar. */
 function dueRows_(rows) {
-  var order = function (r) { return (r.due === 'ultimo_dia' ? '0' : '1') + (r.enroll_to || '9999'); };
-  return rows
-    .filter(function (r) {
-      return (r.due === 'primer_dia' || r.due === 'ultimo_dia') && /@fi\.uba\.ar$/i.test(r.email || '');
-    })
-    .sort(function (a, b) {
-      return order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0;
-    });
+  return rows.filter(function (r) {
+    return r.due === true && /@fi\.uba\.ar$/i.test(r.email || '');
+  });
 }
 
 /** The sheet as values: the headers and one row per reminder. */
@@ -231,8 +215,8 @@ function sheetValues_(rows) {
   var values = [HEADERS.slice()];
   rows.forEach(function (r) {
     values.push([
-      r.created_at, r.aviso_primer_dia, r.aviso_ultimo_dia, r.email, r.subject_name, tableLabel_(r), r.exam_date,
-      timeRange_(r.start_time, r.end_time), r.enroll_from, r.enroll_to, r.first_sent_at, r.last_sent_at,
+      r.created_at, r.aviso, r.email, r.subject_name, tableLabel_(r), r.exam_date, timeRange_(r.start_time, r.end_time),
+      r.enroll_from, r.enroll_to, r.sent_at,
     ].map(cell_));
   });
   return values;
@@ -295,18 +279,13 @@ function capitalize_(s) {
 }
 
 /**
- * The mail of one reminder: kind 'primer_dia' (the enrollment opened) or 'ultimo_dia'.
+ * The mail of one reminder: the enrollment opened.
  * Email-safe HTML (tables and inline styles, 560 px, light) plus a plain-text version.
  */
-function buildMail_(r, kind) {
-  var last = kind === 'ultimo_dia';
-  var subject = last
-    ? 'Hoy es el último día para anotarte al final de ' + r.subject_name
-    : 'Abrió la inscripción al final de ' + r.subject_name;
-  var band = last ? 'Último día para anotarte' : 'Abrió la inscripción';
-  var lead = last
-    ? 'Hoy es el último día para anotarte en el SIU. Que no se te pase.'
-    : 'Ya te podés anotar en el SIU.';
+function buildMail_(r) {
+  var subject = 'Abrió la inscripción al final de ' + r.subject_name;
+  var band = 'Abrió la inscripción';
+  var lead = 'Ya te podés anotar en el SIU.';
   var time = timeRange_(r.start_time, r.end_time);
   var exam = capitalize_(longDay_(r.exam_date)) + (time ? ', ' + time : '');
   var until = r.enroll_to ? 'Te podés anotar hasta ' + deadline_(r.enroll_to) + '.' : 'Revisá la fecha de cierre en el SIU.';
@@ -330,9 +309,7 @@ function buildMail_(r, kind) {
     '—',
   ]).concat(footer).join('\n') + '\n';
 
-  var c = last
-    ? { band: '#fcebe7', bandInk: '#7a2a1e', bandLine: '#f6d3cb' }
-    : { band: '#dff2e9', bandInk: '#245c48', bandLine: '#bfe3d1' };
+  var c = { band: '#dff2e9', bandInk: '#245c48', bandLine: '#bfe3d1' }; // mint, as the app
   var font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
   var detailRows = details.map(function (d, i) {
     var border = i < details.length - 1 ? 'border-bottom:1px solid #e6e9f0;' : '';
@@ -387,8 +364,8 @@ function buildMail_(r, kind) {
 }
 
 /** Sample data for sendTestMail() and preview.html. */
-function sampleRows_() {
-  var base = {
+function sampleRow_() {
+  return {
     reminder_id: 0,
     email: 'alumno@fi.uba.ar',
     subject_name: 'Análisis Matemático II',
@@ -399,10 +376,6 @@ function sampleRows_() {
     end_time: '20:00',
     enroll_from: '2026-11-30 08:00',
     enroll_to: '2026-12-07 14:00',
+    due: true,
   };
-  var first = JSON.parse(JSON.stringify(base));
-  first.due = 'primer_dia';
-  var last = JSON.parse(JSON.stringify(base));
-  last.due = 'ultimo_dia';
-  return [first, last];
 }

@@ -1,5 +1,5 @@
 // Pure part of the Apps Script that sends the "Recordarme" mails (tools/reminders/apps-script/
-// Code.gs), loaded as Apps Script would load it. Which mail is due is decided in the database and
+// Code.gs), loaded as Apps Script would load it. Whether the mail is due is decided in the database and
 // tested in tools/db-test/security.sql.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,9 +11,9 @@ interface Mail {
   text: string;
   html: string;
 }
-type Row = Record<string, string | number | null>;
+type Row = Record<string, string | number | boolean | null>;
 interface CodeGs {
-  buildMail_(r: Row, kind: string): Mail;
+  buildMail_(r: Row): Mail;
   dueRows_(rows: Row[]): Row[];
   sheetValues_(rows: Row[]): string[][];
   deadline_(moment: string): string;
@@ -21,7 +21,7 @@ interface CodeGs {
   timeRange_(start: string | null, end: string | null): string;
   tokenSql_(hash: string): string;
   toHex_(bytes: number[]): string;
-  sampleRows_(): Row[];
+  sampleRow_(): Row;
   HEADERS: string[];
 }
 
@@ -39,13 +39,12 @@ const row = (over: Row = {}): Row => ({
   enroll_from: "2026-11-30 14:00",
   enroll_to: "2026-12-07 14:00",
   created_at: "2026-11-20 10:00",
-  aviso_primer_dia: "2026-11-30",
-  aviso_ultimo_dia: "2026-12-07",
-  first_sent_at: null,
-  last_sent_at: null,
-  due: null,
+  aviso: "2026-11-30",
+  sent_at: null,
+  due: false,
   ...over,
 });
+
 
 describe("dates in the mail", () => {
   it("writes the day with its weekday", () => {
@@ -66,9 +65,10 @@ describe("dates in the mail", () => {
   });
 });
 
+
 describe("buildMail_", () => {
-  it("opening mail: subject, details and links", () => {
-    const m = gs.buildMail_(row(), "primer_dia");
+  it("subject, details and links", () => {
+    const m = gs.buildMail_(row());
     expect(m.subject).toBe("Abrió la inscripción al final de Álgebra Lineal");
     expect(m.text).toContain("Examen: Miércoles 9/12, de 17:00 a 20:00");
     expect(m.text).toContain("Mesa: MESA 01");
@@ -82,54 +82,47 @@ describe("buildMail_", () => {
     expect(m.html).toContain("Hecho por estudiantes, no es un sitio oficial de la universidad.");
   });
 
-  it("last-day mail", () => {
-    const m = gs.buildMail_(row({ enroll_to: "2026-12-08 00:00" }), "ultimo_dia");
-    expect(m.subject).toBe("Hoy es el último día para anotarte al final de Álgebra Lineal");
-    expect(m.text).toContain("Te podés anotar hasta el lunes 7/12 a las 23:59.");
-    expect(m.html).toContain("#fcebe7"); // peach band
+  it("a deadline at 00:00 is the end of the day before", () => {
+    expect(gs.buildMail_(row({ enroll_to: "2026-12-08 00:00" })).text).toContain("Te podés anotar hasta el lunes 7/12 a las 23:59.");
   });
 
   it("shows the kind when it is not Regular, and no time when the SIU gives none", () => {
-    const m = gs.buildMail_(row({ kind: "Libre", start_time: null, end_time: null }), "primer_dia");
+    const m = gs.buildMail_(row({ kind: "Libre", start_time: null, end_time: null }));
     expect(m.text).toContain("Mesa: MESA 01 (Libre)");
     expect(m.text).toContain("Examen: Miércoles 9/12\n");
   });
 
   it("escapes what comes from the SIU", () => {
-    const m = gs.buildMail_(row({ subject_name: 'Química <b>"I"</b> & II' }), "primer_dia");
+    const m = gs.buildMail_(row({ subject_name: 'Química <b>"I"</b> & II' }));
     expect(m.html).not.toContain("<b>");
     expect(m.html).toContain("Química &lt;b&gt;&quot;I&quot;&lt;/b&gt; &amp; II");
   });
 });
 
 describe("dueRows_", () => {
-  it("keeps the rows the database marked as due, only to @fi.uba.ar, last-day mails first", () => {
+  it("keeps the rows the database marked as due, only to @fi.uba.ar", () => {
     const rows = [
-      row({ reminder_id: 1, due: "primer_dia" }),
+      row({ reminder_id: 1, due: true }),
       row({ reminder_id: 2 }),
-      row({ reminder_id: 3, due: "ultimo_dia" }),
-      row({ reminder_id: 4, due: "primer_dia", email: "x@gmail.com" }),
-      row({ reminder_id: 5, due: "otro" }),
+      row({ reminder_id: 3, due: true, email: "x@gmail.com" }),
+      row({ reminder_id: 4, due: true }),
     ];
-    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([3, 1]);
+    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([1, 4]);
   });
 });
 
 describe("sheetValues_", () => {
   it("has the Spanish headers and one text row per reminder", () => {
-    const values = gs.sheetValues_([row({ kind: "Libre", first_sent_at: "2026-11-30 14:05" })]);
-    expect(values[0]).toEqual([
-      "Creado", "Aviso (primer día)", "Aviso (último día)", "Mail", "Materia", "Mesa", "Fecha del examen", "Hora",
-      "Inscripción desde", "Inscripción hasta", "Primer mail enviado", "Último mail enviado",
-    ]);
+    const values = gs.sheetValues_([row({ kind: "Libre", sent_at: "2026-11-30 14:05" })]);
+    expect(values[0]).toEqual(["Creado", "Aviso", "Mail", "Materia", "Mesa", "Fecha", "Hora", "Inscripción desde", "Inscripción hasta", "Mail enviado"]);
     expect(values[1]).toEqual([
-      "2026-11-20 10:00", "2026-11-30", "2026-12-07", "ana@fi.uba.ar", "Álgebra Lineal", "MESA 01 (Libre)", "2026-12-09",
-      "de 17:00 a 20:00", "2026-11-30 14:00", "2026-12-07 14:00", "2026-11-30 14:05", "",
+      "2026-11-20 10:00", "2026-11-30", "ana@fi.uba.ar", "Álgebra Lineal", "MESA 01 (Libre)", "2026-12-09", "de 17:00 a 20:00",
+      "2026-11-30 14:00", "2026-12-07 14:00", "2026-11-30 14:05",
     ]);
   });
 
   it("never writes a formula", () => {
-    expect(gs.sheetValues_([row({ subject_name: "=IMPORTXML(1)" })])[1][4]).toBe("'=IMPORTXML(1)");
+    expect(gs.sheetValues_([row({ subject_name: "=IMPORTXML(1)" })])[1][3]).toBe("'=IMPORTXML(1)");
   });
 });
 
@@ -149,6 +142,7 @@ describe("preview.html", () => {
   });
 });
 
+
 describe("sendRows_ (Google services faked)", () => {
   it("checks marking, marks each mail right after sending it and stops at the daily quota", () => {
     const g = loadCodeGs() as CodeGs & Record<string, unknown>;
@@ -156,29 +150,37 @@ describe("sendRows_ (Google services faked)", () => {
     let quota = 2;
     g.MailApp = {
       getRemainingDailyQuota: () => quota,
-      sendEmail: (m: { to: string; subject: string }) => {
+      sendEmail: (m: { to: string }) => {
         quota--;
         log.push(`mail ${m.to}`);
       },
     };
     g.Utilities = { formatDate: () => "2026-11-30 14:05" };
-    g.rpc_ = (name: string, args: { p_reminder_id: number; p_kind: string }) => log.push(`${name} ${args.p_reminder_id} ${args.p_kind}`);
+    g.rpc_ = (name: string, args: { p_reminder_id: number }) => log.push(`${name} ${args.p_reminder_id}`);
     const rows = [
-      row({ reminder_id: 1, email: "a@fi.uba.ar", due: "primer_dia" }),
+      row({ reminder_id: 1, email: "a@fi.uba.ar", due: true }),
       row({ reminder_id: 2, email: "b@fi.uba.ar" }),
-      row({ reminder_id: 3, email: "c@fi.uba.ar", due: "ultimo_dia" }),
-      row({ reminder_id: 4, email: "d@fi.uba.ar", due: "primer_dia" }),
+      row({ reminder_id: 3, email: "c@fi.uba.ar", due: true }),
+      row({ reminder_id: 4, email: "d@fi.uba.ar", due: true }),
     ];
     const result = (g as unknown as { sendRows_(r: Row[]): { sent: number; left: number } }).sendRows_(rows);
     expect(log).toEqual([
-      "avisos_marcar_enviado 0 primer_dia", // marking works before the first mail
-      "mail c@fi.uba.ar",
-      "avisos_marcar_enviado 3 ultimo_dia",
+      "avisos_marcar_enviado 0", // marking works before the first mail
       "mail a@fi.uba.ar",
-      "avisos_marcar_enviado 1 primer_dia",
+      "avisos_marcar_enviado 1",
+      "mail c@fi.uba.ar",
+      "avisos_marcar_enviado 3",
     ]);
     expect({ ...result }).toEqual({ sent: 2, left: 1 });
-    expect([rows[0].first_sent_at, rows[2].last_sent_at, rows[3].first_sent_at]).toEqual(["2026-11-30 14:05", "2026-11-30 14:05", null]);
+    expect(rows.map((r) => r.sent_at)).toEqual(["2026-11-30 14:05", null, "2026-11-30 14:05", null]);
+  });
+
+  it("does nothing when no mail is due", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    g.rpc_ = () => {
+      throw new Error("no call expected");
+    };
+    expect({ ...(g as unknown as { sendRows_(r: Row[]): object }).sendRows_([row()]) }).toEqual({ sent: 0, left: 0 });
   });
 });
 

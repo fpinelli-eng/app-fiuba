@@ -13,16 +13,16 @@
 --   insert into public.avisos_config (id, token_sha256) values (true, '<hash>')
 --   on conflict (id) do update set token_sha256 = excluded.token_sha256;
 --
--- Rules (Buenos Aires time; exam_tables keeps the SIU's local times):
+-- One mail per reminder, when the enrollment opens (Francisco, #114; confirmed by Tomás). Rules,
+-- Buenos Aires time (exam_tables keeps the SIU's local times), the same as dueMail() of #114:
 -- * Each reminder is re-read against the CURRENT exam_tables by its natural key (the daily SIU sync
 --   replaces the rows): if the SIU moved the enrollment, the new dates apply; if the table is gone,
 --   nothing is due and the reminder stays.
--- * "primer_dia": once the enrollment is open, from 08:00 of its first day. Not when the student
---   asked with the enrollment already open, nor when the SIU gives no opening date.
--- * "ultimo_dia": from 08:00 of the last day (avisos_ultimo_dia(): an enrollment that closes before
---   noon, 00:00 included, has its last day the day before) while it is still open. If the first
---   mail did not go out by then, only this one goes.
--- * Never before 08:00, never after the enrollment closed, never twice.
+-- * Once, from 08:00 of the first day of the enrollment and while it is open (if a run is missed,
+--   it goes later). Never before 08:00, never before it opens, never after it closed.
+-- * Not when the student asked with the enrollment already open, nor when the SIU gives no opening
+--   or closing date. Not for rows of the first version that already got a mail (first_sent_at or
+--   last_sent_at; nothing writes last_sent_at any more).
 -- * Only reminders of the student's current plan and @fi.uba.ar mails. Reminders whose exam already
 --   happened are deleted here (this used to be the GitHub workflow "Recordatorios").
 
@@ -50,39 +50,27 @@ begin
 end;
 $$;
 
--- Last day of the enrollment, the day of the "último día" mail.
-create function public.avisos_ultimo_dia(p_enroll_to timestamp) returns date
-language sql
-immutable
-set search_path = ''
-as $$
-  select case when p_enroll_to::time < time '12:00' then p_enroll_to::date - 1 else p_enroll_to::date end
-$$;
-
--- Which mail is due at p_now for one reminder ('primer_dia', 'ultimo_dia' or null). Pure, so the
--- rules are tested with fixed dates (tools/db-test/security.sql).
+-- Whether the opening mail is due at p_now for one reminder. Pure, so the rules are tested with
+-- fixed dates (tools/db-test/security.sql).
 create function public.avisos_debido(
   p_now timestamp,
   p_created_at timestamp,
   p_enroll_from timestamp,
   p_enroll_to timestamp,
-  p_first_sent boolean,
-  p_last_sent boolean
-) returns text
+  p_sent boolean
+) returns boolean
 language sql
 immutable
 set search_path = ''
 as $$
-  select case
-    when p_enroll_to is null or p_last_sent or p_now::time < time '08:00' or p_now >= p_enroll_to then null
-    when p_enroll_from is not null and p_now < p_enroll_from then null
-    when p_now >= public.avisos_ultimo_dia(p_enroll_to) + time '08:00'
-         and p_created_at < public.avisos_ultimo_dia(p_enroll_to) + time '08:00' then 'ultimo_dia'
-    when p_now >= public.avisos_ultimo_dia(p_enroll_to) + time '08:00' then null
-    when not p_first_sent and p_enroll_from is not null and p_created_at < p_enroll_from
-         and p_now >= p_enroll_from::date + time '08:00' then 'primer_dia'
-    else null
-  end
+  select coalesce(
+    not p_sent
+    and p_now::time >= time '08:00'
+    and p_now >= p_enroll_from
+    and p_now < p_enroll_to
+    and p_created_at < p_enroll_from
+    and p_now >= p_enroll_from::date + time '08:00',
+    false)
 $$;
 
 create function public.avisos_pendientes(p_token text)
@@ -98,11 +86,9 @@ returns table (
   enroll_from text,        -- 'YYYY-MM-DD HH:MM', Buenos Aires
   enroll_to text,
   created_at text,
-  aviso_primer_dia text,   -- 'YYYY-MM-DD': the day each mail goes (null: that mail does not apply)
-  aviso_ultimo_dia text,
-  first_sent_at text,
-  last_sent_at text,
-  due text                 -- 'primer_dia', 'ultimo_dia' or null
+  aviso text,              -- 'YYYY-MM-DD': the day the mail goes (null: it does not apply)
+  sent_at text,            -- when it went out, Buenos Aires
+  due boolean              -- the mail has to go now
 )
 language plpgsql
 security definer
@@ -128,7 +114,7 @@ begin
   reminders as (
     select r.id, u.email::text as email, r.subject_name, r.table_name, r.kind, r.exam_date,
            (r.created_at at time zone 'America/Argentina/Buenos_Aires') as created_ba,
-           r.first_sent_at, r.last_sent_at,
+           coalesce(r.first_sent_at, r.last_sent_at) as sent,
            t.enroll_from, t.enroll_to, t.start_time, t.end_time
     from public.exam_reminders r
     join public.profiles p on p.id = r.user_id and p.plan_id = r.plan_id
@@ -147,18 +133,16 @@ begin
          to_char(x.created_ba, 'YYYY-MM-DD HH24:MI'),
          case when x.enroll_from is not null and x.enroll_to is not null and x.created_ba < x.enroll_from
               then to_char(x.enroll_from, 'YYYY-MM-DD') end,
-         case when x.enroll_to is not null and x.created_ba < public.avisos_ultimo_dia(x.enroll_to) + time '08:00'
-              then to_char(public.avisos_ultimo_dia(x.enroll_to), 'YYYY-MM-DD') end,
-         to_char(x.first_sent_at at time zone 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD HH24:MI'),
-         to_char(x.last_sent_at at time zone 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD HH24:MI'),
-         public.avisos_debido(v_now, x.created_ba, x.enroll_from, x.enroll_to, x.first_sent_at is not null, x.last_sent_at is not null)
+         to_char(x.sent at time zone 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD HH24:MI'),
+         public.avisos_debido(v_now, x.created_ba, x.enroll_from, x.enroll_to, x.sent is not null)
   from reminders x
   order by x.exam_date, x.id;
 end;
 $$;
 
--- Marks one mail as sent. Returns false when it was already marked (or the reminder is gone).
-create function public.avisos_marcar_enviado(p_token text, p_reminder_id bigint, p_kind text) returns boolean
+-- Marks the mail of one reminder as sent (first_sent_at). Returns false when it was already
+-- marked or the reminder is gone.
+create function public.avisos_marcar_enviado(p_token text, p_reminder_id bigint) returns boolean
 language plpgsql
 security definer
 set search_path = ''
@@ -167,22 +151,15 @@ declare
   v_count integer;
 begin
   perform public.avisos_check_token(p_token);
-  if p_kind = 'primer_dia' then
-    update public.exam_reminders set first_sent_at = now() where id = p_reminder_id and first_sent_at is null;
-  elsif p_kind = 'ultimo_dia' then
-    update public.exam_reminders set last_sent_at = now() where id = p_reminder_id and last_sent_at is null;
-  else
-    raise exception 'invalid kind' using errcode = '22023';
-  end if;
+  update public.exam_reminders set first_sent_at = now() where id = p_reminder_id and first_sent_at is null;
   get diagnostics v_count = row_count;
   return v_count > 0;
 end;
 $$;
 
 revoke execute on function public.avisos_check_token(text) from public;
-revoke execute on function public.avisos_ultimo_dia(timestamp) from public;
-revoke execute on function public.avisos_debido(timestamp, timestamp, timestamp, timestamp, boolean, boolean) from public;
+revoke execute on function public.avisos_debido(timestamp, timestamp, timestamp, timestamp, boolean) from public;
 revoke execute on function public.avisos_pendientes(text) from public;
-revoke execute on function public.avisos_marcar_enviado(text, bigint, text) from public;
+revoke execute on function public.avisos_marcar_enviado(text, bigint) from public;
 grant execute on function public.avisos_pendientes(text) to anon;
-grant execute on function public.avisos_marcar_enviado(text, bigint, text) to anon;
+grant execute on function public.avisos_marcar_enviado(text, bigint) to anon;
