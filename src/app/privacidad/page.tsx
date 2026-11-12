@@ -47,8 +47,8 @@ export default function PrivacidadPage() {
             <b>Tus reseñas:</b> las estrellas y el comentario de cada curso que reseñás.
           </li>
           <li>
-            <b>Tus recordatorios de finales:</b> las mesas que elegís en «Recordarme» (materia, fecha, hora e inscripción). Por cada una te mandamos dos mails a tu cuenta
-            @fi.uba.ar, el primer día y el último de la inscripción, y nada más: no usamos tu mail para otra cosa. Se borran solos después del examen, y los podés sacar cuando
+            <b>Tus recordatorios de finales:</b> las mesas que elegís en «Recordarme» (materia, fecha, hora e inscripción). Por cada una te mandamos un mail a tu cuenta
+            @fi.uba.ar cuando abre la inscripción, y nada más: no usamos tu mail para otra cosa. Se borran solos después del examen, y los podés sacar cuando
             quieras desde Finales.
           </li>
           <li>
