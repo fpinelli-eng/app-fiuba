@@ -119,7 +119,7 @@ export function RemindersDialog({
         <label htmlFor={id} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl px-2 py-2 hover:bg-bg">
           <input id={id} type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} className="mt-0.5 size-5 flex-none accent-[var(--accent)]" />
           <span className="flex min-w-0 flex-col">
-            <span className="text-sm text-ink-2 tabular-nums">{title}</span>
+            <span className="text-sm text-ink tabular-nums">{title}</span>
             {detail && <span className="text-[12.5px] text-muted tabular-nums">{detail}</span>}
           </span>
         </label>
@@ -127,18 +127,19 @@ export function RemindersDialog({
     );
   };
 
-  // Day and table (the course, usually with the professor's surname) stand out; the time and the kind
-  // stay in the regular weight. Francisco asked for a lighter list: no enrollment window under each row.
+  // One line per table: day and table (the course, usually with the professor's surname) in ink, the
+  // time and the kind in gray. No bold and no enrollment window (Francisco, 11 Nov 2026: option C).
   const tableTitle = (t: Pick<ExamTableView, "date" | "startTime" | "endTime" | "name" | "kind">) => {
-    const time = formatExamTime(t.startTime, t.endTime);
-    const strong = "font-semibold text-ink";
+    const extra = [formatExamTime(t.startTime, t.endTime), t.kind !== "Regular" ? t.kind : null].filter(Boolean).join(" · ");
     return (
       <>
-        <span className={strong}>{formatExamDay(t.date)}</span>
-        {time && ` · ${time}`}
-        {" · "}
-        <span className={strong}>{t.name}</span>
-        {t.kind !== "Regular" && ` · ${t.kind}`}
+        {formatExamDay(t.date)} · {t.name}
+        {extra && (
+          <>
+            {" "}
+            <span className="ml-1.5 whitespace-nowrap text-muted">{extra}</span>
+          </>
+        )}
       </>
     );
   };
