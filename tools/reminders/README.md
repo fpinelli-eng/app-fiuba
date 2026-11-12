@@ -1,45 +1,62 @@
 # Recordatorios de finales ("Recordarme")
 
-En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Por cada mesa le llega un mail a su cuenta @fi.uba.ar cuando abre la inscripción (decisión de Francisco, 12 de noviembre de 2026: sin mail del último día). El diálogo solo ofrece mesas con la inscripción por abrir.
+En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Por cada mesa le llegan dos mails a su cuenta @fi.uba.ar: cuando abre la inscripción y el último día.
 
-## Cómo decide qué mandar
+Los mails salen de la cuenta de Google del proyecto, **avisosfiubi@gmail.com**, con un Apps Script pegado en una planilla de esa cuenta. No depende de GitHub Actions.
 
-El workflow **"Recordatorios"** (`.github/workflows/reminders.yml`) corre cada 3 horas desde las 08:17 de Buenos Aires y también a mano (Actions → Recordatorios → Run workflow):
+## Cómo funciona
 
-1. `due.sql` lee los recordatorios con algún mail pendiente (del plan actual del alumno y con examen de hoy en adelante) y las mesas de `exam_tables` que les pueden corresponder. Se escribe en un archivo del runner, nunca en el log: tiene los mails.
-2. `send.mjs` empareja cada recordatorio con la mesa de **hoy** por clave natural (plan, código del SIU, nombre, tipo y fecha), porque la sincronización diaria del SIU (`tools/exams/`) reemplaza las filas y cambia los ids. Si el SIU movió la inscripción, usa las fechas nuevas; si la mesa ya no está, no manda nada y el recordatorio queda. La regla está en `dueMail()` (`src/lib/reminders/model.ts`, con pruebas):
-   - **Mail de apertura:** una sola vez, desde las 8 del primer día de la inscripción y mientras siga abierta (si GitHub se salteó la corrida de esa mañana, sale en la siguiente). No va si el alumno lo pidió con la inscripción ya abierta ni si el SIU no da fecha de apertura.
-3. `mark.sql` marca lo que salió (`first_sent_at`: solo el dueño de la base puede) y borra los recordatorios de exámenes que ya pasaron. `last_sent_at` quedó de la primera versión, que también avisaba el último día: ya no se escribe.
+Una vez por hora, el script (`apps-script/Code.gs`, función `hourly`):
 
-Cada mail sale una sola vez. Si el envío de uno falla, no se marca y se reintenta en la corrida siguiente.
+1. Le pregunta a la base qué recordatorios hay y qué mail toca ahora (`avisos_pendientes()`, migración `20261114120000_avisos_rpc.sql`). La base vuelve a leer cada mesa en `exam_tables` por materia, nombre, tipo y fecha (la sincronización diaria del SIU cambia los ids): si el SIU movió la inscripción, usa las fechas nuevas. De paso borra los recordatorios de exámenes que ya pasaron.
+2. Desde las 8 de la mañana manda los mails que tocan y, después de **cada** mail, lo marca en la base (`avisos_marcar_enviado()`). La base no lo vuelve a ofrecer nunca, aunque alguien toque la planilla.
+3. Reescribe la pestaña **Recordatorios** de la planilla con todos los recordatorios: es solo una copia para mirar. Editarla no cambia nada.
 
-## Configuración
+Reglas (están en la base, con pruebas en `tools/db-test/security.sql`):
 
-Secretos del repo (Settings → Secrets and variables → Actions):
+- **Mail de apertura:** una vez abierta la inscripción, desde las 8 del primer día. Si el alumno lo pidió con la inscripción ya abierta, o el SIU no da fecha de apertura, no va.
+- **Mail del último día:** desde las 8 del último día, mientras siga abierta. Si la inscripción cierra a las 00:00 o a la mañana, el último día es el anterior. Si el de apertura no salió hasta ese día, va solo este.
+- Nunca antes de las 8, nunca con la inscripción cerrada, nunca dos veces. Solo a cuentas @fi.uba.ar y a mesas del plan actual del alumno.
 
-- `SUPABASE_DB_PASSWORD`: el mismo de "Base de datos".
-- La casilla de mail del proyecto: `SMTP_HOST`, `SMTP_PORT` (465 con TLS o 587 con STARTTLS), `SMTP_USER`, `SMTP_PASS` y `SMTP_FROM` (por ejemplo `FIUBI <avisos@fiubi.com.ar>`).
+**Límite de Gmail:** una cuenta gratuita manda unos 100 mails por día. Si en un día tocan más, el script para y manda el resto en las horas siguientes o al otro día (mientras la inscripción siga abierta).
 
-**Sin los secretos `SMTP_*`** el workflow solo cuenta cuántos avisos esperan y no marca nada: se puede integrar antes de tener la casilla.
+**Seguridad:** el script entra a la base con la clave pública de la app (la misma que usa la web) y un token propio. Con esa clave solo se pueden usar esas dos funciones, y sin el token devuelven error. La base guarda solo el SHA-256 del token, en `avisos_config`, que nadie puede leer desde la app. El token está únicamente en las propiedades del script.
 
-La casilla es `avisos@fiubi.com.ar`: envía Brevo (plan gratis, 300 mails por día, dominio autenticado con DKIM y DMARC) y recibe ImprovMX, que reenvía todo `@fiubi.com.ar` a los dos administradores.
+**Lo que sigue dependiendo de GitHub:** la migración se aplica una sola vez al integrar el PR (workflow "Base de datos"), y las fechas de examen las sigue trayendo cada mañana el workflow "Fechas de examen del SIU". Si GitHub se saltea un día, las fechas quedan un día viejas, pero los mails siguen saliendo.
 
-## Mail de control
+## Puesta en marcha (Tomás)
 
-Para probar el envío: Actions → Recordatorios → **Run workflow** (con "Mandar mail de control" tildado). Además de los recordatorios que toquen, manda un mail "FIUBI: mail de control" a `SMTP_CONTROL_TO` (secreto con los @fi.uba.ar de los administradores, separados por coma: el mismo tipo de casilla que tienen los alumnos), con cantidades y nada más. Sin ese secreto va a la propia casilla (`SMTP_FROM`), pero ahí puede rebotar: ImprovMX rechaza los mails que salen de IPs en listas negras como SpamCop, y las IPs compartidas de Brevo a veces lo están (`551 5.7.1 … black listed by SpamCop`). Google, que recibe los mails de los alumnos, no rechaza por eso. Lo mismo pasa solo el 1.º de cada mes a las 10:23: Brevo vence la clave SMTP tras 90 días sin uso, y en meses sin recordatorios nadie la usaría.
+Todo desde la cuenta **avisosfiubi@gmail.com**.
 
-Si un envío falla, la corrida termina en error (GitHub avisa por mail) y el resumen muestra solo el código: `EAUTH` o `535` es la clave (vencida o mal cargada en `SMTP_PASS`); `ESOCKET` o `ECONNECTION`, el servidor o el puerto. La clave vence además a la fecha elegida al crearla (un año): se genera otra en Brevo → SMTP & API → SMTP y se reemplaza `SMTP_PASS`.
+1. **Crear la planilla.** En [Google Sheets](https://sheets.google.com), planilla nueva en blanco. Ponele de nombre "Recordatorios FIUBI".
+2. **Abrir el editor de scripts.** En la planilla: **Extensiones → Apps Script**. Se abre una pestaña nueva con un archivo `Código.gs`.
+3. **Pegar el código.**
+   - Borrá lo que tiene `Código.gs` y pegá todo el contenido de [`apps-script/Code.gs`](apps-script/Code.gs) (en GitHub, botón "Copy raw file").
+   - Tocá el engranaje de la izquierda (**Configuración del proyecto**) y tildá **"Mostrar el archivo de manifiesto appsscript.json en el editor"**.
+   - Volvé al editor (ícono `< >`), abrí `appsscript.json`, borrá lo que tiene y pegá [`apps-script/appsscript.json`](apps-script/appsscript.json).
+   - Guardá (ícono del disquete o Ctrl+S).
+4. **Primera prueba: `sendTestMail`.** Arriba, en el menú desplegable de funciones, elegí `sendTestMail` y tocá **Ejecutar**. La primera vez Google pide permisos:
+   - **Revisar permisos** → elegí la cuenta avisosfiubi@gmail.com.
+   - Aparece **"Google no verificó esta app"**: es lo esperado, porque el script es nuestro y no está publicado. Tocá **Configuración avanzada** → **Ir a … (no seguro)** → **Permitir**.
+   - Te llegan a avisosfiubi@gmail.com dos mails de prueba ("[Prueba] Abrió la inscripción…" y "[Prueba] Hoy es el último día…"). No toca la base ni la planilla. El logo se ve recién cuando el PR esté integrado (sale de fiubi.com.ar).
+5. **Crear el token.** Elegí `createToken` y tocá **Ejecutar**. En el **Registro de ejecución** de abajo aparece una línea que empieza con `insert into public.avisos_config`. Copiala entera.
+6. **Guardar el token en la base** (desde acá, con el PR ya integrado). En [Supabase](https://supabase.com/dashboard) → proyecto de FIUBI → **SQL Editor** → pegá la línea → **Run**. Tiene que decir "Success". (La línea tiene solo el hash del token, no el token.) Esto se hace después de que el PR esté integrado: antes la tabla no existe.
+7. **Cargar la clave pública.** En Apps Script → **Configuración del proyecto** → **Propiedades de la secuencia de comandos** (en inglés, *Script Properties*) → **Agregar propiedad**:
+   - Propiedad `SUPABASE_KEY`, valor: la clave pública de la app, la que empieza con `sb_publishable_`. Está en el `.env.local` (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`), en Vercel → Settings → Environment Variables, o en Supabase → Project Settings → API Keys ("Publishable key"). No es secreta: es la misma que usa la web.
+   - `TOKEN` ya está (lo creó el paso 5). No hace falta `SUPABASE_URL`: el script ya sabe la dirección del proyecto (`https://solnlrkmkncsntyptjjm.supabase.co`).
+   - Guardá las propiedades.
+8. **Probar la planilla.** Elegí `syncSheet` y tocá **Ejecutar**. En la planilla aparece la pestaña **Recordatorios** con los recordatorios que haya, sin mandar ningún mail. Si da error, el registro dice qué falta (por ejemplo, "¿TOKEN o SUPABASE_KEY mal copiados?").
+9. **Prender el reloj.** Elegí `installTriggers` y tocá **Ejecutar**. Desde ahí, `hourly` corre sola una vez por hora (se ve en el ícono del reloj, **Activadores**). Correrla dos veces no la duplica.
 
-El cliente de mail es `nodemailer`, instalado con versión fija solo dentro del workflow (no está en `package.json`).
+Listo. Para ver qué pasó en cada corrida: Apps Script → **Ejecuciones** (a la izquierda). Si una falla, Google te manda un mail.
+
+## Cambiar algo después
+
+- **Cambiar el código o el diseño del mail:** se cambia `apps-script/Code.gs` en el repo (con PR) y después se vuelve a pegar en el editor de Apps Script y se guarda. No hace falta tocar nada más: el activador sigue andando con el código nuevo.
+- **Ver el diseño sin mandar nada:** abrí `apps-script/preview.html` en el navegador (los dos mails con datos de ejemplo). Si cambiás el mail en `Code.gs`, regeneralo con `node tools/reminders/apps-script/preview.mjs` (las pruebas avisan si quedó viejo).
+- **Cambiar el token:** en Propiedades del script borrá `TOKEN`, corré `createToken` y pegá la línea nueva en el SQL Editor.
+- **Frenar todo:** en **Activadores**, borrá el de `hourly`.
 
 ## Privacidad
 
-El repo es público: el log y el resumen de cada corrida muestran solo cantidades, nunca mails, nombres ni mensajes de error del servidor de mail (pueden incluir la dirección).
-
-## Probarlo en tu computadora
-
-Con un JSON como el que imprime `due.sql` (sin SMTP solo cuenta; no manda nada):
-
-```
-node --experimental-strip-types tools/reminders/send.mjs --dump due.json --sent sent.json --now 2026-11-30T08:17 [--control]
-```
+La planilla tiene mails de alumnos: no la compartas con nadie más. El registro de ejecuciones muestra solo cantidades. La política de privacidad (`src/app/privacidad/page.tsx`) dice que los datos de los recordatorios se copian a esta planilla y que los mails salen de esta cuenta.
