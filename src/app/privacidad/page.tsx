@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: `Política de privacidad · ${APP_NAM
 
 // Política de privacidad (issue #8). Pública: Google la pide para publicar el login.
 // Si cambia qué datos se guardan o dónde, se actualiza este texto y la fecha.
-const UPDATED = "11 de noviembre de 2026";
+const UPDATED = "12 de noviembre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
@@ -72,8 +72,9 @@ export default function PrivacidadPage() {
           nos informa tu nombre, mail y foto.
         </p>
         <p>
-          Los mails de los recordatorios los manda un proceso automático que corre en los servidores de GitHub (GitHub Actions), desde la casilla de mail del proyecto. Lee tu
-          mail de la base solo para mandarlos y no lo guarda en ningún otro lado.
+          Para los recordatorios, tu mail y las mesas que elegiste (materia, fecha, hora e inscripción) se copian a una planilla de Google de la cuenta del proyecto
+          (avisosfiubi@gmail.com), y los mails salen desde esa cuenta: Google guarda esa copia y envía los mails. La planilla se actualiza sola: lo que sacás o se borra de la
+          web también se borra de ahí.
         </p>
       </Section>
 

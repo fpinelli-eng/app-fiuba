@@ -1,9 +1,6 @@
-// "Recordarme" in Finales: pure logic shared by the app and the sender bot (tools/reminders/,
-// workflow "Recordatorios"). No database, no network. Runs in Node with type stripping, so only
-// type annotations: no enums, no path aliases, relative imports only.
-//
-// Moments are Buenos Aires time as "YYYY-MM-DDTHH:MM" (exam_tables stores them that way), so they
-// compare as strings.
+// "Recordarme" in Finales: types and the natural key of a reminder, shared by the app. Which mail is
+// due, and when, is decided in the database (avisos_pendientes(), migration
+// 20261114120000_avisos_rpc.sql) for the Apps Script that sends them (tools/reminders/).
 
 /**
  * What identifies an exam table across the daily SIU sync, which replaces the rows of
@@ -32,84 +29,4 @@ export interface ExamReminderView extends ReminderKey {
   startTime: string | null;
   enrollFrom: string | null;
   enrollTo: string | null;
-}
-
-/** An exam table as it is now in exam_tables (only what the reminders need). */
-export interface CurrentTable extends ReminderKey {
-  enrollFrom: string | null;
-  enrollTo: string | null;
-  startTime: string | null;
-  endTime: string | null;
-}
-
-/**
- * The current table of each key. The SIU may list one key twice (it should not): then the widest
- * enrollment window wins, so no deadline is announced earlier than the real one.
- */
-export function currentTablesByKey(tables: CurrentTable[]): Map<string, CurrentTable> {
-  const out = new Map<string, CurrentTable>();
-  for (const t of tables) {
-    const key = reminderKey(t);
-    const prev = out.get(key);
-    if (!prev) {
-      out.set(key, t);
-      continue;
-    }
-    out.set(key, {
-      ...prev,
-      enrollFrom: minMoment(prev.enrollFrom, t.enrollFrom),
-      enrollTo: maxMoment(prev.enrollTo, t.enrollTo),
-    });
-  }
-  return out;
-}
-
-const minMoment = (a: string | null, b: string | null) => (a === null ? b : b === null ? a : a < b ? a : b);
-const maxMoment = (a: string | null, b: string | null) => (a === null ? b : b === null ? a : a > b ? a : b);
-
-/** Buenos Aires time of a Date as "YYYY-MM-DDTHH:MM". */
-export function buenosAiresMoment(date: Date): string {
-  return date
-    .toLocaleString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires", hour12: false })
-    .replace(" ", "T")
-    .slice(0, 16);
-}
-
-/** Mails are not sent before this hour (Buenos Aires). */
-export const SEND_FROM = "08:00";
-
-/** "2026-03-01" → "2026-02-28" */
-export function previousDay(date: string): string {
-  const [y, m, d] = date.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
-}
-
-/**
- * One mail per reminder, when the enrollment opens (Francisco, 12 Nov 2026: no "último día" mail).
- * The database still has last_sent_at from the first version; nothing writes it any more.
- */
-export type ReminderMailKind = "first";
-
-export interface ReminderState {
-  /** When the student asked, Buenos Aires time. */
-  createdAt: string;
-  firstSent: boolean;
-}
-
-/**
- * Whether the opening mail is due now for a reminder, given its table as it is now (null: the table
- * is no longer in the SIU, so nothing is sent and the reminder stays).
- *
- * Once, from 08:00 (Buenos Aires) of the first day of the enrollment and while it is open: if the
- * bot missed that morning (GitHub skips scheduled runs), it still goes later. Never at night, never
- * before it opens. Not when the student asked with the enrollment already open (the dialog only
- * offers tables that have not opened yet) nor when the SIU gives no opening date.
- */
-export function dueMail(r: ReminderState, table: Pick<CurrentTable, "enrollFrom" | "enrollTo"> | null, now: string): ReminderMailKind | null {
-  if (!table || !table.enrollFrom || !table.enrollTo || r.firstSent) return null;
-  if (now.slice(11, 16) < SEND_FROM) return null; // never at night, also when catching up
-  const { enrollFrom, enrollTo } = table;
-  if (now < enrollFrom || now >= enrollTo) return null;
-  if (r.createdAt >= enrollFrom) return null;
-  return now >= `${enrollFrom.slice(0, 10)}T${SEND_FROM}` ? "first" : null;
 }

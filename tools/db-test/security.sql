@@ -436,6 +436,76 @@ values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects 
 insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 1);
 reset role;
 
+-- Reminder mails: the Apps Script of the sheet (avisos_*) ---------------------------
+
+-- Due rules, with fixed dates (Buenos Aires): opens Mon 30/11 14:00, closes Mon 7/12 14:00.
+select test.ok(public.avisos_ultimo_dia('2026-12-07 14:00') = '2026-12-07', 'last day: closes in the afternoon');
+select test.ok(public.avisos_ultimo_dia('2026-12-07 00:00') = '2026-12-06', 'last day: closes at midnight, the day before');
+select test.ok(public.avisos_ultimo_dia('2026-12-07 11:59') = '2026-12-06', 'last day: closes in the morning, the day before');
+select test.ok(public.avisos_debido('2026-11-30 13:59', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) is null, 'no mail before the enrollment opens');
+select test.ok(public.avisos_debido('2026-11-30 14:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) = 'primer_dia', 'first mail when it opens');
+select test.ok(public.avisos_debido('2026-12-02 09:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) = 'primer_dia', 'first mail later if it was missed');
+select test.ok(public.avisos_debido('2026-12-02 07:59', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) is null, 'never before 08:00');
+select test.ok(public.avisos_debido('2026-12-02 09:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', true, false) is null, 'first mail only once');
+select test.ok(public.avisos_debido('2026-12-02 09:00', '2026-11-30 15:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) is null, 'no first mail when asked with the enrollment open');
+select test.ok(public.avisos_debido('2026-12-02 09:00', '2026-11-20 10:00', null, '2026-12-07 14:00', false, false) is null, 'no first mail without opening date');
+select test.ok(public.avisos_debido('2026-12-07 08:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', true, false) = 'ultimo_dia', 'last-day mail from 08:00 of the last day');
+select test.ok(public.avisos_debido('2026-12-07 08:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) = 'ultimo_dia', 'only the last-day mail when the first did not go');
+select test.ok(public.avisos_debido('2026-12-07 13:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', true, true) is null, 'last-day mail only once');
+select test.ok(public.avisos_debido('2026-12-07 14:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false, false) is null, 'no mail once it closed');
+select test.ok(public.avisos_debido('2026-12-06 09:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 00:00', true, false) = 'ultimo_dia', 'closes at midnight: last-day mail the day before');
+select test.ok(public.avisos_debido('2026-12-01 10:00', '2026-11-20 10:00', '2026-12-01 09:00', '2026-12-01 20:00', false, false) = 'ultimo_dia', 'one-day enrollment: one mail, the last-day one');
+
+-- Token (only its hash is stored). The script's token in this test: 40 times 'a'.
+insert into public.avisos_config (id, token_sha256) values (true, encode(sha256(convert_to(repeat('a', 40), 'UTF8')), 'hex'));
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to, start_time, end_time) values
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'AVISO ABIERTA', current_date + 20, 'Regular',
+   (now() at time zone 'America/Argentina/Buenos_Aires')::date - 1 + time '00:00', (now() at time zone 'America/Argentina/Buenos_Aires')::date + 5 + time '23:59', '17:00', '20:00'),
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'AVISO CERRADA', current_date + 20, 'Regular', null, null, null, null);
+insert into public.exam_reminders (user_id, plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO ABIERTA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO CERRADA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO PASADA', 'Regular', current_date - 3, 'Álgebra Lineal', now() - interval '5 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'civil-2023', 'CB002', 'AVISO OTRO PLAN', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days');
+
+set role anon;
+select test.fails('select 1 from public.avisos_config', 'anon reads the token hash');
+select test.fails('select 1 from public.exam_reminders limit 1', 'anon reads exam reminders');
+select test.fails($$select * from public.avisos_pendientes('wrong')$$, 'anon lists reminder mails without the token');
+select test.fails($$select * from public.avisos_pendientes(repeat('b', 40))$$, 'anon lists reminder mails with a wrong token');
+select test.fails($$select * from public.avisos_pendientes(null)$$, 'anon lists reminder mails with no token');
+select test.fails($$select public.avisos_marcar_enviado(repeat('b', 40), 1, 'primer_dia')$$, 'anon marks a mail as sent with a wrong token');
+select test.fails($$select public.avisos_check_token(repeat('a', 40))$$, 'anon calls the token check directly');
+select test.fails($$select public.avisos_debido(now()::timestamp, null, null, null, false, false)$$, 'anon calls the due rule directly');
+select test.ok((select count(*) from public.avisos_pendientes(repeat('a', 40))) >= 2, 'the script lists reminder mails with its token');
+reset role;
+create table test.avisos_run as select * from public.avisos_pendientes(repeat('a', 40));
+grant select on test.avisos_run to anon;
+select test.ok((select count(*) from test.avisos_run where table_name like 'AVISO %') = 2, 'reminder mails: only current plan, past exams left out');
+select test.ok((select due from test.avisos_run where table_name = 'AVISO ABIERTA') is not distinct from
+  (case when (now() at time zone 'America/Argentina/Buenos_Aires')::time >= time '08:00' then 'primer_dia' end), 'reminder mails: open enrollment, first mail due (from 08:00)');
+select test.ok((select due is null and enroll_to is null and aviso_primer_dia is null from test.avisos_run where table_name = 'AVISO CERRADA'), 'reminder mails: no dates, nothing due');
+select test.ok((select email from test.avisos_run where table_name = 'AVISO ABIERTA') = 'ana@fi.uba.ar', 'reminder mails: the student mail');
+select test.ok((select count(*) from public.exam_reminders where table_name = 'AVISO PASADA') = 0, 'reminder mails: past reminders are deleted');
+select test.ok(pg_get_function_result('public.avisos_pendientes(text)'::regprocedure) not like '%review%'
+  and pg_get_function_result('public.avisos_pendientes(text)'::regprocedure) not like '%user_id%', 'reminder mails: no reviews nor user ids');
+set role anon;
+select test.ok(public.avisos_marcar_enviado(repeat('a', 40), (select reminder_id from test.avisos_run where table_name = 'AVISO ABIERTA'), 'primer_dia'), 'the script marks a first mail');
+select test.ok(not public.avisos_marcar_enviado(repeat('a', 40), (select reminder_id from test.avisos_run where table_name = 'AVISO ABIERTA'), 'primer_dia'), 'a first mail is marked only once');
+select test.fails($$select public.avisos_marcar_enviado(repeat('a', 40), 1, 'otro')$$, 'the script marks an unknown kind');
+select test.ok((select due from public.avisos_pendientes(repeat('a', 40)) where table_name = 'AVISO ABIERTA') is null, 'a marked first mail is not due again');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails($$select * from public.avisos_pendientes(repeat('a', 40))$$, 'a student lists reminder mails');
+select test.fails($$select public.avisos_marcar_enviado(repeat('a', 40), 1, 'primer_dia')$$, 'a student marks a mail as sent');
+select test.fails($$update public.exam_reminders set first_sent_at = null$$, 'a student clears a sent mark');
+reset role;
+drop table test.avisos_run;
+delete from public.exam_reminders where table_name like 'AVISO %';
+delete from public.exam_tables where name like 'AVISO %';
+delete from public.avisos_config;
+
 -- Deleting the account keeps the review, without author ---------------------------
 
 set role anon;
