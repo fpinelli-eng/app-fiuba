@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { normalizeText } from "@/lib/map/model";
-import { enrollmentStatus, formatEnrollMoment, formatExamDay, formatExamTime, type ExamSubjectView, type ExamTableView, type FinalsData } from "@/lib/exams/types";
+import { enrollmentStatus, formatExamDay, formatExamTime, type ExamSubjectView, type ExamTableView, type FinalsData } from "@/lib/exams/types";
 import { reminderKey, type ExamReminderView } from "@/lib/reminders/model";
 import { saveExamReminders, type ReminderPick } from "./actions";
 
@@ -30,12 +30,6 @@ function candidates(subject: ExamSubjectView, planId: string, now: string): Cand
     });
 }
 
-function enrollText(t: Pick<ExamTableView, "enrollFrom" | "enrollTo">, now: string): string {
-  const status = enrollmentStatus(t, now);
-  if (status.kind === "open") return `Inscripción abierta hasta el ${formatEnrollMoment(status.until)}`;
-  if (status.kind === "soon" && t.enrollTo) return `Inscripción del ${formatEnrollMoment(status.from)} al ${formatEnrollMoment(t.enrollTo)}`;
-  return "Inscripción cerrada";
-}
 
 export function RemindersDialog({
   data,
@@ -118,7 +112,7 @@ export function RemindersDialog({
     return ids.get(key)!;
   };
 
-  const row = (key: string, title: string, detail: string) => {
+  const row = (key: string, title: ReactNode, detail?: string) => {
     const id = idFor(key);
     return (
       <li key={key}>
@@ -126,22 +120,33 @@ export function RemindersDialog({
           <input id={id} type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} className="mt-0.5 size-5 flex-none accent-[var(--accent)]" />
           <span className="flex min-w-0 flex-col">
             <span className="text-sm text-ink-2 tabular-nums">{title}</span>
-            <span className="text-[12.5px] text-muted tabular-nums">{detail}</span>
+            {detail && <span className="text-[12.5px] text-muted tabular-nums">{detail}</span>}
           </span>
         </label>
       </li>
     );
   };
 
+  // Day and table (the course, usually with the professor's surname) stand out; the time and the kind
+  // stay in the regular weight. Francisco asked for a lighter list: no enrollment window under each row.
   const tableTitle = (t: Pick<ExamTableView, "date" | "startTime" | "endTime" | "name" | "kind">) => {
     const time = formatExamTime(t.startTime, t.endTime);
-    return [formatExamDay(t.date), time, t.name, t.kind !== "Regular" ? t.kind : null].filter(Boolean).join(" · ");
+    const strong = "font-semibold text-ink";
+    return (
+      <>
+        <span className={strong}>{formatExamDay(t.date)}</span>
+        {time && ` · ${time}`}
+        {" · "}
+        <span className={strong}>{t.name}</span>
+        {t.kind !== "Regular" && ` · ${t.kind}`}
+      </>
+    );
   };
 
   const group = (subject: ExamSubjectView, items: Candidate[]) => (
     <fieldset key={subject.key} className="flex flex-col">
       <legend className="px-2 pb-1 text-[15px] font-semibold">{subject.name}</legend>
-      <ul className="flex flex-col">{items.map((c) => row(c.key, tableTitle(c.table), enrollText(c.table, now)))}</ul>
+      <ul className="flex flex-col">{items.map((c) => row(c.key, tableTitle(c.table)))}</ul>
     </fieldset>
   );
 
@@ -219,7 +224,7 @@ export function RemindersDialog({
             </h3>
             <ul className="flex flex-col">
               {leftover.map((r) =>
-                row(reminderKey(r), `${r.subjectName} · ${tableTitle({ ...r, endTime: null })}`, listed.has(reminderKey(r)) ? "Inscripción cerrada" : "Ya no está en el SIU"),
+                row(reminderKey(r), <>{r.subjectName} · {tableTitle({ ...r, endTime: null })}</>, listed.has(reminderKey(r)) ? "Inscripción cerrada" : "Ya no está en el SIU"),
               )}
             </ul>
           </section>
