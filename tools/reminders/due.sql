@@ -4,19 +4,19 @@
 -- is never printed. Which mail is due is decided in TypeScript (planRun()).
 --
 -- Only reminders of the student's current plan (after changing plan they no longer apply), with an
--- exam date from today on and some mail still to send.
+-- exam date from today on and the opening mail still to send (rows of the first version that got
+-- a "último día" mail, last_sent_at, are done too).
 with today as (select (now() at time zone 'America/Argentina/Buenos_Aires')::date as d),
 pending as (
   select r.id, u.email, r.plan_id, r.siu_subject_code as code, r.table_name as name, r.kind,
          to_char(r.exam_date, 'YYYY-MM-DD') as date, r.subject_name,
          to_char(r.created_at at time zone 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD"T"HH24:MI') as created_at,
-         r.first_sent_at is not null as first_sent,
-         r.last_sent_at is not null as last_sent
+         r.first_sent_at is not null as first_sent
   from public.exam_reminders r
   join public.profiles p on p.id = r.user_id and p.plan_id = r.plan_id
   join auth.users u on u.id = r.user_id
   cross join today
-  where r.last_sent_at is null
+  where r.first_sent_at is null and r.last_sent_at is null
     and r.exam_date >= today.d
     and u.email is not null
 ),

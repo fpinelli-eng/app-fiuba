@@ -85,46 +85,31 @@ export function previousDay(date: string): string {
 }
 
 /**
- * The day of the "último día" mail. The SIU closes many tables at 23:59, but some close in the
- * morning (09:00) or at 00:00: then the last useful day is the day before.
+ * One mail per reminder, when the enrollment opens (Francisco, 12 Nov 2026: no "último día" mail).
+ * The database still has last_sent_at from the first version; nothing writes it any more.
  */
-export function lastEnrollDay(enrollTo: string): string {
-  const [day, time = "23:59"] = enrollTo.split("T");
-  return time < "12:00" ? previousDay(day) : day;
-}
-
-export type ReminderMailKind = "first" | "last";
+export type ReminderMailKind = "first";
 
 export interface ReminderState {
   /** When the student asked, Buenos Aires time. */
   createdAt: string;
   firstSent: boolean;
-  lastSent: boolean;
 }
 
 /**
- * Which mail is due now for a reminder, given its table as it is now (null: the table is no longer
- * in the SIU, so nothing is sent and the reminder stays).
+ * Whether the opening mail is due now for a reminder, given its table as it is now (null: the table
+ * is no longer in the SIU, so nothing is sent and the reminder stays).
  *
- * Never before 08:00 (Buenos Aires) of any day.
- * - "first": once the enrollment opened, from 08:00 of its first day (never before it opens). Not
- *   when the student asked with the enrollment already open: they already know.
- * - "last": on the last day (see lastEnrollDay()), from 08:00 and while it is still open. If the
- *   first mail is still pending by then (short window, late reminder, the bot was down), only this
- *   one goes and it counts for both.
+ * Once, from 08:00 (Buenos Aires) of the first day of the enrollment and while it is open: if the
+ * bot missed that morning (GitHub skips scheduled runs), it still goes later. Never at night, never
+ * before it opens. Not when the student asked with the enrollment already open (the dialog only
+ * offers tables that have not opened yet) nor when the SIU gives no opening date.
  */
 export function dueMail(r: ReminderState, table: Pick<CurrentTable, "enrollFrom" | "enrollTo"> | null, now: string): ReminderMailKind | null {
-  if (!table || !table.enrollTo || r.lastSent) return null;
+  if (!table || !table.enrollFrom || !table.enrollTo || r.firstSent) return null;
   if (now.slice(11, 16) < SEND_FROM) return null; // never at night, also when catching up
   const { enrollFrom, enrollTo } = table;
-  if (now >= enrollTo) return null;
-  if (enrollFrom && now < enrollFrom) return null;
-
-  const lastFrom = `${lastEnrollDay(enrollTo)}T${SEND_FROM}`;
-  if (now >= lastFrom) return "last";
-
-  if (r.firstSent || !enrollFrom) return null;
+  if (now < enrollFrom || now >= enrollTo) return null;
   if (r.createdAt >= enrollFrom) return null;
-  const firstFrom = `${enrollFrom.slice(0, 10)}T${SEND_FROM}`;
-  return now >= firstFrom ? "first" : null;
+  return now >= `${enrollFrom.slice(0, 10)}T${SEND_FROM}` ? "first" : null;
 }

@@ -12,7 +12,6 @@ const reminder = (over: Partial<DumpReminder> = {}): DumpReminder => ({
   subject_name: "Álgebra Lineal",
   created_at: "2026-11-20T10:00",
   first_sent: false,
-  last_sent: false,
   ...over,
 });
 
@@ -36,7 +35,7 @@ describe("planRun", () => {
     const run = planRun(dump, "2026-12-01T08:17");
     expect(run.mails.map((m) => [m.id, m.which, m.to])).toEqual([[1, "first", "ana@fi.uba.ar"]]);
     expect(run.mails[0].subject).toBe("Abrió la inscripción al final de Álgebra Lineal");
-    expect(run.counts).toEqual({ pending: 1, first: 1, last: 0, missing: 0 });
+    expect(run.counts).toEqual({ pending: 1, first: 1, missing: 0 });
   });
 
   it("skips (and keeps) reminders whose table is gone", () => {
@@ -45,9 +44,9 @@ describe("planRun", () => {
     expect(run.counts.missing).toBe(1);
   });
 
-  it("sends the last-day mail", () => {
+  it("sends one mail per reminder: nothing on the last day", () => {
     const run = planRun({ reminders: [reminder({ first_sent: true })], tables: [table()] }, "2026-12-07T08:17");
-    expect(run.mails.map((m) => m.which)).toEqual(["last"]);
+    expect(run.mails).toHaveLength(0);
   });
 
   it("never mails an address outside fi.uba.ar", () => {

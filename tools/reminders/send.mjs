@@ -94,7 +94,7 @@ writeFileSync(args.sent, JSON.stringify(sent));
 
 const lines = [
   `Recordatorios pendientes: ${counts.pending}`,
-  `Para mandar ahora: ${counts.first} de apertura y ${counts.last} de último día`,
+  `Para mandar ahora (abrió la inscripción): ${counts.first}`,
   `Mesas que ya no están en el SIU (se conservan): ${counts.missing}`,
   configured ? `Enviados: ${sent.length}. Fallaron: ${failed}.` : "Sin la cuenta de mail (secretos SMTP_*): no se mandó ni se marcó nada.",
   `Mail de control: ${control}`,

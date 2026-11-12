@@ -1,6 +1,6 @@
 # Recordatorios de finales ("Recordarme")
 
-En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Por cada mesa le llegan dos mails a su cuenta @fi.uba.ar: el primer día de la inscripción y el último.
+En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Por cada mesa le llega un mail a su cuenta @fi.uba.ar cuando abre la inscripción (decisión de Francisco, 12 de noviembre de 2026: sin mail del último día). El diálogo solo ofrece mesas con la inscripción por abrir.
 
 ## Cómo decide qué mandar
 
@@ -8,9 +8,8 @@ El workflow **"Recordatorios"** (`.github/workflows/reminders.yml`) corre cada 3
 
 1. `due.sql` lee los recordatorios con algún mail pendiente (del plan actual del alumno y con examen de hoy en adelante) y las mesas de `exam_tables` que les pueden corresponder. Se escribe en un archivo del runner, nunca en el log: tiene los mails.
 2. `send.mjs` empareja cada recordatorio con la mesa de **hoy** por clave natural (plan, código del SIU, nombre, tipo y fecha), porque la sincronización diaria del SIU (`tools/exams/`) reemplaza las filas y cambia los ids. Si el SIU movió la inscripción, usa las fechas nuevas; si la mesa ya no está, no manda nada y el recordatorio queda. La regla está en `dueMail()` (`src/lib/reminders/model.ts`, con pruebas):
-   - **Primer mail:** cuando abrió la inscripción, desde las 8 del primer día. No va si el alumno lo pidió con la inscripción ya abierta.
-   - **Último mail:** el último día, desde las 8 y mientras siga abierta. Si cierra a la mañana (antes de las 12) o a las 00:00, el último día es el anterior. Si para entonces el primero no salió (inscripción de un día, recordatorio tardío), va solo este.
-3. `mark.sql` marca lo que salió (`first_sent_at`, `last_sent_at`: solo el dueño de la base puede) y borra los recordatorios de exámenes que ya pasaron.
+   - **Mail de apertura:** una sola vez, desde las 8 del primer día de la inscripción y mientras siga abierta (si GitHub se salteó la corrida de esa mañana, sale en la siguiente). No va si el alumno lo pidió con la inscripción ya abierta ni si el SIU no da fecha de apertura.
+3. `mark.sql` marca lo que salió (`first_sent_at`: solo el dueño de la base puede) y borra los recordatorios de exámenes que ya pasaron. `last_sent_at` quedó de la primera versión, que también avisaba el último día: ya no se escribe.
 
 Cada mail sale una sola vez. Si el envío de uno falla, no se marca y se reintenta en la corrida siguiente.
 
