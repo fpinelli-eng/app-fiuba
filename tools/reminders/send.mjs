@@ -1,8 +1,11 @@
 // Sends the "Recordarme" mails that are due, for the workflow "Recordatorios" (tools/reminders/README.md).
 //
 //   node --experimental-strip-types tools/reminders/send.mjs --dump due.json --sent sent.json
-//        [--summary summary.md] [--now 2026-12-01T08:17]
+//        [--summary summary.md] [--now 2026-12-01T08:17] [--control]
 //
+// --control: after the reminders, also sends a control mail (buildControlMail) to the app's own
+// mailbox (SMTP_FROM), which forwards it to the administrators. The workflow asks for it by hand
+// and once a month, so the SMTP key is never 90 days unused. Without SMTP it fails.
 // --dump: what tools/reminders/due.sql printed. --sent: written with [{ id, which }] of the mails
 // that went out, for tools/reminders/mark.sql. --now (Buenos Aires, "YYYY-MM-DDTHH:MM") is for tests.
 // SMTP comes from the environment (secrets SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM)
@@ -17,10 +20,17 @@ import { parseArgs } from "node:util";
 import "../exams/ts-resolve.mjs";
 
 const { planRun } = await import("../../src/lib/reminders/bot.ts");
+const { buildControlMail } = await import("../../src/lib/reminders/email.ts");
 const { buenosAiresMoment } = await import("../../src/lib/reminders/model.ts");
 
 const { values: args } = parseArgs({
-  options: { dump: { type: "string" }, sent: { type: "string" }, summary: { type: "string" }, now: { type: "string" } },
+  options: {
+    dump: { type: "string" },
+    sent: { type: "string" },
+    summary: { type: "string" },
+    now: { type: "string" },
+    control: { type: "boolean" },
+  },
 });
 if (!args.dump || !args.sent) throw new Error("Uso: send.mjs --dump due.json --sent sent.json [--summary summary.md]");
 
@@ -40,7 +50,12 @@ const configured = Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS && SMTP_FROM);
 
 const sent = [];
 let failed = 0;
-if (mails.length > 0 && configured) {
+// Error codes only (EAUTH, ECONNECTION…, plus the SMTP reply code): enough to tell a wrong key
+// from a server problem, and they never contain an address. The messages may.
+const errors = new Set();
+const errorCode = (e) => [e?.code, e?.responseCode].filter(Boolean).join(" ") || "desconocido";
+let control = "no pedido";
+if ((mails.length > 0 || args.control) && configured) {
   if (!NODEMAILER_DIR) throw new Error("Falta NODEMAILER_DIR (carpeta donde se instaló nodemailer).");
   const nodemailer = createRequire(join(NODEMAILER_DIR, "noop.js"))("nodemailer");
   const port = Number(SMTP_PORT || 465);
@@ -55,11 +70,24 @@ if (mails.length > 0 && configured) {
     try {
       await transport.sendMail({ from: SMTP_FROM, to: m.to, subject: m.subject, text: m.text, html: m.html });
       sent.push({ id: m.id, which: m.which });
-    } catch {
-      failed++; // no details: they may include the address
+    } catch (e) {
+      failed++; // no message: it may include the address
+      errors.add(errorCode(e));
+    }
+  }
+  if (args.control) {
+    const m = buildControlMail({ now, counts, sent: sent.length, failed });
+    try {
+      await transport.sendMail({ from: SMTP_FROM, to: SMTP_FROM, subject: m.subject, text: m.text, html: m.html });
+      control = "enviado";
+    } catch (e) {
+      control = "falló";
+      errors.add(errorCode(e));
     }
   }
   transport.close();
+} else if (args.control) {
+  control = "falló (faltan los secretos SMTP_*)";
 }
 writeFileSync(args.sent, JSON.stringify(sent));
 
@@ -68,8 +96,10 @@ const lines = [
   `Para mandar ahora: ${counts.first} de apertura y ${counts.last} de último día`,
   `Mesas que ya no están en el SIU (se conservan): ${counts.missing}`,
   configured ? `Enviados: ${sent.length}. Fallaron: ${failed}.` : "Sin la cuenta de mail (secretos SMTP_*): no se mandó ni se marcó nada.",
+  `Mail de control: ${control}`,
+  ...(errors.size > 0 ? [`Códigos de error: ${[...errors].join(", ")}`] : []),
 ];
 for (const l of lines) console.log(l);
 if (args.summary) appendFileSync(args.summary, `### Recordatorios\n\n${lines.map((l) => `- ${l}`).join("\n")}\n`);
 if (!configured && mails.length > 0) console.log(`::warning::${mails.length} avisos esperan la cuenta de mail (secretos SMTP_*).`);
-if (failed > 0) process.exitCode = 1;
+if (failed > 0 || control.startsWith("falló")) process.exitCode = 1;

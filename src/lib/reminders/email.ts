@@ -64,3 +64,30 @@ export function buildReminderMail(input: ReminderMailInput): ReminderMail {
     `<p style="font-size:13px">${escapeHtml(footer)}</p>`;
   return { subject, text, html };
 }
+
+export interface ControlMailInput {
+  /** "YYYY-MM-DDTHH:MM", Buenos Aires time. */
+  now: string;
+  counts: { pending: number; first: number; last: number; missing: number };
+  /** Mails of this run that went out and that failed. */
+  sent: number;
+  failed: number;
+}
+
+/**
+ * Control mail that the workflow sends to the app's own mailbox (SMTP_FROM): by hand ("Run workflow"
+ * with "Mandar mail de control") and once a month, so the SMTP key never spends 90 days unused
+ * (Brevo expires it). Only counts: it goes to the administrators, never to students.
+ */
+export function buildControlMail(input: ControlMailInput): ReminderMail {
+  const { now, counts, sent, failed } = input;
+  const [date, time] = now.split("T");
+  const lines = [
+    `El envío de mails de FIUBI funciona: este mail salió el ${longDay(date)} a las ${time}.`,
+    `Recordatorios pendientes: ${counts.pending}.`,
+    `En esta corrida: ${sent} enviados, ${failed} fallaron.`,
+  ];
+  const text = `${lines.join("\n")}\n\n—\nLo manda el workflow "Recordatorios" de GitHub para comprobar el envío.\n`;
+  const html = `<p>${lines.map(escapeHtml).join("<br>")}</p><p style="font-size:13px">Lo manda el workflow "Recordatorios" de GitHub para comprobar el envío.</p>`;
+  return { subject: "FIUBI: mail de control", text, html };
+}

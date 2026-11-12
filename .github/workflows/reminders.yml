@@ -6,6 +6,9 @@
 # Secrets: SUPABASE_DB_PASSWORD (the same one as "Base de datos") and the app's mailbox: SMTP_HOST,
 # SMTP_PORT (465 or 587), SMTP_USER, SMTP_PASS and SMTP_FROM ("FIUBI <avisos@…>"). Without the mail
 # secrets it only counts and marks nothing. The repository is public: only counts go to the log.
+# Control mail: by hand (Run workflow → "Mandar mail de control") and on the 1st of every month it
+# also mails the app's own mailbox (SMTP_FROM, forwarded to the administrators). It proves sending
+# works and keeps the Brevo SMTP key alive (it expires after 90 days without use).
 name: Recordatorios
 
 on:
@@ -13,7 +16,15 @@ on:
     # Every 3 hours from 08:17 in Buenos Aires (11:17 UTC): 08, 11, 14, 17, 20, 23, 02, 05.
     # Mails only go out from 08:00 (src/lib/reminders/model.ts).
     - cron: "17 2-23/3 * * *"
+    # Control mail, the 1st of every month at 10:23 in Buenos Aires (13:23 UTC). If you change it,
+    # change it also in the "Send" step.
+    - cron: "23 13 1 * *"
   workflow_dispatch:
+    inputs:
+      control:
+        description: "Mandar mail de control a la casilla de la app"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -71,9 +82,12 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/mailer" --no-save --no-audit --no-fund --loglevel=error nodemailer@10.2.1
           echo "NODEMAILER_DIR=$RUNNER_TEMP/mailer" >> "$GITHUB_ENV"
       - name: Send
+        env:
+          CONTROL: ${{ (github.event_name == 'schedule' && github.event.schedule == '23 13 1 * *') || (github.event_name == 'workflow_dispatch' && inputs.control) }}
         run: |
           node --experimental-strip-types --no-warnings tools/reminders/send.mjs \
-            --dump "$RUNNER_TEMP/due.json" --sent "$RUNNER_TEMP/sent.json" --summary "$GITHUB_STEP_SUMMARY"
+            --dump "$RUNNER_TEMP/due.json" --sent "$RUNNER_TEMP/sent.json" --summary "$GITHUB_STEP_SUMMARY" \
+            $([ "$CONTROL" = "true" ] && echo --control)
       - name: Mark as sent
         # Also after a partial failure: what went out is marked, so it is not sent twice.
         if: always() && env.PGCONN != ''

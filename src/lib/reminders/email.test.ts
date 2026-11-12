@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildReminderMail, deadline, longDay } from "./email";
+import { buildControlMail, buildReminderMail, deadline, longDay } from "./email";
 
 const table = {
   name: "MESA 01",
@@ -40,5 +40,13 @@ describe("reminder mails", () => {
     const mail = buildReminderMail({ which: "first", subjectName: "Física <I> & Co", table });
     expect(mail.html).toContain("Física &lt;I&gt; &amp; Co");
     expect(mail.html).not.toContain("<I>");
+  });
+
+  it("writes the control mail with counts only", () => {
+    const mail = buildControlMail({ now: "2026-12-01T10:23", counts: { pending: 4, first: 1, last: 0, missing: 0 }, sent: 1, failed: 0 });
+    expect(mail.subject).toBe("FIUBI: mail de control");
+    expect(mail.text).toContain("este mail salió el martes 1/12 a las 10:23");
+    expect(mail.text).toContain("Recordatorios pendientes: 4.");
+    expect(mail.text).toContain("En esta corrida: 1 enviados, 0 fallaron.");
   });
 });

@@ -1,9 +1,9 @@
 // Nombre de la app (decidido el 6 de noviembre de 2026). El logo dibujado está en src/components/Logo.tsx.
 export const APP_NAME = "FIUBI";
 
-// Mails de contacto de la política de privacidad (/privacidad): los de Tomás y Francisco, hasta que
-// la app tenga dominio y mail propios. Se cambian solo acá.
-export const CONTACT_EMAILS = ["tjantus@fi.uba.ar", "fpinelli@fi.uba.ar"];
+// Mail de contacto (política de privacidad y SECURITY.md). ImprovMX lo reenvía a los dos
+// administradores: ningún mail personal queda publicado. Se cambia solo acá.
+export const CONTACT_EMAIL = "contacto@fiubi.com.ar";
 
 // Menú principal. En la computadora va todo en la barra superior; en el celular, las secciones con
 // `mobile: "tab"` van en la barra de abajo y las de `mobile: "top"` como ícono en la barra de arriba.
