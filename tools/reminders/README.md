@@ -4,7 +4,7 @@ En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **A
 
 ## Cómo decide qué mandar
 
-El workflow **"Recordatorios"** (`.github/workflows/reminders.yml`) corre cada 3 horas desde las 08:17 de Buenos Aires y también a mano (Actions → Recordatorios → Run workflow):
+El workflow **"Recordatorios"** (`.github/workflows/reminders.yml`) corre cada una hora (a los :17; GitHub saltea algunas corridas programadas, y así igual sale alguna por hora) y también a mano (Actions → Recordatorios → Run workflow):
 
 1. `due.sql` lee los recordatorios con algún mail pendiente (del plan actual del alumno y con examen de hoy en adelante) y las mesas de `exam_tables` que les pueden corresponder. Se escribe en un archivo del runner, nunca en el log: tiene los mails.
 2. `send.mjs` empareja cada recordatorio con la mesa de **hoy** por clave natural (plan, código del SIU, nombre, tipo y fecha), porque la sincronización diaria del SIU (`tools/exams/`) reemplaza las filas y cambia los ids. Si el SIU movió la inscripción, usa las fechas nuevas; si la mesa ya no está, no manda nada y el recordatorio queda. La regla está en `dueMail()` (`src/lib/reminders/model.ts`, con pruebas):
