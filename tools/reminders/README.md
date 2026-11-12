@@ -23,6 +23,14 @@ Secretos del repo (Settings → Secrets and variables → Actions):
 
 **Sin los secretos `SMTP_*`** el workflow solo cuenta cuántos avisos esperan y no marca nada: se puede integrar antes de tener la casilla.
 
+La casilla es `avisos@fiubi.com.ar`: envía Brevo (plan gratis, 300 mails por día, dominio autenticado con DKIM y DMARC) y recibe ImprovMX, que reenvía todo `@fiubi.com.ar` a los dos administradores.
+
+## Mail de control
+
+Para probar el envío: Actions → Recordatorios → **Run workflow** (con "Mandar mail de control" tildado). Además de los recordatorios que toquen, manda un mail "FIUBI: mail de control" a la propia casilla (`SMTP_FROM`), que les llega a los administradores, con cantidades y nada más. Lo mismo pasa solo el 1.º de cada mes a las 10:23: Brevo vence la clave SMTP tras 90 días sin uso, y en meses sin recordatorios nadie la usaría.
+
+Si un envío falla, la corrida termina en error (GitHub avisa por mail) y el resumen muestra solo el código: `EAUTH` o `535` es la clave (vencida o mal cargada en `SMTP_PASS`); `ESOCKET` o `ECONNECTION`, el servidor o el puerto. La clave vence además a la fecha elegida al crearla (un año): se genera otra en Brevo → SMTP & API → SMTP y se reemplaza `SMTP_PASS`.
+
 El cliente de mail es `nodemailer`, instalado con versión fija solo dentro del workflow (no está en `package.json`).
 
 ## Privacidad
@@ -34,5 +42,5 @@ El repo es público: el log y el resumen de cada corrida muestran solo cantidade
 Con un JSON como el que imprime `due.sql` (sin SMTP solo cuenta; no manda nada):
 
 ```
-node --experimental-strip-types tools/reminders/send.mjs --dump due.json --sent sent.json --now 2026-11-30T08:17
+node --experimental-strip-types tools/reminders/send.mjs --dump due.json --sent sent.json --now 2026-11-30T08:17 [--control]
 ```
