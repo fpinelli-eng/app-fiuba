@@ -17,7 +17,6 @@ export interface DumpReminder {
   subject_name: string;
   created_at: string;
   first_sent: boolean;
-  last_sent: boolean;
 }
 
 export interface DumpTable {
@@ -46,7 +45,7 @@ export interface PlannedMail extends ReminderMail {
 export interface RunPlan {
   mails: PlannedMail[];
   /** Counts only: the log of a public repository. */
-  counts: { pending: number; first: number; last: number; missing: number };
+  counts: { pending: number; first: number; missing: number };
 }
 
 const toTable = (t: DumpTable): CurrentTable => ({
@@ -66,7 +65,7 @@ const FIUBA_MAIL = /^[^\s@<>",]+@fi\.uba\.ar$/i;
 
 export function planRun(dump: Dump, now: string): RunPlan {
   const current = currentTablesByKey(dump.tables.map(toTable));
-  const counts = { pending: dump.reminders.length, first: 0, last: 0, missing: 0 };
+  const counts = { pending: dump.reminders.length, first: 0, missing: 0 };
   const mails: PlannedMail[] = [];
   for (const r of dump.reminders) {
     const table = current.get(reminderKey({ planId: r.plan_id, code: r.code, name: r.name, kind: r.kind, date: r.date })) ?? null;
@@ -74,7 +73,7 @@ export function planRun(dump: Dump, now: string): RunPlan {
       counts.missing++;
       continue;
     }
-    const which = dueMail({ createdAt: r.created_at, firstSent: r.first_sent, lastSent: r.last_sent }, table, now);
+    const which = dueMail({ createdAt: r.created_at, firstSent: r.first_sent }, table, now);
     if (!which || !table.enrollTo || !FIUBA_MAIL.test(r.email)) continue;
     counts[which]++;
     const mail = buildReminderMail({

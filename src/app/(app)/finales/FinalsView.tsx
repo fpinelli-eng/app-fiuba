@@ -212,7 +212,7 @@ export function FinalsView({ data }: { data: FinalsData }) {
             setReminders(saved);
             if (active > 0)
               setNotice(
-                "Te vamos a mandar un mail el primer día de la inscripción y el último, así no te olvidás.",
+                "Te vamos a mandar un mail cuando abra la inscripción, así no te olvidás.",
               );
             else if (active === 0)
               setNotice("Listo, sacamos tus recordatorios.");

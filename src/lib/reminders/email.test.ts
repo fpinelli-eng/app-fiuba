@@ -26,13 +26,13 @@ describe("reminder mails", () => {
     expect(mail.text).toContain("Para dejar de recibir estos avisos, sacá el recordatorio en Finales.");
   });
 
-  it("writes the last-day mail, with the kind when it is not Regular", () => {
+  it("adds the kind when it is not Regular", () => {
     const mail = buildReminderMail({
-      which: "last",
+      which: "first",
       subjectName: "Álgebra Lineal",
       table: { ...table, name: "MESA PARA RENDIR LIBRE", kind: "Libre", startTime: null, endTime: null },
     });
-    expect(mail.subject).toBe("Último día para anotarte al final de Álgebra Lineal");
+    expect(mail.subject).toBe("Abrió la inscripción al final de Álgebra Lineal");
     expect(mail.text).toContain("Mesa: MESA PARA RENDIR LIBRE (Libre), el miércoles 9/12.");
   });
 
@@ -43,7 +43,7 @@ describe("reminder mails", () => {
   });
 
   it("writes the control mail with counts only", () => {
-    const mail = buildControlMail({ now: "2026-12-01T10:23", counts: { pending: 4, first: 1, last: 0, missing: 0 }, sent: 1, failed: 0 });
+    const mail = buildControlMail({ now: "2026-12-01T10:23", counts: { pending: 4, first: 1, missing: 0 }, sent: 1, failed: 0 });
     expect(mail.subject).toBe("FIUBI: mail de control");
     expect(mail.text).toContain("este mail salió el martes 1/12 a las 10:23");
     expect(mail.text).toContain("Recordatorios pendientes: 4.");

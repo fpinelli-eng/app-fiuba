@@ -6,9 +6,11 @@ import { enrollmentStatus, formatExamDay, formatExamTime, type ExamSubjectView, 
 import { reminderKey, type ExamReminderView } from "@/lib/reminders/model";
 import { saveExamReminders, type ReminderPick } from "./actions";
 
-// "Recordarme": the student checks the exam tables they want mails for (first and last day of the
-// enrollment). Pending finals first; other subjects through the search box. Reminders whose table
-// is no longer open or no longer in the SIU are listed apart, so they can be removed too.
+// "Recordarme": the student checks the exam tables they want a mail for, sent when the enrollment
+// opens (only one: Francisco, 12 Nov 2026). Only tables that have not opened yet are offered, plus
+// the ones already saved whose enrollment is open now. Pending finals first; other subjects through
+// the search box. Reminders whose table closed or is no longer in the SIU are listed apart, so they
+// can be removed too.
 // Native <dialog> like ConfirmCourses: a bottom sheet on the phone, centered from md.
 // Visual design pending (Francisco): only existing classes and tokens.
 
@@ -16,18 +18,17 @@ interface Candidate {
   key: string;
   pick: ReminderPick;
   table: ExamTableView;
+  /** Saved earlier and the enrollment is open now: its mail already went (or was not due). */
+  open: boolean;
 }
 
-function candidates(subject: ExamSubjectView, planId: string, now: string): Candidate[] {
+function candidates(subject: ExamSubjectView, planId: string, now: string, saved: Set<string>): Candidate[] {
   return subject.tables
-    .filter((t) => {
-      const kind = enrollmentStatus(t, now).kind;
-      return kind === "open" || kind === "soon";
-    })
     .map((t) => {
       const pick = { code: t.code, name: t.name, kind: t.kind, date: t.date, subjectName: subject.name };
-      return { key: reminderKey({ planId, ...pick }), pick, table: t };
-    });
+      return { key: reminderKey({ planId, ...pick }), pick, table: t, open: enrollmentStatus(t, now).kind === "open" };
+    })
+    .filter((c) => enrollmentStatus(c.table, now).kind === "soon" || (c.open && saved.has(c.key)));
 }
 
 
@@ -60,13 +61,13 @@ export function RemindersDialog({
   }, []);
 
   const pendingKeys = new Set(data.pending.map((s) => s.key));
-  const pending = data.pending.map((s) => ({ subject: s, items: candidates(s, planId, now) })).filter((g) => g.items.length > 0);
+  const pending = data.pending.map((s) => ({ subject: s, items: candidates(s, planId, now, initial) })).filter((g) => g.items.length > 0);
   const q = normalizeText(query);
   const others = data.all
     .filter((s) => !pendingKeys.has(s.key))
-    .map((s) => ({ subject: s, items: candidates(s, planId, now) }))
+    .map((s) => ({ subject: s, items: candidates(s, planId, now, initial) }))
     .filter((g) => g.items.length > 0 && ((q && normalizeText(g.subject.name).includes(q)) || g.items.some((c) => initial.has(c.key) || selected.has(c.key))));
-  const offered = new Set([...data.pending, ...data.all].flatMap((s) => candidates(s, planId, now).map((c) => c.key)));
+  const offered = new Set([...data.pending, ...data.all].flatMap((s) => candidates(s, planId, now, initial).map((c) => c.key)));
   const listed = new Set([...data.pending, ...data.all].flatMap((s) => s.tables.map((t) => reminderKey({ planId, ...t }))));
   // Saved reminders whose table is closed or no longer in the SIU.
   const leftover = mine.filter((r) => !offered.has(reminderKey(r)));
@@ -85,7 +86,7 @@ export function RemindersDialog({
       return;
     }
     const picks = new Map<string, ReminderPick>();
-    for (const s of [...data.pending, ...data.all]) for (const c of candidates(s, planId, now)) if (selected.has(c.key)) picks.set(c.key, c.pick);
+    for (const s of [...data.pending, ...data.all]) for (const c of candidates(s, planId, now, initial)) if (selected.has(c.key)) picks.set(c.key, c.pick);
     for (const r of leftover) {
       const key = reminderKey(r);
       if (selected.has(key)) picks.set(key, { code: r.code, name: r.name, kind: r.kind, date: r.date, subjectName: r.subjectName });
@@ -147,7 +148,7 @@ export function RemindersDialog({
   const group = (subject: ExamSubjectView, items: Candidate[]) => (
     <fieldset key={subject.key} className="flex flex-col">
       <legend className="px-2 pb-1 text-[15px] font-semibold">{subject.name}</legend>
-      <ul className="flex flex-col">{items.map((c) => row(c.key, tableTitle(c.table)))}</ul>
+      <ul className="flex flex-col">{items.map((c) => row(c.key, tableTitle(c.table), c.open ? "Inscripción abierta" : undefined))}</ul>
     </fieldset>
   );
 
@@ -171,7 +172,7 @@ export function RemindersDialog({
             Recordarme
           </h2>
           <p id="recordarme-desc" className="mt-0.5 text-[13.5px] text-muted">
-            Elegí las mesas y te avisamos por mail cuando abre y cierra la inscripción.
+            Elegí las mesas y te avisamos por mail cuando abra la inscripción.
           </p>
         </div>
         <button
@@ -194,7 +195,7 @@ export function RemindersDialog({
             {pending.map((g) => group(g.subject, g.items))}
           </section>
         ) : (
-          <p className="mx-2 rounded-xl bg-bg px-4 py-5 text-center text-[14px] text-muted">Tus finales pendientes no tienen mesas con inscripción por delante.</p>
+          <p className="mx-2 rounded-xl bg-bg px-4 py-5 text-center text-[14px] text-muted">Tus finales pendientes no tienen mesas con la inscripción por abrir.</p>
         )}
 
         <section aria-labelledby="recordarme-otras" className="flex flex-col gap-3">
@@ -214,7 +215,7 @@ export function RemindersDialog({
               className="h-11 w-full min-w-0 rounded-[10px] border border-line-strong bg-surface px-3 text-base text-ink outline-none focus:border-accent md:h-10 md:text-sm"
             />
           </div>
-          {q && others.length === 0 && <p className="px-2 text-[13px] text-muted">No encontramos mesas con inscripción por delante.</p>}
+          {q && others.length === 0 && <p className="px-2 text-[13px] text-muted">No encontramos mesas con la inscripción por abrir.</p>}
           {others.map((g) => group(g.subject, g.items))}
         </section>
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buenosAiresMoment, currentTablesByKey, dueMail, lastEnrollDay, previousDay, reminderKey, type CurrentTable } from "./model";
+import { buenosAiresMoment, currentTablesByKey, dueMail, previousDay, reminderKey, type CurrentTable } from "./model";
 
 const table = (over: Partial<CurrentTable> = {}): CurrentTable => ({
   planId: "industrial-2023",
@@ -14,7 +14,7 @@ const table = (over: Partial<CurrentTable> = {}): CurrentTable => ({
   ...over,
 });
 
-const fresh = { createdAt: "2026-11-20T10:00", firstSent: false, lastSent: false };
+const fresh = { createdAt: "2026-11-20T10:00", firstSent: false };
 
 describe("buenosAiresMoment", () => {
   it("uses Buenos Aires time (UTC−3), also across midnight", () => {
@@ -23,17 +23,10 @@ describe("buenosAiresMoment", () => {
   });
 });
 
-describe("previousDay / lastEnrollDay", () => {
+describe("previousDay", () => {
   it("goes back across months and years", () => {
     expect(previousDay("2027-03-01")).toBe("2027-02-28");
     expect(previousDay("2027-01-01")).toBe("2026-12-31");
-  });
-
-  it("is the closing day, or the day before when it closes in the morning or at 00:00", () => {
-    expect(lastEnrollDay("2026-12-07T23:59")).toBe("2026-12-07");
-    expect(lastEnrollDay("2026-12-07T14:00")).toBe("2026-12-07");
-    expect(lastEnrollDay("2027-03-01T09:00")).toBe("2027-02-28");
-    expect(lastEnrollDay("2026-12-08T00:00")).toBe("2026-12-07");
   });
 });
 
@@ -86,16 +79,15 @@ describe("dueMail", () => {
     expect(dueMail({ ...fresh, firstSent: true }, t, "2026-12-03T11:17")).toBeNull();
   });
 
-  it("skips the first mail when the student asked with the enrollment already open", () => {
+  it("skips the mail when the student asked with the enrollment already open", () => {
     expect(dueMail({ ...fresh, createdAt: "2026-12-02T10:00" }, t, "2026-12-03T11:17")).toBeNull();
-    expect(dueMail({ ...fresh, createdAt: "2026-12-02T10:00" }, t, "2026-12-07T08:17")).toBe("last");
+    expect(dueMail({ ...fresh, createdAt: "2026-12-02T10:00" }, t, "2026-12-07T08:17")).toBeNull();
   });
 
-  it("sends the last mail on the last day from 08:00, once", () => {
+  it("never sends a last-day mail", () => {
     const sent = { ...fresh, firstSent: true };
-    expect(dueMail(sent, t, "2026-12-07T05:17")).toBeNull();
-    expect(dueMail(sent, t, "2026-12-07T08:17")).toBe("last");
-    expect(dueMail({ ...sent, lastSent: true }, t, "2026-12-07T11:17")).toBeNull();
+    expect(dueMail(sent, t, "2026-12-07T08:17")).toBeNull();
+    expect(dueMail(sent, t, "2026-12-07T20:17")).toBeNull();
   });
 
   it("sends nothing once it closed", () => {
@@ -103,30 +95,20 @@ describe("dueMail", () => {
     expect(dueMail(fresh, table({ enrollTo: "2026-12-07T14:00" }), "2026-12-07T14:17")).toBeNull();
   });
 
-  it("uses the day before when the enrollment closes in the morning", () => {
-    const morning = table({ enrollFrom: "2027-02-23T09:00", enrollTo: "2027-03-01T09:00" });
-    expect(dueMail({ ...fresh, firstSent: true }, morning, "2027-02-28T08:17")).toBe("last");
-  });
-
-  it("only sends the last mail when the window is one day", () => {
+  it("sends the mail when the window is one day", () => {
     const oneDay = table({ enrollFrom: "2026-12-07T08:00", enrollTo: "2026-12-07T23:59" });
-    expect(dueMail(fresh, oneDay, "2026-12-07T08:17")).toBe("last");
+    expect(dueMail(fresh, oneDay, "2026-12-07T08:17")).toBe("first");
   });
 
-  it("never announces the last day before it opens", () => {
+  it("waits for the opening hour, also on a day that opens in the afternoon", () => {
     const late = table({ enrollFrom: "2026-12-08T14:00", enrollTo: "2026-12-09T09:00" });
     expect(dueMail(fresh, late, "2026-12-08T08:17")).toBeNull();
-    expect(dueMail(fresh, late, "2026-12-08T14:17")).toBe("last");
+    expect(dueMail(fresh, late, "2026-12-08T14:17")).toBe("first");
   });
 
   it("sends nothing when the table is gone or has no dates", () => {
     expect(dueMail(fresh, null, "2026-12-03T11:17")).toBeNull();
     expect(dueMail(fresh, table({ enrollFrom: null, enrollTo: null }), "2026-12-03T11:17")).toBeNull();
-  });
-
-  it("without a start date, only sends the last mail", () => {
-    const noFrom = table({ enrollFrom: null });
-    expect(dueMail(fresh, noFrom, "2026-12-03T11:17")).toBeNull();
-    expect(dueMail(fresh, noFrom, "2026-12-07T08:17")).toBe("last");
+    expect(dueMail(fresh, table({ enrollFrom: null }), "2026-12-07T08:17")).toBeNull();
   });
 });

@@ -46,13 +46,12 @@ export function deadline(enrollTo: string): string {
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function buildReminderMail(input: ReminderMailInput): ReminderMail {
-  const { which, subjectName, table } = input;
-  const subject =
-    which === "first" ? `Abrió la inscripción al final de ${subjectName}` : `Último día para anotarte al final de ${subjectName}`;
+  const { subjectName, table } = input; // only the opening mail (ReminderMailKind in model.ts)
+  const subject = `Abrió la inscripción al final de ${subjectName}`;
   const time = table.startTime ? (table.endTime && table.endTime !== table.startTime ? ` de ${table.startTime} a ${table.endTime}` : ` a las ${table.startTime}`) : "";
   const kind = table.kind && table.kind !== "Regular" ? ` (${table.kind})` : "";
   const lines = [
-    which === "first" ? `Ya te podés anotar en el SIU al final de ${subjectName}.` : `Hoy es el último día para anotarte en el SIU al final de ${subjectName}.`,
+    `Ya te podés anotar en el SIU al final de ${subjectName}.`,
     `Mesa: ${table.name}${kind}, el ${longDay(table.date)}${time}.`,
     `La inscripción cierra ${deadline(table.enrollTo)}.`,
   ];
@@ -68,7 +67,7 @@ export function buildReminderMail(input: ReminderMailInput): ReminderMail {
 export interface ControlMailInput {
   /** "YYYY-MM-DDTHH:MM", Buenos Aires time. */
   now: string;
-  counts: { pending: number; first: number; last: number; missing: number };
+  counts: { pending: number; first: number; missing: number };
   /** Mails of this run that went out and that failed. */
   sent: number;
   failed: number;
