@@ -1,6 +1,6 @@
 # Fechas de examen del SIU, todos los días
 
-El workflow **"Fechas de examen del SIU"** (`.github/workflows/exams.yml`) copia todas las mañanas (06:00 en Buenos Aires) las mesas de examen de cada plan desde la página pública "Fechas de examen" del SIU (`guaraniautogestion.fi.uba.ar/g3w/fecha_examen`, no pide sesión) a `exam_tables`, la tabla que muestra Finales. Hace lo mismo que **Publicar fechas** en Administración → Exámenes con el enlace del SIU, pero para todos los planes y solo cuando algo cambió.
+El workflow **"Fechas de examen del SIU"** (`.github/workflows/exams.yml`) copia todas las mañanas (06:13 en Buenos Aires, y de nuevo a las 12:13 por si GitHub salteó la primera) las mesas de examen de cada plan desde la página pública "Fechas de examen" del SIU (`guaraniautogestion.fi.uba.ar/g3w/fecha_examen`, no pide sesión) a `exam_tables`, la tabla que muestra Finales. Hace lo mismo que **Publicar fechas** en Administración → Exámenes con el enlace del SIU, pero para todos los planes y solo cuando algo cambió.
 
 ## Cómo funciona
 

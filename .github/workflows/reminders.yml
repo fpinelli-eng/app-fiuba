@@ -1,5 +1,5 @@
-# "Recordarme" in Finales: mails each student on the first and on the last day of the enrollment of
-# the exam tables they picked (tools/reminders/README.md). Every 3 hours it reads the pending
+# "Recordarme" in Finales: mails each student when the enrollment opens for
+# the exam tables they picked (tools/reminders/README.md). Every hour it reads the pending
 # reminders and the current exam tables (tools/reminders/due.sql), decides what is due and sends it
 # (tools/reminders/send.mjs, which uses src/lib/reminders/), then marks what went out and deletes
 # the reminders whose exam already happened (tools/reminders/mark.sql).
@@ -15,9 +15,11 @@ name: Recordatorios
 
 on:
   schedule:
-    # Every 3 hours from 08:17 in Buenos Aires (11:17 UTC): 08, 11, 14, 17, 20, 23, 02, 05.
-    # Mails only go out from 08:00 (src/lib/reminders/model.ts).
-    - cron: "17 2-23/3 * * *"
+    # GitHub runs scheduled workflows late or drops them when it is busy (above all on the hour):
+    # on 11-12 Nov 2026 one run of five went out. So it runs often and off the hour; a repeated run
+    # is harmless (concurrency group, and nothing is done twice).
+    # Every hour at :17. Mails only go out from 08:00 in Buenos Aires (src/lib/reminders/model.ts).
+    - cron: "17 * * * *"
     # Control mail, the 1st of every month at 10:23 in Buenos Aires (13:23 UTC). If you change it,
     # change it also in the "Send" step.
     - cron: "23 13 1 * *"

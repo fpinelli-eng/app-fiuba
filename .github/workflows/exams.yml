@@ -11,8 +11,12 @@ name: Fechas de examen del SIU
 
 on:
   schedule:
-    # Daily, at 09:00 UTC = 06:00 in Buenos Aires: before students look at Finales in the morning.
-    - cron: "0 9 * * *"
+    # GitHub runs scheduled workflows late or drops them when it is busy (above all on the hour):
+    # on 11-12 Nov 2026 one run of five went out. So it runs often and off the hour; a repeated run
+    # is harmless (concurrency group, and nothing is done twice).
+    # 06:13 and 12:13 in Buenos Aires (09:13 and 15:13 UTC): before students look at Finales in the
+    # morning, and again in case the first one was dropped (only plans that changed are written).
+    - cron: "13 9,15 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
