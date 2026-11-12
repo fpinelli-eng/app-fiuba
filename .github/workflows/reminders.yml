@@ -7,7 +7,9 @@
 # SMTP_PORT (465 or 587), SMTP_USER, SMTP_PASS and SMTP_FROM ("FIUBI <avisos@…>"). Without the mail
 # secrets it only counts and marks nothing. The repository is public: only counts go to the log.
 # Control mail: by hand (Run workflow → "Mandar mail de control") and on the 1st of every month it
-# also mails the app's own mailbox (SMTP_FROM, forwarded to the administrators). It proves sending
+# also mails SMTP_CONTROL_TO (secret: the administrators' @fi.uba.ar, comma-separated) or, without
+# it, the app's own mailbox (SMTP_FROM). Not to @fiubi.com.ar by default: ImprovMX rejects senders
+# on blocklists like SpamCop, and Brevo's shared IPs sometimes are; Google (the students) does not. It proves sending
 # works and keeps the Brevo SMTP key alive (it expires after 90 days without use).
 name: Recordatorios
 
@@ -47,6 +49,7 @@ jobs:
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       SMTP_FROM: ${{ secrets.SMTP_FROM }}
+      SMTP_CONTROL_TO: ${{ secrets.SMTP_CONTROL_TO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -27,7 +27,7 @@ La casilla es `avisos@fiubi.com.ar`: envía Brevo (plan gratis, 300 mails por d�
 
 ## Mail de control
 
-Para probar el envío: Actions → Recordatorios → **Run workflow** (con "Mandar mail de control" tildado). Además de los recordatorios que toquen, manda un mail "FIUBI: mail de control" a la propia casilla (`SMTP_FROM`), que les llega a los administradores, con cantidades y nada más. Lo mismo pasa solo el 1.º de cada mes a las 10:23: Brevo vence la clave SMTP tras 90 días sin uso, y en meses sin recordatorios nadie la usaría.
+Para probar el envío: Actions → Recordatorios → **Run workflow** (con "Mandar mail de control" tildado). Además de los recordatorios que toquen, manda un mail "FIUBI: mail de control" a `SMTP_CONTROL_TO` (secreto con los @fi.uba.ar de los administradores, separados por coma: el mismo tipo de casilla que tienen los alumnos), con cantidades y nada más. Sin ese secreto va a la propia casilla (`SMTP_FROM`), pero ahí puede rebotar: ImprovMX rechaza los mails que salen de IPs en listas negras como SpamCop, y las IPs compartidas de Brevo a veces lo están (`551 5.7.1 … black listed by SpamCop`). Google, que recibe los mails de los alumnos, no rechaza por eso. Lo mismo pasa solo el 1.º de cada mes a las 10:23: Brevo vence la clave SMTP tras 90 días sin uso, y en meses sin recordatorios nadie la usaría.
 
 Si un envío falla, la corrida termina en error (GitHub avisa por mail) y el resumen muestra solo el código: `EAUTH` o `535` es la clave (vencida o mal cargada en `SMTP_PASS`); `ESOCKET` o `ECONNECTION`, el servidor o el puerto. La clave vence además a la fecha elegida al crearla (un año): se genera otra en Brevo → SMTP & API → SMTP y se reemplaza `SMTP_PASS`.
 

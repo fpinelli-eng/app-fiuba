@@ -3,9 +3,10 @@
 //   node --experimental-strip-types tools/reminders/send.mjs --dump due.json --sent sent.json
 //        [--summary summary.md] [--now 2026-12-01T08:17] [--control]
 //
-// --control: after the reminders, also sends a control mail (buildControlMail) to the app's own
-// mailbox (SMTP_FROM), which forwards it to the administrators. The workflow asks for it by hand
-// and once a month, so the SMTP key is never 90 days unused. Without SMTP it fails.
+// --control: after the reminders, also sends a control mail (buildControlMail) to SMTP_CONTROL_TO
+// (comma-separated, a secret: the administrators' @fi.uba.ar, the same kind of mailbox the students
+// have) or, without it, to SMTP_FROM. The workflow asks for it by hand and once a month, so the SMTP
+// key is never 90 days unused. Without SMTP it fails.
 // --dump: what tools/reminders/due.sql printed. --sent: written with [{ id, which }] of the mails
 // that went out, for tools/reminders/mark.sql. --now (Buenos Aires, "YYYY-MM-DDTHH:MM") is for tests.
 // SMTP comes from the environment (secrets SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM)
@@ -45,7 +46,7 @@ try {
   process.exit(1);
 }
 const { mails, counts } = planRun(dump, now);
-const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, NODEMAILER_DIR } = process.env;
+const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_CONTROL_TO, NODEMAILER_DIR } = process.env;
 const configured = Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS && SMTP_FROM);
 
 const sent = [];
@@ -78,7 +79,7 @@ if ((mails.length > 0 || args.control) && configured) {
   if (args.control) {
     const m = buildControlMail({ now, counts, sent: sent.length, failed });
     try {
-      await transport.sendMail({ from: SMTP_FROM, to: SMTP_FROM, subject: m.subject, text: m.text, html: m.html });
+      await transport.sendMail({ from: SMTP_FROM, to: SMTP_CONTROL_TO || SMTP_FROM, subject: m.subject, text: m.text, html: m.html });
       control = "enviado";
     } catch (e) {
       control = "falló";
