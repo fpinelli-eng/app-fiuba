@@ -4,6 +4,7 @@ Fechas del calendario académico de la FIUBA que se muestran en **Novedades** (`
 
 - `2026-2027.json`: sacado de `Calendario_Academico_2026_2027.pdf` (lo publica la FIUBA en www.ingenieria.uba.ar). Una entrada por cada tramo de semanas seguidas: `title`, `starts_on` (lunes de la primera semana), `ends_on` (sábado de la última) y `sort` (fila del PDF, de arriba hacia abajo).
 - Se cargó en la base con `supabase/migrations/20261102150000_news.sql` (tabla `academic_events`, `calendar = '2026-2027'`). La app muestra solo el calendario más nuevo (el nombre más grande).
+- Son semanas y tentativas (el PDF se arma a principio de año). Novedades muestra solo las filas importantes (`isImportantDate()` en `src/lib/news/model.ts`: si el PDF nuevo cambia un título, actualizalo ahí también) como "Tentativa", hasta que un administrador confirma la fecha real desde Administración → Novedades (`academic_date_confirmations`). Si se vuelve a cargar un calendario con una migración, sus filas cambian de id y las confirmaciones quedan como fechas sueltas: revisalas.
 
 ## Cómo cargar el del año que viene
 

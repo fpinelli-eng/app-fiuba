@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/app";
 import { getNewsPage } from "@/lib/news/data";
 import {
+  addDays,
   calendarHighlights,
   dateBadge,
   formatCountdown,
+  formatDateRange,
   formatNewsDate,
   formatRemaining,
   formatWeekday,
   groupCalendar,
+  type AcademicEvent,
   type DateHighlight,
   type FiubaNewsItem,
 } from "@/lib/news/model";
@@ -18,18 +21,25 @@ export const metadata: Metadata = { title: `Novedades · ${APP_NAME}` };
 
 const FIUBA_URL = "https://www.ingenieria.uba.ar";
 
-// Oculto por ahora (10/11/2026): las fechas del calendario académico cargado tienen errores.
-// Para volver a mostrarlo, true. Los datos y la lógica siguen igual.
-const SHOW_ACADEMIC_CALENDAR = false;
-
 // Las fechas van en una fila que se desliza en el celular (así las noticias quedan a mano, sin
 // bajar tanto) y en una grilla en la computadora.
 const DATE_ROW =
   "-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-4 md:gap-3 md:overflow-visible md:px-0 md:pb-0";
 const DATE_CARD = "flex w-[78%] max-w-[300px] shrink-0 snap-start flex-col rounded-2xl md:w-auto md:max-w-none";
 
-const range = (e: DateHighlight["event"]) =>
-  e.startsOn === e.endsOn ? formatWeekday(e.startsOn) : `${formatWeekday(e.startsOn)} → ${formatWeekday(e.endsOn)}`;
+// De dónde sale la fecha: la semana tentativa del calendario académico, o la fecha que confirmó
+// la Secretaría (con el origen, por ejemplo "Mail de la Secretaría del 29/10").
+function Origin({ event, className = "" }: { event: AcademicEvent; className?: string }) {
+  return (
+    <span className={`line-clamp-2 text-[12px] ${className}`}>
+      {event.tentative ? "Tentativa · calendario académico" : `Confirmada · ${event.note}`}
+    </span>
+  );
+}
+
+// "hasta sáb 5/12", o la semana si la fecha es tentativa (el sábado del PDF no es un día real).
+const until = (e: AcademicEvent) =>
+  e.tentative ? `hasta la semana del ${formatDateRange({ ...e, startsOn: addDays(e.endsOn, -5) }).replace("Semana del ", "")}` : `hasta ${formatWeekday(e.endsOn)}`;
 
 // En curso: cuánto falta para que termine y una barra con lo que ya pasó del período.
 function NowCard({ date }: { date: DateHighlight }) {
@@ -42,9 +52,10 @@ function NowCard({ date }: { date: DateHighlight }) {
           <span className="block h-full rounded-full bg-mint-ink" style={{ width: `${Math.max(6, Math.round(progress * 100))}%` }} />
         </span>
         <span className="flex items-baseline justify-between gap-2 text-[13px] tabular-nums">
-          <span className="font-semibold">{formatRemaining(days)}</span>
-          <span className="opacity-80">hasta {formatWeekday(event.endsOn)}</span>
+          <span className="font-semibold">{formatRemaining(days, event.tentative)}</span>
+          <span className="opacity-80">{until(event)}</span>
         </span>
+        <Origin event={event} className="opacity-80" />
       </span>
     </li>
   );
@@ -67,11 +78,14 @@ function UpcomingCard({ date }: { date: DateHighlight }) {
             close ? "bg-peach text-peach-ink" : "bg-sky text-sky-ink"
           }`}
         >
-          {formatCountdown(days)}
+          {formatCountdown(days, event.tentative)}
         </span>
       </span>
       <span className="line-clamp-3 text-[15px] leading-snug font-semibold text-ink">{event.title}</span>
-      <span className="mt-auto text-[13px] text-muted tabular-nums">{range(event)}</span>
+      <span className="mt-auto flex flex-col gap-0.5">
+        <span className="text-[13px] text-ink-2 tabular-nums">{formatDateRange(event)}</span>
+        <Origin event={event} className="text-muted" />
+      </span>
     </li>
   );
 }
@@ -100,8 +114,9 @@ function FiubaNewsCard({ item, today }: { item: FiubaNewsItem; today: string }) 
   );
 }
 
-// Novedades: avisos from the admins, the next dates of the FIUBA academic calendar and the news of
-// www.fi.uba.ar (copied once a day by the "Noticias de la FIUBA" workflow).
+// Novedades: avisos from the admins, the important dates (the academic calendar's, tentative, or
+// confirmed by the Secretaría from /admin/novedades) and the news of www.fi.uba.ar (copied once a
+// day by the "Noticias de la FIUBA" workflow).
 export default async function NovedadesPage() {
   await requireProfile();
   const { today, news, fiuba, events } = await getNewsPage();
@@ -145,11 +160,11 @@ export default async function NovedadesPage() {
         </section>
       )}
 
-      {SHOW_ACADEMIC_CALENDAR && (dates.now.length > 0 || dates.upcoming.length > 0) && (
+      {(dates.now.length > 0 || dates.upcoming.length > 0) && (
         <section aria-labelledby="calendar-title" className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="calendar-title" className="text-[22px] font-semibold">
-              Calendario
+              Fechas importantes
             </h2>
             <a href={FIUBA_URL} target="_blank" rel="noopener noreferrer" className="py-1 text-sm text-muted underline">
               Calendario completo
