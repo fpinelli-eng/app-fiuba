@@ -103,7 +103,7 @@ describe("buildMail_", () => {
 });
 
 describe("dueRows_", () => {
-  it("keeps the rows the database marked as due, only to @fi.uba.ar", () => {
+  it("keeps the rows the database marked as due, only to @fi.uba.ar, last-day mails first", () => {
     const rows = [
       row({ reminder_id: 1, due: "primer_dia" }),
       row({ reminder_id: 2 }),
@@ -111,7 +111,7 @@ describe("dueRows_", () => {
       row({ reminder_id: 4, due: "primer_dia", email: "x@gmail.com" }),
       row({ reminder_id: 5, due: "otro" }),
     ];
-    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([1, 3]);
+    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([3, 1]);
   });
 });
 
@@ -150,7 +150,7 @@ describe("preview.html", () => {
 });
 
 describe("sendRows_ (Google services faked)", () => {
-  it("marks each mail right after sending it and stops at the daily quota", () => {
+  it("checks marking, marks each mail right after sending it and stops at the daily quota", () => {
     const g = loadCodeGs() as CodeGs & Record<string, unknown>;
     const log: string[] = [];
     let quota = 2;
@@ -170,8 +170,46 @@ describe("sendRows_ (Google services faked)", () => {
       row({ reminder_id: 4, email: "d@fi.uba.ar", due: "primer_dia" }),
     ];
     const result = (g as unknown as { sendRows_(r: Row[]): { sent: number; left: number } }).sendRows_(rows);
-    expect(log).toEqual(["mail a@fi.uba.ar", "avisos_marcar_enviado 1 primer_dia", "mail c@fi.uba.ar", "avisos_marcar_enviado 3 ultimo_dia"]);
+    expect(log).toEqual([
+      "avisos_marcar_enviado 0 primer_dia", // marking works before the first mail
+      "mail c@fi.uba.ar",
+      "avisos_marcar_enviado 3 ultimo_dia",
+      "mail a@fi.uba.ar",
+      "avisos_marcar_enviado 1 primer_dia",
+    ]);
     expect({ ...result }).toEqual({ sent: 2, left: 1 });
     expect([rows[0].first_sent_at, rows[2].last_sent_at, rows[3].first_sent_at]).toEqual(["2026-11-30 14:05", "2026-11-30 14:05", null]);
+  });
+});
+
+describe("fetchReminders_ (API faked)", () => {
+  it("reads every page: the API cuts long answers", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const all = Array.from({ length: 2500 }, (_, i) => ({ reminder_id: i }));
+    const calls: string[] = [];
+    g.PAGE_SIZE = 1000;
+    g.PropertiesService = { getScriptProperties: () => ({ getProperty: (k: string) => ({ SUPABASE_KEY: "sb_publishable_x", TOKEN: "t".repeat(64) })[k] ?? null }) };
+    g.UrlFetchApp = {
+      fetch: (url: string, opts: { headers: Record<string, string>; payload: string }) => {
+        calls.push(url);
+        expect(opts.headers).toEqual({ apikey: "sb_publishable_x" });
+        expect(JSON.parse(opts.payload)).toEqual({ p_token: "t".repeat(64) });
+        const q = new URL(url).searchParams;
+        const offset = Number(q.get("offset"));
+        const page = all.slice(offset, offset + Math.min(Number(q.get("limit")), 800)); // the API caps at 800 here
+        return { getResponseCode: () => 200, getContentText: () => JSON.stringify(page) };
+      },
+    };
+    const rows = (g as unknown as { fetchReminders_(): { reminder_id: number }[] }).fetchReminders_();
+    expect(rows.length).toBe(2500);
+    expect(rows[2499].reminder_id).toBe(2499);
+    expect(calls[0]).toBe("https://solnlrkmkncsntyptjjm.supabase.co/rest/v1/rpc/avisos_pendientes?limit=1000&offset=0");
+  });
+
+  it("fails with a hint when the token is wrong", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    g.PropertiesService = { getScriptProperties: () => ({ getProperty: (k: string) => ({ SUPABASE_KEY: "k", TOKEN: "t" })[k] ?? null }) };
+    g.UrlFetchApp = { fetch: () => ({ getResponseCode: () => 400, getContentText: () => '{"message":"invalid token"}' }) };
+    expect(() => (g as unknown as { fetchReminders_(): unknown }).fetchReminders_()).toThrow(/TOKEN o SUPABASE_KEY/);
   });
 });

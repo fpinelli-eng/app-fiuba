@@ -28,6 +28,7 @@ var TIME_ZONE = 'America/Argentina/Buenos_Aires';
 var DEFAULT_SUPABASE_URL = 'https://solnlrkmkncsntyptjjm.supabase.co';
 var SHEET_NAME = 'Recordatorios';
 var SEND_FROM_HOUR = 8;
+var PAGE_SIZE = 1000;
 var LINKS = {
   siu: 'https://guaraniautogestion.fi.uba.ar/',
   finales: 'https://fiubi.com.ar/finales',
@@ -132,11 +133,14 @@ function config_() {
   return { url: (props.getProperty('SUPABASE_URL') || DEFAULT_SUPABASE_URL).replace(/\/+$/, ''), key: key, token: token };
 }
 
-/** Calls a database function through the API (role anon: only the two avisos_* functions). */
-function rpc_(name, args) {
+/**
+ * Calls a database function through the API (role anon: only the two avisos_* functions).
+ * query: optional "limit=…&offset=…" for functions that return rows.
+ */
+function rpc_(name, args, query) {
   var c = config_();
   args.p_token = c.token;
-  var res = UrlFetchApp.fetch(c.url + '/rest/v1/rpc/' + name, {
+  var res = UrlFetchApp.fetch(c.url + '/rest/v1/rpc/' + name + (query ? '?' + query : ''), {
     method: 'post',
     contentType: 'application/json',
     headers: { apikey: c.key },
@@ -152,14 +156,29 @@ function rpc_(name, args) {
   return JSON.parse(body);
 }
 
+/**
+ * All the reminders, by pages: the API returns at most a fixed number of rows per call (1000 in
+ * Supabase by default) and would cut the rest without saying so. The database keeps a stable order
+ * (exam date, id); it stops at the first empty page.
+ */
 function fetchReminders_() {
-  return rpc_('avisos_pendientes', {});
+  var all = [];
+  for (var page = 0; page < 100; page++) {
+    var rows = rpc_('avisos_pendientes', {}, 'limit=' + PAGE_SIZE + '&offset=' + all.length);
+    if (!rows.length) return all;
+    all = all.concat(rows);
+  }
+  throw new Error('Demasiados recordatorios: más de ' + all.length + '.');
 }
 
 /** Sends the due mails, within the daily quota of the account. Returns counts. */
 function sendRows_(rows) {
   var due = dueRows_(rows);
   var sent = 0;
+  if (!due.length) return { sent: 0, left: 0 };
+  // First check that marking works (reminder 0 does not exist: it answers false). If it did not,
+  // the same students would get the same mail every hour.
+  rpc_('avisos_marcar_enviado', { p_reminder_id: 0, p_kind: 'primer_dia' });
   for (var i = 0; i < due.length; i++) {
     if (MailApp.getRemainingDailyQuota() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
     var row = due[i];
@@ -192,11 +211,19 @@ function writeSheet_(rows) {
 // Pure functions (no Google services): tested in the repo
 // ---------------------------------------------------------------------------------------------
 
-/** Rows with a mail due now, in the database's order (by exam date). */
+/**
+ * Rows with a mail due now. Last-day mails first, and the enrollments that close sooner first: if
+ * the daily quota runs out, what is left can still go later.
+ */
 function dueRows_(rows) {
-  return rows.filter(function (r) {
-    return (r.due === 'primer_dia' || r.due === 'ultimo_dia') && /@fi\.uba\.ar$/i.test(r.email || '');
-  });
+  var order = function (r) { return (r.due === 'ultimo_dia' ? '0' : '1') + (r.enroll_to || '9999'); };
+  return rows
+    .filter(function (r) {
+      return (r.due === 'primer_dia' || r.due === 'ultimo_dia') && /@fi\.uba\.ar$/i.test(r.email || '');
+    })
+    .sort(function (a, b) {
+      return order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0;
+    });
 }
 
 /** The sheet as values: the headers and one row per reminder. */
