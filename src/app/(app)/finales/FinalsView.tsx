@@ -14,8 +14,10 @@ import {
   type ExamTableView,
   type FinalsData,
 } from "@/lib/exams/types";
+import type { ReminderMailState } from "@/lib/reminders/mail";
 import type { ExamReminderView } from "@/lib/reminders/model";
-import { RemindersDialog } from "./RemindersDialog";
+import { ConfirmationText } from "./ReminderMail";
+import { RemindersDialog, type SavedNotice } from "./RemindersDialog";
 
 const plural = (n: number, one: string, many: string) =>
   `${n} ${n === 1 ? one : many}`;
@@ -90,7 +92,14 @@ function TableRow({
   );
 }
 
-export function FinalsView({ data }: { data: FinalsData }) {
+export function FinalsView({
+  data,
+  reminderMail,
+}: {
+  data: FinalsData;
+  /** Where the reminder mails go; null while the database does not have it (previews). */
+  reminderMail: ReminderMailState | null;
+}) {
   const [query, setQuery] = useState("");
   const q = normalizeText(query);
   const { now, pending, all } = data;
@@ -98,7 +107,8 @@ export function FinalsView({ data }: { data: FinalsData }) {
     data.reminders,
   );
   const [remindOpen, setRemindOpen] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SavedNotice | null>(null);
+  const [mail, setMail] = useState<ReminderMailState | null>(reminderMail);
   const remindButton = useRef<HTMLButtonElement>(null);
   const activeReminders =
     reminders?.filter((r) => r.planId === data.planId).length ?? 0;
@@ -165,14 +175,26 @@ export function FinalsView({ data }: { data: FinalsData }) {
 
       {/* Always rendered, out of the flow, so screen readers announce the notice. */}
       <p role="status" className="sr-only">
-        {notice}
+        {notice?.text}
+        {notice?.confirmation && (
+          <>
+            {" "}
+            <ConfirmationText confirmation={notice.confirmation} />
+          </>
+        )}
       </p>
       {notice && (
         <div
           aria-hidden="true"
           className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]"
         >
-          {notice}
+          {notice.text}
+          {/* The confirmation mail: so the student finds it now and marks it as not spam. */}
+          {notice.confirmation && (
+            <p className="mt-1.5 text-[14px]">
+              <ConfirmationText confirmation={notice.confirmation} />
+            </p>
+          )}
         </div>
       )}
 
@@ -180,14 +202,11 @@ export function FinalsView({ data }: { data: FinalsData }) {
         <RemindersDialog
           data={data}
           reminders={reminders}
-          onSaved={(saved, active) => {
+          mail={mail}
+          onMailChange={setMail}
+          onSaved={(saved, saidNotice) => {
             setReminders(saved);
-            if (active > 0)
-              setNotice(
-                "Te vamos a mandar un mail cuando abra la inscripción, así no te olvidás.",
-              );
-            else if (active === 0)
-              setNotice("Listo, sacamos tus recordatorios.");
+            if (saidNotice) setNotice(saidNotice);
           }}
           onClose={() => {
             setRemindOpen(false);

@@ -278,7 +278,7 @@ describe("the alert mail", () => {
   });
 });
 
-describe("hourly(): the reminders and the monitor never stop each other", () => {
+describe("hourly(): the reminders, the confirmations and the monitor never stop each other", () => {
   /** Mocked Google services. failDb: every database call fails. */
   function services(opts: { failDb?: boolean; failSalud?: boolean }) {
     const calls: string[] = [];
@@ -308,6 +308,10 @@ describe("hourly(): the reminders and the monitor never stop each other", () => 
             calls.push("avisos");
             return opts.failDb ? response(500, "down") : response(200, []);
           }
+          if (url.includes("/rpc/avisos_confirmaciones")) {
+            calls.push("confirm");
+            return opts.failDb ? response(500, "down") : response(200, []);
+          }
           if (url.includes("/rpc/salud")) {
             calls.push("salud");
             if (opts.failDb) return response(500, "down");
@@ -325,7 +329,7 @@ describe("hourly(): the reminders and the monitor never stop each other", () => 
   it("all fine: reminders, then the monitor; no alert", () => {
     const s = services({});
     load(s.globals).hourly();
-    expect(s.calls).toEqual(["avisos", "sheet", "salud", "web", "web"]);
+    expect(s.calls).toEqual(["avisos", "sheet", "confirm", "salud", "web", "web"]);
     expect(s.sent).toEqual([]);
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
   });

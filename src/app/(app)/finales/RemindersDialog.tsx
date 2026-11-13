@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { normalizeText } from "@/lib/map/model";
 import { enrollmentStatus, formatExamDay, formatExamTime, type ExamSubjectView, type ExamTableView, type FinalsData } from "@/lib/exams/types";
+import { normalizeReminderEmail, type ConfirmationNotice, type ReminderMailState } from "@/lib/reminders/mail";
 import { reminderKey, type ExamReminderView } from "@/lib/reminders/model";
-import { saveExamReminders, type ReminderPick } from "./actions";
+import { saveExamReminders, saveReminderEmail, type ReminderPick, type SaveRemindersResult } from "./actions";
+import { ReminderEmailField, type EmailStatus } from "./ReminderMail";
 
 // "Recordarme": the student checks the exam tables they want a mail for, sent when the enrollment
 // opens (only one: Francisco, 12 Nov 2026). Only tables that have not opened yet are offered, plus
@@ -13,6 +15,14 @@ import { saveExamReminders, type ReminderPick } from "./actions";
 // can be removed too.
 // Native <dialog> like ConfirmCourses: a bottom sheet on the phone, centered from md.
 // Visual design pending (Francisco): only existing classes and tokens.
+// At the top, where the mails go and the optional other mail (ReminderMail.tsx). "Aceptar" also
+// saves a mail typed and not saved yet.
+
+/** What Finales shows after saving: a line and, when one is due, the confirmation mail help. */
+export interface SavedNotice {
+  text: string;
+  confirmation: ConfirmationNotice | null;
+}
 
 interface Candidate {
   key: string;
@@ -35,12 +45,18 @@ function candidates(subject: ExamSubjectView, planId: string, now: string, saved
 export function RemindersDialog({
   data,
   reminders,
+  mail,
+  onMailChange,
   onSaved,
   onClose,
 }: {
   data: FinalsData;
   reminders: ExamReminderView[];
-  onSaved: (reminders: ExamReminderView[], active: number) => void;
+  /** null: the database does not have the other mail yet (previews): the field is not shown. */
+  mail: ReminderMailState | null;
+  onMailChange: (mail: ReminderMailState) => void;
+  /** notice null: nothing to say (an error is shown in the dialog). */
+  onSaved: (reminders: ExamReminderView[], notice: SavedNotice | null) => void;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -50,6 +66,22 @@ export function RemindersDialog({
   const [selected, setSelected] = useState<Set<string>>(initial);
   const [query, setQuery] = useState("");
   const [state, setState] = useState<{ kind: "idle" | "saving" } | { kind: "error"; message: string }>({ kind: "idle" });
+  const [emailDraft, setEmailDraft] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>({ kind: "idle" });
+
+  // Saves the other mail (null: back to the account). Returns false on error, else the confirmation due.
+  const saveEmail = async (value: string | null): Promise<false | { confirmation: ConfirmationNotice | null }> => {
+    setEmailStatus({ kind: "saving" });
+    const result = await saveReminderEmail(value).catch(() => ({ error: "No pudimos guardar el mail.", mail: null, confirmation: null }));
+    if (result.error) {
+      setEmailStatus({ kind: "error", message: result.error });
+      return false;
+    }
+    if (result.mail) onMailChange(result.mail);
+    setEmailDraft(null);
+    setEmailStatus({ kind: "saved", confirmation: result.confirmation });
+    return { confirmation: result.confirmation };
+  };
 
   useEffect(() => {
     const d = dialog.current;
@@ -80,8 +112,19 @@ export function RemindersDialog({
   };
 
   const save = async () => {
+    // A mail typed and not saved: saved first (if it is wrong, the dialog stays open with the error).
+    let emailConfirmation: ConfirmationNotice | null = null;
+    if (mail && emailDraft !== null) {
+      const typed = normalizeReminderEmail(emailDraft, mail.account);
+      if (!("email" in typed) || typed.email !== mail.custom) {
+        const saved = await saveEmail(emailDraft);
+        if (!saved) return;
+        emailConfirmation = saved.confirmation;
+      } else setEmailDraft(null);
+    }
     const changed = selected.size !== initial.size || [...selected].some((k) => !initial.has(k));
     if (!changed) {
+      if (emailConfirmation) onSaved(reminders, { text: `Listo, te avisamos a ${emailConfirmation.to}.`, confirmation: emailConfirmation });
       dialog.current?.close();
       return;
     }
@@ -92,17 +135,22 @@ export function RemindersDialog({
       if (selected.has(key)) picks.set(key, { code: r.code, name: r.name, kind: r.kind, date: r.date, subjectName: r.subjectName });
     }
     setState({ kind: "saving" });
-    const result = await saveExamReminders([...picks.values()]).catch(() => ({ error: "No pudimos guardar tus recordatorios.", reminders: null }));
+    const result = await saveExamReminders([...picks.values()]).catch((): SaveRemindersResult => ({ error: "No pudimos guardar tus recordatorios.", reminders: null }));
     if (result.error) {
       if (result.reminders) {
-        onSaved(result.reminders, -1);
+        onSaved(result.reminders, null);
         setSelected(new Set(result.reminders.filter((r) => r.planId === planId).map(reminderKey)));
       }
       setState({ kind: "error", message: result.error });
       return;
     }
     const saved = result.reminders ?? [];
-    onSaved(saved, saved.filter((r) => r.planId === planId).length);
+    const active = saved.filter((r) => r.planId === planId).length;
+    const confirmation = result.confirmation ?? emailConfirmation;
+    onSaved(saved, {
+      text: active > 0 ? "Te vamos a mandar un mail cuando abra la inscripción, así no te olvidás." : "Listo, sacamos tus recordatorios.",
+      confirmation: active > 0 ? confirmation : null,
+    });
     dialog.current?.close();
   };
 
@@ -187,6 +235,18 @@ export function RemindersDialog({
       </div>
 
       <div className="flex flex-col gap-4 overflow-y-auto overscroll-contain px-2 py-3 md:px-4 md:py-4">
+        {mail && (
+          <ReminderEmailField
+            mail={mail}
+            draft={emailDraft}
+            status={emailStatus}
+            onDraft={(draft) => {
+              setEmailDraft(draft);
+              if (emailStatus.kind === "error" || draft !== null) setEmailStatus({ kind: "idle" });
+            }}
+            onSave={(email) => void saveEmail(email)}
+          />
+        )}
         {pending.length > 0 ? (
           <section aria-labelledby="recordarme-pendientes" className="flex flex-col gap-3">
             <h3 id="recordarme-pendientes" className="px-2 text-[13px] font-semibold text-muted">

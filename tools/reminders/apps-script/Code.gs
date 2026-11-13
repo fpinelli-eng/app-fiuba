@@ -12,7 +12,19 @@
  *      database (avisos_marcar_enviado()): the database never offers it again, even if someone
  *      edits the sheet;
  *   3. rewrites the "Recordatorios" tab with all of them (it is only a copy to look at: editing it
- *      changes nothing).
+ *      changes nothing);
+ *   4. at any hour, sends the confirmation mails ("Activaste tus recordatorios", so the student
+ *      finds it now and marks it as "No es spam"): avisos_confirmaciones() lists them and
+ *      avisos_confirmacion_enviada() marks each one right after sending it (migration
+ *      20261116120000_recordarme_confirmacion.sql). It leaves CONFIRM_QUOTA_RESERVE mails of the
+ *      daily quota for the reminders.
+ *
+ * Optional instant path: deployed as a web app (Deploy → New deployment → Web app, execute as me,
+ * anyone), doPost() runs step 4 right away when the app posts {token, action: 'confirm'} after a
+ * student saves their reminders. Without it, the hourly run sends them.
+ *
+ * The mail goes to the address the database gives: the student's other mail if they set one in
+ * Recordarme, else their @fi.uba.ar account.
  *
  * Script Properties (Project Settings → Script Properties), never in this file:
  *   SUPABASE_KEY  the publishable key of the app (sb_publishable_…, in Vercel / .env.local)
@@ -29,6 +41,10 @@ var DEFAULT_SUPABASE_URL = 'https://solnlrkmkncsntyptjjm.supabase.co';
 var SHEET_NAME = 'Recordatorios';
 var SEND_FROM_HOUR = 8;
 var PAGE_SIZE = 1000;
+var CONFIRM_QUOTA_RESERVE = 30; // confirmations stop here: the rest of the daily quota is for the reminders
+var SENDER = 'avisosfiubi@gmail.com';
+// A plain address (the database checks the same): no spaces, commas or brackets, one @.
+var EMAIL_RE = /^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
 var LINKS = {
   siu: 'https://guaraniautogestion.fi.uba.ar/',
   finales: 'https://fiubi.com.ar/finales',
@@ -59,6 +75,12 @@ function hourly() {
     failure = e;
   }
   try {
+    confirmPass_();
+  } catch (e) {
+    Logger.log('Confirmaciones: ' + e);
+    failure = failure || e;
+  }
+  try {
     if (typeof saludCheck_ === 'function') saludCheck_();
   } catch (e) {
     Logger.log('Monitor: ' + e);
@@ -87,6 +109,42 @@ function sendTestMail() {
   var mail = buildMail_(sampleRow_());
   MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   Logger.log('Listo: se mandó un mail de prueba a ' + to + '.');
+}
+
+/** Sends the confirmation mail with sample data to the account running the script. Touches nothing else. */
+function sendTestConfirmMail() {
+  var to = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail();
+  var mail = buildConfirmMail_(sampleConfirmRow_());
+  MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  Logger.log('Listo: se mandó un mail de confirmación de prueba a ' + to + '.');
+}
+
+/** Sends the pending confirmation mails now (the same as the end of hourly()). */
+function sendConfirmations() {
+  var result = confirmPass_();
+  if (!result) Logger.log('Otra ejecución sigue corriendo: no se mandó nada.');
+}
+
+/**
+ * Web app (optional instant path): the app posts {"token": "…", "action": "confirm"} after a
+ * student saves their reminders, and this sends the pending confirmations right away. Without the
+ * right TOKEN it does nothing. Answers only counts.
+ */
+function doPost(e) {
+  var body = null;
+  try {
+    body = JSON.parse((e && e.postData && e.postData.contents) || '');
+  } catch (err) {
+    body = null;
+  }
+  var result;
+  try {
+    result = handlePost_(body, PropertiesService.getScriptProperties().getProperty('TOKEN'), confirmPass_);
+  } catch (err) {
+    Logger.log('doPost: ' + err);
+    result = { ok: false, error: 'failed' };
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
@@ -203,6 +261,38 @@ function sendRows_(rows) {
   return { sent: sent, left: due.length - sent };
 }
 
+/**
+ * The confirmations pass, under the same lock as the reminders (never twice at once). Returns the
+ * counts, or null when another run holds the lock.
+ */
+function confirmPass_() {
+  var result = null;
+  withLock_(function () {
+    result = sendConfirmations_(rpc_('avisos_confirmaciones', {}));
+    if (result.sent || result.left) Logger.log('Confirmaciones enviadas: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
+  });
+  return result;
+}
+
+/** Sends the due confirmation mails, leaving CONFIRM_QUOTA_RESERVE of the quota. Returns counts. */
+function sendConfirmations_(rows) {
+  var due = confirmRows_(rows);
+  var sent = 0;
+  if (!due.length) return { sent: 0, left: 0 };
+  // Check that marking works first (no student has this address: it answers 0).
+  rpc_('avisos_confirmacion_enviada', { p_email: '' });
+  for (var i = 0; i < due.length; i++) {
+    if (MailApp.getRemainingDailyQuota() <= CONFIRM_QUOTA_RESERVE) break;
+    var row = due[i];
+    var mail = buildConfirmMail_(row);
+    MailApp.sendEmail({ to: row.email, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    // Right after each mail. If marking fails, stop here: at most this one could go twice.
+    rpc_('avisos_confirmacion_enviada', { p_email: row.email });
+    sent++;
+  }
+  return { sent: sent, left: due.length - sent };
+}
+
 function writeSheet_(rows) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
@@ -219,11 +309,43 @@ function writeSheet_(rows) {
 // Pure functions (no Google services): tested in the repo
 // ---------------------------------------------------------------------------------------------
 
-/** Rows whose mail is due now (the database decides), only to @fi.uba.ar. */
+/**
+ * Rows whose mail is due now (the database decides), only to a plain address: the student's
+ * @fi.uba.ar account or the other mail they set (the database only gives @fi.uba.ar accounts).
+ */
 function dueRows_(rows) {
   return rows.filter(function (r) {
-    return r.due === true && /@fi\.uba\.ar$/i.test(r.email || '');
+    return r.due === true && EMAIL_RE.test(r.email || '');
   });
+}
+
+/** Confirmations to send: a plain address and at least one mesa. */
+function confirmRows_(rows) {
+  return rows.filter(function (r) {
+    return EMAIL_RE.test(r.email || '') && Number(r.mesas) > 0;
+  });
+}
+
+/** What doPost() does with the body: checks the token and the action, then runs pass(). */
+function handlePost_(body, token, pass) {
+  if (!token || !body || typeof body.token !== 'string' || !sameToken_(body.token, token)) return { ok: false, error: 'token' };
+  if (body.action !== 'confirm') return { ok: false, error: 'action' };
+  var result = pass();
+  return result ? { ok: true, sent: result.sent, left: result.left } : { ok: true, busy: true };
+}
+
+/** Compares two tokens without stopping at the first different character. */
+function sameToken_(a, b) {
+  if (a.length !== b.length) return false;
+  var diff = 0;
+  for (var i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/** "ANA", "maría josé" → "Ana", "María"; '' when Google gave no name. */
+function firstName_(name) {
+  var first = String(name || '').trim().split(/\s+/)[0] || '';
+  return first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : '';
 }
 
 /** The sheet as values: the headers and one row per reminder. */
@@ -377,6 +499,103 @@ function buildMail_(r) {
     '</td></tr></table></body></html>';
 
   return { subject: subject, text: text, html: html };
+}
+
+/**
+ * The confirmation mail, sent once when a student activates their reminders (or changes the address):
+ * so they find it now and teach their inbox that the reminders are not spam. Same frame as
+ * buildMail_() (logo, colored band, card, button, footer), lavender band. r: {email, first_name, mesas}.
+ */
+function buildConfirmMail_(r) {
+  var name = firstName_(r.first_name);
+  var n = Number(r.mesas) || 0;
+  var mesas = n === 1 ? '1 mesa' : n + ' mesas';
+  var subject = 'Activaste tus recordatorios de FIUBI';
+  var band = 'Recordatorios activados';
+  var title = name ? '¡Listo, ' + name + '!' : '¡Listo!';
+  var lead = 'Elegiste ' + mesas + '. Te vamos a escribir a este mail cuando abra la inscripción' + (n === 1 ? '.' : ' de cada una.');
+  var tipsTitle = 'Para que los avisos no se pierdan';
+  var tips = [
+    'Si este mail te llegó a Spam, tocá «No es spam» para que los avisos te lleguen a Recibidos.',
+    'Agregá ' + SENDER + ' a tus contactos.',
+  ];
+  var footer = [
+    'Te llega porque activaste los recordatorios en FIUBI. Para dejar de recibirlos, sacalos en Finales → Recordarme. Si no fuiste vos, escribinos a contacto@fiubi.com.ar.',
+    'Hecho por estudiantes, no es un sitio oficial de la universidad.',
+  ];
+
+  var text = [
+    band.toUpperCase(),
+    '',
+    title,
+    'Activaste tus recordatorios de FIUBI.',
+    lead,
+    '',
+    tipsTitle + ':',
+  ].concat(tips.map(function (t, i) { return (i + 1) + '. ' + t; })).concat([
+    '',
+    'Ver mis finales en FIUBI: ' + LINKS.finales,
+    '',
+    '—',
+  ]).concat(footer).join('\n') + '\n';
+
+  var c = { band: '#e4ecfc', bandInk: '#22408f', bandLine: '#d6e0f7', tip: '#fff0d3', tipInk: '#5c4510', tipLine: '#f2dca6' }; // lavender and butter, as the app
+  var font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  var tipRows = tips.map(function (t, i) {
+    return '<tr>' +
+      '<td style="padding:' + (i ? '10px' : '0') + ' 0 0 0;width:28px;vertical-align:top;font-family:' + font + ';font-size:15px;line-height:22px;font-weight:700;color:' + c.tipInk + ';">' + (i + 1) + '.</td>' +
+      '<td style="padding:' + (i ? '10px' : '0') + ' 0 0 0;vertical-align:top;font-family:' + font + ';font-size:15px;line-height:22px;color:' + c.tipInk + ';">' + escape_(t) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  var html =
+    '<!doctype html><html lang="es"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">' +
+    '<title>' + escape_(subject) + '</title></head>' +
+    '<body style="margin:0;padding:0;background-color:#f6f7fa;">' +
+    // Preview line in the inbox, hidden in the mail.
+    '<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">' + escape_(lead + ' Si te llegó a Spam, tocá «No es spam».') + '</div>' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f7fa;">' +
+    '<tr><td align="center" style="padding:24px 12px;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background-color:#ffffff;border:1px solid #e6e9f0;border-radius:16px;border-collapse:separate;">' +
+    // Logo
+    '<tr><td style="padding:24px 28px 20px 28px;">' +
+    '<a href="' + LINKS.finales + '" style="text-decoration:none;"><img src="' + LINKS.logo + '" width="112" height="31" alt="FIUBI" style="display:block;border:0;outline:none;width:112px;height:31px;"></a>' +
+    '</td></tr>' +
+    // Colored band
+    '<tr><td style="background-color:' + c.band + ';border-top:1px solid ' + c.bandLine + ';border-bottom:1px solid ' + c.bandLine + ';padding:12px 28px;font-family:' + font + ';font-size:14px;line-height:20px;font-weight:700;color:' + c.bandInk + ';">' +
+    escape_(band) + '</td></tr>' +
+    // Title and lead
+    '<tr><td style="padding:24px 28px 4px 28px;font-family:' + font + ';font-size:13px;line-height:18px;color:#5e667a;">Activaste tus recordatorios de FIUBI</td></tr>' +
+    '<tr><td style="padding:0 28px 8px 28px;font-family:' + font + ';font-size:26px;line-height:32px;font-weight:700;color:#1f2537;">' + escape_(title) + '</td></tr>' +
+    '<tr><td style="padding:0 28px 20px 28px;font-family:' + font + ';font-size:15px;line-height:22px;color:#3b4357;">' + escape_(lead) + '</td></tr>' +
+    // Tips card
+    '<tr><td style="padding:0 28px 24px 28px;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:' + c.tip + ';border:1px solid ' + c.tipLine + ';border-radius:12px;border-collapse:separate;">' +
+    '<tr><td style="padding:16px 18px;">' +
+    '<div style="font-family:' + font + ';font-size:15px;line-height:22px;font-weight:700;color:' + c.tipInk + ';padding:0 0 8px 0;">' + escape_(tipsTitle) + '</div>' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + tipRows + '</table>' +
+    '</td></tr></table></td></tr>' +
+    // Button
+    '<tr><td style="padding:0 28px 28px 28px;">' +
+    '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+    '<td align="center" bgcolor="#3b5bd0" style="background-color:#3b5bd0;border-radius:10px;">' +
+    '<a href="' + LINKS.finales + '" style="display:inline-block;padding:14px 26px;font-family:' + font + ';font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Ver mis finales</a>' +
+    '</td></tr></table></td></tr>' +
+    '</table>' +
+    // Footer
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">' +
+    '<tr><td style="padding:16px 28px 0 28px;font-family:' + font + ';font-size:12px;line-height:18px;color:#5e667a;">' +
+    footer.map(escape_).join('<br>') + '</td></tr></table>' +
+    '</td></tr></table></body></html>';
+
+  return { subject: subject, text: text, html: html };
+}
+
+/** Sample data for sendTestConfirmMail() and preview.html. */
+function sampleConfirmRow_() {
+  return { email: 'alumno@fi.uba.ar', first_name: 'ANA', mesas: 3 };
 }
 
 /** Sample data for sendTestMail() and preview.html. */

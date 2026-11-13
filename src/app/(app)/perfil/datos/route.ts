@@ -46,6 +46,11 @@ export async function GET() {
   // Aparte y sin cortar si falla: la columna llega con la migración 20261115120000_signup_source, que las
   // vistas previas (base de producción) no tienen hasta integrar la rama.
   const source = await supabase.from("profiles").select("signup_source").eq("id", account.id).maybeSingle();
+  // Igual: llegan con la migración 20261116120000_recordarme_confirmacion.
+  const [reminderEmail, confirmations] = await Promise.all([
+    supabase.from("profiles").select("reminder_email").eq("id", account.id).maybeSingle(),
+    supabase.from("reminder_confirmations").select("email, sent_at").eq("user_id", account.id).order("sent_at"),
+  ]);
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
 
   const byId = new Map(map.subjects.map((s) => [s.id, s]));
@@ -77,6 +82,9 @@ export async function GET() {
     })),
     cursadas: (courses.data ?? []).map((c) => ({ ...course(c.offerings as unknown as OfferingRef), confirmada: c.created_at })),
     recordatorios_de_finales: reminders.data ?? [],
+    // "¿Preferís recibir los avisos en otro mail?" (null: a tu cuenta) y los mails de confirmación enviados.
+    mail_para_recordatorios: reminderEmail.error ? null : (reminderEmail.data?.reminder_email ?? null),
+    mails_de_confirmacion: confirmations.error ? [] : (confirmations.data ?? []).map((c) => ({ mail: c.email, enviado: c.sent_at })),
     resenas: reviews.map((r) => ({ materia: r.subjectName, curso: r.detail, estrellas: r.stars, comentario: r.comment })),
     ofertas_enviadas: (submissions.data ?? []).map((s) => ({
       enviada: s.created_at,

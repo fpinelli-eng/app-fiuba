@@ -51,8 +51,9 @@ export default function PrivacidadPage() {
           </li>
           <li>
             <b>Tus recordatorios de finales:</b> las mesas que elegís en «Recordarme» (materia, fecha, hora e inscripción). Por cada una te mandamos un mail a tu cuenta
-            @fi.uba.ar cuando abre la inscripción, y nada más: no usamos tu mail para otra cosa. Se borran solos después del examen, y los podés sacar cuando
-            quieras desde Finales.
+            @fi.uba.ar, o al otro mail que elijas en «Recordarme», cuando abre la inscripción. Al activarlos (o cambiar el mail) te mandamos además un mail de
+            confirmación, y guardamos a qué dirección y cuándo salió. Nada más: no usamos esos mails para otra cosa. Los recordatorios se borran solos después del examen,
+            y los podés sacar (y volver a tu mail de la facultad) cuando quieras desde Finales.
           </li>
           <li>
             <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada y tu preferencia de tema (claro u oscuro).
@@ -75,8 +76,8 @@ export default function PrivacidadPage() {
           nos informa tu nombre, mail y foto.
         </p>
         <p>
-          Para los recordatorios, tu mail y las mesas que elegiste (materia, fecha, hora e inscripción) se copian a una planilla de Google de la cuenta del proyecto
-          (avisosfiubi@gmail.com), y los mails salen desde esa cuenta: Google guarda esa copia y envía los mails. La planilla se actualiza sola: lo que sacás o se borra de la
+          Para los recordatorios, el mail al que te avisamos y las mesas que elegiste (materia, fecha, hora e inscripción) se copian a una planilla de Google de la cuenta
+          del proyecto (avisosfiubi@gmail.com), y los mails (también el de confirmación, con tu nombre) salen desde esa cuenta: Google guarda esa copia y envía los mails. La planilla se actualiza sola: lo que sacás o se borra de la
           web también se borra de ahí.
         </p>
       </Section>
