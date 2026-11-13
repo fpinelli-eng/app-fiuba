@@ -387,19 +387,35 @@ body {
   }
 }
 
-/* Finales: la pista de "Recordarme" aparece, se queda unos segundos y se va (FinalsView). */
-@keyframes hint-life {
+/* Finales: "Recordarme" se estira con la pregunta y vuelve a su nombre (FinalsView). El estado final es el
+   de los estilos normales, así que con "reducir movimiento" queda directo en "Recordarme". */
+@keyframes remind-ask {
   0% {
+    max-width: 0;
     opacity: 0;
-    transform: translateY(-6px) scale(0.96);
   }
-  8%,
-  88% {
+  14%,
+  78% {
+    max-width: 22rem;
     opacity: 1;
-    transform: none;
   }
   100% {
+    max-width: 0;
     opacity: 0;
-    transform: translateY(-6px);
+  }
+}
+@keyframes remind-label {
+  0% {
+    max-width: 10rem;
+    opacity: 1;
+  }
+  14%,
+  78% {
+    max-width: 0;
+    opacity: 0;
+  }
+  100% {
+    max-width: 10rem;
+    opacity: 1;
   }
 }
