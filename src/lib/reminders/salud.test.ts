@@ -109,7 +109,7 @@ const PDF_2025 = "Calendario_Academico_2025_2026_43483483f2.pdf";
 const calendarPage = (current: string) =>
   `<h1>Calendario académico</h1><p>Enero 2026 - Marzo 2027 <a href="https://cms.fi.uba.ar/uploads/${current}">(+)</a></p>` +
   `<p>Febrero 2025 - Marzo 2026 <a href="https://cms.fi.uba.ar/uploads/${PDF_2025}">(+)</a></p>` +
-  `<img src="https://cms.fi.uba.ar/uploads/logo_FIUBA_bco_e004995ae8.png"><a href="/uploads/Reglamento_7c1d.pdf">x</a>` +
+  `<img src="https://cms.fi.uba.ar/uploads/logo_FIUBA_bco_e004995ae8.png"><a href="/uploads/${PDF_2025}">(+)</a>` +
   `<script id="__NEXT_DATA__">{"body":"[(+)](/uploads/${current})"}</script>`;
 const keys = (r: Result) => r.problems.map((p) => p.key);
 
@@ -416,6 +416,8 @@ describe("FIUBA academic calendar: once a day, mails when its PDF changes", () =
 
   it("reads the PDF names of the page, absolute or relative, without repeats or other files", () => {
     expect(gs.saludCalendarPdfs_(calendarPage(PDF_2026))).toEqual([PDF_2025, PDF_2026]);
+    // Any PDF counts, even without "calendario" in its name.
+    expect(gs.saludCalendarPdfs_('<a href="https://cms.fi.uba.ar/uploads/CA_FIUBA_2027_2028_ab12.pdf">(+)</a>')).toEqual(["CA_FIUBA_2027_2028_ab12.pdf"]);
     expect(gs.saludCalendarPdfs_("<p>Sin calendario</p>")).toEqual([]);
   });
 

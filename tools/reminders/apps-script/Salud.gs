@@ -19,7 +19,7 @@
  * SALUD_STATE (delete it to start over).
  *
  * Once a day (from SALUD_LIMITS.calendarHour) it also reads the FIUBA academic calendar page
- * (SALUD_CALENDAR_PAGE) and the names of the calendar PDFs it links. When they differ from the
+ * (SALUD_CALENDAR_PAGE) and the names of the PDFs it links. When they differ from the
  * last ones seen (Script Property SALUD_CALENDARIO), it mails once "El calendario académico de la
  * FIUBA cambió": the dates of Novedades (data/calendario/) come from that PDF. The first reading
  * only stores the names; a page that does not answer, or has no PDF, is unknown (it tries again
@@ -412,8 +412,9 @@ function saludCalendarDue_(prev, now) {
 }
 
 /**
- * The file names of the calendar PDFs the page links (cms.fi.uba.ar/uploads/…, absolute or
- * relative), sorted and without repeats. "Calendario_Academico_2026_2027_81c0faa452_909e52c493.pdf":
+ * The file names of the PDFs the page links (cms.fi.uba.ar/uploads/…, absolute or relative),
+ * sorted and without repeats. All of them, not only the ones named "calendario": a new calendar
+ * with another name must not go unnoticed (today the page links only calendars). "Calendario_Academico_2026_2027_81c0faa452_909e52c493.pdf":
  * the CMS adds a new hash when a file is uploaded again, so a corrected PDF gets a new name.
  */
 function saludCalendarPdfs_(html) {
@@ -421,7 +422,7 @@ function saludCalendarPdfs_(html) {
   var re = /\/uploads\/([A-Za-z0-9._%-]+\.pdf)/gi;
   var m;
   while ((m = re.exec(String(html || ''))) !== null) {
-    if (/calendario/i.test(m[1])) seen[m[1]] = true;
+    seen[m[1]] = true;
   }
   return Object.keys(seen).sort();
 }
@@ -437,7 +438,7 @@ function saludCalendarEvaluate_(prev, page, now) {
   if (!page) return unknown('la página de la FIUBA no respondió; se vuelve a probar en una hora.');
   if (page.code !== 200) return unknown('la página de la FIUBA respondió ' + page.code + '; se vuelve a probar en una hora.');
   var files = saludCalendarPdfs_(page.html);
-  if (!files.length) return unknown('la página no tiene ningún PDF del calendario (¿cambió el sitio de la FIUBA?); se vuelve a probar en una hora.');
+  if (!files.length) return unknown('la página no tiene ningún PDF (¿cambió el sitio de la FIUBA?); se vuelve a probar en una hora.');
   var state = { day: saludDay_(now), files: files };
   if (!prev.files) return { status: 'primera', log: 'primera lectura, ' + files.length + ' PDF guardados.', mail: false, added: [], removed: [], state: state };
   var added = files.filter(function (f) { return prev.files.indexOf(f) < 0; });
