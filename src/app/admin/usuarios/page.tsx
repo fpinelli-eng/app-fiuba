@@ -39,9 +39,9 @@ export default async function AdminUsersPage() {
   ] as const;
 
   return (
-    <div className="flex flex-col gap-4">
+    <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div>
-        <h1 className="text-[26px] font-semibold md:text-[32px]">Usuarios</h1>
+        <h1 className="text-[30px] font-semibold">Usuarios</h1>
         <p className="text-muted">Quiénes usan la app. De las reseñas se ve solo cuántas dejó cada uno, nunca cuáles: siguen siendo anónimas.</p>
       </div>
 
@@ -88,6 +88,6 @@ export default async function AdminUsersPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </main>
   );
 }
