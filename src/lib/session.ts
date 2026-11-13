@@ -1,7 +1,9 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail, profileFromUser, type Profile } from "@/lib/auth";
+import { parseRef, REFERRAL_COOKIE } from "@/lib/referral";
 
 export type Account = Profile & {
   id: string;
@@ -9,6 +11,20 @@ export type Account = Profile & {
   planId: string | null;
   isAdmin: boolean;
 };
+
+// Función todavía no creada: la migración 20261115120000_signup_source no está aplicada (las vistas
+// previas de Vercel usan la base de producción hasta que se integra la rama).
+const MISSING_FUNCTION = new Set(["42883", "PGRST202"]);
+
+// Si llegó por el QR (cookie del proxy), lo anota en el perfil recién creado. La base solo lo acepta una
+// vez, en las primeras 24 h de la cuenta y con valores de la lista. La cookie queda (en un Server
+// Component no se puede borrar) y vence sola: la base no deja reescribir el valor.
+async function saveSignupSource(supabase: Awaited<ReturnType<typeof createClient>>): Promise<void> {
+  const source = parseRef((await cookies()).get(REFERRAL_COOKIE)?.value);
+  if (!source) return;
+  const { error } = await supabase.rpc("set_my_signup_source", { p_source: source });
+  if (error && !MISSING_FUNCTION.has(error.code)) throw new Error(`set_my_signup_source: ${error.message}`);
+}
 
 // Verificación definitiva de la sesión, del lado del servidor.
 // Sin sesión → /ingresar. Con una cuenta que no es @fi.uba.ar → se cierra la sesión y se muestra el rechazo.
@@ -39,6 +55,7 @@ export const requireAccount = cache(async (): Promise<Account> => {
     // existe más y el perfil no se puede crear (foreign key). Se cierra la sesión y vuelve al ingreso.
     if (createError?.code === "23503") redirect("/auth/salir");
     if (createError) throw new Error(`ensure_profile: ${createError.message}`);
+    await saveSignupSource(supabase);
   }
 
   return {

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: `Política de privacidad · ${APP_NAM
 
 // Política de privacidad (issue #8). Pública: Google la pide para publicar el login.
 // Si cambia qué datos se guardan o dónde, se actualiza este texto y la fecha.
-const UPDATED = "12 de noviembre de 2026";
+const UPDATED = "13 de noviembre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
@@ -38,6 +38,9 @@ export default function PrivacidadPage() {
           <li>
             <b>De tu cuenta de Google @fi.uba.ar:</b> nombre, mail y foto. Los usamos para identificarte y mostrarlos en tu perfil. Los administradores pueden ver tu nombre, tu mail,
             tu carrera, tu fecha de alta, la última vez que usaste la app y cuántas reseñas dejaste para administrar la app (nunca cuáles escribiste ni qué dicen). No accedemos a tus mails, archivos ni a nada más de tu cuenta.
+          </li>
+          <li>
+            <b>Si llegaste por el QR de FIUBI:</b> anotamos solo eso al crear tu cuenta, y lo ven los administradores.
           </li>
           <li>
             <b>Lo que cargás:</b> tu carrera y plan, el estado y la nota de cada materia, los requisitos aprobados (como la prueba de inglés) y los cursos que elegís para el

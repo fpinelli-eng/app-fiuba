@@ -35,6 +35,7 @@ export default async function AdminUsersPage() {
     ["Con aprobadas", users.filter((u) => u.subjects > 0).length],
     ["Armaron el Plan", users.filter((u) => u.planCourses > 0).length],
     ["Dejaron reseñas", users.filter((u) => u.reviews > 0).length],
+    ["Entraron por QR", users.filter((u) => u.signupSource === "qr").length],
   ] as const;
 
   return (
@@ -44,7 +45,7 @@ export default async function AdminUsersPage() {
         <p className="text-muted">Quiénes usan la app. De las reseñas se ve solo cuántas dejó cada uno, nunca cuáles: siguen siendo anónimas.</p>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-7">
+      <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-8">
         {stats.map(([label, n]) => (
           <li key={label} className="rounded-2xl border border-line bg-surface p-3">
             <div className="text-[13px] text-muted">{label}</div>
@@ -62,6 +63,7 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-2.5 font-semibold">Carrera</th>
               <th className="px-4 py-2.5 font-semibold">Alta</th>
               <th className="px-4 py-2.5 font-semibold">Último uso</th>
+              <th className="px-4 py-2.5 font-semibold">Origen</th>
               <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
               <th className="px-4 py-2.5 text-right font-semibold">Reseñas</th>
               <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
@@ -76,6 +78,7 @@ export default async function AdminUsersPage() {
                 <td className="px-4 py-2.5 whitespace-nowrap">{u.planId ? (planName.get(u.planId) ?? u.planId) : "Sin elegir"}</td>
                 <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">{date(u.createdAt)}</td>
                 <td className="px-4 py-2.5 whitespace-nowrap">{u.lastSeenAt ? ago(now - new Date(u.lastSeenAt).getTime()) : "—"}</td>
+                <td className="px-4 py-2.5 whitespace-nowrap">{u.signupSource === "qr" ? "QR" : "—"}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.subjects}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.reviews}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.planCourses}</td>

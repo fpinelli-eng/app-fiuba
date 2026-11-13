@@ -125,6 +125,36 @@ select public.ensure_profile();  -- twice is fine
 select test.ok((select count(*) from public.profiles) = 1, 'student sees only their profile');
 select test.ok((select plan_id from public.profiles) is null, 'new profile has no plan');
 
+-- Signup source (the printed QR): only with set_my_signup_source(), once, whitelisted values.
+select test.ok((select signup_source from public.profiles) is null, 'new profile has no signup source');
+select test.fails($$select public.set_my_signup_source('facebook')$$, 'student sets an arbitrary signup source');
+select test.fails($$select public.set_my_signup_source('QR')$$, 'student sets a signup source outside the list (case)');
+select test.fails($$select public.set_my_signup_source(null)$$, 'student sets a null signup source');
+select test.fails($$update public.profiles set signup_source = 'qr'$$, 'student sets her signup source directly');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select public.set_my_signup_source('qr');  -- only touches the caller's own profile (none here)
+reset role;
+select test.ok((select signup_source from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') is null, 'another account sets her signup source');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"Ana@FI.UBA.AR"}', false);
+select public.set_my_signup_source('qr');
+select test.ok((select signup_source from public.profiles) = 'qr', 'student records she came through the QR');
+select public.set_my_signup_source('qr');  -- twice (two first requests at once) is fine
+select test.fails($$update public.profiles set signup_source = null$$, 'student clears her signup source');
+select test.fails($$select public.set_my_signup_source('otro')$$, 'student rewrites her signup source');
+select test.ok((select signup_source from public.profiles) = 'qr', 'the signup source stays after the failed changes');
+-- Only during the first 24 hours of the account.
+reset role;
+update public.profiles set signup_source = null, created_at = now() - interval '2 days' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+select public.set_my_signup_source('qr');
+select test.ok((select signup_source from public.profiles) is null, 'an older account sets its signup source');
+reset role;
+update public.profiles set signup_source = 'qr', created_at = now() where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+
 -- The plan is chosen only with choose_my_plan() (once) and changed with change_my_plan().
 select test.fails($$update public.profiles set plan_id = 'industrial-2023'$$, 'student sets their plan directly');
 select test.fails($$select public.choose_my_plan('no-existe')$$, 'student picks a plan that does not exist');
@@ -315,6 +345,9 @@ select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists th
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
 select test.ok((select last_seen_at from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees when each student last used the app');
+select test.ok((select signup_source from public.admin_users() where email = 'ana@fi.uba.ar') = 'qr', 'admin sees who came through the QR');
+select test.ok((select signup_source from public.admin_users() where email = 'beto@fi.uba.ar') is null, 'admin sees no source for the others');
+select test.fails($$update public.profiles set signup_source = null where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'admin edits a signup source');
 reset role;
 insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
 set role authenticated;

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseEnv } from "./env";
+import { parseRef, REFERRAL_COOKIE, REFERRAL_MAX_AGE } from "@/lib/referral";
 
 // Rutas que se pueden ver sin sesión.
 const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest", "/robots.txt", "/sitemap.xml"];
@@ -33,6 +34,14 @@ export async function updateSession(request: NextRequest) {
     loggedIn = !!data?.claims.sub;
   } catch {
     loggedIn = false;
+  }
+
+  // Llegó por el QR impreso (?ref=qr): se recuerda en una cookie propia hasta que cree la cuenta
+  // (requireAccount() lo guarda en profiles.signup_source). Solo valores de la lista, nunca texto libre.
+  // Va después de getClaims porque setAll reemplaza `response`; las respuestas de abajo copian sus cookies.
+  const ref = parseRef(request.nextUrl.searchParams.get("ref"));
+  if (ref && !loggedIn) {
+    response.cookies.set(REFERRAL_COOKIE, ref, { httpOnly: true, sameSite: "lax", secure: true, maxAge: REFERRAL_MAX_AGE, path: "/" });
   }
 
   const path = request.nextUrl.pathname;
