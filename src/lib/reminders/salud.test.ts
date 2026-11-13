@@ -341,7 +341,7 @@ describe("hourly(): the reminders and the monitor never stop each other", () => 
   it("the monitor fails: the reminders already ran, and hourly() reports it", () => {
     const s = services({ failSalud: true });
     s.globals.UrlFetchApp.fetch = ((orig) => (url: string) => {
-      if (url.startsWith("https://fiubi.com.ar")) throw new Error("boom");
+      if (url === SITE || url === ROBOTS) throw new Error("boom");
       return orig(url);
     })(s.globals.UrlFetchApp.fetch);
     s.globals.MailApp.sendEmail = () => {
