@@ -34,7 +34,7 @@ export interface ImportPreview {
   stats: { subjects: number; courses: number; blocks: number };
   warnings: string[];
   matched: MatchedSubject[];
-  /** SIU subjects that are not in this plan (other plan of the career, other careers): ignored. */
+  /** SIU subjects that are not in this plan (other plan of the career, other careers, new electives): ignored unless an admin pairs or adds them. */
   unmatched: UnmatchedSubject[];
   /** "Reemplazar con otro texto": the published import this one replaces, to restore it on "Descartar". */
   replacing?: { rawText: string; preview: ImportPreview; publishedAt: string | null };

@@ -354,7 +354,7 @@ async function publishPlan(planId: string, term: { id: string }, republish = fal
   const built = await buildPreview(imp.data.raw_text as string, planId, term.id);
   const preview: ImportPreview = decisions ? { ...built.preview, decisions } : built.preview;
   const drafts = built.drafts;
-  if (drafts.length === 0) return { error: "El texto no tiene cursos de este plan." };
+  if (drafts.length === 0 && !republish) return { error: "El texto no tiene cursos de este plan." };
 
   const fields = (d: OfferingDraft) => ({
     siu_subject_name: d.siu_subject_name,
@@ -364,10 +364,15 @@ async function publishPlan(planId: string, term: { id: string }, republish = fal
     quota: d.quota,
     enrolled: d.enrolled,
   });
-  const toUpdate = drafts.filter((d) => existing.has(offeringKey(d)));
+  // Republishing (the plan gained or lost subjects) only adds the courses of new subjects and hides
+  // those of subjects no longer in the plan: the rest of the live offer is not touched.
+  const toUpdate = republish ? [] : drafts.filter((d) => existing.has(offeringKey(d)));
   const toInsert = drafts.filter((d) => !existing.has(offeringKey(d)));
   const draftKeys = new Set(drafts.map(offeringKey));
-  const toHide = [...existing.entries()].filter(([key]) => !draftKeys.has(key)).map(([, id]) => id);
+  const matchedCodes = new Set(preview.matched.map((m) => m.siuCode));
+  const toHide = [...existing.entries()]
+    .filter(([key]) => (republish ? !matchedCodes.has(key.split("|")[0]) : !draftKeys.has(key)))
+    .map(([, id]) => id);
 
   try {
     // Remember which SIU code is which subject, for the next terms.
@@ -413,7 +418,7 @@ async function publishPlan(planId: string, term: { id: string }, republish = fal
       const removed = await supabase.from("offering_blocks").delete().in("offering_id", updatedIds);
       if (removed.error) throw new Error(`offering_blocks: ${removed.error.message}`);
     }
-    const blocks = drafts.flatMap((d) => d.blocks.map((b) => ({ ...b, offering_id: offeringIdOf.get(offeringKey(d))! })));
+    const blocks = [...toInsert, ...toUpdate].flatMap((d) => d.blocks.map((b) => ({ ...b, offering_id: offeringIdOf.get(offeringKey(d))! })));
     if (blocks.length) {
       const inserted = await supabase.from("offering_blocks").insert(blocks);
       if (inserted.error) throw new Error(`offering_blocks: ${inserted.error.message}`);

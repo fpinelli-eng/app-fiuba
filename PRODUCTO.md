@@ -134,7 +134,7 @@ Ninguna habla con las otras. El alumno hace la integración en su cabeza: mira q
 |---|---|
 | Cargar la oferta **por carrera y plan** pegando el texto del SIU; tablero con el estado de cada plan (sin cargar / procesado / publicado) | MVP |
 | Cursos con cambios respecto del cuatrimestre anterior: "mismo curso que…", "curso nuevo" o "no mostrar", con la opción sugerida ya marcada. Se puede publicar sin revisar nada | MVP |
-| Materias del SIU que no están en el plan: se informan y se ignoran | MVP |
+| Materias del SIU que no están en el plan: se informan y se ignoran, salvo que el administrador las empareje con una del plan o las agregue al plan como electivas nuevas | MVP |
 | Oferta publicada editable: quitar o volver a mostrar cursos; reemplazar todo el plan con otro texto | MVP |
 | Ofertas enviadas por alumnos: si el plan no tiene la oferta del cuatrimestre, un alumno pega la oferta de comisiones del SIU desde el Plan; queda pendiente y un administrador la publica (con la misma carga) o la rechaza. Nunca se publica sola | MVP |
 | Fecha de reseñas pendientes del cuatrimestre | MVP |
