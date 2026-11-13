@@ -16,7 +16,7 @@
  *   4. at any hour, sends the confirmation mails ("Activaste tus recordatorios", so the student
  *      finds it now and marks it as "No es spam"): avisos_confirmaciones() lists them and
  *      avisos_confirmacion_enviada() marks each one right after sending it (migration
- *      20261116120000_recordarme_confirmacion.sql). It leaves CONFIRM_QUOTA_RESERVE mails of the
+ *      20261116130000_recordarme_confirmacion.sql). It leaves CONFIRM_QUOTA_RESERVE mails of the
  *      daily quota for the reminders.
  *
  * Optional instant path: deployed as a web app (Deploy → New deployment → Web app, execute as me,

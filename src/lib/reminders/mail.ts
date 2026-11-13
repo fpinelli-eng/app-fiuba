@@ -1,6 +1,6 @@
 // "Recordarme": where the reminder mails go and when the confirmation mail is due. Pure, so it runs in
 // the browser and the server and is tested. The database applies the same rules
-// (set_my_reminder_email() and avisos_confirmaciones(), migration 20261116120000_recordarme_confirmacion.sql);
+// (set_my_reminder_email() and avisos_confirmaciones(), migration 20261116130000_recordarme_confirmacion.sql);
 // these are for the screen: what to show and whether to promise a confirmation mail.
 
 /** The account that sends the reminders. */

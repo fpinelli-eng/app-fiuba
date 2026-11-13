@@ -537,7 +537,7 @@ select test.fails($$update public.exam_reminders set first_sent_at = null$$, 'a 
 reset role;
 drop table test.avisos_run;
 
--- Recordarme: other mail and confirmation mail (20261116120000_recordarme_confirmacion.sql) -----
+-- Recordarme: other mail and confirmation mail (20261116130000_recordarme_confirmacion.sql) -----
 
 -- The other mail: only through set_my_reminder_email(), only their own, any domain, valid format.
 set role authenticated;

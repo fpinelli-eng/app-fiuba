@@ -46,7 +46,7 @@ export async function GET() {
   // Aparte y sin cortar si falla: la columna llega con la migración 20261115120000_signup_source, que las
   // vistas previas (base de producción) no tienen hasta integrar la rama.
   const source = await supabase.from("profiles").select("signup_source").eq("id", account.id).maybeSingle();
-  // Igual: llegan con la migración 20261116120000_recordarme_confirmacion.
+  // Igual: llegan con la migración 20261116130000_recordarme_confirmacion.
   const [reminderEmail, confirmations] = await Promise.all([
     supabase.from("profiles").select("reminder_email").eq("id", account.id).maybeSingle(),
     supabase.from("reminder_confirmations").select("email, sent_at").eq("user_id", account.id).order("sent_at"),
