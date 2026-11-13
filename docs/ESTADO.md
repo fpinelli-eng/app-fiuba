@@ -2,7 +2,7 @@
 
 Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué punto estamos sin haber estado en las conversaciones anteriores. **Se actualiza en cada pull request que cambie algo de lo que dice acá.**
 
-Última actualización: 11 de noviembre de 2026.
+Última actualización: 13 de noviembre de 2026.
 
 ## Cómo se llegó hasta acá
 
@@ -51,6 +51,7 @@ Resumen para que cualquier persona (o cualquier sesión de Claude) sepa en qué 
 | Supabase: consulta cada 3 días para que el plan gratuito no pause el proyecto, y respaldo semanal cifrado de `public` y `auth` (30 días, como *artifact*). **Falta que Francisco cree el secreto `BACKUP_PASSPHRASE`** | `.github/workflows/keepalive.yml`, `.github/workflows/backup.yml`, `docs/RESPALDOS.md` | PR #54 abierto |
 | Seguridad: Next.js 16.4.6 (corrige tres vulnerabilidades publicadas), cabeceras de seguridad en todas las páginas y revisión completa con lo que falta antes del lanzamiento | `next.config.ts`, `package.json`, `docs/SEGURIDAD.md` | PR abierto (rama `security-hardening`) |
 | Seguridad y privacidad (revisión del 11 de noviembre): carrera y plan solo por las funciones de la app (`choose_my_plan()` la primera vez, `change_my_plan()` después); la página principal ya no muestra texto de la dirección al rechazar una cuenta; "Relevamiento de usuarios" solo con totales; "Descargar mis datos" con todo lo que se guarda | `supabase/migrations/20261113120000_plan_only_by_function.sql`, `src/app/ingresar/`, `src/app/auth/`, `tools/stats/users.sql`, `src/app/(app)/perfil/datos/route.ts` | PR abierto (rama `seguridad-ajustes`) |
+| Administración → Usuarios: quién entró por el QR impreso (columna "Origen" y total "Entraron por QR"). El QR apunta a `https://fiubi.com.ar/?ref=qr`: el proxy lo guarda en la cookie `fiubi_ref` (solo valores de una lista) y, al crear el perfil, `requireAccount()` lo anota con `set_my_signup_source()` (una sola vez y en las primeras 24 h de la cuenta). Figura en la política de privacidad y en "Descargar mis datos" | `src/lib/referral.ts`, `src/lib/supabase/proxy.ts`, `src/lib/session.ts`, `src/app/admin/usuarios/`, `supabase/migrations/20261115120000_signup_source.sql` | PR abierto (rama `origen-qr`) |
 
 ## Qué falta, en orden
 
