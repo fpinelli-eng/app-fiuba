@@ -242,18 +242,7 @@ body {
   }
 }
 
-@keyframes story-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Celular: el nombre de Novedades se despliega al lado de la campanita y se vuelve a cerrar (Header). */
+() => inNew/* Celular: el nombre de Novedades se despliega al lado de la campanita y se vuelve a cerrar (Header). */
 @keyframes peek-label {
   0% {
     max-width: 0;
@@ -274,11 +263,12 @@ body {
 }
 
 /* Pantallas dibujadas de las historias (StoryMocks): cada una se anima en tres pasos, como un video.
-   El estado final es el de los estilos normales, así que con "reducir movimiento" se ve completa. */
+   El estado final es el de los estilos normales, así que con "reducir movimiento" se ve completa.
+   Las llegadas frenan suave (sin rebote): cubic-bezier(0.16, 1, 0.3, 1), puesto en cada animación. */
 @keyframes story-pop {
   from {
     opacity: 0;
-    transform: scale(0.4);
+    transform: scale(0.72);
   }
 }
 @keyframes story-fade {
@@ -289,7 +279,7 @@ body {
 @keyframes story-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
 }
 @keyframes story-grow {
@@ -297,44 +287,75 @@ body {
     transform: scaleX(0);
   }
 }
+/* El arco del Inicio: cada tramo se dibuja desde su comienzo (los trazos miden 100 con pathLength). */
 @keyframes story-arc {
   from {
-    stroke-dashoffset: 120;
+    stroke-dasharray: 0 100;
   }
 }
+/* El toque: una yema que apoya, aprieta y se va. Su estado normal es invisible. */
 @keyframes story-tap {
   0% {
     opacity: 0;
-    transform: translate(14px, 18px);
+    transform: scale(1.7);
   }
-  35% {
+  30% {
     opacity: 1;
     transform: none;
   }
-  55% {
-    transform: scale(0.78);
+  48% {
+    opacity: 1;
+    transform: scale(0.72);
   }
-  75% {
+  66% {
     opacity: 1;
     transform: none;
   }
   100% {
     opacity: 0;
+    transform: none;
+  }
+}
+/* La onda del toque, en el momento en que aprieta. */
+@keyframes story-ripple {
+  0%,
+  44% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.3);
+  }
+}
+/* Una fila que se marca al tocarla: el contorno aparece y se va. */
+@keyframes story-pick {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  78% {
+    opacity: 1;
   }
 }
 @keyframes story-sheet {
   0% {
-    transform: translateY(110%);
+    transform: translateY(105%);
   }
-  18%,
-  82% {
+  16%,
+  84% {
     transform: none;
   }
   100% {
-    transform: translateY(110%);
+    transform: translateY(105%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .story-step,
   .story-mock,
   .story-mock * {
     animation: none !important;
