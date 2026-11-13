@@ -44,7 +44,7 @@ var PAGE_SIZE = 1000;
 var CONFIRM_QUOTA_RESERVE = 30; // confirmations stop here: the rest of the daily quota is for the reminders
 var SENDER = 'avisosfiubi@gmail.com';
 // A plain address (the database checks the same): no spaces, commas or brackets, one @.
-var EMAIL_RE = /^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
+var EMAIL_RE = /^(?=[^@]{1,64}@)[a-z0-9_%+-]+(\.[a-z0-9_%+-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
 var LINKS = {
   siu: 'https://guaraniautogestion.fi.uba.ar/',
   finales: 'https://fiubi.com.ar/finales',
@@ -251,7 +251,7 @@ function sendRows_(rows) {
     if (MailApp.getRemainingDailyQuota() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
     var row = due[i];
     var mail = buildMail_(row);
-    MailApp.sendEmail({ to: row.email, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    if (!sendMail_(row.email, mail)) continue; // a rejected address never blocks the others
     // Right after each mail. If marking fails, stop here: at most this one could go twice.
     rpc_('avisos_marcar_enviado', { p_reminder_id: row.reminder_id });
     row.sent_at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
@@ -259,6 +259,20 @@ function sendRows_(rows) {
     sent++;
   }
   return { sent: sent, left: due.length - sent };
+}
+
+/**
+ * Sends one mail. Returns false (and logs, without the address) when Gmail rejects it: the address
+ * comes from the student, so one bad address must not stop the rest. It stays unmarked.
+ */
+function sendMail_(to, mail) {
+  try {
+    MailApp.sendEmail({ to: to, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    return true;
+  } catch (e) {
+    Logger.log('No se pudo mandar un mail: ' + e);
+    return false;
+  }
 }
 
 /**
@@ -285,7 +299,7 @@ function sendConfirmations_(rows) {
     if (MailApp.getRemainingDailyQuota() <= CONFIRM_QUOTA_RESERVE) break;
     var row = due[i];
     var mail = buildConfirmMail_(row);
-    MailApp.sendEmail({ to: row.email, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    if (!sendMail_(row.email, mail)) continue; // a rejected address never blocks the others
     // Right after each mail. If marking fails, stop here: at most this one could go twice.
     rpc_('avisos_confirmacion_enviada', { p_email: row.email });
     sent++;

@@ -10,7 +10,7 @@ import { REMINDER_SENDER, reminderDestination, type ConfirmationNotice, type Rem
 export function ConfirmationText({ confirmation }: { confirmation: ConfirmationNotice }) {
   return (
     <>
-      {confirmation.soon ? "En unos minutos" : "En la próxima hora"} te llega un mail de confirmación de <b className="font-semibold">{REMINDER_SENDER}</b> a{" "}
+      En unos minutos te llega un mail de confirmación de <b className="font-semibold">{REMINDER_SENDER}</b> a{" "}
       <b className="font-semibold break-all">{confirmation.to}</b>. Si no está en Recibidos, buscalo en Spam y tocá «No es spam», o agregá {REMINDER_SENDER} a tus
       contactos.
     </>
@@ -78,7 +78,7 @@ export function ReminderEmailField({
             className="h-11 w-full min-w-0 rounded-[10px] border border-line-strong bg-surface px-3 text-base text-ink outline-none focus:border-accent md:h-10 md:text-sm"
           />
           {error && (
-            <p id="recordarme-mail-error" className="text-[12.5px] text-danger">
+            <p id="recordarme-mail-error" role="alert" className="text-[12.5px] text-danger">
               {error}
             </p>
           )}

@@ -8,7 +8,7 @@ export const REMINDER_SENDER = "avisosfiubi@gmail.com";
 
 export const REMINDER_EMAIL_MAX = 254;
 /** A plain address, the same as the database check: no spaces, commas or brackets, one @. */
-const EMAIL_RE = /^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/;
+const EMAIL_RE = /^(?=[^@]{1,64}@)[a-z0-9_%+-]+(\.[a-z0-9_%+-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 
 /** Confirmations per student in 24 hours (the address can be anyone's). */
 export const CONFIRMATIONS_PER_DAY = 3;
@@ -50,9 +50,10 @@ export function confirmationDue(s: ReminderMailState, activeReminders: number, n
   return recent < CONFIRMATIONS_PER_DAY;
 }
 
-/** What the screen says after saving: the confirmation goes to `to`, now or in the next run. */
+/**
+ * What the screen says after saving: a confirmation goes to `to` "en unos minutos" (with the instant
+ * path; without it, within the hour: the copy stays simple on purpose).
+ */
 export interface ConfirmationNotice {
   to: string;
-  /** The instant path is set up (AVISOS_WEBAPP_URL): in a few minutes; if not, within the hour. */
-  soon: boolean;
 }

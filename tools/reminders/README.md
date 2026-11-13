@@ -20,7 +20,7 @@ Reglas (están en la base, con pruebas en `tools/db-test/security.sql`):
 
 **Límite de Gmail:** una cuenta gratuita manda unos 100 mails por día. Si en un día tocan más, el script para y manda el resto al otro día (mientras la inscripción siga abierta).
 
-**Seguridad:** el script entra a la base con la clave pública de la app (la misma que usa la web) y un token propio. Con esa clave solo se pueden usar las funciones `avisos_*` y `salud()`, y sin el token devuelven error. La base guarda solo el SHA-256 del token, en `avisos_config`, que nadie puede leer desde la app. El token está únicamente en las propiedades del script.
+**Seguridad:** el script entra a la base con la clave pública de la app (la misma que usa la web) y un token propio. Con esa clave solo se pueden usar las funciones `avisos_*` y `salud()`, y sin el token devuelven error. La base guarda solo el SHA-256 del token, en `avisos_config`, que nadie puede leer desde la app. El token está en las propiedades del script y, si se usa el camino al instante del mail de confirmación, también en Vercel (`AVISOS_WEBAPP_TOKEN`, solo del servidor).
 
 **Lo que sigue dependiendo de GitHub:** la migración se aplica una sola vez al integrar el PR (workflow "Base de datos"), y las fechas de examen las sigue trayendo cada mañana el workflow "Fechas de examen del SIU". Si GitHub se saltea un día, las fechas quedan un día viejas, pero los mails siguen saliendo.
 
@@ -54,10 +54,10 @@ Listo. Para ver qué pasó en cada corrida: Apps Script → **Ejecuciones** (a l
 
 Los mails salen de una cuenta de Gmail nueva y externa a la facultad, así que en las cuentas @fi.uba.ar (Google Workspace) muchas veces caen en **Spam**. Para que el alumno lo arregle antes del aviso de verdad, al activar sus recordatorios le llega enseguida **un mail de confirmación** ("Activaste tus recordatorios de FIUBI", `buildConfirmMail_()` en `Code.gs`): cuántas mesas eligió y que, si le llegó a Spam, toque **"No es spam"** y agregue avisosfiubi@gmail.com a sus contactos. La app le dice lo mismo al tocar **Aceptar** (`ReminderMail.tsx`).
 
-- **Cuándo:** una vez por alumno y dirección (migración `20261116120000_recordarme_confirmacion.sql`). Sale cuando tiene al menos un recordatorio de su plan con el examen por delante y su última confirmación fue a otra dirección (o nunca recibió una): la primera vez que activa recordatorios, y de nuevo solo si cambia el mail. Sacar todas las mesas y volver a elegir no manda otra. Como el otro mail puede ser cualquiera, como mucho 3 por alumno cada 24 horas (las demás esperan). Los alumnos que ya tenían recordatorios antes de esta versión reciben la suya en las primeras corridas.
+- **Cuándo:** una vez por alumno y dirección, primero los que eligieron mesas más recientemente (migración `20261116120000_recordarme_confirmacion.sql`). Sale cuando tiene al menos un recordatorio de su plan con el examen por delante y su última confirmación fue a otra dirección (o nunca recibió una): la primera vez que activa recordatorios, y de nuevo solo si cambia el mail. Sacar todas las mesas y volver a elegir no manda otra. Como el otro mail puede ser cualquiera, como mucho 3 por alumno cada 24 horas (las demás esperan). Los alumnos que ya tenían recordatorios antes de esta versión reciben la suya en las primeras corridas.
 - **Otro mail:** en Recordarme, "¿Preferís recibir los avisos en otro mail?" (cualquier dominio). Se guarda en `profiles.reminder_email` solo con `set_my_reminder_email()`; vacío vuelve a la cuenta @fi.uba.ar. `avisos_pendientes()` manda a ese mail cuando existe (la cuenta tiene que seguir siendo @fi.uba.ar). Los administradores no lo ven.
 - **Cómo sale:** `hourly()`, después de los recordatorios y a cualquier hora, le pide a la base `avisos_confirmaciones()` (mismo `TOKEN`), manda cada una y la marca enseguida con `avisos_confirmacion_enviada()`. Deja `CONFIRM_QUOTA_RESERVE` (30) mails de la cuota diaria para los recordatorios: si no alcanza, salen en la corrida siguiente. Para probar el diseño sin tocar nada: `sendTestConfirmMail` (y `preview.html` lo muestra junto al del recordatorio).
-- **Al instante (opcional):** sin nada más, la confirmación sale en la corrida de cada hora y la app dice "en la próxima hora". Si el script se publica como aplicación web, la app le avisa al guardar y sale en unos minutos (la app dice "en unos minutos").
+- **Al instante (opcional):** sin nada más, la confirmación sale en la corrida de cada hora. Si el script se publica como aplicación web, la app le avisa al guardar y sale en unos minutos. La app dice "en unos minutos" en los dos casos (texto simple a propósito).
 
 ### Puesta en marcha (Tomás)
 
@@ -121,7 +121,7 @@ Listo: desde la próxima hora corre solo.
 
 - **Cambiar el código o el diseño del mail:** se cambia `apps-script/Code.gs` en el repo (con PR) y después se vuelve a pegar en el editor de Apps Script y se guarda. No hace falta tocar nada más: el activador sigue andando con el código nuevo.
 - **Ver el diseño sin mandar nada:** abrí `apps-script/preview.html` en el navegador (el mail con datos de ejemplo). Si cambiás el mail en `Code.gs`, regeneralo con `node tools/reminders/apps-script/preview.mjs` (las pruebas avisan si quedó viejo).
-- **Cambiar el token:** en Propiedades del script borrá `TOKEN`, corré `createToken` y pegá la línea nueva en el SQL Editor.
+- **Cambiar el token:** en Propiedades del script borrá `TOKEN`, corré `createToken` y pegá la línea nueva en el SQL Editor. Si está la aplicación web, cambialo también en Vercel (`AVISOS_WEBAPP_TOKEN`).
 - **Frenar todo:** en **Activadores**, borrá el de `hourly` (frena también el monitor).
 
 ## Privacidad

@@ -29,10 +29,6 @@ export function confirmRequest(env: Record<string, string | undefined> = process
   };
 }
 
-export function instantConfirmations(): boolean {
-  return confirmRequest() !== null;
-}
-
 /**
  * Asks the script to send the pending confirmations now, after the response (never blocks nor fails
  * the save). The script keeps running even if this gives up waiting.

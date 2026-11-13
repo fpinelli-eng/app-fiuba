@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { normalizeText } from "@/lib/map/model";
 import { enrollmentStatus, formatExamDay, formatExamTime, type ExamSubjectView, type ExamTableView, type FinalsData } from "@/lib/exams/types";
-import { normalizeReminderEmail, type ConfirmationNotice, type ReminderMailState } from "@/lib/reminders/mail";
+import { normalizeReminderEmail, reminderDestination, type ConfirmationNotice, type ReminderMailState } from "@/lib/reminders/mail";
 import { reminderKey, type ExamReminderView } from "@/lib/reminders/model";
 import { saveExamReminders, saveReminderEmail, type ReminderPick, type SaveRemindersResult } from "./actions";
 import { ReminderEmailField, type EmailStatus } from "./ReminderMail";
@@ -70,7 +70,7 @@ export function RemindersDialog({
   const [emailStatus, setEmailStatus] = useState<EmailStatus>({ kind: "idle" });
 
   // Saves the other mail (null: back to the account). Returns false on error, else the confirmation due.
-  const saveEmail = async (value: string | null): Promise<false | { confirmation: ConfirmationNotice | null }> => {
+  const saveEmail = async (value: string | null): Promise<false | { to: string; confirmation: ConfirmationNotice | null }> => {
     setEmailStatus({ kind: "saving" });
     const result = await saveReminderEmail(value).catch(() => ({ error: "No pudimos guardar el mail.", mail: null, confirmation: null }));
     if (result.error) {
@@ -80,7 +80,7 @@ export function RemindersDialog({
     if (result.mail) onMailChange(result.mail);
     setEmailDraft(null);
     setEmailStatus({ kind: "saved", confirmation: result.confirmation });
-    return { confirmation: result.confirmation };
+    return { to: result.mail ? reminderDestination(result.mail) : (mail?.account ?? ""), confirmation: result.confirmation };
   };
 
   useEffect(() => {
@@ -113,18 +113,23 @@ export function RemindersDialog({
 
   const save = async () => {
     // A mail typed and not saved: saved first (if it is wrong, the dialog stays open with the error).
-    let emailConfirmation: ConfirmationNotice | null = null;
+    let emailSaved: { to: string; confirmation: ConfirmationNotice | null } | null = null;
     if (mail && emailDraft !== null) {
       const typed = normalizeReminderEmail(emailDraft, mail.account);
       if (!("email" in typed) || typed.email !== mail.custom) {
+        setState({ kind: "saving" });
         const saved = await saveEmail(emailDraft);
-        if (!saved) return;
-        emailConfirmation = saved.confirmation;
+        if (!saved) {
+          setState({ kind: "idle" });
+          return;
+        }
+        emailSaved = { to: saved.to, confirmation: saved.confirmation };
       } else setEmailDraft(null);
     }
+    const emailConfirmation = emailSaved?.confirmation ?? null;
     const changed = selected.size !== initial.size || [...selected].some((k) => !initial.has(k));
     if (!changed) {
-      if (emailConfirmation) onSaved(reminders, { text: `Listo, te avisamos a ${emailConfirmation.to}.`, confirmation: emailConfirmation });
+      if (emailSaved) onSaved(reminders, { text: `Listo, te avisamos a ${emailSaved.to}.`, confirmation: emailConfirmation });
       dialog.current?.close();
       return;
     }

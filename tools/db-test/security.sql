@@ -551,6 +551,9 @@ select test.fails($$select public.set_my_reminder_email('ana@gmail')$$, 'other m
 select test.fails($$select public.set_my_reminder_email('ana@gmail.com, beto@gmail.com')$$, 'other mail: two addresses');
 select test.fails($$select public.set_my_reminder_email('ana perez@gmail.com')$$, 'other mail: spaces');
 select test.fails($$select public.set_my_reminder_email('<ana@gmail.com>')$$, 'other mail: brackets');
+select test.fails($$select public.set_my_reminder_email('ana..perez@gmail.com')$$, 'other mail: two dots in a row');
+select test.fails($$select public.set_my_reminder_email('ana@-gmail.com')$$, 'other mail: label starting with a hyphen');
+select test.fails($$select public.set_my_reminder_email(repeat('a', 65) || '@gmail.com')$$, 'other mail: local part too long');
 select test.fails($$select public.set_my_reminder_email(repeat('a', 64) || '@' || repeat('b', 190) || '.com')$$, 'other mail: too long');
 select public.set_my_reminder_email('  Ana.Perez+fiubi@GMAIL.com ');
 select test.ok((select reminder_email from public.profiles where id = auth.uid()) = 'ana.perez+fiubi@gmail.com', 'other mail: trimmed and lowercased, any domain');

@@ -20,6 +20,7 @@
 --   reminders.
 -- * Students who already had reminders before this migration get their confirmation in the first
 --   runs (it helps them too); the script leaves quota for the reminders (CONFIRM_QUOTA_RESERVE).
+--   Newest reminders first, so a student who just tapped Aceptar does not wait behind that backlog.
 -- * avisos_pendientes() now mails coalesce(reminder_email, account mail). Recreated from its last
 --   definition (20261114130000_avisos_un_mail.sql), changing only that.
 
@@ -27,7 +28,8 @@ alter table public.profiles add column reminder_email text check (
   reminder_email is null or (
     char_length(reminder_email) <= 254
     and reminder_email = lower(reminder_email)
-    and reminder_email ~ '^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$'
+    and char_length(split_part(reminder_email, '@', 1)) <= 64
+    and reminder_email ~ '^[a-z0-9_%+-]+(\.[a-z0-9_%+-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$'
   )
 );
 
@@ -58,7 +60,8 @@ begin
     raise exception 'not a student' using errcode = '42501';
   end if;
   if v_email is not null and (
-    char_length(v_email) > 254 or v_email !~ '^[a-z0-9._%+-]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$'
+    char_length(v_email) > 254 or char_length(split_part(v_email, '@', 1)) > 64
+    or v_email !~ '^[a-z0-9_%+-]+(\.[a-z0-9_%+-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$'
   ) then
     raise exception 'invalid email' using errcode = '22023';
   end if;
@@ -95,7 +98,7 @@ begin
              where c.user_id = p.id order by c.sent_at desc, c.id desc limit 1) as last_email,
            (select count(*) from public.reminder_confirmations c
              where c.user_id = p.id and c.sent_at > now() - interval '24 hours') as recent,
-           p.created_at
+           (select max(r.created_at) from public.exam_reminders r where r.user_id = p.id) as last_reminder_at
     from public.profiles p
     join auth.users u on u.id = p.id
     where u.email ~* '^[^\s@<>",]+@fi\.uba\.ar$'
@@ -104,7 +107,7 @@ begin
   from students s
   where s.mesas > 0 and s.last_email is distinct from s.email and s.recent < 3
   group by s.email
-  order by min(s.created_at), s.email;
+  order by max(s.last_reminder_at) desc, s.email;
 end;
 $$;
 

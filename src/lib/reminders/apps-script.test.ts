@@ -302,6 +302,39 @@ describe("sendConfirmations_ (Google services faked)", () => {
   });
 });
 
+describe("a rejected address never blocks the others", () => {
+  it("skips it unmarked and keeps sending, reminders and confirmations", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const log: string[] = [];
+    g.Logger = { log: () => undefined };
+    g.MailApp = {
+      getRemainingDailyQuota: () => 100,
+      sendEmail: (m: { to: string }) => {
+        if (m.to.startsWith("malo")) throw new Error("Invalid email");
+        log.push(`mail ${m.to}`);
+      },
+    };
+    g.Utilities = { formatDate: () => "2026-11-30 14:05" };
+    g.rpc_ = (name: string, args: { p_reminder_id?: number; p_email?: string }) => log.push(`${name} ${args.p_reminder_id ?? args.p_email}`);
+    const reminders = [row({ reminder_id: 1, email: "malo@gmail.com", due: true }), row({ reminder_id: 2, email: "b@fi.uba.ar", due: true })];
+    const r1 = (g as unknown as { sendRows_(r: Row[]): object }).sendRows_(reminders);
+    expect({ ...r1 }).toEqual({ sent: 1, left: 1 });
+    const r2 = (g as unknown as { sendConfirmations_(r: Row[]): object }).sendConfirmations_([
+      { email: "malo@gmail.com", first_name: "A", mesas: 1 },
+      { email: "c@gmail.com", first_name: "C", mesas: 1 },
+    ]);
+    expect({ ...r2 }).toEqual({ sent: 1, left: 1 });
+    expect(log).toEqual([
+      "avisos_marcar_enviado 0",
+      "mail b@fi.uba.ar",
+      "avisos_marcar_enviado 2",
+      "avisos_confirmacion_enviada ",
+      "mail c@gmail.com",
+      "avisos_confirmacion_enviada c@gmail.com",
+    ]);
+  });
+});
+
 describe("doPost (instant confirmations)", () => {
   const token = "t".repeat(64);
   const pass = () => ({ sent: 1, left: 0 });

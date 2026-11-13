@@ -21,7 +21,7 @@ describe("normalizeReminderEmail", () => {
   });
 
   it("rejects what is not one plain address", () => {
-    for (const bad of ["ana", "ana@gmail", "@gmail.com", "ana perez@gmail.com", "a@gmail.com, b@gmail.com", "a@gmail.com;b@gmail.com", "<a@gmail.com>", "a@@gmail.com", "a@gmail.c", `${"a".repeat(65)}@gmail.com`, `a@${"b".repeat(250)}.com`]) {
+    for (const bad of ["ana", "ana@gmail", "@gmail.com", "ana perez@gmail.com", "a@gmail.com, b@gmail.com", "a@gmail.com;b@gmail.com", "<a@gmail.com>", "a@@gmail.com", "a@gmail.c", "a..b@gmail.com", ".a@gmail.com", "a.@gmail.com", "a@-gmail.com", "a@gmail-.com", "a@gmail..com", `${"a".repeat(65)}@gmail.com`, `a@${"b".repeat(250)}.com`]) {
       expect(normalizeReminderEmail(bad, ACCOUNT), bad).toHaveProperty("error");
     }
   });

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getMyReminders, getReminderMailState } from "@/lib/reminders/data";
-import { instantConfirmations, requestConfirmations } from "@/lib/reminders/instant";
+import { requestConfirmations } from "@/lib/reminders/instant";
 import { confirmationDue, normalizeReminderEmail, reminderDestination, type ConfirmationNotice, type ReminderMailState } from "@/lib/reminders/mail";
 import { reminderKey, type ExamReminderView, type ReminderKey } from "@/lib/reminders/model";
 import { createClient } from "@/lib/supabase/server";
@@ -113,7 +113,7 @@ async function confirmAfterSave(
     const active = (reminders ?? []).filter((r) => r.planId === account.planId).length;
     if (!state || !confirmationDue(state, active)) return null;
     requestConfirmations();
-    return { to: reminderDestination(state), soon: instantConfirmations() };
+    return { to: reminderDestination(state) };
   } catch {
     return null;
   }
