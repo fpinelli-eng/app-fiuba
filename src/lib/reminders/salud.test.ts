@@ -28,6 +28,18 @@ interface Result {
   state: State;
 }
 type Data = Record<string, string | number | null>;
+interface CalendarSeen {
+  day: string;
+  files: string[] | null;
+}
+interface CalendarResult {
+  status: string;
+  log: string;
+  mail: boolean;
+  added: string[];
+  removed: string[];
+  state: CalendarSeen | null;
+}
 interface Http {
   url: string;
   code: number | null;
@@ -39,6 +51,12 @@ interface SaludGs {
   saludAge_(ms: number): string;
   saludBuildMail_(problems: Check[], resolved: { key: string; title: string }[], now: number): { subject: string; text: string; html: string };
   saludLog_(checks: Check[]): string;
+  saludCalendarParse_(raw: string | null): CalendarSeen;
+  saludCalendarDue_(prev: CalendarSeen, now: number): boolean;
+  saludCalendarPdfs_(html: string): string[];
+  saludCalendarEvaluate_(prev: CalendarSeen, page: { code: number; html: string } | null, now: number): CalendarResult;
+  saludCalendarMail_(added: string[], removed: string[], now: number): { subject: string; text: string; html: string };
+  saludCheck_(opts?: { dryRun?: boolean }): (Result & { calendar: CalendarResult }) | null;
   hourly(): void;
   [key: string]: unknown;
 }
@@ -71,6 +89,28 @@ const up: Http[] = [
   { url: ROBOTS, code: 200 },
 ];
 const fresh = () => gs.saludParseState_(null);
+
+/** A Date whose "now" is fixed, for the code that reads the clock (the vm context has its own Date). */
+function fixedDate(now: number) {
+  return class extends Date {
+    constructor(...a: unknown[]) {
+      super(...((a.length ? a : [now]) as [number]));
+    }
+    static now() {
+      return now;
+    }
+  };
+}
+
+const CALENDAR = "https://www.fi.uba.ar/estudiantes/calendario-academico";
+const PDF_2026 = "Calendario_Academico_2026_2027_81c0faa452_909e52c493.pdf";
+const PDF_2025 = "Calendario_Academico_2025_2026_43483483f2.pdf";
+/** The calendar page as fi.uba.ar serves it: absolute links in the HTML, relative ones in its JSON. */
+const calendarPage = (current: string) =>
+  `<h1>Calendario académico</h1><p>Enero 2026 - Marzo 2027 <a href="https://cms.fi.uba.ar/uploads/${current}">(+)</a></p>` +
+  `<p>Febrero 2025 - Marzo 2026 <a href="https://cms.fi.uba.ar/uploads/${PDF_2025}">(+)</a></p>` +
+  `<img src="https://cms.fi.uba.ar/uploads/logo_FIUBA_bco_e004995ae8.png"><a href="/uploads/${PDF_2025}">(+)</a>` +
+  `<script id="__NEXT_DATA__">{"body":"[(+)](/uploads/${current})"}</script>`;
 const keys = (r: Result) => r.problems.map((p) => p.key);
 
 describe("Salud.gs and Code.gs share one global scope", () => {
@@ -286,6 +326,7 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
     const sent: { to: string; subject: string }[] = [];
     const response = (code: number, body: unknown) => ({ getResponseCode: () => code, getContentText: () => JSON.stringify(body) });
     const globals = {
+      Date: fixedDate(NOW),
       Logger: { log: () => undefined },
       LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => undefined }) },
       PropertiesService: {
@@ -315,7 +356,11 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
           if (url.includes("/rpc/salud")) {
             calls.push("salud");
             if (opts.failDb) return response(500, "down");
-            return response(200, [{ exam_sync_at: new Date().toISOString(), news_fetched_at: new Date().toISOString(), reminders_due: 0 }]);
+            return response(200, [{ exam_sync_at: new Date(NOW).toISOString(), news_fetched_at: new Date(NOW).toISOString(), reminders_due: 0 }]);
+          }
+          if (url === CALENDAR) {
+            calls.push("calendario");
+            return { getResponseCode: () => 200, getContentText: () => calendarPage(PDF_2026) };
           }
           calls.push("web");
           if (opts.failSalud) throw new Error("boom");
@@ -329,9 +374,10 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
   it("all fine: reminders, then the monitor; no alert", () => {
     const s = services({});
     load(s.globals).hourly();
-    expect(s.calls).toEqual(["avisos", "sheet", "confirm", "salud", "web", "web"]);
+    expect(s.calls).toEqual(["avisos", "sheet", "confirm", "salud", "web", "web", "calendario"]);
     expect(s.sent).toEqual([]);
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
+    expect(JSON.parse(s.props.SALUD_CALENDARIO)).toEqual({ day: "2026-11-20", files: [PDF_2025, PDF_2026] });
   });
 
   it("the reminders fail: the monitor still runs and alerts, and hourly() still fails", () => {
@@ -365,6 +411,175 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
     s.props.ALERT_TO = "ana@fi.uba.ar, beto@fi.uba.ar";
     expect(() => load(s.globals).hourly()).toThrow();
     expect(s.sent[0].to).toBe("ana@fi.uba.ar,beto@fi.uba.ar");
+  });
+});
+
+describe("FIUBA academic calendar: once a day, mails when its PDF changes", () => {
+  const seen = (files: string[] | null, day = "2026-11-19") => ({ day, files });
+  const ok = (current = PDF_2026) => ({ code: 200, html: calendarPage(current) });
+
+  it("reads the PDF names of the page, absolute or relative, without repeats or other files", () => {
+    expect(gs.saludCalendarPdfs_(calendarPage(PDF_2026))).toEqual([PDF_2025, PDF_2026]);
+    // Any PDF counts, even without "calendario" in its name.
+    expect(gs.saludCalendarPdfs_('<a href="https://cms.fi.uba.ar/uploads/CA_FIUBA_2027_2028_ab12.pdf">(+)</a>')).toEqual(["CA_FIUBA_2027_2028_ab12.pdf"]);
+    expect(gs.saludCalendarPdfs_("<p>Sin calendario</p>")).toEqual([]);
+  });
+
+  it("once a day, from 09:00 in Buenos Aires", () => {
+    const at = (ba: string) => Date.parse(`${ba}-03:00`);
+    expect(gs.saludCalendarDue_(seen(null, ""), at("2026-11-20T08:59:00"))).toBe(false);
+    expect(gs.saludCalendarDue_(seen(null, ""), at("2026-11-20T09:00:00"))).toBe(true);
+    expect(gs.saludCalendarDue_(seen([PDF_2026], "2026-11-19"), at("2026-11-20T23:30:00"))).toBe(true);
+    expect(gs.saludCalendarDue_(seen([PDF_2026], "2026-11-20"), at("2026-11-20T23:30:00"))).toBe(false);
+  });
+
+  it("the first reading only stores the names", () => {
+    const r = gs.saludCalendarEvaluate_(gs.saludCalendarParse_(null), ok(), NOW);
+    expect(r.status).toBe("primera");
+    expect(r.mail).toBe(false);
+    expect(r.state).toEqual({ day: "2026-11-20", files: [PDF_2025, PDF_2026] });
+  });
+
+  it("the same PDFs: no mail, and today is marked as read", () => {
+    const r = gs.saludCalendarEvaluate_(seen([PDF_2025, PDF_2026]), ok(), NOW);
+    expect(r.status).toBe("igual");
+    expect(r.mail).toBe(false);
+    expect(r.state?.day).toBe("2026-11-20");
+  });
+
+  it("a PDF uploaded again (new name) mails, with the new and the gone file", () => {
+    const fixed = "Calendario_Academico_2026_2027_81c0faa452_909e52c493_a1b2c3d4e5.pdf";
+    const r = gs.saludCalendarEvaluate_(seen([PDF_2025, PDF_2026]), ok(fixed), NOW);
+    expect(r.status).toBe("cambió");
+    expect(r.mail).toBe(true);
+    expect(r.added).toEqual([fixed]);
+    expect(r.removed).toEqual([PDF_2026]);
+    expect(r.state?.files).toEqual([PDF_2025, fixed]);
+  });
+
+  it("no answer, an error or a page without PDFs is unknown: no mail, nothing stored", () => {
+    const prev = seen([PDF_2025, PDF_2026]);
+    for (const page of [null, { code: 503, html: "" }, { code: 200, html: "<p>Nuevo sitio</p>" }]) {
+      const r = gs.saludCalendarEvaluate_(prev, page, NOW);
+      expect(r.status).toBe("desconocido");
+      expect(r.mail).toBe(false);
+      expect(r.state).toBeNull();
+    }
+  });
+
+  it("a broken stored value starts over", () => {
+    expect(gs.saludCalendarParse_("{nope")).toEqual({ day: "", files: null });
+    expect(gs.saludCalendarParse_(JSON.stringify({ day: "2026-11-20", files: [] }))).toEqual({ day: "2026-11-20", files: null });
+  });
+
+  it("the mail says what changed, what to do and links to the FIUBA page", () => {
+    const m = gs.saludCalendarMail_(["Calendario_<b>nuevo</b>.pdf"], [PDF_2026], NOW);
+    expect(m.subject).toBe("El calendario académico de la FIUBA cambió: revisá las fechas de FIUBI");
+    expect(m.text).toContain("Calendario_<b>nuevo</b>.pdf");
+    expect(m.text).toContain(PDF_2026);
+    expect(m.text).toContain("data/calendario/README.md");
+    expect(m.text).toContain(`Ver el calendario: ${CALENDAR}`);
+    expect(m.html).toContain(`href="${CALENDAR}"`);
+    expect(m.html).not.toContain("<b>nuevo");
+  });
+
+  /** saludCheck_() with mocked services, a fixed clock and the calendar page answering `page`. */
+  function run(opts: {
+    now: number;
+    page: () => { code: number; html: string };
+    props?: Record<string, string>;
+    failMail?: boolean;
+    dryRun?: boolean;
+  }) {
+    const props: Record<string, string> = { SUPABASE_KEY: "k", TOKEN: "t".repeat(40), ...opts.props };
+    const sent: { to: string; subject: string }[] = [];
+    const fetched: string[] = [];
+    const response = (code: number, body: string) => ({ getResponseCode: () => code, getContentText: () => body });
+    const g = load({
+      Date: fixedDate(opts.now),
+      Logger: { log: () => undefined },
+      LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => undefined }) },
+      PropertiesService: {
+        getScriptProperties: () => ({ getProperty: (k: string) => props[k] ?? null, setProperty: (k: string, v: string) => (props[k] = v) }),
+      },
+      Session: { getEffectiveUser: () => ({ getEmail: () => "avisos@example.com" }), getActiveUser: () => ({ getEmail: () => "" }) },
+      MailApp: {
+        sendEmail: (m: { to: string; subject: string }) => {
+          if (opts.failMail) throw new Error("sin cuota");
+          sent.push(m);
+        },
+      },
+      UrlFetchApp: {
+        fetch: (url: string) => {
+          fetched.push(url);
+          if (url === CALENDAR) {
+            const p = opts.page();
+            return response(p.code, p.html);
+          }
+          if (url.includes("/rpc/salud")) {
+            const now = new Date(opts.now).toISOString();
+            return response(200, JSON.stringify([{ exam_sync_at: now, news_fetched_at: now, reminders_due: 0 }]));
+          }
+          return response(200, "ok");
+        },
+      },
+    });
+    let error: unknown = null;
+    let r: ReturnType<SaludGs["saludCheck_"]> = null;
+    try {
+      r = g.saludCheck_({ dryRun: opts.dryRun });
+    } catch (e) {
+      error = e;
+    }
+    return { r, error, props, sent, fetched };
+  }
+
+  it("day by day: stores, skips the rest of the day, mails once when it changes", () => {
+    const day1 = run({ now: NOW, page: () => ok() });
+    expect(day1.error).toBeNull();
+    expect(day1.sent).toEqual([]);
+    const stored = { SALUD_CALENDARIO: day1.props.SALUD_CALENDARIO };
+
+    const later = run({ now: NOW + H, page: () => ok("Otro_calendario.pdf"), props: stored });
+    expect(later.fetched).not.toContain(CALENDAR);
+    expect(later.sent).toEqual([]);
+
+    const day2 = run({ now: NOW + 24 * H, page: () => ok("Calendario_Academico_2026_2027_nuevo.pdf"), props: stored });
+    expect(day2.sent.map((m) => m.subject)).toEqual(["El calendario académico de la FIUBA cambió: revisá las fechas de FIUBI"]);
+    expect(day2.sent[0].to).toBe("avisos@example.com");
+    expect(JSON.parse(day2.props.SALUD_CALENDARIO).files).toContain("Calendario_Academico_2026_2027_nuevo.pdf");
+
+    const day3 = run({
+      now: NOW + 48 * H,
+      page: () => ok("Calendario_Academico_2026_2027_nuevo.pdf"),
+      props: { SALUD_CALENDARIO: day2.props.SALUD_CALENDARIO },
+    });
+    expect(day3.sent).toEqual([]);
+  });
+
+  it("a mail that fails stores nothing (the error reaches hourly()), so the next run tries again", () => {
+    const stored = { SALUD_CALENDARIO: JSON.stringify(seen([PDF_2025, PDF_2026])) };
+    const failed = run({ now: NOW, page: () => ok("Nuevo.pdf"), props: stored, failMail: true });
+    expect(String(failed.error)).toContain("sin cuota");
+    expect(failed.props.SALUD_CALENDARIO).toBe(stored.SALUD_CALENDARIO);
+    // The health checks of that run were saved before.
+    expect(JSON.parse(failed.props.SALUD_STATE).day).toBe("2026-11-20");
+  });
+
+  it("the page failing does not alert and keeps the last names", () => {
+    const stored = { SALUD_CALENDARIO: JSON.stringify(seen([PDF_2025, PDF_2026])) };
+    const down = run({ now: NOW, page: () => ({ code: 500, html: "" }), props: stored });
+    expect(down.error).toBeNull();
+    expect(down.sent).toEqual([]);
+    expect(down.props.SALUD_CALENDARIO).toBe(stored.SALUD_CALENDARIO);
+  });
+
+  it("saludProbar reads the page even if it was read today, and stores nothing", () => {
+    const stored = { SALUD_CALENDARIO: JSON.stringify(seen([PDF_2025, PDF_2026], "2026-11-20")) };
+    const dry = run({ now: NOW, page: () => ok("Nuevo.pdf"), props: stored, dryRun: true });
+    expect(dry.r?.calendar.mail).toBe(true);
+    expect(dry.sent).toEqual([]);
+    expect(dry.props.SALUD_CALENDARIO).toBe(stored.SALUD_CALENDARIO);
   });
 });
 

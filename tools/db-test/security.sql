@@ -110,6 +110,7 @@ select test.ok((select count(*) from public.offering_blocks) = 0, 'gmail account
 select test.ok((select count(*) from public.exam_tables) = 0, 'gmail account reads exam tables');
 select test.ok((select count(*) from public.academic_events) = 0, 'gmail account reads the academic calendar');
 select test.ok((select count(*) from public.news) = 0, 'gmail account reads news');
+select test.ok((select count(*) from public.academic_date_confirmations) = 0, 'gmail account reads confirmed dates');
 select test.ok((select count(*) from public.fiuba_news) = 0, 'gmail account reads FIUBA news');
 select test.ok((select count(*) from public.historical_reviews) = 0, 'gmail account reads Dolly opinions');
 select test.ok((select count(*) from public.course_star_counts(array[1::bigint])) = 0, 'gmail account reads course scores');
@@ -215,6 +216,12 @@ select test.fails($$insert into public.historical_reviews (course_id, teacher, t
 update public.historical_reviews set hidden_at = now();
 select test.ok((select count(*) from public.historical_reviews where hidden_at is not null) = 0, 'student hides a Dolly opinion');
 select test.fails($$insert into public.academic_events (calendar, title, starts_on, ends_on) values ('2026-2027', 'x', '2026-11-02', '2026-11-07')$$, 'student adds an academic event');
+select test.ok((select count(*) from public.academic_date_confirmations) = 4, 'students read the confirmed dates');
+select test.fails($$insert into public.academic_date_confirmations (calendar, title, starts_on, ends_on, note) values ('2026-2027', 'x', '2026-11-02', '2026-11-07', 'x')$$, 'student confirms a date');
+update public.academic_date_confirmations set note = 'x';
+select test.ok((select count(*) from public.academic_date_confirmations where note = 'x') = 0, 'student edits a confirmed date');
+delete from public.academic_date_confirmations;  -- RLS: deletes nothing
+select test.ok((select count(*) from public.academic_date_confirmations) = 4, 'student deletes confirmed dates');
 update public.news set pinned = true;
 select test.ok((select not pinned from public.news), 'student pins news');
 delete from public.news;  -- RLS: deletes nothing
@@ -368,6 +375,11 @@ select test.fails($$insert into public.news (title) values ('')$$, 'news with an
 select test.fails($$insert into public.news (title) values (repeat('a', 141))$$, 'news title over 140 characters');
 delete from public.news where title = 'Charla de ingresantes';
 select test.ok((select count(*) from public.news) = 1, 'admin deletes news');
+insert into public.academic_date_confirmations (calendar, title, starts_on, ends_on, note) values ('2026-2027', 'Charla de ingresantes', '2027-03-02', '2027-03-02', 'Mail de la Secretaría del 1/3');
+select test.fails($$insert into public.academic_date_confirmations (calendar, title, starts_on, ends_on, note) values ('2026-2027', 'x', '2027-03-02', '2027-03-01', 'x')$$, 'confirmed date that ends before it starts');
+select test.fails($$insert into public.academic_date_confirmations (calendar, title, starts_on, ends_on, note, replaces) select '2026-2027', 'x', '2026-11-17', '2026-11-18', 'x', replaces from public.academic_date_confirmations where replaces is not null limit 1$$, 'two confirmations of the same calendar date');
+delete from public.academic_date_confirmations where title = 'Charla de ingresantes';
+select test.ok((select count(*) from public.academic_date_confirmations) = 4, 'admin confirms and deletes dates');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
 reset role;

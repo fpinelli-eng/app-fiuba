@@ -91,6 +91,7 @@ Qué revisa (los límites están en `SALUD_LIMITS`, al principio de `Salud.gs`):
 | Noticias de la FIUBA (una vez por día) | la última copia tiene más de 48 h |
 | Mails de Recordarme | uno tenía que salir hace más de 3 h y sigue sin mandarse |
 | https://fiubi.com.ar y https://fiubi.com.ar/robots.txt | no responden 200 **dos veces seguidas** (una sola falla no avisa) |
+| Calendario académico de la FIUBA (una vez por día, desde las 9: lee https://www.fi.uba.ar/estudiantes/calendario-academico) | cambiaron los PDF que enlaza la página (hoy, solo calendarios: uno nuevo, o el mismo subido de nuevo, que la FIUBA guarda con otro nombre). Manda **un** mail, "El calendario académico de la FIUBA cambió: revisá las fechas de FIUBI", con los PDF nuevos y los que ya no están; no hay mail de "se resolvió". La primera lectura solo guarda los nombres; si la página no responde o no tiene ningún PDF, no avisa y vuelve a probar a la hora siguiente |
 
 La base le devuelve solo cantidades y fechas (nunca mails ni nombres) y el mail tiene solo eso, con un botón a Administración → Estado. Cada llamada anota la hora en la base, así la página de Estado muestra "Último chequeo del monitor: hace X" y avisa ⚠️ "El monitor no está corriendo" si pasaron más de 2 horas.
 
@@ -106,6 +107,10 @@ Con la planilla de arriba ya andando y el PR del monitor integrado (antes la bas
 
 Listo: desde la próxima hora corre solo.
 
+**Cuando se integra un cambio de `Salud.gs`** (por ejemplo, el chequeo del calendario académico): borrá el contenido del archivo `Salud` en Apps Script, pegá de nuevo [`apps-script/Salud.gs`](apps-script/Salud.gs) y guardá. `Código.gs`, el activador y las propiedades no cambian. Después corré `saludProbar`: al final del registro dice qué vio en la página del calendario ("primera lectura, 13 PDF guardados" en la primera corrida normal).
+
+**Si llega "El calendario académico de la FIUBA cambió":** bajá el PDF nuevo de la página de la FIUBA y seguí [`data/calendario/README.md`](../../data/calendario/README.md): si cambiaron fechas, van en una migración nueva. Lo que recuerda está en la propiedad `SALUD_CALENDARIO` (la fecha de la última lectura y los nombres de los PDF); borrarla lo hace empezar de cero, sin mail.
+
 **El primer día puede llegar un aviso de "Las fechas de examen no se actualizan"** seguido de otro "todo volvió a andar": hasta que corra la sincronización del SIU con el código nuevo (la mañana siguiente a integrar el PR), la base solo sabe la última vez que *cambiaron* las fechas. Para evitarlo, hacé estos pasos después de esa corrida (en GitHub → Actions → "Fechas de examen del SIU" se ve si ya corrió). Lo que recuerda (qué avisó y cuántas veces falló la web) está en la propiedad `SALUD_STATE`; borrarla lo hace empezar de cero.
 
 **Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. En **Activadores**, editá el de `hourly` y fijate que en **Configuración de notificaciones de errores** diga "Notificarme inmediatamente" (o "a diario"). Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos avisos de Google a tu cuenta.
@@ -116,6 +121,7 @@ Listo: desde la próxima hora corre solo.
 - Problemas que pasan solo en el navegador de un alumno (JavaScript que falla en un celular, una pantalla que se ve mal).
 - Si se cae la cuenta de Google o Apps Script, no hay quién avise (por eso Estado muestra cuándo fue el último chequeo).
 - Que los datos estén bien: sabe que las fechas de examen se leyeron hace poco, no si el SIU las publicó correctas.
+- Del calendario académico mira solo los nombres de los PDF: si la FIUBA reemplazara el archivo con el mismo nombre, no se enteraría (hasta ahora cada subida nueva lleva otro). Tampoco lee los mails de la Secretaría con las fechas exactas.
 
 ## Cambiar algo después
 
