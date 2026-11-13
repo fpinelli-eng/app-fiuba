@@ -344,14 +344,14 @@ body {
 }
 @keyframes story-sheet {
   0% {
-    transform: translateY(105%);
+    transform: translateY(130%);
   }
   16%,
   84% {
     transform: none;
   }
   100% {
-    transform: translateY(105%);
+    transform: translateY(130%);
   }
 }
 @media (prefers-reduced-motion: reduce) {

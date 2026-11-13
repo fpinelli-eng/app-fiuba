@@ -207,12 +207,12 @@ function Mapa({ firstName }: MockProps) {
   const s3 = stepAt(3);
   const pickState = s2;
   const pickGrade = s2 + 0.6;
-  // La ficha arranca y termina abajo, fuera de la pantalla, y pasa por encima de los números de la lista
+  // La ficha arranca y termina abajo, fuera de la pantalla (130 %: también su número y su sombra), y pasa por encima de los números de la lista
   // (z-40): ya bajó cuando empieza el paso 3. Va con `transform` (no con la clase translate-y
   // de Tailwind, que usa la propiedad `translate` y la animación no la pisaría).
   const sheet = (
     <div
-      className="absolute inset-x-0 bottom-0 z-40 [transform:translateY(105%)] rounded-t-[16px] border-t border-line bg-surface px-3 pt-1.5 pb-3 shadow-[0_-10px_24px_var(--pop-shadow)]"
+      className="absolute inset-x-0 bottom-0 z-40 [transform:translateY(130%)] rounded-t-[16px] border-t border-line bg-surface px-3 pt-1.5 pb-3 shadow-[0_-10px_24px_var(--pop-shadow)]"
       style={anim("story-sheet", s2 - 0.35, 2.1, "cubic-bezier(0.3, 0, 0.2, 1)")}
     >
       <div className="mx-auto h-[3px] w-6 rounded-full bg-line-strong" />
