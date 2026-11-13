@@ -18,6 +18,13 @@
  * missing, the account running the script). What it remembers is in the Script Property
  * SALUD_STATE (delete it to start over).
  *
+ * Once a day (from SALUD_LIMITS.calendarHour) it also reads the FIUBA academic calendar page
+ * (SALUD_CALENDAR_PAGE) and the names of the PDFs it links. When they differ from the
+ * last ones seen (Script Property SALUD_CALENDARIO), it mails once "El calendario académico de la
+ * FIUBA cambió": the dates of Novedades (data/calendario/) come from that PDF. The first reading
+ * only stores the names; a page that does not answer, or has no PDF, is unknown (it tries again
+ * the next hour, mails nothing and keeps the last names).
+ *
  * Functions to run by hand (Run ▸): saludProbar (checks and logs, mails nothing),
  * saludMailDePrueba (a sample alert to ALERT_TO). Every name here starts with "salud" or
  * "SALUD_": Apps Script puts all files in one global scope. The pure functions are tested in the
@@ -33,7 +40,9 @@ var SALUD_LIMITS = {
   reminderHours: 3,  // the reminders go every hour from 08:00
   httpFailures: 2,   // in a row, so one slow answer does not wake anybody
   mailsPerDay: 4,
+  calendarHour: 9,   // the FIUBA calendar page is read once a day, from 09:00 in Buenos Aires
 };
+var SALUD_CALENDAR_PAGE = 'https://www.fi.uba.ar/estudiantes/calendario-academico';
 var SALUD_DB_CHECKS = ['examenes', 'noticias', 'recordatorios'];
 var SALUD_HOUR = 60 * 60 * 1000;
 
@@ -47,7 +56,9 @@ function saludProbar() {
   if (!r) return;
   Logger.log(saludLog_(r.checks) + '\n\n' + (r.mail
     ? 'En una corrida normal mandaría un mail a ' + r.recipients.join(', ') + '.'
-    : 'En una corrida normal no mandaría mail (nada cambió desde el último aviso).'));
+    : 'En una corrida normal no mandaría mail (nada cambió desde el último aviso).') +
+    '\n\nCalendario académico de la FIUBA: ' + r.calendar.log +
+    (r.calendar.mail ? ' En una corrida normal avisaría por mail.' : ''));
 }
 
 /** Sends a sample alert to ALERT_TO (or the account running the script). Touches nothing else. */
@@ -93,7 +104,10 @@ function saludCheck_(opts) {
     var r = saludEvaluate_(prev, data, dataError, http, now);
     r.recipients = saludRecipients_(props.getProperty('ALERT_TO'), saludOwner_());
     Logger.log('Monitor: ' + (r.problems.length ? r.problems.map(function (p) { return p.title; }).join('; ') : 'todo bien') + '.');
-    if (dryRun) return r;
+    if (dryRun) {
+      r.calendar = saludCalendarCheck_(props, r.recipients, now, true);
+      return r;
+    }
     if (r.mail) {
       try {
         var mail = saludBuildMail_(r.problems, r.resolved, now);
@@ -107,10 +121,39 @@ function saludCheck_(opts) {
       }
     }
     props.setProperty('SALUD_STATE', JSON.stringify(r.state));
+    // After the state is saved: if this fails, the checks above already did their part.
+    r.calendar = saludCalendarCheck_(props, r.recipients, now, false);
     return r;
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * The daily look at the FIUBA academic calendar page. Returns what saludCalendarEvaluate_() saw
+ * ({ status: 'hoy' } when it was already read today). With dryRun it always reads the page and
+ * mails and stores nothing.
+ */
+function saludCalendarCheck_(props, recipients, now, dryRun) {
+  var prev = saludCalendarParse_(props.getProperty('SALUD_CALENDARIO'));
+  if (!dryRun && !saludCalendarDue_(prev, now)) return { status: 'hoy', log: 'ya se leyó hoy.', mail: false, state: null };
+  var page = null;
+  try {
+    var res = UrlFetchApp.fetch(SALUD_CALENDAR_PAGE, { muteHttpExceptions: true, followRedirects: true });
+    page = { code: res.getResponseCode(), html: res.getContentText() };
+  } catch (e) {
+    page = null;
+  }
+  var c = saludCalendarEvaluate_(prev, page, now);
+  Logger.log('Calendario académico: ' + c.log);
+  if (dryRun) return c;
+  if (c.mail) {
+    // If the mail fails nothing is stored, so the next run tries again.
+    var mail = saludCalendarMail_(c.added, c.removed, now);
+    MailApp.sendEmail({ to: recipients.join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  }
+  if (c.state) props.setProperty('SALUD_CALENDARIO', JSON.stringify(c.state));
+  return c;
 }
 
 function saludOwner_() {
@@ -280,12 +323,26 @@ function saludBuildMail_(problems, resolved, now) {
   }
   text = text.concat(['', 'Ver el estado: ' + SALUD_PANEL, '', '—'], footer).join('\n') + '\n';
 
-  var c = n === 0
+  var items = problems.map(function (p) { return { mark: '⚠️', title: p.title, detail: p.detail }; })
+    .concat(resolved.map(function (p) { return { mark: '✅', title: p.title, detail: 'Se resolvió.' }; }));
+  var html = saludMailHtml_({
+    subject: subject, band: band, ok: n === 0, when: when, items: items,
+    href: SALUD_PANEL, button: 'Ver el estado', footer: footer,
+  });
+  return { subject: subject, text: text, html: html };
+}
+
+/**
+ * The HTML of a monitor mail (email-safe, like buildMail_() of Code.gs): logo, a colored band,
+ * the time, one row per item ({ mark, title, detail }), a button and the footer lines.
+ * ok: mint band (all good), otherwise peach.
+ */
+function saludMailHtml_(o) {
+  var subject = o.subject, band = o.band, when = o.when, items = o.items, footer = o.footer;
+  var c = o.ok
     ? { band: '#dff2e9', bandInk: '#245c48', bandLine: '#bfe3d1' }  // mint, as the app
     : { band: '#fcebe7', bandInk: '#7a2a1e', bandLine: '#f4cfc6' }; // peach, as the app
   var font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-  var items = problems.map(function (p) { return { mark: '⚠️', title: p.title, detail: p.detail }; })
-    .concat(resolved.map(function (p) { return { mark: '✅', title: p.title, detail: 'Se resolvió.' }; }));
   var rows = items.map(function (it, i) {
     var border = i < items.length - 1 ? 'border-bottom:1px solid #e6e9f0;' : '';
     return '<tr>' +
@@ -317,7 +374,7 @@ function saludBuildMail_(problems, resolved, now) {
     '<tr><td style="padding:0 28px 28px 28px;">' +
     '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
     '<td align="center" bgcolor="#3b5bd0" style="background-color:#3b5bd0;border-radius:10px;">' +
-    '<a href="' + SALUD_PANEL + '" style="display:inline-block;padding:14px 26px;font-family:' + font + ';font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Ver el estado</a>' +
+    '<a href="' + saludEscape_(o.href) + '" style="display:inline-block;padding:14px 26px;font-family:' + font + ';font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">' + saludEscape_(o.button) + '</a>' +
     '</td></tr></table></td></tr>' +
     '</table>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">' +
@@ -325,7 +382,7 @@ function saludBuildMail_(problems, resolved, now) {
     footer.map(saludEscape_).join('<br>') + '</td></tr></table>' +
     '</td></tr></table></body></html>';
 
-  return { subject: subject, text: text, html: html };
+  return html;
 }
 
 /** Sample problems for saludMailDePrueba(). */
@@ -334,4 +391,82 @@ function saludSampleProblems_() {
     { key: 'examenes', title: 'Las fechas de examen no se actualizan', detail: 'Última lectura del SIU: hace 2 días.' },
     { key: 'recordatorios', title: 'Hay mails de Recordarme sin mandar', detail: '12 por mandar; el más viejo tenía que salir hace 4 h.' },
   ];
+}
+
+// ---------------------------------------------------------------------------------------------
+// FIUBA academic calendar (pure functions, tested in the repo)
+// ---------------------------------------------------------------------------------------------
+
+/** What was last seen of the calendar page: { day, files } (files: null before the first reading). */
+function saludCalendarParse_(raw) {
+  var s = {};
+  try { s = raw ? JSON.parse(raw) : {}; } catch (e) { s = {}; }
+  var files = Array.isArray(s.files) && s.files.length && s.files.every(function (f) { return typeof f === 'string'; }) ? s.files : null;
+  return { day: typeof s.day === 'string' ? s.day : '', files: files };
+}
+
+/** Whether to read the page now: not read yet today, and from SALUD_LIMITS.calendarHour. */
+function saludCalendarDue_(prev, now) {
+  var hour = new Date(now - 3 * SALUD_HOUR).getUTCHours();
+  return prev.day !== saludDay_(now) && hour >= SALUD_LIMITS.calendarHour;
+}
+
+/**
+ * The file names of the PDFs the page links (cms.fi.uba.ar/uploads/…, absolute or relative),
+ * sorted and without repeats. All of them, not only the ones named "calendario": a new calendar
+ * with another name must not go unnoticed (today the page links only calendars). "Calendario_Academico_2026_2027_81c0faa452_909e52c493.pdf":
+ * the CMS adds a new hash when a file is uploaded again, so a corrected PDF gets a new name.
+ */
+function saludCalendarPdfs_(html) {
+  var seen = {};
+  var re = /\/uploads\/([A-Za-z0-9._%-]+\.pdf)/gi;
+  var m;
+  while ((m = re.exec(String(html || ''))) !== null) {
+    seen[m[1]] = true;
+  }
+  return Object.keys(seen).sort();
+}
+
+/**
+ * The decision of one reading. page: { code, html }, or null when the fetch failed.
+ * Returns { status, log, mail, added, removed, state }: state is what to store (null: keep the
+ * last one). status: 'desconocido' (no answer or no PDF: no mail, nothing stored), 'primera'
+ * (first reading: only stores), 'igual' or 'cambió' (mail, and store only once it is sent).
+ */
+function saludCalendarEvaluate_(prev, page, now) {
+  var unknown = function (log) { return { status: 'desconocido', log: log, mail: false, added: [], removed: [], state: null }; };
+  if (!page) return unknown('la página de la FIUBA no respondió; se vuelve a probar en una hora.');
+  if (page.code !== 200) return unknown('la página de la FIUBA respondió ' + page.code + '; se vuelve a probar en una hora.');
+  var files = saludCalendarPdfs_(page.html);
+  if (!files.length) return unknown('la página no tiene ningún PDF (¿cambió el sitio de la FIUBA?); se vuelve a probar en una hora.');
+  var state = { day: saludDay_(now), files: files };
+  if (!prev.files) return { status: 'primera', log: 'primera lectura, ' + files.length + ' PDF guardados.', mail: false, added: [], removed: [], state: state };
+  var added = files.filter(function (f) { return prev.files.indexOf(f) < 0; });
+  var removed = prev.files.filter(function (f) { return files.indexOf(f) < 0; });
+  if (!added.length && !removed.length) return { status: 'igual', log: 'sin cambios (' + files.length + ' PDF).', mail: false, added: [], removed: [], state: state };
+  return { status: 'cambió', log: 'cambió: ' + added.length + ' PDF nuevos, ' + removed.length + ' que ya no están.',
+    mail: true, added: added, removed: removed, state: state };
+}
+
+/** The mail when the calendar page changed: which PDFs are new and which are gone. */
+function saludCalendarMail_(added, removed, now) {
+  var subject = 'El calendario académico de la FIUBA cambió: revisá las fechas de FIUBI';
+  var band = 'Cambió el calendario académico de la FIUBA';
+  var when = new Date(now - 3 * SALUD_HOUR).toISOString().slice(0, 16).replace('T', ' ') + ' (hora de Buenos Aires)';
+  var todo = 'Las fechas de Novedades salen de ese PDF (data/calendario/ en el repo). Bajá el nuevo, ' +
+    'comparalo con las fechas cargadas y, si cambió algo, cargalo con una migración nueva (data/calendario/README.md).';
+  var items = added.map(function (f) { return { mark: '🆕', title: f, detail: 'PDF nuevo en la página de la FIUBA.' }; })
+    .concat(removed.map(function (f) { return { mark: '➖', title: f, detail: 'Ya no está en la página.' }; }));
+  var footer = [
+    'Lo manda el monitor de la planilla de avisosfiubi@gmail.com (Salud.gs). Llega una vez por cada cambio de la página.',
+  ];
+  var text = [band.toUpperCase(), when, ''];
+  items.forEach(function (it) { text.push(it.mark + ' ' + it.title, '   ' + it.detail); });
+  text = text.concat(['', todo, '', 'Ver el calendario: ' + SALUD_CALENDAR_PAGE, '', '—'], footer).join('\n') + '\n';
+  var html = saludMailHtml_({
+    subject: subject, band: band, ok: false, when: when,
+    items: items.concat([{ mark: '👉', title: 'Qué hacer', detail: todo }]),
+    href: SALUD_CALENDAR_PAGE, button: 'Ver el calendario', footer: footer,
+  });
+  return { subject: subject, text: text, html: html };
 }
