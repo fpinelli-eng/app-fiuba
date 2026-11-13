@@ -76,9 +76,11 @@ Con la planilla de arriba ya andando y el PR del monitor integrado (antes la bas
 4. **Probar sin mandar nada.** Elegí `saludProbar` y tocá **Ejecutar**. En el registro aparece cada chequeo con ✅ o ⚠️ y si en una corrida normal mandaría un mail. Si Google pide permisos de nuevo, aceptá como en el paso 4 de arriba.
 5. **Mail de prueba.** Elegí `saludMailDePrueba` y tocá **Ejecutar**: les llega a los de `ALERT_TO` un aviso de ejemplo ("[Prueba] FIUBI: 2 problemas"). No toca la base ni lo que el monitor recuerda.
 
-Listo: desde la próxima hora corre solo. Lo que recuerda (qué avisó y cuántas veces falló la web) está en la propiedad `SALUD_STATE`; borrarla lo hace empezar de cero.
+Listo: desde la próxima hora corre solo.
 
-**Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos mails (remitente `apps-scripts-notifications@google.com`) a tu cuenta.
+**El primer día puede llegar un aviso de "Las fechas de examen no se actualizan"** seguido de otro "todo volvió a andar": hasta que corra la sincronización del SIU con el código nuevo (la mañana siguiente a integrar el PR), la base solo sabe la última vez que *cambiaron* las fechas. Para evitarlo, hacé estos pasos después de esa corrida (en GitHub → Actions → "Fechas de examen del SIU" se ve si ya corrió). Lo que recuerda (qué avisó y cuántas veces falló la web) está en la propiedad `SALUD_STATE`; borrarla lo hace empezar de cero.
+
+**Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. En **Activadores**, editá el de `hourly` y fijate que en **Configuración de notificaciones de errores** diga "Notificarme inmediatamente" (o "a diario"). Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos avisos de Google a tu cuenta.
 
 ### Lo que no ve
 

@@ -103,6 +103,12 @@ describe("thresholds", () => {
     expect(keys(gs.saludEvaluate_(fresh(), healthy({ exam_sync_at: null }), null, up, NOW))).toEqual(["examenes"]);
   });
 
+  it("reads the timestamps as the API sends them", () => {
+    // PostgREST: microseconds and "+00:00".
+    const r = gs.saludEvaluate_(fresh(), healthy({ exam_sync_at: "2026-11-19T02:00:00.123456+00:00" }), null, up, NOW);
+    expect(r.problems[0].detail).toBe("Última lectura del SIU: hace 37 h.");
+  });
+
   it("news: problem after 48 h", () => {
     expect(keys(gs.saludEvaluate_(fresh(), healthy({ news_fetched_at: ago(47) }), null, up, NOW))).toEqual([]);
     const r = gs.saludEvaluate_(fresh(), healthy({ news_fetched_at: ago(73) }), null, up, NOW);
