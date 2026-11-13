@@ -548,6 +548,86 @@ select test.fails($$select public.avisos_marcar_enviado(repeat('a', 40), 1)$$, '
 select test.fails($$update public.exam_reminders set first_sent_at = null$$, 'a student clears a sent mark');
 reset role;
 drop table test.avisos_run;
+
+-- Recordarme: other mail and confirmation mail (20261116130000_recordarme_confirmacion.sql) -----
+
+-- The other mail: only through set_my_reminder_email(), only their own, any domain, valid format.
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails($$update public.profiles set reminder_email = 'ana@gmail.com'$$, 'a student writes reminder_email directly');
+select test.fails($$insert into public.reminder_confirmations (user_id, email) values (auth.uid(), 'ana@gmail.com')$$, 'a student records a confirmation');
+select test.fails($$select * from public.avisos_confirmaciones(repeat('a', 40))$$, 'a student lists confirmations');
+select test.fails($$select public.avisos_confirmacion_enviada(repeat('a', 40), 'ana@fi.uba.ar')$$, 'a student marks a confirmation');
+select test.fails($$select public.set_my_reminder_email('no-es-un-mail')$$, 'other mail: no @');
+select test.fails($$select public.set_my_reminder_email('ana@gmail')$$, 'other mail: no domain');
+select test.fails($$select public.set_my_reminder_email('ana@gmail.com, beto@gmail.com')$$, 'other mail: two addresses');
+select test.fails($$select public.set_my_reminder_email('ana perez@gmail.com')$$, 'other mail: spaces');
+select test.fails($$select public.set_my_reminder_email('<ana@gmail.com>')$$, 'other mail: brackets');
+select test.fails($$select public.set_my_reminder_email('ana..perez@gmail.com')$$, 'other mail: two dots in a row');
+select test.fails($$select public.set_my_reminder_email('ana@-gmail.com')$$, 'other mail: label starting with a hyphen');
+select test.fails($$select public.set_my_reminder_email(repeat('a', 65) || '@gmail.com')$$, 'other mail: local part too long');
+select test.fails($$select public.set_my_reminder_email(repeat('a', 64) || '@' || repeat('b', 190) || '.com')$$, 'other mail: too long');
+select public.set_my_reminder_email('  Ana.Perez+fiubi@GMAIL.com ');
+select test.ok((select reminder_email from public.profiles where id = auth.uid()) = 'ana.perez+fiubi@gmail.com', 'other mail: trimmed and lowercased, any domain');
+select public.set_my_reminder_email('ANA@fi.uba.ar');
+select test.ok((select reminder_email is null from public.profiles where id = auth.uid()), 'other mail: the account mail is stored as null');
+select public.set_my_reminder_email('ana.perez@gmail.com');
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 0, 'a student (or admin) does not read another reminder_email');
+select public.set_my_reminder_email('');
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select test.fails($$select public.set_my_reminder_email('otro@gmail.com')$$, 'another domain sets a reminder mail');
+reset role;
+select test.ok((select reminder_email from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') = 'ana.perez@gmail.com', 'other mail: another student does not change it');
+select test.ok(pg_get_function_result('public.admin_users()'::regprocedure) not like '%reminder%', 'admins do not get reminder_email');
+
+update auth.users set raw_user_meta_data = '{"full_name": "ANA MARÍA PÉREZ"}' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+-- Reminder mails go to the other mail.
+select test.ok((select email from public.avisos_pendientes(repeat('a', 40)) where table_name = 'AVISO ABIERTA') = 'ana.perez@gmail.com', 'reminder mails: to the other mail when set');
+
+set role anon;
+select test.fails($$select public.set_my_reminder_email('ana@gmail.com')$$, 'anon sets a reminder mail');
+select test.fails('select 1 from public.reminder_confirmations', 'anon reads confirmations');
+select test.fails($$select * from public.avisos_confirmaciones('wrong')$$, 'anon lists confirmations without the token');
+select test.fails($$select * from public.avisos_confirmaciones(repeat('b', 40))$$, 'anon lists confirmations with a wrong token');
+select test.fails($$select * from public.avisos_confirmaciones(null)$$, 'anon lists confirmations with no token');
+select test.fails($$select public.avisos_confirmacion_enviada(repeat('b', 40), 'ana.perez@gmail.com')$$, 'anon marks a confirmation with a wrong token');
+-- Ana has 4 reminders of her plan ahead (MESA 01 and the AVISO ones) and never got one.
+select test.ok((select (mesas, first_name) = (4, 'ANA') from public.avisos_confirmaciones(repeat('a', 40)) where email = 'ana.perez@gmail.com'), 'confirmation due, to the other mail, with her first name and the count of mesas of her plan');
+select test.ok((select count(*) from public.avisos_confirmaciones(repeat('a', 40)) where email like 'beto@%') = 0, 'no confirmation without reminders');
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'nadie@gmail.com') = 0, 'marking an address nobody uses records nothing');
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'Ana.Perez@gmail.com ') = 1, 'the script marks a confirmation');
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'ana.perez@gmail.com') = 0, 'a confirmation is marked only once');
+select test.ok((select count(*) from public.avisos_confirmaciones(repeat('a', 40)) where email like 'ana%') = 0, 'a sent confirmation is not due again');
+reset role;
+select test.ok(pg_get_function_result('public.avisos_confirmaciones(text)'::regprocedure) not like '%id%', 'confirmations: no user ids');
+-- Removing every reminder and adding them again does not send another one.
+delete from public.exam_reminders where table_name = 'AVISO SIN FECHAS';
+select test.ok((select count(*) from public.avisos_confirmaciones(repeat('a', 40)) where email like 'ana%') = 0, 'changing the mesas does not send another');
+-- Changing the address does (back to the account mail), at most 3 in 24 hours.
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select public.set_my_reminder_email(null);
+reset role;
+select test.ok((select mesas from public.avisos_confirmaciones(repeat('a', 40)) where email = 'ana@fi.uba.ar') = 3, 'a new address gets a confirmation');
+select test.ok((select email from public.avisos_pendientes(repeat('a', 40)) where table_name = 'AVISO ABIERTA') = 'ana@fi.uba.ar', 'reminder mails: back to the account mail');
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'ana@fi.uba.ar') = 1, 'second confirmation');
+update public.profiles set reminder_email = 'ana.otra@gmail.com' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'ana.otra@gmail.com') = 1, 'third confirmation');
+update public.profiles set reminder_email = 'ana.cuarta@gmail.com' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select test.ok((select count(*) from public.avisos_confirmaciones(repeat('a', 40)) where email like 'ana%') = 0, 'at most 3 confirmations in 24 hours');
+select test.ok(public.avisos_confirmacion_enviada(repeat('a', 40), 'ana.cuarta@gmail.com') = 0, 'the cap holds when marking too');
+update public.reminder_confirmations set sent_at = sent_at - interval '25 hours';
+select test.ok((select count(*) from public.avisos_confirmaciones(repeat('a', 40)) where email = 'ana.cuarta@gmail.com') = 1, 'after 24 hours it goes');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.reminder_confirmations) = 3, 'a student reads their confirmations');
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.reminder_confirmations) = 0, 'a student (or admin) does not read another one''s confirmations');
+reset role;
+update public.profiles set reminder_email = null;
+
 delete from public.exam_reminders where table_name like 'AVISO %';
 delete from public.exam_tables where name like 'AVISO %';
 delete from public.avisos_config;
@@ -619,5 +699,6 @@ select test.ok((select count(*) from public.review_authors) = 0, 'authorship is 
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
 select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
 select test.ok((select count(*) from public.exam_reminders) = 0, 'exam reminders are deleted with the account');
+select test.ok((select count(*) from public.reminder_confirmations) = 0, 'reminder confirmations are deleted with the account');
 
 \echo 'All security checks passed.'

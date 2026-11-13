@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import { toMoment } from "@/lib/exams/group";
 import { NOT_YET } from "@/lib/offer/data";
+import type { ReminderMailState } from "./mail";
 import type { ExamReminderView } from "./model";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
@@ -47,4 +48,26 @@ export async function getMyReminders(supabase: Client): Promise<ExamReminderView
     throw new Error(`exam_reminders: ${error.message}`);
   }
   return (data as ReminderRow[]).map(toReminderView);
+}
+
+/**
+ * Where the student's reminder mails go and the confirmations sent (RLS: only their own), or null
+ * when the database does not have them yet (previews before the migration is merged).
+ */
+export async function getReminderMailState(supabase: Client, userId: string, account: string): Promise<ReminderMailState | null> {
+  const [profile, confirmations] = await Promise.all([
+    supabase.from("profiles").select("reminder_email").eq("id", userId).maybeSingle(),
+    supabase.from("reminder_confirmations").select("email, sent_at").eq("user_id", userId).order("sent_at", { ascending: false }).limit(10),
+  ]);
+  for (const r of [profile, confirmations]) {
+    if (r.error) {
+      if (NOT_YET.has(r.error.code)) return null;
+      throw new Error(`reminder mail: ${r.error.message}`);
+    }
+  }
+  return {
+    account,
+    custom: (profile.data as { reminder_email: string | null } | null)?.reminder_email ?? null,
+    confirmations: ((confirmations.data ?? []) as { email: string; sent_at: string }[]).map((c) => ({ email: c.email, sentAt: c.sent_at })),
+  };
 }

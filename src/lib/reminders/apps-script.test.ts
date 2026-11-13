@@ -14,6 +14,11 @@ interface Mail {
 type Row = Record<string, string | number | boolean | null>;
 interface CodeGs {
   buildMail_(r: Row): Mail;
+  buildConfirmMail_(r: Row): Mail;
+  confirmRows_(rows: Row[]): Row[];
+  handlePost_(body: unknown, token: string | null, pass: () => { sent: number; left: number } | null): Record<string, unknown>;
+  sameToken_(a: string, b: string): boolean;
+  firstName_(name: string | null): string;
   dueRows_(rows: Row[]): Row[];
   sheetValues_(rows: Row[]): string[][];
   deadline_(moment: string): string;
@@ -100,14 +105,16 @@ describe("buildMail_", () => {
 });
 
 describe("dueRows_", () => {
-  it("keeps the rows the database marked as due, only to @fi.uba.ar", () => {
+  it("keeps the rows the database marked as due, to a plain address (@fi.uba.ar or the student's other mail)", () => {
     const rows = [
       row({ reminder_id: 1, due: true }),
       row({ reminder_id: 2 }),
-      row({ reminder_id: 3, due: true, email: "x@gmail.com" }),
+      row({ reminder_id: 3, due: true, email: "ana.perez+fiubi@gmail.com" }),
       row({ reminder_id: 4, due: true }),
+      row({ reminder_id: 5, due: true, email: "a@gmail.com, b@gmail.com" }),
+      row({ reminder_id: 6, due: true, email: null }),
     ];
-    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([1, 4]);
+    expect(gs.dueRows_(rows).map((r) => r.reminder_id)).toEqual([1, 3, 4]);
   });
 });
 
@@ -213,5 +220,163 @@ describe("fetchReminders_ (API faked)", () => {
     g.PropertiesService = { getScriptProperties: () => ({ getProperty: (k: string) => ({ SUPABASE_KEY: "k", TOKEN: "t" })[k] ?? null }) };
     g.UrlFetchApp = { fetch: () => ({ getResponseCode: () => 400, getContentText: () => '{"message":"invalid token"}' }) };
     expect(() => (g as unknown as { fetchReminders_(): unknown }).fetchReminders_()).toThrow(/TOKEN o SUPABASE_KEY/);
+  });
+});
+
+describe("confirmation mail", () => {
+  const confirm = (over: Row = {}): Row => ({ email: "ana@fi.uba.ar", first_name: "ANA", mesas: 3, ...over });
+
+  it("subject, count, the spam steps and the link", () => {
+    const m = gs.buildConfirmMail_(confirm());
+    expect(m.subject).toBe("Activaste tus recordatorios de FIUBI");
+    expect(m.text).toContain("¡Listo, Ana!");
+    expect(m.text).toContain("Elegiste 3 mesas. Te vamos a escribir a este mail cuando abra la inscripción de cada una.");
+    expect(m.text).toContain("1. Si este mail te llegó a Spam, tocá «No es spam» para que los avisos te lleguen a Recibidos.");
+    expect(m.text).toContain("2. Agregá avisosfiubi@gmail.com a tus contactos.");
+    expect(m.text).toContain("Ver mis finales en FIUBI: https://fiubi.com.ar/finales");
+    expect(m.text).toContain("Si no fuiste vos, escribinos a contacto@fiubi.com.ar.");
+    expect(m.html).toContain('href="https://fiubi.com.ar/finales"');
+    expect(m.html).toContain('src="https://fiubi.com.ar/brand/fiubi-logo-mail.png"');
+    expect(m.html).toContain("#e4ecfc"); // lavender band
+    expect(m.html).toContain("Agregá avisosfiubi@gmail.com a tus contactos.");
+  });
+
+  it("one mesa, and no name", () => {
+    const m = gs.buildConfirmMail_(confirm({ mesas: 1, first_name: "" }));
+    expect(m.text).toContain("¡Listo!\n");
+    expect(m.text).toContain("Elegiste 1 mesa. Te vamos a escribir a este mail cuando abra la inscripción.\n");
+  });
+
+  it("escapes the name", () => {
+    const m = gs.buildConfirmMail_(confirm({ first_name: "<b>Ana</b>" }));
+    expect(m.html).not.toContain("<b>");
+  });
+
+  it("writes the first name with a capital", () => {
+    expect(gs.firstName_("ANA")).toBe("Ana");
+    expect(gs.firstName_("  maría josé ")).toBe("María");
+    expect(gs.firstName_(null)).toBe("");
+  });
+
+  it("sends only to a plain address with mesas", () => {
+    const rows = [confirm(), confirm({ email: "x@gmail.com", mesas: 0 }), confirm({ email: "a@b.com; c@d.com" }), confirm({ email: "ana.perez@gmail.com" })];
+    expect(gs.confirmRows_(rows).map((r) => r.email)).toEqual(["ana@fi.uba.ar", "ana.perez@gmail.com"]);
+  });
+});
+
+describe("sendConfirmations_ (Google services faked)", () => {
+  it("checks marking, marks each mail right after sending it and leaves quota for the reminders", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const log: string[] = [];
+    let quota = 32; // CONFIRM_QUOTA_RESERVE is 30: two confirmations fit
+    g.MailApp = {
+      getRemainingDailyQuota: () => quota,
+      sendEmail: (m: { to: string; subject: string }) => {
+        quota--;
+        log.push(`mail ${m.to} ${m.subject}`);
+      },
+    };
+    g.rpc_ = (name: string, args: { p_email: string }) => log.push(`${name} '${args.p_email}'`);
+    const rows = [
+      { email: "a@fi.uba.ar", first_name: "A", mesas: 1 },
+      { email: "b@gmail.com", first_name: "B", mesas: 2 },
+      { email: "c@fi.uba.ar", first_name: "C", mesas: 1 },
+    ];
+    const result = (g as unknown as { sendConfirmations_(r: Row[]): { sent: number; left: number } }).sendConfirmations_(rows);
+    expect(log).toEqual([
+      "avisos_confirmacion_enviada ''",
+      "mail a@fi.uba.ar Activaste tus recordatorios de FIUBI",
+      "avisos_confirmacion_enviada 'a@fi.uba.ar'",
+      "mail b@gmail.com Activaste tus recordatorios de FIUBI",
+      "avisos_confirmacion_enviada 'b@gmail.com'",
+    ]);
+    expect({ ...result }).toEqual({ sent: 2, left: 1 });
+  });
+
+  it("does nothing when none is due", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    g.rpc_ = () => {
+      throw new Error("no call expected");
+    };
+    expect({ ...(g as unknown as { sendConfirmations_(r: Row[]): object }).sendConfirmations_([]) }).toEqual({ sent: 0, left: 0 });
+  });
+});
+
+describe("a rejected address never blocks the others", () => {
+  it("skips it unmarked and keeps sending, reminders and confirmations", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const log: string[] = [];
+    g.Logger = { log: () => undefined };
+    g.MailApp = {
+      getRemainingDailyQuota: () => 100,
+      sendEmail: (m: { to: string }) => {
+        if (m.to.startsWith("malo")) throw new Error("Invalid email");
+        log.push(`mail ${m.to}`);
+      },
+    };
+    g.Utilities = { formatDate: () => "2026-11-30 14:05" };
+    g.rpc_ = (name: string, args: { p_reminder_id?: number; p_email?: string }) => log.push(`${name} ${args.p_reminder_id ?? args.p_email}`);
+    const reminders = [row({ reminder_id: 1, email: "malo@gmail.com", due: true }), row({ reminder_id: 2, email: "b@fi.uba.ar", due: true })];
+    const r1 = (g as unknown as { sendRows_(r: Row[]): object }).sendRows_(reminders);
+    expect({ ...r1 }).toEqual({ sent: 1, left: 1 });
+    const r2 = (g as unknown as { sendConfirmations_(r: Row[]): object }).sendConfirmations_([
+      { email: "malo@gmail.com", first_name: "A", mesas: 1 },
+      { email: "c@gmail.com", first_name: "C", mesas: 1 },
+    ]);
+    expect({ ...r2 }).toEqual({ sent: 1, left: 1 });
+    expect(log).toEqual([
+      "avisos_marcar_enviado 0",
+      "mail b@fi.uba.ar",
+      "avisos_marcar_enviado 2",
+      "avisos_confirmacion_enviada ",
+      "mail c@gmail.com",
+      "avisos_confirmacion_enviada c@gmail.com",
+    ]);
+  });
+});
+
+describe("doPost (instant confirmations)", () => {
+  const token = "t".repeat(64);
+  const pass = () => ({ sent: 1, left: 0 });
+
+  it("runs the pass only with the right token and action", () => {
+    expect({ ...gs.handlePost_({ token, action: "confirm" }, token, pass) }).toEqual({ ok: true, sent: 1, left: 0 });
+    expect({ ...gs.handlePost_({ token: "u".repeat(64), action: "confirm" }, token, pass) }).toEqual({ ok: false, error: "token" });
+    expect({ ...gs.handlePost_({ token: "t", action: "confirm" }, token, pass) }).toEqual({ ok: false, error: "token" });
+    expect({ ...gs.handlePost_({ action: "confirm" }, token, pass) }).toEqual({ ok: false, error: "token" });
+    expect({ ...gs.handlePost_(null, token, pass) }).toEqual({ ok: false, error: "token" });
+    expect({ ...gs.handlePost_({ token, action: "confirm" }, null, pass) }).toEqual({ ok: false, error: "token" });
+    expect({ ...gs.handlePost_({ token, action: "otra" }, token, pass) }).toEqual({ ok: false, error: "action" });
+    expect({ ...gs.handlePost_({ token, action: "confirm" }, token, () => null) }).toEqual({ ok: true, busy: true });
+  });
+
+  it("does not run the pass with a wrong token", () => {
+    let ran = false;
+    gs.handlePost_({ token: "x".repeat(64), action: "confirm" }, token, () => {
+      ran = true;
+      return null;
+    });
+    expect(ran).toBe(false);
+    expect(gs.sameToken_("abc", "abc")).toBe(true);
+    expect(gs.sameToken_("abc", "abd")).toBe(false);
+  });
+
+  it("answers JSON from the web app", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    let sent: string | null = null;
+    g.PropertiesService = { getScriptProperties: () => ({ getProperty: (k: string) => (k === "TOKEN" ? token : null) }) };
+    g.ContentService = {
+      MimeType: { JSON: "json" },
+      createTextOutput: (s: string) => {
+        sent = s;
+        return { setMimeType: () => s };
+      },
+    };
+    g.confirmPass_ = () => ({ sent: 0, left: 0 });
+    const doPost = (g as unknown as { doPost(e: unknown): unknown }).doPost;
+    doPost({ postData: { contents: JSON.stringify({ token, action: "confirm" }) } });
+    expect(JSON.parse(sent!)).toEqual({ ok: true, sent: 0, left: 0 });
+    doPost({ postData: { contents: "no es json" } });
+    expect(JSON.parse(sent!)).toEqual({ ok: false, error: "token" });
   });
 });

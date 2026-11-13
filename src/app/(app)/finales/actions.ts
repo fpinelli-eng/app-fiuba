@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getMyReminders } from "@/lib/reminders/data";
+import { getMyReminders, getReminderMailState } from "@/lib/reminders/data";
+import { requestConfirmations } from "@/lib/reminders/instant";
+import { confirmationDue, normalizeReminderEmail, reminderDestination, type ConfirmationNotice, type ReminderMailState } from "@/lib/reminders/mail";
 import { reminderKey, type ExamReminderView, type ReminderKey } from "@/lib/reminders/model";
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/session";
+import { requireProfile, type Account } from "@/lib/session";
 
 /** An exam table picked in "Recordarme": its natural key and the subject name the app shows. */
 export interface ReminderPick {
@@ -15,7 +17,14 @@ export interface ReminderPick {
   subjectName: string;
 }
 
-export type SaveRemindersResult = { error: string | null; reminders: ExamReminderView[] | null };
+export type SaveRemindersResult = {
+  error: string | null;
+  reminders: ExamReminderView[] | null;
+  /** A confirmation mail is due (first reminders, or a new address): where it goes. */
+  confirmation?: ConfirmationNotice | null;
+};
+
+export type SaveReminderEmailResult = { error: string | null; mail: ReminderMailState | null; confirmation: ConfirmationNotice | null };
 
 const MAX = 50;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -84,5 +93,47 @@ export async function saveExamReminders(picks: ReminderPick[]): Promise<SaveRemi
   }
 
   revalidatePath("/finales");
-  return { error: null, reminders: await getMyReminders(supabase) };
+  const reminders = await getMyReminders(supabase);
+  const confirmation = await confirmAfterSave(supabase, account, reminders);
+  return { error: null, reminders, confirmation };
+}
+
+/**
+ * After a save: if a confirmation mail is due, asks the script to send it now (when the instant path
+ * is set up) and says where it goes. Never fails the save: without the migration, nothing.
+ */
+async function confirmAfterSave(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  account: Account,
+  reminders: ExamReminderView[] | null,
+  mail?: ReminderMailState | null,
+): Promise<ConfirmationNotice | null> {
+  try {
+    const state = mail === undefined ? await getReminderMailState(supabase, account.id, account.email) : mail;
+    const active = (reminders ?? []).filter((r) => r.planId === account.planId).length;
+    if (!state || !confirmationDue(state, active)) return null;
+    requestConfirmations();
+    return { to: reminderDestination(state) };
+  } catch {
+    return null;
+  }
+}
+
+// "¿Preferís recibir los avisos en otro mail?": any domain; empty clears it. Only through
+// set_my_reminder_email(), which checks it again.
+export async function saveReminderEmail(input: string | null): Promise<SaveReminderEmailResult> {
+  const account = await requireProfile();
+  const normalized = normalizeReminderEmail(typeof input === "string" ? input.slice(0, 400) : null, account.email);
+  if ("error" in normalized) return { error: normalized.error, mail: null, confirmation: null };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_my_reminder_email", { p_email: normalized.email });
+  if (error) {
+    if (error.code === "22023") return { error: "Revisá el mail: tiene que ser como nombre@gmail.com.", mail: null, confirmation: null };
+    return { error: "No pudimos guardar el mail.", mail: null, confirmation: null };
+  }
+  const mail = await getReminderMailState(supabase, account.id, account.email);
+  const reminders = await getMyReminders(supabase).catch(() => null);
+  revalidatePath("/finales");
+  return { error: null, mail, confirmation: await confirmAfterSave(supabase, account, reminders, mail) };
 }
