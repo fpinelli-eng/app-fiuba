@@ -205,14 +205,15 @@ function Mapa({ firstName }: MockProps) {
   const s1 = stepAt(1);
   const s2 = stepAt(2);
   const s3 = stepAt(3);
-  const pickState = s2 + 0.05;
-  const pickGrade = s2 + 0.7;
-  // La ficha arranca y termina abajo, fuera de la pantalla. Va con `transform` (no con la clase translate-y
+  const pickState = s2;
+  const pickGrade = s2 + 0.6;
+  // La ficha arranca y termina abajo, fuera de la pantalla, y pasa por encima de los números de la lista
+  // (z-40): ya bajó cuando empieza el paso 3. Va con `transform` (no con la clase translate-y
   // de Tailwind, que usa la propiedad `translate` y la animación no la pisaría).
   const sheet = (
     <div
-      className="absolute inset-x-0 bottom-0 z-10 [transform:translateY(105%)] rounded-t-[16px] border-t border-line bg-surface px-3 pt-1.5 pb-3 shadow-[0_-10px_24px_var(--pop-shadow)]"
-      style={anim("story-sheet", s2 - 0.35, 2.3, "cubic-bezier(0.3, 0, 0.2, 1)")}
+      className="absolute inset-x-0 bottom-0 z-40 [transform:translateY(105%)] rounded-t-[16px] border-t border-line bg-surface px-3 pt-1.5 pb-3 shadow-[0_-10px_24px_var(--pop-shadow)]"
+      style={anim("story-sheet", s2 - 0.35, 2.1, "cubic-bezier(0.3, 0, 0.2, 1)")}
     >
       <div className="mx-auto h-[3px] w-6 rounded-full bg-line-strong" />
       <div className="mt-1.5 flex items-baseline justify-between text-[11px] leading-tight font-semibold">
@@ -261,9 +262,9 @@ function Mapa({ firstName }: MockProps) {
         <div className="relative">
           <MapRow state="enabled" name="Física II" note={<span className={STATE_NOTE}>Habilitada</span>} />
           {/* Al final queda aprobada: la fila verde aparece encima. */}
-          <MapRow state="approved" name="Física II" note={GRADE} className="absolute inset-0" style={anim("story-fade", s3 + 0.3, 0.35)} />
+          <MapRow state="approved" name="Física II" note={GRADE} className="absolute inset-0" style={anim("story-fade", s3 + 0.2, 0.35)} />
           {/* Elegida: el contorno de la fila mientras la ficha está abierta. */}
-          <span className="absolute -inset-px rounded-lg opacity-0 shadow-[0_0_0_2px_var(--accent)]" style={anim("story-pick", s1 + PRESS, 3.2, "linear")} />
+          <span className="absolute -inset-px rounded-lg opacity-0 shadow-[0_0_0_2px_var(--accent)]" style={anim("story-pick", s1 + PRESS, 3, "linear")} />
           <Touch at={s1} className="top-0.5 left-[55%]" />
           <Marker n={1} className="-top-2 -left-3.5" />
         </div>
@@ -272,7 +273,7 @@ function Mapa({ firstName }: MockProps) {
         </div>
         <div className="relative">
           <MapRow state="blocked" name="Física III" note={<span className={STATE_NOTE}>Bloqueada</span>} />
-          <MapRow state="enabled" name="Física III" note={<span className={STATE_NOTE}>Habilitada</span>} className="absolute inset-0" style={anim("story-fade", s3 + 0.65, 0.35)} />
+          <MapRow state="enabled" name="Física III" note={<span className={STATE_NOTE}>Habilitada</span>} className="absolute inset-0" style={anim("story-fade", s3 + 0.55, 0.35)} />
           <Marker n={3} className="-top-2 -right-3.5" />
         </div>
       </div>
@@ -299,8 +300,9 @@ function Plan({ firstName, term }: MockProps) {
   const s1 = stepAt(1);
   const s2 = stepAt(2);
   const s3 = stepAt(3);
-  // Cuándo se toca cada curso: los dos primeros en el paso 1, el tercero al empezar el paso 3.
-  const touches = [s1, s1 + 0.6, s3 - 0.3];
+  // Cuándo se toca cada curso: los dos primeros en el paso 1; el tercero, de modo que apriete justo al
+  // empezar el paso 3.
+  const touches = [s1, s1 + 0.6, s3 - PRESS];
   const dotAt = (course: number, day: number) => (course === 2 ? touches[2] + PRESS + 0.1 : s2 + day * 0.07);
   return (
     <Phone active="calendar" initial={firstName.charAt(0) || "F"}>
@@ -334,7 +336,7 @@ function Plan({ firstName, term }: MockProps) {
                 <span key={c} className={`size-1 rounded-full ${PLAN_COURSES[c].dot}`} style={anim("story-pop", dotAt(c, d), 0.3)} />
               ))}
             </span>
-            {courses.length > 1 && <span className="absolute top-0.5 right-0.5 size-[5px] rounded-full bg-danger" style={anim("story-pop", s3 + 0.5, 0.3)} />}
+            {courses.length > 1 && <span className="absolute top-0.5 right-0.5 size-[5px] rounded-full bg-danger" style={anim("story-pop", s3 + 0.3, 0.3)} />}
           </span>
         ))}
         <Marker n={2} className="-top-2 -left-2" />
@@ -344,7 +346,7 @@ function Plan({ firstName, term }: MockProps) {
           <b className="font-semibold">18:00</b>
           <span className="flex-auto font-semibold">Física II</span>
         </div>
-        <div className="flex h-6 items-center gap-2 rounded-lg border-[1.5px] border-danger bg-peach px-2 text-peach-ink" style={anim("story-rise", s3 + 0.35)}>
+        <div className="flex h-6 items-center gap-2 rounded-lg border-[1.5px] border-danger bg-peach px-2 text-peach-ink" style={anim("story-rise", s3 + 0.1)}>
           <b className="font-semibold">19:00</b>
           <span className="flex-auto font-semibold">Economía</span>
           <span className="rounded-full bg-surface px-1.5 py-0.5 text-[8.5px] font-semibold text-danger">Se superpone</span>
