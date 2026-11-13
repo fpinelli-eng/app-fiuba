@@ -1,401 +1,598 @@
 import type { CSSProperties, ReactNode } from "react";
+import { STATE_STYLE, StateIcon } from "@/app/(app)/mapa/icons";
+import { NavIcon } from "@/components/icons";
+import { Logo } from "@/components/Logo";
+import { StarIcon } from "@/components/Stars";
+import { NAV, type NavIcon as NavIconName } from "@/lib/app";
+import type { DisplayState } from "@/lib/map/model";
 
 // Mini versiones dibujadas de cada pantalla para las historias de bienvenida (WelcomeStories),
-// animadas como un video en tres pasos: un dedo toca algo y se ve qué pasa. Los números (1, 2, 3)
-// y los puntos de abajo de la historia (src/lib/intro/stories.ts) aparecen en el mismo paso.
-// Datos de ejemplo. Son decorativas (aria-hidden): el texto de abajo dice lo mismo.
+// animadas como un video en tres pasos: un toque y se ve qué pasa. Los números (1, 2, 3) y los
+// puntos de abajo de la historia (src/lib/intro/stories.ts) aparecen en el mismo paso.
+// Se dibujan como la pantalla del celular (la barra de arriba, la de pestañas con la sección
+// marcada) y con las mismas piezas de las pantallas reales: los colores de estado del mapa, los
+// tramos del arco, las etiquetas de inscripción. Datos de ejemplo.
+// Son decorativas (aria-hidden): el texto de abajo dice lo mismo.
 // Los estilos normales son el estado final: con "reducir movimiento" se ven completas y quietas.
 
 /** When step n starts (seconds). */
 export const stepAt = (n: number) => 0.5 + (n - 1) * 1.6;
 
+/** Arrivals slow down softly, without bounce. */
+const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+
 /** Inline animation that starts at a given second and keeps its first frame until then. */
-const anim = (name: string, at: number, seconds = 0.45, easing = "ease-out"): CSSProperties => ({
+const anim = (name: string, at: number, seconds = 0.5, easing = EASE): CSSProperties => ({
   animation: `${name} ${seconds}s ${easing} ${at}s both`,
 });
 
-function Marker({ n, className }: { n: number; className: string }) {
+/** Seconds from the start of a touch until it presses: what it touches reacts then. */
+const PRESS = 0.55;
+
+/** The number of a step: over a corner of what it points at, or (inline) right after it in the row. */
+function Marker({ n, className = "", inline = false }: { n: number; className?: string; inline?: boolean }) {
   return (
     <span
-      className={`absolute z-20 grid size-6 place-items-center rounded-full bg-ink text-[12px] font-bold text-bg shadow-[0_0_0_3px_var(--surface)] ${className}`}
-      style={anim("story-pop", stepAt(n))}
+      className={`${inline ? "flex-none" : "absolute"} z-20 grid size-5 place-items-center rounded-full bg-ink text-[11px] leading-none font-bold text-bg shadow-[0_0_0_2px_var(--surface)] ${className}`}
+      style={anim("story-pop", stepAt(n), 0.4)}
     >
       {n}
     </span>
   );
 }
 
-/** A finger that taps at a given second, then goes away. */
-function Finger({ at, className }: { at: number; className: string }) {
+/** A fingertip that lands at a given second, presses and goes away. */
+function Touch({ at, className }: { at: number; className: string }) {
   return (
-    <span className={`pointer-events-none absolute z-30 text-[22px] opacity-0 ${className}`} style={anim("story-tap", at, 1.3, "ease-in-out")}>
-      👆
+    <span className={`pointer-events-none absolute z-30 size-[22px] rounded-full opacity-0 ${className}`} style={anim("story-tap", at, 1.15, "ease-in-out")}>
+      <span className="absolute inset-0 rounded-full border-2 border-ink/70 bg-ink/25 shadow-[0_0_0_1.5px_var(--surface)]" />
+      <span className="absolute inset-0 rounded-full border-2 border-ink/60 opacity-0" style={anim("story-ripple", at, 1.15, "ease-out")} />
     </span>
   );
 }
 
-function Screen({ title, children }: { title: string; children: ReactNode }) {
+function Check({ size = 8 }: { size?: number }) {
   return (
-    <div aria-hidden="true" className="story-mock relative overflow-hidden rounded-[20px] bg-surface p-3 text-ink shadow-[0_8px_24px_var(--pop-shadow)]">
-      <div className="mb-2 font-display text-[15px] font-semibold">{title}</div>
-      {children}
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
+}
+
+const TABS = NAV.filter((item) => item.mobile === "tab").map((item) => item.icon);
+// Con muy poco alto (celulares chicos con las barras del navegador) se saca el marco para que entre todo.
+const CHROME = "[@media(max-height:639px)]:hidden";
+
+/** The phone screen: top bar, the page and the tab bar with the section marked. */
+function Phone({ active, initial, overlay, children }: { active: NavIconName; initial: string; overlay?: ReactNode; children: ReactNode }) {
+  return (
+    <div aria-hidden="true" className="story-mock relative overflow-hidden rounded-[22px] bg-bg text-ink shadow-[0_14px_28px_-14px_var(--card-shadow)]">
+      <div className={`flex items-center justify-between px-3 pt-2.5 ${CHROME}`}>
+        <Logo decorative className="h-[9px]" />
+        <span className="flex items-center gap-1">
+          <span
+            className={`grid size-[18px] place-items-center rounded-full ${active === "bell" ? "bg-lavender text-lavender-ink" : "border border-line bg-surface text-muted"}`}
+          >
+            <NavIcon name="bell" size={10} />
+          </span>
+          <span className="grid size-[18px] place-items-center rounded-full bg-mint text-[8px] leading-none font-bold text-mint-ink">{initial}</span>
+        </span>
+      </div>
+      <div className="relative px-3 pt-2 pb-2.5">{children}</div>
+      <div className={`grid grid-cols-5 border-t border-line bg-surface px-2 py-[5px] ${CHROME}`}>
+        {TABS.map((icon) => (
+          <span key={icon} className="grid place-items-center">
+            <span className={`grid h-[18px] w-8 place-items-center rounded-full ${icon === active ? "bg-lavender text-lavender-ink" : "text-muted"}`}>
+              <NavIcon name={icon} size={12} />
+            </span>
+          </span>
+        ))}
+      </div>
+      {overlay}
     </div>
   );
 }
 
-// Inicio: el arco se llena, aparece el promedio y después lo que estás cursando.
-function Inicio() {
-  return (
-    <Screen title="Inicio">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <svg width="112" height="64" viewBox="0 0 112 64">
-            <path d="M8 58 A48 48 0 0 1 104 58" fill="none" stroke="var(--arc-track)" strokeWidth="12" strokeLinecap="round" />
-            <path
-              d="M8 58 A48 48 0 0 1 82 18"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeDasharray="120"
-              strokeDashoffset="0"
-              style={anim("story-arc", stepAt(1), 1.4)}
-            />
-          </svg>
-          <span className="absolute inset-x-0 bottom-0 text-center text-[12px] leading-tight">
-            <b className="font-display text-[17px]">142</b> de 248 C
-          </span>
-          <Marker n={1} className="-top-2 -left-2" />
-        </div>
-        <div className="relative flex-1 rounded-xl bg-butter p-2 text-butter-ink" style={anim("story-pop", stepAt(2))}>
-          <div className="text-[10px] font-semibold uppercase">Promedio</div>
-          <div className="font-display text-[24px] leading-none font-semibold">7,8</div>
-          <Marker n={2} className="-top-2.5 -right-2" />
-        </div>
-      </div>
-      <div className="relative mt-3 grid grid-cols-2 gap-2 text-[11px]">
-        <div className="rounded-xl bg-sky p-2 text-sky-ink" style={anim("story-rise", stepAt(3))}>
-          <b>Cursando</b>
-          <div>Probabilidad · Física II</div>
-        </div>
-        <div className="rounded-xl bg-peach p-2 text-peach-ink" style={anim("story-rise", stepAt(3) + 0.25)}>
-          <b>Finales</b>
-          <div>Álgebra · Química</div>
-        </div>
-        <Marker n={3} className="-top-2.5 left-1/2 -translate-x-1/2" />
-      </div>
-    </Screen>
-  );
+function PageTitle({ children }: { children: ReactNode }) {
+  return <div className="truncate font-display text-[13px] leading-tight font-semibold tracking-[-0.01em]">{children}</div>;
 }
 
-function Node({ name, className, children, style }: { name: string; className: string; children?: ReactNode; style?: CSSProperties }) {
-  return (
-    <div className={`relative flex h-[46px] flex-col justify-between overflow-hidden rounded-lg px-1.5 py-1 text-[10px] leading-tight font-semibold ${className}`} style={style}>
-      <span className="line-clamp-2">{name}</span>
-      {children}
-    </div>
-  );
+const CARD = "rounded-[14px] bg-surface shadow-[0_8px_14px_-12px_var(--card-shadow)]";
+const BORDERED = "rounded-[14px] border border-line bg-surface";
+
+export interface MockProps {
+  firstName: string;
+  term: string | null;
 }
 
-// Mapa: tocás Física II, se abre la ficha, elegís Aprobada y un 8, se pinta de verde y se
-// habilita la que sigue.
-function Mapa() {
+// Inicio: el arco se llena tramo por tramo, aparecen el promedio y las aprobadas, y después la semana
+// y los finales pendientes.
+const ARC = "M12 56 A44 44 0 0 1 100 56";
+// Tramos del arco (de 0 a 100), como en ProgressArc: CBC, obligatorias y electivas, uno tras otro.
+const ARC_SEGMENTS = [
+  { stroke: "stroke-cat-cbc", from: 0, len: 18, at: 0, seconds: 0.3 },
+  { stroke: "stroke-cat-required", from: 18, len: 30, at: 0.3, seconds: 0.5 },
+  { stroke: "stroke-cat-elective", from: 48, len: 9, at: 0.8, seconds: 0.25 },
+];
+
+function Inicio({ firstName }: MockProps) {
+  const s1 = stepAt(1);
   const s2 = stepAt(2);
   const s3 = stepAt(3);
   return (
-    <Screen title="Mapa">
-      <div className="grid grid-cols-3 gap-1.5">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] text-muted">1.° cuat.</span>
-          <Node name="Análisis II" className="bg-mint text-mint-ink">
-            <span className="text-right">✓ 8</span>
-          </Node>
-          <Node name="Álgebra Lineal" className="bg-mint text-mint-ink">
-            <span className="text-right">✓ 7</span>
-          </Node>
-        </div>
-        <div className="relative flex flex-col gap-1.5">
-          <span className="text-[10px] text-muted">2.° cuat.</span>
-          <Node name="Probabilidad" className="bg-sky text-sky-ink">
-            <span>Cursando</span>
-          </Node>
-          <Node name="Física II" className="border border-line-strong bg-surface">
-            <span className="text-muted">Habilitada</span>
-            {/* Al final queda aprobada: la capa verde aparece encima. */}
-            <span className="absolute inset-0 flex flex-col justify-between bg-mint px-1.5 py-1 text-mint-ink" style={anim("story-fade", s3 + 0.5)}>
-              <span>Física II</span>
-              <span className="text-right">✓ 8</span>
-            </span>
-          </Node>
-          <Finger at={stepAt(1)} className="top-[66px] right-0" />
-          <Marker n={1} className="top-[52px] -left-2" />
-        </div>
-        <div className="relative flex flex-col gap-1.5">
-          <span className="text-[10px] text-muted">3.° cuat.</span>
-          <Node name="Estadística" className="bg-blocked text-blocked-ink">
-            <span>🔒</span>
-            <span className="absolute inset-0 flex flex-col justify-between border border-line-strong bg-surface px-1.5 py-1 text-ink" style={anim("story-pop", s3 + 0.9)}>
-              <span>Estadística</span>
-              <span className="text-muted">Habilitada</span>
-            </span>
-          </Node>
-          <Node name="Economía" className="bg-blocked text-blocked-ink">
-            <span>🔒</span>
-          </Node>
-          <Marker n={3} className="top-3 -right-1" />
-        </div>
-      </div>
-      {/* La ficha de la materia sube, se elige "Aprobada" y la nota, y baja. */}
-      <div
-        className="absolute inset-x-0 bottom-0 z-10 translate-y-[110%] rounded-t-2xl border-t border-line bg-surface p-2.5 shadow-[0_-8px_20px_var(--pop-shadow)]"
-        style={anim("story-sheet", s2 - 0.3, 2.4)}
-      >
-        <div className="text-[12px] font-semibold">Física II</div>
-        <div className="mt-1.5 grid grid-cols-2 gap-1 text-[10.5px]">
-          <span className="relative overflow-hidden rounded-md border border-line py-1 text-center">
-            Aprobada
-            <span className="absolute inset-0 grid place-items-center bg-accent-soft font-semibold shadow-[inset_0_0_0_1.5px_var(--accent)]" style={anim("story-fade", s2 + 0.5, 0.2)}>
-              Aprobada
-            </span>
-          </span>
-          <span className="rounded-md border border-line py-1 text-center">Cursando</span>
-        </div>
-        <div className="mt-1.5 grid grid-cols-7 gap-0.5 text-[10px]">
-          {[4, 5, 6, 7, 8, 9, 10].map((g) => (
-            <span key={g} className="relative overflow-hidden rounded border border-line py-0.5 text-center">
-              {g}
-              {g === 8 && (
-                <span className="absolute inset-0 grid place-items-center bg-accent font-semibold text-on-accent" style={anim("story-fade", s2 + 1.2, 0.2)}>
-                  8
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
-        <Marker n={2} className="top-1 right-2" />
-        <Finger at={s2 + 0.1} className="top-4 left-6" />
-        <Finger at={s2 + 0.8} className="bottom-0 left-[58%]" />
-      </div>
-    </Screen>
-  );
-}
-
-// Plan: tocás un curso, aparecen sus horarios en la semana; sumás otro que se pisa y te avisa.
-function Plan() {
-  const days = ["Lun", "Mar", "Mié", "Jue", "Vie"];
-  const s2 = stepAt(2);
-  const s3 = stepAt(3);
-  return (
-    <Screen title="Plan">
-      <div className="flex gap-2">
-        <div className="relative flex w-[38%] flex-col gap-1.5 text-[10px]">
-          {[
-            ["Probabilidad", "Curso 2", "bg-sky text-sky-ink"],
-            ["Física II", "Curso 1", "bg-mint text-mint-ink"],
-            ["Economía", "Curso 3", "bg-peach text-peach-ink"],
-          ].map(([n, c, k]) => (
-            <div key={n} className={`rounded-lg px-1.5 py-1 ${k}`}>
-              <b className="block">{n}</b>
-              {c}
+    <Phone active="home" initial={firstName.charAt(0) || "F"}>
+      <PageTitle>{firstName ? `Hola, ${firstName}` : "Hola"}</PageTitle>
+      <div className="mt-2 grid grid-cols-[1.35fr_1fr] gap-1.5">
+        <div className={`relative px-2 pt-1.5 pb-2 ${CARD}`}>
+          <div className="text-[9.5px] leading-tight font-semibold">Avance de la carrera</div>
+          <div className="relative mx-auto mt-1.5 w-[108px]">
+            <svg viewBox="0 0 112 62" className="block h-auto w-full">
+              <path d={ARC} fill="none" className="stroke-arc-track" strokeWidth="9" strokeLinecap="round" />
+              <circle cx="12" cy="56" r="4.5" className="fill-cat-cbc" style={anim("story-fade", s1, 0.15)} />
+              {ARC_SEGMENTS.map((seg) => (
+                <path
+                  key={seg.stroke}
+                  d={ARC}
+                  pathLength={100}
+                  fill="none"
+                  className={seg.stroke}
+                  strokeWidth="9"
+                  strokeDasharray={`${seg.len} 100`}
+                  strokeDashoffset={-seg.from}
+                  style={anim("story-arc", s1 + seg.at, seg.seconds, "linear")}
+                />
+              ))}
+              <circle cx="65.6" cy="13.1" r="6" strokeWidth="3" className="fill-surface stroke-ink" style={anim("story-fade", s1 + 1, 0.25)} />
+            </svg>
+            <div className="absolute inset-x-0 bottom-0 text-center font-display text-[17px] leading-none font-medium tracking-[-0.03em]" style={anim("story-fade", s1 + 0.4)}>
+              57<span className="text-[9px]">%</span>
             </div>
-          ))}
-          <Finger at={stepAt(1)} className="top-3 right-0" />
-          <Finger at={s3 - 0.2} className="top-[78px] right-0" />
-          <Marker n={1} className="-top-2 -left-2" />
-        </div>
-        <div className="relative grid flex-1 grid-cols-5 gap-0.5">
-          {days.map((d) => (
-            <span key={d} className="text-center text-[9px] text-muted">
-              {d}
-            </span>
-          ))}
-          <div className="col-span-5 grid h-[96px] grid-cols-5 gap-0.5">
-            {[0, 1, 2, 3, 4].map((d) => (
-              <div key={d} className="relative rounded-md bg-bg">
-                {(d === 0 || d === 2) && <span className="absolute inset-x-0 top-1 h-7 rounded bg-sky" style={anim("story-pop", s2 - 0.6 + d * 0.1)} />}
-                {(d === 1 || d === 3) && <span className="absolute inset-x-0 top-9 h-8 rounded bg-mint" style={anim("story-pop", s2 + d * 0.1)} />}
-                {d === 3 && (
-                  <span className="absolute inset-x-0 top-12 h-8 rounded bg-peach/90 shadow-[0_0_0_2px_var(--danger)]" style={anim("story-pop", s3 + 0.4)} />
-                )}
-              </div>
-            ))}
           </div>
-          <span className="absolute -bottom-1 left-0 rounded-full bg-danger-soft px-1.5 text-[9.5px] font-semibold text-danger-ink" style={anim("story-rise", s3 + 0.8)}>
-            ⚠ Jueves: se superponen
-          </span>
-          <Marker n={2} className="top-3 -left-2" />
-          <Marker n={3} className="-right-1 bottom-2" />
+          <div className="mt-1 text-center text-[9px] leading-tight text-muted">142 de 248 créditos</div>
+          <Marker n={1} className="top-7 -left-1.5" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="relative flex flex-1 flex-col justify-center rounded-[14px] bg-mint px-2 py-1" style={anim("story-pop", s2)}>
+            <div className="text-[9.5px] leading-tight font-semibold text-mint-ink">Promedio</div>
+            <div className="font-display text-[18px] leading-[1.2] font-medium tracking-[-0.03em]">7,8</div>
+            <Marker n={2} className="-top-1.5 -right-1.5" />
+          </div>
+          <div className="flex flex-1 flex-col justify-center rounded-[14px] bg-lavender px-2 py-1 text-lavender-ink" style={anim("story-pop", s2 + 0.12)}>
+            <div className="text-[9.5px] leading-tight font-semibold">Aprobadas</div>
+            <div className="font-display text-[18px] leading-[1.2] font-medium tracking-[-0.03em] text-ink">18</div>
+          </div>
         </div>
       </div>
-    </Screen>
+      <div className="relative mt-1.5 grid grid-cols-2 gap-1.5">
+        <div className={`p-2 ${CARD}`} style={anim("story-rise", s3)}>
+          <div className="text-[9.5px] leading-tight font-semibold">Tu semana</div>
+          <div className="mt-1 rounded-md border border-sky-line bg-sky px-1.5 py-1 text-[9px] leading-tight text-sky-ink">
+            <b className="block font-semibold">Probabilidad</b>
+            Lun 18–22 hs
+          </div>
+        </div>
+        <div className={`p-2 ${CARD}`} style={anim("story-rise", s3 + 0.12)}>
+          <div className="text-[9.5px] leading-tight font-semibold">Finales pendientes</div>
+          <div className="mt-1 flex flex-col gap-1 text-[9px] leading-tight">
+            <span className="flex justify-between gap-1">
+              Álgebra II <span className="text-muted">destraba 2</span>
+            </span>
+            <span>Química</span>
+          </div>
+        </div>
+        <Marker n={3} className="-top-2 left-1/2 -translate-x-1/2" />
+      </div>
+    </Phone>
   );
 }
 
-// Reseñas: el puntaje, los comentarios y, al tocar "Dejar mi reseña", las estrellas se llenan.
-function Resenas() {
+function MapRow({ state, name, note, className = "", style }: { state: DisplayState; name: string; note: ReactNode; className?: string; style?: CSSProperties }) {
+  return (
+    <div className={`flex h-[26px] items-center gap-1.5 rounded-lg px-2 text-[10px] leading-none ${STATE_STYLE[state]} ${className}`} style={style}>
+      <StateIcon state={state} size={10} />
+      <span className="flex-auto font-semibold">{name}</span>
+      {note}
+    </div>
+  );
+}
+
+const STATE_NOTE = "text-[9px]";
+const GRADE = <span className="text-[12px] font-bold">8</span>;
+
+// Mapa: tocás Física II, sube la ficha, elegís Aprobada y un 8, la ficha baja, la materia queda
+// aprobada y se habilita la que sigue.
+function Mapa({ firstName }: MockProps) {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
+  const s3 = stepAt(3);
+  const pickState = s2;
+  const pickGrade = s2 + 0.6;
+  // La ficha arranca y termina abajo, fuera de la pantalla (130 %: también su número y su sombra), y pasa por encima de los números de la lista
+  // (z-40): ya bajó cuando empieza el paso 3. Va con `transform` (no con la clase translate-y
+  // de Tailwind, que usa la propiedad `translate` y la animación no la pisaría).
+  const sheet = (
+    <div
+      className="absolute inset-x-0 bottom-0 z-40 [transform:translateY(130%)] rounded-t-[16px] border-t border-line bg-surface px-3 pt-1.5 pb-3 shadow-[0_-10px_24px_var(--pop-shadow)]"
+      style={anim("story-sheet", s2 - 0.35, 2.1, "cubic-bezier(0.3, 0, 0.2, 1)")}
+    >
+      <div className="mx-auto h-[3px] w-6 rounded-full bg-line-strong" />
+      <div className="mt-1.5 flex items-baseline justify-between text-[11px] leading-tight font-semibold">
+        Física II <span className="text-[9px] font-normal text-muted">8 C</span>
+      </div>
+      <div className="mt-1.5 grid grid-cols-3 gap-1 text-[9.5px] leading-none">
+        {["Aprobada", "Final pend.", "Cursando"].map((label, i) => (
+          <span key={label} className="relative rounded-md border border-line-strong py-[5px] text-center">
+            {label}
+            {i === 0 && (
+              <span
+                className="absolute -inset-px grid place-items-center rounded-md bg-accent-soft font-semibold shadow-[inset_0_0_0_1.5px_var(--accent)]"
+                style={anim("story-fade", pickState + PRESS, 0.15)}
+              >
+                {label}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+      <div className="mt-1.5 grid grid-cols-7 gap-[3px] text-[10px] leading-none font-semibold">
+        {[4, 5, 6, 7, 8, 9, 10].map((g) => (
+          <span key={g} className="relative rounded-[5px] border border-line py-1 text-center">
+            {g}
+            {g === 8 && (
+              <span className="absolute -inset-px grid place-items-center rounded-[5px] bg-accent text-on-accent" style={anim("story-fade", pickGrade + PRESS, 0.15)}>
+                8
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+      <Marker n={2} className="-top-2.5 right-3" />
+      <Touch at={pickState} className="top-[32px] left-[21%]" />
+      <Touch at={pickGrade} className="bottom-0.5 left-[60%]" />
+    </div>
+  );
+  return (
+    <Phone active="map" initial={firstName.charAt(0) || "F"} overlay={sheet}>
+      <PageTitle>Mapa de la carrera</PageTitle>
+      <div className={`mt-2 flex flex-col gap-1 p-1.5 ${BORDERED}`}>
+        <div className="px-1 text-[10px] leading-tight font-semibold">
+          3.er cuatrimestre
+        </div>
+        <MapRow state="approved" name="Análisis II" note={GRADE} />
+        <div className="relative">
+          <MapRow state="enabled" name="Física II" note={<span className={STATE_NOTE}>Habilitada</span>} />
+          {/* Al final queda aprobada: la fila verde aparece encima. */}
+          <MapRow state="approved" name="Física II" note={GRADE} className="absolute inset-0" style={anim("story-fade", s3 + 0.2, 0.35)} />
+          {/* Elegida: el contorno de la fila mientras la ficha está abierta. */}
+          <span className="absolute -inset-px rounded-lg opacity-0 shadow-[0_0_0_2px_var(--accent)]" style={anim("story-pick", s1 + PRESS, 3, "linear")} />
+          <Touch at={s1} className="top-0.5 left-[55%]" />
+          <Marker n={1} className="-top-2 -left-3.5" />
+        </div>
+        <div className="mt-0.5 px-1 text-[10px] leading-tight font-semibold">
+          4.º cuatrimestre
+        </div>
+        <div className="relative">
+          <MapRow state="blocked" name="Física III" note={<span className={STATE_NOTE}>Bloqueada</span>} />
+          <MapRow state="enabled" name="Física III" note={<span className={STATE_NOTE}>Habilitada</span>} className="absolute inset-0" style={anim("story-fade", s3 + 0.55, 0.35)} />
+          <Marker n={3} className="-top-2 -right-3.5" />
+        </div>
+      </div>
+    </Phone>
+  );
+}
+
+// Plan: elegís dos cursos y aparecen en la semana; sumás un tercero que se pisa el jueves y te avisa.
+const PLAN_COURSES = [
+  { name: "Probabilidad", course: "Curso 2", bg: "bg-sky", ink: "text-sky-ink", dot: "bg-sky-ink" },
+  { name: "Física II", course: "Curso 1", bg: "bg-mint", ink: "text-mint-ink", dot: "bg-mint-ink" },
+  { name: "Economía", course: "Curso 3", bg: "bg-peach", ink: "text-peach-ink", dot: "bg-peach-ink" },
+];
+// Qué cursos tiene cada día (índices de PLAN_COURSES): el jueves se pisan Física II y Economía.
+const PLAN_DAYS: [string, number[]][] = [
+  ["Lun", [0]],
+  ["Mar", [1]],
+  ["Mié", [0]],
+  ["Jue", [1, 2]],
+  ["Vie", []],
+];
+
+function Plan({ firstName, term }: MockProps) {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
+  const s3 = stepAt(3);
+  // Cuándo se toca cada curso: los dos primeros en el paso 1; el tercero, de modo que apriete justo al
+  // empezar el paso 3.
+  const touches = [s1, s1 + 0.6, s3 - PRESS];
+  const dotAt = (course: number, day: number) => (course === 2 ? touches[2] + PRESS + 0.1 : s2 + day * 0.07);
+  return (
+    <Phone active="calendar" initial={firstName.charAt(0) || "F"}>
+      <PageTitle>Armá tu {term ?? "cuatrimestre"}</PageTitle>
+      <div className={`relative mt-2 ${BORDERED}`}>
+        {PLAN_COURSES.map((c, i) => (
+          <div key={c.name} className="relative flex h-6 items-center gap-1.5 border-t border-line pr-2 pl-3.5 text-[10px] leading-none first:border-t-0">
+            <span className="relative size-3 flex-none rounded-full border-[1.5px] border-line-strong">
+              <span className={`absolute -inset-[1.5px] grid place-items-center rounded-full ${c.bg} ${c.ink}`} style={anim("story-pop", touches[i] + PRESS, 0.3)}>
+                <Check size={7} />
+              </span>
+            </span>
+            <span className="flex-auto font-semibold">{c.name}</span>
+            <span className="text-[9px] text-muted">{c.course}</span>
+            <Touch at={touches[i]} className="top-px left-[38%]" />
+          </div>
+        ))}
+        <Marker n={1} className="-top-2.5 -left-2.5" />
+      </div>
+      <div className="relative mt-1.5 grid grid-cols-5 gap-1">
+        {PLAN_DAYS.map(([day, courses], d) => (
+          <span
+            key={day}
+            className={`relative flex h-[26px] flex-col items-center justify-center gap-[3px] rounded-lg border text-[9px] leading-none ${
+              day === "Jue" ? "border-transparent bg-lavender font-semibold text-lavender-ink" : "border-line bg-surface text-ink-2"
+            }`}
+          >
+            {day}
+            <span className="flex h-1 gap-0.5">
+              {courses.map((c) => (
+                <span key={c} className={`size-1 rounded-full ${PLAN_COURSES[c].dot}`} style={anim("story-pop", dotAt(c, d), 0.3)} />
+              ))}
+            </span>
+            {courses.length > 1 && <span className="absolute top-0.5 right-0.5 size-[5px] rounded-full bg-danger" style={anim("story-pop", s3 + 0.3, 0.3)} />}
+          </span>
+        ))}
+        <Marker n={2} className="-top-2 -left-2" />
+      </div>
+      <div className="relative mt-1.5 flex flex-col gap-1 text-[9.5px] leading-none">
+        <div className="flex h-6 items-center gap-2 rounded-lg border border-mint-line bg-mint px-2 text-mint-ink" style={anim("story-rise", s2 + 0.3)}>
+          <b className="font-semibold">18:00</b>
+          <span className="flex-auto font-semibold">Física II</span>
+        </div>
+        <div className="flex h-6 items-center gap-2 rounded-lg border-[1.5px] border-danger bg-peach px-2 text-peach-ink" style={anim("story-rise", s3 + 0.1)}>
+          <b className="font-semibold">19:00</b>
+          <span className="flex-auto font-semibold">Economía</span>
+          <span className="rounded-full bg-surface px-1.5 py-0.5 text-[8.5px] font-semibold text-danger">Se superpone</span>
+        </div>
+        <Marker n={3} className="-right-2 -bottom-2" />
+      </div>
+    </Phone>
+  );
+}
+
+function StarOutline({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className="block fill-none stroke-star" strokeWidth="1.8" strokeLinejoin="round">
+      <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z" />
+    </svg>
+  );
+}
+
+function MiniStars({ value }: { value: number }) {
+  return (
+    <span className="flex gap-px">
+      {[1, 2, 3, 4, 5].map((k) => (k <= value ? <StarIcon key={k} size={9} /> : <StarOutline key={k} size={9} />))}
+    </span>
+  );
+}
+
+// Reseñas: la ficha de un curso con su puntaje, los comentarios y, al tocar las estrellas, tu reseña.
+function Resenas({ firstName }: MockProps) {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
   const s3 = stepAt(3);
   return (
-    <Screen title="Reseñas">
-      <div className="relative flex items-center gap-2.5 rounded-xl bg-bg p-2" style={anim("story-pop", stepAt(1))}>
-        <div className="font-display text-[28px] leading-none font-semibold">4,6</div>
-        <div className="text-[11px]">
-          <div className="text-star">★★★★★</div>
-          <div className="text-muted">Curso 2 · Pérez · 32 reseñas</div>
+    <Phone active="star" initial={firstName.charAt(0) || "F"}>
+      <PageTitle>Curso 2</PageTitle>
+      <div className="text-[9px] leading-tight text-muted">Probabilidad · Pérez, García</div>
+      <div className={`relative mt-1.5 flex items-center gap-2.5 px-2.5 py-1.5 ${BORDERED}`} style={anim("story-pop", s1)}>
+        <div>
+          <div className="font-display text-[22px] leading-none font-medium tracking-[-0.03em]">4,6</div>
+          <div className="mt-1 text-[8.5px] leading-none text-muted">32 reseñas</div>
         </div>
-        <Marker n={1} className="-top-2 -right-1" />
+        <div className="flex flex-auto flex-col gap-[3px]">
+          {[72, 18, 6, 2, 2].map((pct, i) => (
+            <span key={i} className="flex items-center gap-1 text-[7.5px] leading-none text-muted">
+              {5 - i}
+              <span className="h-[3px] flex-auto overflow-hidden rounded-full bg-disabled">
+                <span className="block h-full origin-left rounded-full bg-star" style={{ width: `${pct}%`, ...anim("story-grow", s1 + 0.2 + i * 0.06, 0.6) }} />
+              </span>
+            </span>
+          ))}
+        </div>
+        <Marker n={1} className="-top-2 -right-2" />
       </div>
-      <div className="relative mt-2 flex flex-col gap-1.5 text-[11px]">
-        <div className="rounded-xl border border-line p-2" style={anim("story-rise", stepAt(2))}>
-          <span className="text-star">★★★★★</span> Explica muy bien y los parciales son justos.
+      <div className={`relative mt-1.5 px-2.5 text-[9.5px] leading-snug text-ink-2 ${BORDERED}`}>
+        <div className="flex flex-col gap-0.5 py-1" style={anim("story-rise", s2)}>
+          <MiniStars value={5} />
+          Explica muy bien y los parciales son justos.
         </div>
-        <div className="rounded-xl border border-line p-2" style={anim("story-rise", stepAt(2) + 0.35)}>
-          <span className="text-star">★★★★</span>☆ Mucha práctica, vale la pena ir a clase.
+        <div className={`flex flex-col gap-0.5 border-t border-disabled py-1 ${CHROME}`} style={anim("story-rise", s2 + 0.2)}>
+          <MiniStars value={4} />
+          Mucha práctica: conviene ir a clase.
         </div>
         <Marker n={2} className="-top-2 -left-2" />
       </div>
-      <div className="relative mt-2 flex items-center justify-between rounded-lg bg-accent px-2.5 py-1.5 text-[11px] font-semibold text-on-accent">
-        Tu reseña
-        <span className="flex gap-0.5 text-[14px]">
+      <div className={`relative mt-1.5 flex items-center justify-between gap-2 py-1 pr-1 pl-2.5 ${BORDERED}`}>
+        <span className="relative flex gap-0.5">
           {[0, 1, 2, 3, 4].map((i) => (
             <span key={i} className="relative">
-              <span className="opacity-40">★</span>
-              <span className="absolute inset-0 text-star" style={anim("story-pop", s3 + 0.5 + i * 0.18, 0.25)}>
-                ★
+              <StarOutline size={14} />
+              <span className="absolute inset-0" style={anim("story-pop", s3 + PRESS + i * 0.05, 0.3)}>
+                <StarIcon size={14} />
               </span>
             </span>
           ))}
+          <Touch at={s3} className="-top-1 -right-1" />
         </span>
-        <Finger at={s3} className="-top-1 right-3" />
-        <Marker n={3} className="-top-2.5 -left-1" />
+        <span className="rounded-md bg-accent px-2 py-[5px] text-[9px] leading-none font-semibold text-on-accent">Enviar reseña</span>
+        <Marker n={3} className="-top-2 -left-2" />
       </div>
-    </Screen>
+    </Phone>
   );
 }
 
-// Finales: la mesa con día y hora; después se resaltan la inscripción y la baja.
-function Finales() {
+// Finales: las mesas con día y hora; después la inscripción y hasta cuándo darse de baja.
+function Finales({ firstName }: MockProps) {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
+  const s3 = stepAt(3);
+  const chip = "w-fit rounded-full px-1.5 py-0.5 text-[8.5px] leading-tight font-semibold";
   return (
-    <Screen title="Finales">
-      <div className="flex flex-col gap-1.5 text-[11px]">
-        {[
-          ["9", "DIC", "17:00", "Álgebra Lineal"],
-          ["14", "DIC", "9:00", "Química Básica"],
-        ].map(([d, m, h, n], i) => (
-          <div key={n} className="relative flex items-center gap-2 rounded-xl bg-bg p-1.5" style={anim("story-rise", stepAt(1) + i * 0.3)}>
-            <span className="flex w-[52px] flex-none flex-col items-center rounded-lg bg-lavender py-1 leading-none text-lavender-ink">
-              <span className="text-[9px] font-semibold">{m}</span>
-              <b className="font-display text-[17px]">{d}</b>
-              <span className="text-[9px]">{h}</span>
-            </span>
-            <span className="min-w-0 flex-1">
-              <b className="block">{n}</b>
-              <span className="relative inline-block rounded px-0.5">
-                {i === 0 && <span className="absolute inset-0 rounded bg-butter" style={anim("story-fade", stepAt(2))} />}
-                <span className="relative">Inscripción: 30/11 al 7/12</span>
-              </span>
-              <span className="relative block w-fit rounded px-0.5 text-[10px]">
-                {i === 0 && <span className="absolute inset-0 rounded bg-peach" style={anim("story-fade", stepAt(3))} />}
-                <span className="relative">Baja hasta el 8/12</span>
-              </span>
-            </span>
-            {i === 0 && (
-              <>
-                <Marker n={1} className="-top-2 -left-2" />
-                <Marker n={2} className="top-3 right-1" />
-                <Marker n={3} className="-bottom-2 right-8" />
-              </>
-            )}
-          </div>
-        ))}
+    <Phone active="exam" initial={firstName.charAt(0) || "F"}>
+      <div className="flex items-center justify-between gap-2">
+        <PageTitle>Finales</PageTitle>
+        <span className="rounded-full border border-line-strong bg-surface px-2 py-[3px] text-[8.5px] leading-none font-semibold">Recordarme</span>
       </div>
-    </Screen>
-  );
-}
-
-// Novedades: el aviso fijado, el calendario con la barra de lo que está pasando y las noticias.
-function Novedades() {
-  return (
-    <Screen title="Novedades">
-      <div className="relative rounded-xl bg-butter p-2 text-[11px] text-butter-ink" style={anim("story-rise", stepAt(1))}>
-        <b>📌 Inscripción a cursos de verano</b>
-        <div>Del 9 al 14 de noviembre.</div>
-        <Marker n={1} className="-top-2 -right-1" />
-      </div>
-      <div className="relative mt-2 grid grid-cols-2 gap-1.5 text-[10.5px]" style={anim("story-rise", stepAt(2))}>
-        <div className="rounded-xl bg-mint p-2 text-mint-ink">
-          <b className="flex items-center gap-1">
-            <span className="size-1.5 rounded-full bg-mint-ink motion-safe:animate-ping" /> Ahora
-          </b>
-          <div>Inscripción a finales</div>
-          <span className="mt-1 block h-1.5 w-[70%] origin-left rounded-full bg-mint-ink" style={anim("story-grow", stepAt(2) + 0.4, 1.2)} />
+      <div className={`mt-2 px-2.5 ${BORDERED}`}>
+        <div className="pt-2 text-[10.5px] leading-tight font-semibold">Tus finales pendientes</div>
+        <div className="flex flex-col gap-1 py-2 text-[9.5px] leading-tight">
+          <b className="font-semibold">Álgebra Lineal</b>
+          <span className="flex items-center gap-1.5">
+            <span className="text-ink-2" style={anim("story-rise", s1)}>
+              <b className="font-semibold">Mié 9/12</b> · 17:00
+            </span>
+            <Marker n={1} inline />
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className={`${chip} bg-mint text-mint-ink`} style={anim("story-pop", s2)}>
+              Inscripción abierta hasta el 7/12
+            </span>
+            <Marker n={2} inline />
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-[9px] text-muted" style={anim("story-fade", s3)}>
+              Te podés dar de baja hasta el 8/12
+            </span>
+            <Marker n={3} inline />
+          </span>
         </div>
-        <div className="rounded-xl border border-line p-2">
-          <b>Se viene</b>
-          <div>Receso de verano</div>
-          <span className="mt-0.5 inline-block rounded-full bg-sky px-1.5 text-sky-ink">En 12 días</span>
+        <div className="flex flex-col gap-1 border-t border-line py-2 text-[9.5px] leading-tight">
+          <b className="font-semibold">Química Básica</b>
+          <span className="text-ink-2" style={anim("story-rise", s1 + 0.15)}>
+            <b className="font-semibold">Lun 14/12</b> · 9:00
+          </span>
+          <span className={`${chip} bg-butter text-butter-ink`} style={anim("story-pop", s2 + 0.15)}>
+            Inscripción desde el 5/12
+          </span>
+        </div>
+      </div>
+    </Phone>
+  );
+}
+
+// Novedades: el aviso fijado, las próximas fechas (lo que está pasando y lo que viene) y las noticias.
+function Novedades({ firstName }: MockProps) {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
+  const s3 = stepAt(3);
+  return (
+    <Phone active="bell" initial={firstName.charAt(0) || "F"}>
+      <PageTitle>Novedades</PageTitle>
+      <div className={`relative mt-2 px-2.5 py-2 text-[9.5px] leading-tight ${BORDERED}`} style={anim("story-rise", s1)}>
+        <span className="mr-1.5 rounded-full bg-butter px-1.5 py-0.5 text-[8.5px] font-semibold text-butter-ink">Fijado</span>
+        <b className="font-semibold">Inscripción a cursos de verano</b>
+        <div className="mt-1 text-ink-2">Del 9 al 14 de diciembre, por el SIU.</div>
+        <Marker n={1} className="-top-2 -right-2" />
+      </div>
+      <div className="relative mt-1.5 grid grid-cols-2 gap-1.5 text-[9.5px] leading-tight" style={anim("story-rise", s2)}>
+        <div className="flex flex-col gap-1.5 rounded-[14px] bg-mint p-2 text-mint-ink">
+          <b className="font-semibold">Inscripción a finales</b>
+          <span className="mt-auto flex flex-col gap-1">
+            <span className="h-1 overflow-hidden rounded-full bg-surface/70">
+              <span className="block h-full w-[62%] origin-left rounded-full bg-mint-ink" style={anim("story-grow", s2 + 0.3, 0.9)} />
+            </span>
+            <span className="text-[8.5px] font-semibold">Quedan 4 días</span>
+          </span>
+        </div>
+        <div className={`flex flex-col gap-1.5 p-2 ${BORDERED}`}>
+          <span className="flex items-start justify-between gap-1">
+            <span className="flex w-7 flex-col items-center rounded-md bg-lavender py-0.5 leading-none text-lavender-ink">
+              <span className="text-[7px] font-semibold uppercase">dic</span>
+              <span className="font-display text-[11px] font-semibold">21</span>
+            </span>
+            <span className="rounded-full bg-sky px-1.5 py-0.5 text-[8px] font-semibold whitespace-nowrap text-sky-ink">En 12 días</span>
+          </span>
+          <b className="font-semibold">Receso de verano</b>
         </div>
         <Marker n={2} className="-top-2.5 left-1/2 -translate-x-1/2" />
       </div>
-      <div className="relative mt-2 flex items-center gap-2 rounded-xl border border-line p-1.5 text-[10.5px]" style={anim("story-rise", stepAt(3))}>
-        <span className="h-9 w-14 flex-none rounded-lg bg-lavender" />
-        <span>
-          <b className="block">Noticias de la FIUBA</b>
-          <span className="text-muted">La facultad lanza la credencial…</span>
+      <div className={`relative mt-1.5 flex items-center gap-2 p-1.5 text-[9.5px] leading-tight ${BORDERED}`} style={anim("story-rise", s3)}>
+        <span className="grid h-8 w-14 flex-none place-items-center rounded-lg bg-lavender text-lavender-ink">
+          {/* La foto de la noticia: un paisaje dibujado. */}
+          <svg width="22" height="16" viewBox="0 0 22 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 14l6-7 4 4.5 3-3L21 14" />
+            <circle cx="16" cy="3.5" r="1.5" />
+          </svg>
         </span>
-        <Marker n={3} className="-top-2 -right-1" />
+        <span className="min-w-0">
+          <span className="block text-[8.5px] text-muted">Noticias de la FIUBA · hoy</span>
+          <b className="block truncate font-semibold">Charla abierta en Paseo Colón</b>
+        </span>
+        <Marker n={3} className="-top-2 -right-2" />
       </div>
-    </Screen>
+    </Phone>
   );
 }
 
 // Web: se recomienda la compu; la misma cuenta en los dos, lo que marcás en uno aparece en el otro.
 function Web() {
+  const s1 = stepAt(1);
+  const s2 = stepAt(2);
   const s3 = stepAt(3);
+  const touch = s3 - 0.35;
+  const cell = "flex h-[18px] items-center gap-[3px] overflow-hidden rounded-md px-1 text-[7.5px] leading-none font-semibold whitespace-nowrap";
   const subject = (late: number) => (
-    <span className="relative block overflow-hidden rounded-md border border-line-strong bg-surface px-1.5 py-1 text-[9.5px] font-semibold">
-      Física II
-      <span className="absolute inset-0 flex items-center justify-between bg-mint px-1.5 text-mint-ink" style={anim("story-fade", s3 + late, 0.3)}>
-        Física II <span>✓ 8</span>
+    <span className="relative block">
+      <span className={`${cell} ${STATE_STYLE.enabled}`}>Física II</span>
+      <span className={`absolute inset-0 ${cell} ${STATE_STYLE.approved}`} style={anim("story-fade", touch + PRESS + late, 0.3)}>
+        <Check size={7} />
+        Física II
       </span>
     </span>
   );
   return (
-    <Screen title="Compu y celular">
-      <div className="flex items-end justify-center gap-3">
-        <div className="relative w-[64%]" style={anim("story-rise", stepAt(1))}>
-          <div className="rounded-t-lg border-[3px] border-b-0 border-ink/80 bg-bg p-1.5">
-            <div className="mb-1 truncate rounded bg-surface px-1 text-[8.5px] text-muted">fiubi.com.ar</div>
+    <div aria-hidden="true" className="story-mock relative rounded-[22px] bg-bg px-4 pt-5 pb-3 text-ink shadow-[0_14px_28px_-14px_var(--card-shadow)]">
+      <div className="flex items-end justify-center gap-4">
+        <div className="relative w-[62%]" style={anim("story-rise", s1)}>
+          <div className="rounded-t-[10px] border-[2.5px] border-b-0 border-ink-2 bg-surface p-1.5">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <Logo decorative className="h-[6px]" />
+              <span className="flex-auto truncate rounded-full bg-bg px-1.5 py-px text-[8px] leading-tight text-muted">fiubi.com.ar</span>
+            </div>
             <div className="grid grid-cols-3 gap-1">
-              <span className="rounded-md bg-mint py-2" />
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.approved}`} />
               {subject(0)}
-              <span className="rounded-md bg-blocked py-2" />
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.blocked}`} />
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.approved}`} />
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.in_progress}`} />
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.blocked}`} />
             </div>
           </div>
-          <div className="mx-[-8px] h-1.5 rounded-b-md bg-ink/80" />
-          <span className="absolute -top-2.5 right-0 rounded-full bg-mint px-1.5 text-[9px] font-semibold text-mint-ink">Recomendada</span>
+          <div className="-mx-2.5 h-1.5 rounded-b-md bg-ink-2" />
           <Marker n={1} className="-top-2 -left-2" />
-          <Finger at={s3 - 0.4} className="top-6 left-[46%]" />
+          <Touch at={touch} className="top-[26px] left-[44%]" />
         </div>
-        <div className="relative w-[24%]" style={anim("story-rise", stepAt(2))}>
-          <div className="rounded-[12px] border-[3px] border-ink/80 bg-bg p-1 pb-3">
-            <div className="mx-auto mb-1 h-1 w-5 rounded-full bg-ink/60" />
+        <div className="relative w-[22%]" style={anim("story-rise", s2)}>
+          <div className="rounded-[12px] border-[2.5px] border-ink-2 bg-surface px-1 pt-1 pb-2.5">
+            <div className="mx-auto mb-1 h-[3px] w-4 rounded-full bg-line-strong" />
             <div className="flex flex-col gap-1">
-              <span className="rounded-md bg-mint py-1.5" />
-              {subject(0.6)}
+              <span className={`h-[18px] rounded-md ${STATE_STYLE.approved}`} />
+              {subject(0.5)}
             </div>
           </div>
           <Marker n={2} className="-top-2 -right-2" />
         </div>
       </div>
-      <div className="relative mt-2 text-center text-[11px] font-semibold text-mint-ink" style={anim("story-rise", s3 + 0.7)}>
-        ⇄ Se sincroniza solo
-        <Marker n={3} className="-top-1 left-2" />
+      <div className="relative mx-auto mt-2.5 flex w-fit items-center gap-1.5 rounded-full bg-mint px-2.5 py-1 text-[10px] leading-none font-semibold text-mint-ink" style={anim("story-rise", touch + PRESS + 0.6)}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 9h14l-4-4M20 15H6l4 4" />
+        </svg>
+        Se sincroniza solo
+        <Marker n={3} className="-top-2 -left-3.5" />
       </div>
-    </Screen>
+    </div>
   );
 }
 
-const MOCKS: Record<string, () => ReactNode> = {
+const MOCKS: Record<string, (props: MockProps) => ReactNode> = {
   web: Web,
   inicio: Inicio,
   mapa: Mapa,
@@ -408,7 +605,7 @@ const MOCKS: Record<string, () => ReactNode> = {
 export const hasStoryMock = (id: string) => id in MOCKS;
 
 /** The drawn screen of a story, or null when the story has none. */
-export function StoryMock({ id }: { id: string }) {
+export function StoryMock({ id, firstName, term }: { id: string } & MockProps) {
   const Mock = MOCKS[id];
-  return Mock ? <Mock /> : null;
+  return Mock ? <Mock firstName={firstName} term={term} /> : null;
 }
