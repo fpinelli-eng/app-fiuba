@@ -50,12 +50,51 @@ Todo desde la cuenta **avisosfiubi@gmail.com**.
 
 Listo. Para ver qué pasó en cada corrida: Apps Script → **Ejecuciones** (a la izquierda). Si una falla, Google te manda un mail.
 
+## Monitor (avisa por mail cuando algo se rompe)
+
+En la misma planilla, un segundo archivo, `apps-script/Salud.gs`, revisa cada hora si la app anda y les manda un mail a los administradores **solo cuando aparece un problema o cuando se resuelve** (un mail con la lista de lo que está mal), como mucho 4 por día. No usa GitHub Actions: corre dentro de `hourly`, después de los recordatorios y por separado (si uno falla, el otro corre igual). Lo mismo se ve en **Administración → Estado** (https://fiubi.com.ar/admin/estado).
+
+Qué revisa (los límites están en `SALUD_LIMITS`, al principio de `Salud.gs`):
+
+| Chequeo | Avisa si… |
+|---|---|
+| La base responde (`salud()`, migración `20261115130000_salud.sql`, con el mismo `TOKEN`) | da error: base caída, `TOKEN` o `SUPABASE_KEY` mal |
+| Fechas de examen del SIU (el workflow corre todas las mañanas) | la última lectura tiene más de 36 h: GitHub se salteó corridas o el SIU no responde |
+| Noticias de la FIUBA (una vez por día) | la última copia tiene más de 48 h |
+| Mails de Recordarme | uno tenía que salir hace más de 3 h y sigue sin mandarse |
+| https://fiubi.com.ar y https://fiubi.com.ar/robots.txt | no responden 200 **dos veces seguidas** (una sola falla no avisa) |
+
+La base le devuelve solo cantidades y fechas (nunca mails ni nombres) y el mail tiene solo eso, con un botón a Administración → Estado. Cada llamada anota la hora en la base, así la página de Estado muestra "Último chequeo del monitor: hace X" y avisa ⚠️ "El monitor no está corriendo" si pasaron más de 2 horas.
+
+### Ponerlo en marcha (Tomás)
+
+Con la planilla de arriba ya andando y el PR del monitor integrado (antes la base no tiene `salud()`):
+
+1. **Pegar `Salud.gs`.** En Apps Script, al lado de **Archivos**, tocá **+** → **Secuencia de comandos**, ponele de nombre `Salud` y pegá todo el contenido de [`apps-script/Salud.gs`](apps-script/Salud.gs). Guardá.
+2. **Actualizar `Código.gs`.** Borrá su contenido y pegá de nuevo [`apps-script/Code.gs`](apps-script/Code.gs): cambió `hourly` para que llame al monitor. Guardá. El activador sigue igual (no hace falta `installTriggers`) y `appsscript.json` no cambió.
+3. **A quién le llegan los avisos.** **Configuración del proyecto** → **Propiedades de la secuencia de comandos** → **Agregar propiedad**: `ALERT_TO`, valor: los mails separados por coma (por ejemplo, el tuyo y el de Francisco de la FIUBA). Escribilos vos ahí: no van en el repo. Si no existe, el aviso le llega a avisosfiubi@gmail.com.
+4. **Probar sin mandar nada.** Elegí `saludProbar` y tocá **Ejecutar**. En el registro aparece cada chequeo con ✅ o ⚠️ y si en una corrida normal mandaría un mail. Si Google pide permisos de nuevo, aceptá como en el paso 4 de arriba.
+5. **Mail de prueba.** Elegí `saludMailDePrueba` y tocá **Ejecutar**: les llega a los de `ALERT_TO` un aviso de ejemplo ("[Prueba] FIUBI: 2 problemas"). No toca la base ni lo que el monitor recuerda.
+
+Listo: desde la próxima hora corre solo.
+
+**El primer día puede llegar un aviso de "Las fechas de examen no se actualizan"** seguido de otro "todo volvió a andar": hasta que corra la sincronización del SIU con el código nuevo (la mañana siguiente a integrar el PR), la base solo sabe la última vez que *cambiaron* las fechas. Para evitarlo, hacé estos pasos después de esa corrida (en GitHub → Actions → "Fechas de examen del SIU" se ve si ya corrió). Lo que recuerda (qué avisó y cuántas veces falló la web) está en la propiedad `SALUD_STATE`; borrarla lo hace empezar de cero.
+
+**Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. En **Activadores**, editá el de `hourly` y fijate que en **Configuración de notificaciones de errores** diga "Notificarme inmediatamente" (o "a diario"). Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos avisos de Google a tu cuenta.
+
+### Lo que no ve
+
+- Errores en las pantallas con sesión (Mapa, Plan, Finales…): el monitor no entra con una cuenta, solo mira la página pública y `robots.txt`.
+- Problemas que pasan solo en el navegador de un alumno (JavaScript que falla en un celular, una pantalla que se ve mal).
+- Si se cae la cuenta de Google o Apps Script, no hay quién avise (por eso Estado muestra cuándo fue el último chequeo).
+- Que los datos estén bien: sabe que las fechas de examen se leyeron hace poco, no si el SIU las publicó correctas.
+
 ## Cambiar algo después
 
 - **Cambiar el código o el diseño del mail:** se cambia `apps-script/Code.gs` en el repo (con PR) y después se vuelve a pegar en el editor de Apps Script y se guarda. No hace falta tocar nada más: el activador sigue andando con el código nuevo.
 - **Ver el diseño sin mandar nada:** abrí `apps-script/preview.html` en el navegador (el mail con datos de ejemplo). Si cambiás el mail en `Code.gs`, regeneralo con `node tools/reminders/apps-script/preview.mjs` (las pruebas avisan si quedó viejo).
 - **Cambiar el token:** en Propiedades del script borrá `TOKEN`, corré `createToken` y pegá la línea nueva en el SQL Editor.
-- **Frenar todo:** en **Activadores**, borrá el de `hourly`.
+- **Frenar todo:** en **Activadores**, borrá el de `hourly` (frena también el monitor).
 
 ## Privacidad
 

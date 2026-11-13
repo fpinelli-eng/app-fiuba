@@ -18,7 +18,7 @@ import "./ts-resolve.mjs";
 
 const { fetchSiuExamsPage, siuExamsUrl } = await import("../../src/lib/siu/exams-fetch.ts");
 const { parseSiuExamsHtml } = await import("../../src/lib/siu/exams-html.ts");
-const { validateFilters, groupFilters, siuSearchUrl, checkPlanSync, normalizeRow, diffExamRows, hasChanges, summaryMarkdown } =
+const { validateFilters, groupFilters, siuSearchUrl, checkPlanSync, normalizeRow, diffExamRows, hasChanges, summaryMarkdown, checkedSql } =
   await import("../../src/lib/exams/siu-sync.ts");
 
 const { values: args } = parseArgs({
@@ -107,9 +107,10 @@ if (!dryRun) {
         `select length(set_config('exams.payload', $${tag}$${payload}$${tag}$, false)) as payload_chars;`,
         // By its full path: the generated file lives elsewhere (the runner's temp folder).
         `\\i '${fileURLToPath(new URL("apply.sql", import.meta.url)).replaceAll("\\", "/").replaceAll("'", "''")}'`,
-        "",
       ]
-    : ["-- Sin cambios: no hay nada para guardar.", ""];
+    : ["-- Sin cambios en las fechas."];
+  // Also without changes: the plans read now, for the health monitor (Administración → Estado).
+  sql.push(checkedSql(outcomes.filter((o) => !("skip" in o)).map((o) => o.planId)), "");
   writeFileSync(args.sql, sql.join("\n"));
 }
 

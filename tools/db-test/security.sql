@@ -540,6 +540,57 @@ delete from public.exam_reminders where table_name like 'AVISO %';
 delete from public.exam_tables where name like 'AVISO %';
 delete from public.avisos_config;
 
+-- Health monitor: salud() for the Apps Script, admin_salud() for Administración → Estado -----
+
+insert into public.avisos_config (id, token_sha256) values (true, encode(sha256(convert_to(repeat('a', 40), 'UTF8')), 'hex'));
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to) values
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'SALUD DEBIDA', current_date + 20, 'Regular',
+   (now() at time zone 'America/Argentina/Buenos_Aires')::date - 1 + time '00:00', (now() at time zone 'America/Argentina/Buenos_Aires')::date + 5 + time '23:59');
+insert into public.exam_reminders (user_id, plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'SALUD DEBIDA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'civil-2023', 'CB002', 'SALUD DEBIDA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days');
+update public.exam_imports set published_at = now() - interval '3 days', checked_at = now() - interval '2 hours';
+select test.ok((select count(*) from public.monitor_state) = 0, 'no monitor heartbeat yet');
+
+set role anon;
+select test.fails($$select * from public.salud('wrong')$$, 'anon reads the health without the token');
+select test.fails($$select * from public.salud(repeat('b', 40))$$, 'anon reads the health with a wrong token');
+select test.fails($$select * from public.salud(null)$$, 'anon reads the health with no token');
+select test.fails('select 1 from public.monitor_state', 'anon reads the monitor heartbeat');
+select test.fails('select * from public.salud_datos()', 'anon reads the health figures directly');
+select test.fails('select * from public.admin_salud()', 'anon reads the admin health');
+select test.ok((select count(*) from public.salud(repeat('a', 40))) = 1, 'the script reads the health with its token');
+reset role;
+create table test.salud_run as select * from public.salud(repeat('a', 40));
+select test.ok((select last_health_check_at > now() - interval '1 minute' from public.monitor_state), 'the health check records the heartbeat');
+select test.ok((select monitor_checked_at is not null from test.salud_run), 'health: the heartbeat comes back');
+select test.ok((select exam_sync_at > now() - interval '3 hours' and exam_sync_at < now() - interval '1 hour' from test.salud_run), 'health: the exam sync is the last read, not the last change');
+select test.ok((select exam_oldest_plan_sync_at is not null and news_fetched_at is not null from test.salud_run), 'health: oldest plan sync and news');
+select test.ok((select reminders_due from test.salud_run) =
+  case when (now() at time zone 'America/Argentina/Buenos_Aires')::time >= time '08:00' then 1 else 0 end, 'health: due reminder mails, only of the current plan');
+select test.ok((select (reminders_due = 0) = (reminders_due_since is null) from test.salud_run), 'health: since when, only when something is due');
+select test.ok((select offers_pending >= 0 and users >= 2 and reviews >= 0 from test.salud_run), 'health: counts');
+select test.ok(regexp_replace(pg_get_function_result('public.salud(text)'::regprocedure), '\w+ (timestamp with time zone|bigint)(, )?', '', 'g') = 'TABLE()',
+  'health: only timestamps and counts (no mails, names or ids)');
+select test.ok(pg_get_function_result('public.salud(text)'::regprocedure) = pg_get_function_result('public.admin_salud()'::regprocedure), 'health: the admin version returns the same');
+drop table test.salud_run;
+update public.monitor_state set last_health_check_at = now() - interval '5 hours';
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails('select * from public.admin_salud()', 'a student reads the admin health');
+select test.fails($$select * from public.salud(repeat('a', 40))$$, 'a student reads the health with the token');
+select test.fails('select 1 from public.monitor_state', 'a student reads the monitor heartbeat');
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.admin_salud()) = 1, 'admin reads the health');
+select test.ok((select monitor_checked_at < now() - interval '4 hours' from public.admin_salud()), 'admin sees the last heartbeat');
+select test.fails('update public.monitor_state set last_health_check_at = now()', 'admin writes the monitor heartbeat');
+reset role;
+select test.ok((select last_health_check_at < now() - interval '4 hours' from public.monitor_state), 'the admin page does not record a heartbeat');
+delete from public.exam_reminders where table_name = 'SALUD DEBIDA';
+delete from public.exam_tables where name = 'SALUD DEBIDA';
+delete from public.avisos_config;
+
 -- Deleting the account keeps the review, without author ---------------------------
 
 set role anon;

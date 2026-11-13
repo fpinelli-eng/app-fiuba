@@ -6,7 +6,7 @@ Revisión del 10 de noviembre de 2026, antes del lanzamiento oficial. Se actuali
 
 - **Base de datos.** Revisada aplicando todas las migraciones a una base vacía:
   - todas las tablas tienen seguridad por fila;
-  - nada está abierto a usuarios sin sesión (`anon`) y ninguna política es `true`. La excepción son las dos funciones del Apps Script de los recordatorios (`avisos_pendientes()` y `avisos_marcar_enviado()`), que sin su token devuelven error (la base guarda solo el SHA-256 del token, en una tabla que nadie lee);
+  - nada está abierto a usuarios sin sesión (`anon`) y ninguna política es `true`. La excepción son las funciones del Apps Script de los recordatorios (`avisos_pendientes()` y `avisos_marcar_enviado()`) y del monitor (`salud()`, que devuelve solo cantidades y fechas), que sin su token devuelven error (la base guarda solo el SHA-256 del token, en una tabla que nadie lee);
   - las funciones con permisos elevados (`security definer`) fijan `search_path` y verifican quién llama;
   - `profiles.is_admin` no se puede cambiar desde la app (permisos por columna) y el plan solo con `choose_my_plan()` (la primera vez) o `change_my_plan()`;
   - el autor de una reseña (`review_authors`) no lo puede leer ningún usuario.

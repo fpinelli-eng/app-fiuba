@@ -230,3 +230,25 @@ export function summaryMarkdown(outcomes: PlanOutcome[], dryRun: boolean): strin
     : `${ok} de ${outcomes.length} planes leídos; ${changed} con cambios se actualizaron.`;
   return ["### Fechas de examen del SIU", "", head, "", "| Plan | Mesas | Cambios |", "|---|---:|---|", ...lines, ""].join("\n");
 }
+
+/**
+ * SQL that records that these plans were read from the SIU now, changed or not
+ * (exam_imports.checked_at, migration 20261115130000_salud.sql). The health monitor
+ * (Administración → Estado and tools/reminders/apps-script/Salud.gs) uses it to notice when the
+ * daily sync stops running: published_at only moves when the dates change. Plan ids come from
+ * exam-filters.json and are checked anyway. Does nothing while the column does not exist yet.
+ */
+export function checkedSql(planIds: string[]): string {
+  const ids = planIds.filter((id) => /^[a-z0-9-]+$/.test(id));
+  if (!ids.length) return "-- Ningún plan leído.";
+  return [
+    "do $checked$",
+    "begin",
+    "  if exists (select 1 from information_schema.columns",
+    "             where table_schema = 'public' and table_name = 'exam_imports' and column_name = 'checked_at') then",
+    `    update public.exam_imports set checked_at = now() where plan_id in (${ids.map((id) => `'${id}'`).join(", ")});`,
+    "  end if;",
+    "end",
+    "$checked$;",
+  ].join("\n");
+}
