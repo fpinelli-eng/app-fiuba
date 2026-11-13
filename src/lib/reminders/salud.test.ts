@@ -105,7 +105,7 @@ describe("thresholds", () => {
 
   it("reads the timestamps as the API sends them", () => {
     // PostgREST: microseconds and "+00:00".
-    const r = gs.saludEvaluate_(fresh(), healthy({ exam_sync_at: "2026-11-19T02:00:00.123456+00:00" }), null, up, NOW);
+    const r = gs.saludEvaluate_(fresh(), healthy({ exam_sync_at: "2026-11-19T01:30:00.123456+00:00" }), null, up, NOW);
     expect(r.problems[0].detail).toBe("Última lectura del SIU: hace 37 h.");
   });
 
