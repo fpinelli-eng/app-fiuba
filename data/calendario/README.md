@@ -4,6 +4,8 @@ Fechas del calendario académico de la FIUBA que se muestran en **Novedades** (`
 
 - `2026-2027.json`: sacado de `Calendario_Academico_2026_2027.pdf` (lo publica la FIUBA en www.ingenieria.uba.ar). Una entrada por cada tramo de semanas seguidas: `title`, `starts_on` (lunes de la primera semana), `ends_on` (sábado de la última) y `sort` (fila del PDF, de arriba hacia abajo).
 - Se cargó en la base con `supabase/migrations/20261102150000_news.sql` (tabla `academic_events`, `calendar = '2026-2027'`). La app muestra solo el calendario más nuevo (el nombre más grande).
+- Revisado el 13/11/2026 contra el PDF que enlaza https://www.fi.uba.ar/estudiantes/calendario-academico (el mismo archivo, `Calendario_Academico_2026_2027_81c0faa452_909e52c493.pdf`, modificado el 17/12/2025): las 70 fechas coinciden, semana por semana. Ojo: el PDF marca **semanas** ("las fechas indicadas corresponden a los días lunes de cada semana"), no días; las fechas exactas las anuncia la Secretaría por mail. `src/lib/news/calendar-data.test.ts` fija algunas filas y comprueba que la migración cargó exactamente este JSON.
+- **Si la FIUBA cambia el PDF**, el monitor de la planilla de avisos manda un mail ("El calendario académico de la FIUBA cambió", `tools/reminders/README.md`, "Monitor"). Entonces se baja el nuevo y se siguen los pasos de abajo.
 
 ## Cómo cargar el del año que viene
 
