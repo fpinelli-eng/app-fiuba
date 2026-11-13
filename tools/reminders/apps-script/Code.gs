@@ -40,15 +40,31 @@ var HEADERS = ['Creado', 'Aviso', 'Mail', 'Materia', 'Mesa', 'Fecha', 'Hora', 'I
 // Functions to run by hand or from the trigger
 // ---------------------------------------------------------------------------------------------
 
-/** The trigger's function: mails what is due and refreshes the sheet. */
+/**
+ * The trigger's function: mails what is due and refreshes the sheet, then runs the health monitor
+ * (Salud.gs). Each part in its own try: one failing never stops the other. The error is thrown at
+ * the end, so Google still mails the failure.
+ */
 function hourly() {
-  withLock_(function () {
-    var rows = fetchReminders_();
-    var result = { sent: 0, left: 0 };
-    if (Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H')) >= SEND_FROM_HOUR) result = sendRows_(rows);
-    writeSheet_(rows);
-    Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
-  });
+  var failure = null;
+  try {
+    withLock_(function () {
+      var rows = fetchReminders_();
+      var result = { sent: 0, left: 0 };
+      if (Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H')) >= SEND_FROM_HOUR) result = sendRows_(rows);
+      writeSheet_(rows);
+      Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
+    });
+  } catch (e) {
+    failure = e;
+  }
+  try {
+    if (typeof saludCheck_ === 'function') saludCheck_();
+  } catch (e) {
+    Logger.log('Monitor: ' + e);
+    failure = failure || e;
+  }
+  if (failure) throw failure;
 }
 
 /** Same as the trigger: mails what is due now (from 08:00) and refreshes the sheet. */

@@ -9,6 +9,7 @@ const TABS = [
   { href: "/admin/resenas", label: "Reseñas" },
   { href: "/admin/novedades", label: "Novedades" },
   { href: "/admin/usuarios", label: "Usuarios" },
+  { href: "/admin/estado", label: "Estado" },
 ] as const;
 
 export function AdminNav() {
