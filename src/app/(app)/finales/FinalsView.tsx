@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { NavIcon } from "@/components/icons";
 import { normalizeText } from "@/lib/map/model";
 import {
@@ -16,24 +16,6 @@ import {
 } from "@/lib/exams/types";
 import type { ExamReminderView } from "@/lib/reminders/model";
 import { RemindersDialog } from "./RemindersDialog";
-
-// La pista de "Recordarme" se muestra una sola vez en cada dispositivo (si no hay localStorage, nunca).
-const HINT_KEY = "fiubi-recordarme-pista";
-const noSubscribe = () => () => {};
-const hintSeen = () => {
-  try {
-    return window.localStorage.getItem(HINT_KEY) !== null;
-  } catch {
-    return true;
-  }
-};
-const markHintSeen = () => {
-  try {
-    window.localStorage.setItem(HINT_KEY, "1");
-  } catch {
-    // Sin almacenamiento: no pasa nada.
-  }
-};
 
 const plural = (n: number, one: string, many: string) =>
   `${n} ${n === 1 ? one : many}`;
@@ -120,13 +102,6 @@ export function FinalsView({ data }: { data: FinalsData }) {
   const remindButton = useRef<HTMLButtonElement>(null);
   const activeReminders =
     reminders?.filter((r) => r.planId === data.planId).length ?? 0;
-  const seenHint = useSyncExternalStore(noSubscribe, hintSeen, () => true);
-  const [hintGone, setHintGone] = useState(false);
-  const showHint = !seenHint && !hintGone;
-  const hideHint = () => {
-    markHintSeen();
-    setHintGone(true);
-  };
 
   const open = pending.flatMap((s) => {
     const table = s.tables.find(
@@ -145,49 +120,46 @@ export function FinalsView({ data }: { data: FinalsData }) {
           Finales
         </h1>
         {data.loaded && reminders !== null && (
-          <div className="relative">
+          <>
             <button
               ref={remindButton}
               onClick={() => {
                 setNotice(null);
-                hideHint();
                 setRemindOpen(true);
               }}
               aria-haspopup="dialog"
               aria-describedby="recordarme-pista"
-              className="flex h-10 items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 text-[13.5px] font-semibold text-ink"
+              className="flex h-10 items-center rounded-full border border-line-strong bg-surface px-3.5 text-[13.5px] font-semibold whitespace-nowrap text-ink"
             >
               <NavIcon name="bell" size={17} />
-              Recordarme
-              {activeReminders > 0 && (
-                <span className="text-muted">
-                  {" "}
-                  · {activeReminders}
-                  <span className="sr-only">
-                    {" "}
-                    {activeReminders === 1 ? "mesa" : "mesas"}
-                  </span>
+              {/* Al entrar a Finales el botón se estira con la pregunta y se vuelve a cerrar en "Recordarme". */}
+              <span
+                aria-hidden="true"
+                className="max-w-0 overflow-hidden opacity-0 motion-safe:animate-[remind-ask_5s_ease-in-out_0.5s_both]"
+              >
+                <span className="pl-1.5">
+                  ¿Te avisamos por mail cuando abre la inscripción?
                 </span>
-              )}
+              </span>
+              <span className="overflow-hidden motion-safe:animate-[remind-label_5s_ease-in-out_0.5s_both]">
+                <span className="pl-1.5">Recordarme</span>
+                {activeReminders > 0 && (
+                  <span className="text-muted">
+                    {" "}
+                    · {activeReminders}
+                    <span className="sr-only">
+                      {" "}
+                      {activeReminders === 1 ? "mesa" : "mesas"}
+                    </span>
+                  </span>
+                )}
+              </span>
             </button>
-            {/* Pista: se despliega al entrar, explica para qué sirve y se esconde sola (una vez por dispositivo). */}
             <p id="recordarme-pista" className="sr-only">
               Te mandamos un mail cuando abre y cuando cierra la inscripción a
               las mesas que elijas.
             </p>
-            {showHint && (
-              <div
-                aria-hidden="true"
-                onAnimationEnd={hideHint}
-                onClick={hideHint}
-                className="absolute top-[calc(100%+10px)] right-0 z-20 w-[250px] rounded-2xl bg-ink px-3.5 py-3 text-[13.5px] leading-snug text-bg shadow-[0_10px_24px_var(--pop-shadow)] motion-safe:animate-[hint-life_6s_ease-in-out_both] motion-reduce:hidden"
-              >
-                <span className="absolute -top-1.5 right-6 size-3 rotate-45 bg-ink" />
-                ¿Querés que te mandemos un mail cuando abre la inscripción a un
-                final? Tocá <b>Recordarme</b> y elegí las mesas.
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
 

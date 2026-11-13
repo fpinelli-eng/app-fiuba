@@ -6,7 +6,7 @@ El workflow **"Fechas de examen del SIU"** (`.github/workflows/exams.yml`) copia
 
 1. `current.sql` lee las mesas que hay hoy en la base (un JSON).
 2. `sync.mjs` baja, de a una y con pausas, la búsqueda de cada plan de `data/siu/exam-filters.json`, la lee con el mismo intérprete de la app (`parseSiuExamsHtml()`, `src/lib/siu/exams-html.ts`) y la compara con la base (`src/lib/exams/siu-sync.ts`, con pruebas).
-3. Si un plan cambió, `apply.sql` reemplaza todas sus mesas en una sola transacción y anota la carga en `exam_imports`. Los planes sin cambios no se tocan: correrlo dos veces da lo mismo.
+3. Si un plan cambió, `apply.sql` reemplaza todas sus mesas en una sola transacción y anota la carga en `exam_imports`. Los planes sin cambios no se tocan: correrlo dos veces da lo mismo. Con cambios o sin ellos, cada plan leído bien queda anotado en `exam_imports.checked_at` (`checkedSql()`): así el monitor (Administración → Estado y `tools/reminders/README.md`, "Monitor") se da cuenta si la sincronización deja de correr. `published_at` solo cambia cuando cambian las fechas.
 
 Un plan **se saltea y conserva sus fechas** si el SIU no responde, devuelve cero mesas (una página de error o sin fechas publicadas nunca borra un plan) o muestra otra carrera u otro plan que el pedido. Si no se pudo leer **ningún** plan, el workflow falla y GitHub le manda un mail al dueño del repo: probablemente el SIU está caído o cambió su página.
 

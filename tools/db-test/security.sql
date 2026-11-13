@@ -126,6 +126,36 @@ select public.ensure_profile();  -- twice is fine
 select test.ok((select count(*) from public.profiles) = 1, 'student sees only their profile');
 select test.ok((select plan_id from public.profiles) is null, 'new profile has no plan');
 
+-- Signup source (the printed QR): only with set_my_signup_source(), once, whitelisted values.
+select test.ok((select signup_source from public.profiles) is null, 'new profile has no signup source');
+select test.fails($$select public.set_my_signup_source('facebook')$$, 'student sets an arbitrary signup source');
+select test.fails($$select public.set_my_signup_source('QR')$$, 'student sets a signup source outside the list (case)');
+select test.fails($$select public.set_my_signup_source(null)$$, 'student sets a null signup source');
+select test.fails($$update public.profiles set signup_source = 'qr'$$, 'student sets her signup source directly');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select public.set_my_signup_source('qr');  -- only touches the caller's own profile (none here)
+reset role;
+select test.ok((select signup_source from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001') is null, 'another account sets her signup source');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"Ana@FI.UBA.AR"}', false);
+select public.set_my_signup_source('qr');
+select test.ok((select signup_source from public.profiles) = 'qr', 'student records she came through the QR');
+select public.set_my_signup_source('qr');  -- twice (two first requests at once) is fine
+select test.fails($$update public.profiles set signup_source = null$$, 'student clears her signup source');
+select test.fails($$select public.set_my_signup_source('otro')$$, 'student rewrites her signup source');
+select test.ok((select signup_source from public.profiles) = 'qr', 'the signup source stays after the failed changes');
+-- Only during the first 24 hours of the account.
+reset role;
+update public.profiles set signup_source = null, created_at = now() - interval '2 days' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+select public.set_my_signup_source('qr');
+select test.ok((select signup_source from public.profiles) is null, 'an older account sets its signup source');
+reset role;
+update public.profiles set signup_source = 'qr', created_at = now() where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+
 -- The plan is chosen only with choose_my_plan() (once) and changed with change_my_plan().
 select test.fails($$update public.profiles set plan_id = 'industrial-2023'$$, 'student sets their plan directly');
 select test.fails($$select public.choose_my_plan('no-existe')$$, 'student picks a plan that does not exist');
@@ -322,6 +352,9 @@ select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists th
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
 select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
 select test.ok((select last_seen_at from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees when each student last used the app');
+select test.ok((select signup_source from public.admin_users() where email = 'ana@fi.uba.ar') = 'qr', 'admin sees who came through the QR');
+select test.ok((select signup_source from public.admin_users() where email = 'beto@fi.uba.ar') is null, 'admin sees no source for the others');
+select test.fails($$update public.profiles set signup_source = null where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'admin edits a signup source');
 reset role;
 insert into public.user_subjects values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'in_progress', null);
 set role authenticated;
@@ -447,6 +480,128 @@ insert into public.user_subjects (user_id, subject_id, status, grade)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'), 'approved', 9);
 insert into public.plan_choices (user_id, option, offering_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'A', 1);
 reset role;
+
+-- Reminder mails: the Apps Script of the sheet (avisos_*) ---------------------------
+
+-- Due rule (one mail, when the enrollment opens), with fixed dates (Buenos Aires): opens Mon 30/11
+-- 14:00, closes Mon 7/12 14:00; asked on 20/11.
+select test.ok(not public.avisos_debido('2026-11-30 13:59', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'no mail before the enrollment opens');
+select test.ok(public.avisos_debido('2026-11-30 14:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'mail when it opens');
+select test.ok(public.avisos_debido('2026-12-03 11:17', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'mail later if it was missed');
+select test.ok(not public.avisos_debido('2026-12-03 02:17', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'never before 08:00');
+select test.ok(not public.avisos_debido('2026-11-30 05:00', '2026-11-20 10:00', '2026-11-30 00:00', '2026-12-07 14:00', false), 'opens at midnight: not before 08:00');
+select test.ok(public.avisos_debido('2026-11-30 08:00', '2026-11-20 10:00', '2026-11-30 00:00', '2026-12-07 14:00', false), 'opens at midnight: from 08:00');
+select test.ok(not public.avisos_debido('2026-12-03 11:17', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', true), 'only once');
+select test.ok(not public.avisos_debido('2026-12-03 11:17', '2026-12-02 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'no mail when asked with the enrollment open');
+select test.ok(not public.avisos_debido('2026-12-07 14:00', '2026-11-20 10:00', '2026-11-30 14:00', '2026-12-07 14:00', false), 'no mail once it closed');
+select test.ok(not public.avisos_debido('2026-12-03 11:17', '2026-11-20 10:00', null, '2026-12-07 14:00', false), 'no mail without opening date');
+select test.ok(not public.avisos_debido('2026-12-03 11:17', '2026-11-20 10:00', '2026-11-30 14:00', null, false), 'no mail without closing date');
+
+-- Token (only its hash is stored). The script's token in this test: 40 times 'a'.
+insert into public.avisos_config (id, token_sha256) values (true, encode(sha256(convert_to(repeat('a', 40), 'UTF8')), 'hex'));
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to, start_time, end_time) values
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'AVISO ABIERTA', current_date + 20, 'Regular',
+   (now() at time zone 'America/Argentina/Buenos_Aires')::date - 1 + time '00:00', (now() at time zone 'America/Argentina/Buenos_Aires')::date + 5 + time '23:59', '17:00', '20:00'),
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'AVISO VIEJA', current_date + 20, 'Regular',
+   (now() at time zone 'America/Argentina/Buenos_Aires')::date - 1 + time '00:00', (now() at time zone 'America/Argentina/Buenos_Aires')::date + 5 + time '23:59', null, null),
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'AVISO SIN FECHAS', current_date + 20, 'Regular', null, null, null, null);
+insert into public.exam_reminders (user_id, plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, created_at, last_sent_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO ABIERTA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days', null),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO VIEJA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days', now()),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO SIN FECHAS', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days', null),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'AVISO PASADA', 'Regular', current_date - 3, 'Álgebra Lineal', now() - interval '5 days', null),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'civil-2023', 'CB002', 'AVISO OTRO PLAN', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days', null);
+
+set role anon;
+select test.fails('select 1 from public.avisos_config', 'anon reads the token hash');
+select test.fails('select 1 from public.exam_reminders limit 1', 'anon reads exam reminders');
+select test.fails($$select * from public.avisos_pendientes('wrong')$$, 'anon lists reminder mails without the token');
+select test.fails($$select * from public.avisos_pendientes(repeat('b', 40))$$, 'anon lists reminder mails with a wrong token');
+select test.fails($$select * from public.avisos_pendientes(null)$$, 'anon lists reminder mails with no token');
+select test.fails($$select public.avisos_marcar_enviado(repeat('b', 40), 1)$$, 'anon marks a mail as sent with a wrong token');
+select test.fails($$select public.avisos_check_token(repeat('a', 40))$$, 'anon calls the token check directly');
+select test.fails($$select public.avisos_debido(now()::timestamp, null, null, null, false)$$, 'anon calls the due rule directly');
+select test.ok((select count(*) from public.avisos_pendientes(repeat('a', 40))) >= 3, 'the script lists reminder mails with its token');
+reset role;
+create table test.avisos_run as select * from public.avisos_pendientes(repeat('a', 40));
+grant select on test.avisos_run to anon;
+select test.ok((select count(*) from test.avisos_run where table_name like 'AVISO %') = 3, 'reminder mails: only current plan, past exams left out');
+select test.ok((select due from test.avisos_run where table_name = 'AVISO ABIERTA') =
+  ((now() at time zone 'America/Argentina/Buenos_Aires')::time >= time '08:00'), 'reminder mails: open enrollment, mail due (from 08:00)');
+select test.ok((select not due and sent_at is not null from test.avisos_run where table_name = 'AVISO VIEJA'), 'reminder mails: a first-version mail counts as sent');
+select test.ok((select not due and enroll_to is null and aviso is null from test.avisos_run where table_name = 'AVISO SIN FECHAS'), 'reminder mails: no dates, nothing due');
+select test.ok((select email from test.avisos_run where table_name = 'AVISO ABIERTA') = 'ana@fi.uba.ar', 'reminder mails: the student mail');
+select test.ok((select count(*) from public.exam_reminders where table_name = 'AVISO PASADA') = 0, 'reminder mails: past reminders are deleted');
+select test.ok(pg_get_function_result('public.avisos_pendientes(text)'::regprocedure) not like '%review%'
+  and pg_get_function_result('public.avisos_pendientes(text)'::regprocedure) not like '%user_id%', 'reminder mails: no reviews nor user ids');
+set role anon;
+select test.ok(public.avisos_marcar_enviado(repeat('a', 40), (select reminder_id from test.avisos_run where table_name = 'AVISO ABIERTA')), 'the script marks a mail');
+select test.ok(not public.avisos_marcar_enviado(repeat('a', 40), (select reminder_id from test.avisos_run where table_name = 'AVISO ABIERTA')), 'a mail is marked only once');
+select test.ok(not public.avisos_marcar_enviado(repeat('a', 40), 0), 'marking a reminder that does not exist answers false');
+select test.ok((select not due from public.avisos_pendientes(repeat('a', 40)) where table_name = 'AVISO ABIERTA'), 'a marked mail is not due again');
+reset role;
+select test.ok((select last_sent_at is null from public.exam_reminders where table_name = 'AVISO ABIERTA'), 'marking does not touch last_sent_at');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails($$select * from public.avisos_pendientes(repeat('a', 40))$$, 'a student lists reminder mails');
+select test.fails($$select public.avisos_marcar_enviado(repeat('a', 40), 1)$$, 'a student marks a mail as sent');
+select test.fails($$update public.exam_reminders set first_sent_at = null$$, 'a student clears a sent mark');
+reset role;
+drop table test.avisos_run;
+delete from public.exam_reminders where table_name like 'AVISO %';
+delete from public.exam_tables where name like 'AVISO %';
+delete from public.avisos_config;
+
+-- Health monitor: salud() for the Apps Script, admin_salud() for Administración → Estado -----
+
+insert into public.avisos_config (id, token_sha256) values (true, encode(sha256(convert_to(repeat('a', 40), 'UTF8')), 'hex'));
+insert into public.exam_tables (plan_id, siu_subject_code, siu_subject_name, name, exam_date, kind, enroll_from, enroll_to) values
+  ('industrial-2023', 'CB002', 'ÁLGEBRA LINEAL', 'SALUD DEBIDA', current_date + 20, 'Regular',
+   (now() at time zone 'America/Argentina/Buenos_Aires')::date - 1 + time '00:00', (now() at time zone 'America/Argentina/Buenos_Aires')::date + 5 + time '23:59');
+insert into public.exam_reminders (user_id, plan_id, siu_subject_code, table_name, kind, exam_date, subject_name, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'industrial-2023', 'CB002', 'SALUD DEBIDA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'civil-2023', 'CB002', 'SALUD DEBIDA', 'Regular', current_date + 20, 'Álgebra Lineal', now() - interval '5 days');
+update public.exam_imports set published_at = now() - interval '3 days', checked_at = now() - interval '2 hours';
+select test.ok((select count(*) from public.monitor_state) = 0, 'no monitor heartbeat yet');
+
+set role anon;
+select test.fails($$select * from public.salud('wrong')$$, 'anon reads the health without the token');
+select test.fails($$select * from public.salud(repeat('b', 40))$$, 'anon reads the health with a wrong token');
+select test.fails($$select * from public.salud(null)$$, 'anon reads the health with no token');
+select test.fails('select 1 from public.monitor_state', 'anon reads the monitor heartbeat');
+select test.fails('select * from public.salud_datos()', 'anon reads the health figures directly');
+select test.fails('select * from public.admin_salud()', 'anon reads the admin health');
+select test.ok((select count(*) from public.salud(repeat('a', 40))) = 1, 'the script reads the health with its token');
+reset role;
+create table test.salud_run as select * from public.salud(repeat('a', 40));
+select test.ok((select last_health_check_at > now() - interval '1 minute' from public.monitor_state), 'the health check records the heartbeat');
+select test.ok((select monitor_checked_at is not null from test.salud_run), 'health: the heartbeat comes back');
+select test.ok((select exam_sync_at > now() - interval '3 hours' and exam_sync_at < now() - interval '1 hour' from test.salud_run), 'health: the exam sync is the last read, not the last change');
+select test.ok((select exam_oldest_plan_sync_at is not null and news_fetched_at is not null from test.salud_run), 'health: oldest plan sync and news');
+select test.ok((select reminders_due from test.salud_run) =
+  case when (now() at time zone 'America/Argentina/Buenos_Aires')::time >= time '08:00' then 1 else 0 end, 'health: due reminder mails, only of the current plan');
+select test.ok((select (reminders_due = 0) = (reminders_due_since is null) from test.salud_run), 'health: since when, only when something is due');
+select test.ok((select offers_pending >= 0 and users >= 2 and reviews >= 0 from test.salud_run), 'health: counts');
+select test.ok(regexp_replace(pg_get_function_result('public.salud(text)'::regprocedure), '\w+ (timestamp with time zone|bigint)(, )?', '', 'g') = 'TABLE()',
+  'health: only timestamps and counts (no mails, names or ids)');
+select test.ok(pg_get_function_result('public.salud(text)'::regprocedure) = pg_get_function_result('public.admin_salud()'::regprocedure), 'health: the admin version returns the same');
+drop table test.salud_run;
+update public.monitor_state set last_health_check_at = now() - interval '5 hours';
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails('select * from public.admin_salud()', 'a student reads the admin health');
+select test.fails($$select * from public.salud(repeat('a', 40))$$, 'a student reads the health with the token');
+select test.fails('select 1 from public.monitor_state', 'a student reads the monitor heartbeat');
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.admin_salud()) = 1, 'admin reads the health');
+select test.ok((select monitor_checked_at < now() - interval '4 hours' from public.admin_salud()), 'admin sees the last heartbeat');
+select test.fails('update public.monitor_state set last_health_check_at = now()', 'admin writes the monitor heartbeat');
+reset role;
+select test.ok((select last_health_check_at < now() - interval '4 hours' from public.monitor_state), 'the admin page does not record a heartbeat');
+delete from public.exam_reminders where table_name = 'SALUD DEBIDA';
+delete from public.exam_tables where name = 'SALUD DEBIDA';
+delete from public.avisos_config;
 
 -- Deleting the account keeps the review, without author ---------------------------
 

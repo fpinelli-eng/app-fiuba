@@ -43,6 +43,9 @@ export async function GET() {
       .eq("user_id", account.id),
   ]);
   const failed = [profile, courses, choices, submissions].find((r) => r.error);
+  // Aparte y sin cortar si falla: la columna llega con la migración 20261115120000_signup_source, que las
+  // vistas previas (base de producción) no tienen hasta integrar la rama.
+  const source = await supabase.from("profiles").select("signup_source").eq("id", account.id).maybeSingle();
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
 
   const byId = new Map(map.subjects.map((s) => [s.id, s]));
@@ -54,6 +57,7 @@ export async function GET() {
       administrador: account.isAdmin,
       alta: profile.data!.created_at,
       vio_las_historias: profile.data!.intro_seen_at ?? null,
+      llego_por_el_qr: source.error ? null : source.data?.signup_source === "qr",
     },
     carrera: { carrera: map.careerName, plan: map.year, plan_id: map.planId },
     materias: map.progress.subjects.map((s) => ({

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { siuExamsUrl } from "../siu/exams-fetch";
 import { parseSiuExamsHtml } from "../siu/exams-html";
 import {
+  checkedSql,
   checkPlanSync,
   checkSync,
   diffExamRows,
@@ -219,5 +220,15 @@ describe("summaryMarkdown", () => {
 
   it("says when nothing was saved", () => {
     expect(summaryMarkdown([{ planId: "industrial-2023", tables: 240, diff: null }], true)).toContain("Prueba: 1 de 1 planes leídos");
+  });
+});
+
+describe("checkedSql", () => {
+  it("marks the plans read, only with safe ids, and nothing without plans", () => {
+    const sql = checkedSql(["industrial-2023", "civil-2023", "x'); drop table y; --"]);
+    expect(sql).toContain("where plan_id in ('industrial-2023', 'civil-2023');");
+    expect(sql).not.toContain("drop table");
+    expect(sql).toContain("column_name = 'checked_at'");
+    expect(checkedSql([])).toBe("-- Ningún plan leído.");
   });
 });
