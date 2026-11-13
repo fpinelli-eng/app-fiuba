@@ -3,12 +3,14 @@
 import { useActionState, useState, type ReactNode } from "react";
 import type { CourseChange, CourseDecision } from "@/lib/admin/offer-import";
 import {
+  addOfferSubjects,
   discardOffer,
   linkSiuSubject,
   processOffer,
   publishOffer,
   publishSubmission,
   rejectSubmission,
+  removeOfferSubject,
   setCourseDecision,
   setCurrentTerm,
   setOfferingVisible,
@@ -314,5 +316,57 @@ export function SubmissionActions({ submissionId }: { submissionId: number }) {
       <ErrorText state={published} />
       <ErrorText state={rejected} />
     </div>
+  );
+}
+
+const small =
+  "h-9 whitespace-nowrap rounded-[9px] border border-line-strong bg-surface px-3 text-[13px] font-semibold text-ink disabled:cursor-not-allowed disabled:text-disabled-ink";
+
+/**
+ * Materia que no está en el plan: agregarla como electiva (nombre del SIU, créditos a elegir).
+ * Sin `siuCode`, "Agregar todas" las de la lista con los mismos créditos.
+ */
+export function AddSubjectForm({ planId, siuCode, siuName, credits }: { planId: string; siuCode?: string; siuName?: string; credits: number }) {
+  const [state, action, pending] = useActionState(addOfferSubjects, initial);
+  const id = `credits-${siuCode ?? "all"}`;
+  return (
+    <form action={action} className="flex flex-col items-end gap-1.5">
+      <input type="hidden" name="planId" value={planId} />
+      {siuCode && <input type="hidden" name="siuCode" value={siuCode} />}
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="text-[13px] text-muted">
+          <span className="sr-only">{siuName ? `Créditos de ${siuName}` : "Créditos de cada una"}</span>
+          <span aria-hidden>Créditos</span>
+        </label>
+        <input
+          id={id}
+          name="credits"
+          type="number"
+          min={1}
+          max={20}
+          defaultValue={credits}
+          className="h-9 w-16 rounded-[9px] border border-line-strong bg-surface px-2 text-[13px] text-ink"
+        />
+        <button type="submit" disabled={pending} className={small}>
+          {pending ? "Agregando…" : siuCode ? "Agregar al plan" : "Agregar todas"}
+        </button>
+      </div>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
+  );
+}
+
+/** Deshace una electiva agregada desde la oferta (mientras ningún alumno la marcó). */
+export function RemoveOfferSubjectButton({ planId, subjectId, name }: { planId: string; subjectId: number; name: string }) {
+  const [state, action, pending] = useActionState(removeOfferSubject, initial);
+  return (
+    <form action={action} className="flex flex-col items-end gap-1.5">
+      <input type="hidden" name="planId" value={planId} />
+      <input type="hidden" name="subjectId" value={subjectId} />
+      <button type="submit" disabled={pending} aria-label={`Quitar ${name} del plan`} className={small}>
+        {pending ? "Quitando…" : "Quitar del plan"}
+      </button>
+      {state.error && <span className="text-xs text-danger">{state.error}</span>}
+    </form>
   );
 }

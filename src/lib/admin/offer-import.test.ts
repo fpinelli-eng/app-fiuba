@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { commissionKey, decisionFor, detectCourseChanges, offeringKey, previewImport, sameLead, termFromPeriodo } from "./offer-import";
+import { commissionKey, decisionFor, defaultElectiveCredits, detectCourseChanges, offeringKey, previewImport, sameLead, siuDisplayName, termFromPeriodo } from "./offer-import";
 
 const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), "utf-8");
 // Plan subjects as they would come from the database (ids are made up).
@@ -174,5 +174,20 @@ describe("detectCourseChanges", () => {
     expect(decisionFor({ changes }, "CB002|01")).toEqual({ kind: "new" });
     expect(decisionFor({ changes, decisions: { "CB002|01": { kind: "same", courseId: 10 } } }, "CB002|01")).toEqual({ kind: "same", courseId: 10 });
     expect(decisionFor({ changes }, "otra")).toBeNull();
+  });
+});
+
+describe("electives added from the offer", () => {
+  it("writes the SIU name like the plans", () => {
+    expect(siuDisplayName("TALLER DE PROGRAMACION II")).toBe("Taller de Programacion II");
+    expect(siuDisplayName("  GESTION DE LA CALIDAD Y AMBIENTE ")).toBe("Gestion de la Calidad y Ambiente");
+    expect(siuDisplayName("INTRODUCCIÓN A LA INGENIERÍA IV")).toBe("Introducción a la Ingeniería IV");
+  });
+
+  it("suggests the most common credits of the plan electives", () => {
+    expect(defaultElectiveCredits([6, 4, 6, 3, 6, 4])).toBe(6);
+    expect(defaultElectiveCredits([3, 6])).toBe(3);
+    expect(defaultElectiveCredits([])).toBe(4);
+    expect(defaultElectiveCredits([0, 0])).toBe(4);
   });
 });

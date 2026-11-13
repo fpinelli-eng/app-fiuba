@@ -382,7 +382,32 @@ delete from public.academic_date_confirmations where title = 'Charla de ingresan
 select test.ok((select count(*) from public.academic_date_confirmations) = 4, 'admin confirms and deletes dates');
 insert into public.subjects (plan_id, code, name, kind, category) values ('industrial-2023', 'ZZ', 'Prueba', 'elective', 'Materias Electivas');
 delete from public.subjects where code = 'ZZ';
+-- Electives added from the offer: the admin adds them (subjects + subject_siu_codes) and undoes them.
+insert into public.subjects (plan_id, code, name, credits, kind, category, added_from_offer) values ('industrial-2023', 'TA999', 'Electiva Nueva', 6, 'elective', 'Materias Electivas', true);
+insert into public.subject_siu_codes (subject_id, siu_code) select id, 'TA999' from public.subjects where code = 'TA999';
+select test.ok((select count(*) from public.subject_siu_codes where siu_code = 'TA999') = 1, 'admin adds an elective from the offer');
+select test.fails($$select public.remove_offer_subject((select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL'))$$, 'admin removes a subject of the plan JSON');
 reset role;
+insert into public.user_subjects (user_id, subject_id, status) select 'aaaaaaaa-0000-0000-0000-000000000001', id, 'in_progress' from public.subjects where code = 'TA999';
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails($$insert into public.subjects (plan_id, code, name, kind, category, added_from_offer) values ('industrial-2023', 'TA998', 'Otra', 'elective', 'Materias Electivas', true)$$, 'student adds a subject');
+select test.fails($$insert into public.subject_siu_codes (subject_id, siu_code) select id, 'XX1' from public.subjects where code = 'AL' and plan_id = 'industrial-2023'$$, 'student links a SIU code');
+update public.subjects set credits = 20 where code = 'TA999';  -- RLS: updates nothing
+delete from public.subject_siu_codes where siu_code = 'TA999';  -- RLS: deletes nothing
+select test.fails($$select public.remove_offer_subject((select id from public.subjects where code = 'TA999'))$$, 'student removes an elective added from the offer');
+reset role;
+select test.ok((select credits from public.subjects where code = 'TA999') = 6, 'student cannot edit a subject');
+select test.ok((select count(*) from public.subject_siu_codes where siu_code = 'TA999') = 1, 'student cannot unlink a SIU code');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.fails($$select public.remove_offer_subject((select id from public.subjects where code = 'TA999'))$$, 'admin removes an elective a student already marked');
+reset role;
+delete from public.user_subjects where subject_id = (select id from public.subjects where code = 'TA999');
+set role authenticated;
+select public.remove_offer_subject((select id from public.subjects where code = 'TA999'));
+reset role;
+select test.ok((select count(*) from public.subjects where code = 'TA999') = 0 and (select count(*) from public.subject_siu_codes where siu_code = 'TA999') = 0, 'admin removes an elective added from the offer');
 
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);

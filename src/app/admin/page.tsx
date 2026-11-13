@@ -5,12 +5,14 @@ import { APP_NAME } from "@/lib/app";
 import { formatHour } from "@/lib/plan/format";
 import {
   getAdminOverview,
+  getOfferSubjects,
   getPlanSubjectOptions,
   getPlanImport,
   getPendingSubmissions,
   getPublishedOffer,
   termLabel,
   type ImportStatus,
+  type OfferSubject,
   type PendingSubmission,
   type PlanRow,
   type PublishedCourse,
@@ -18,11 +20,13 @@ import {
 import { decisionFor, type ImportPreview } from "@/lib/admin/offer-import";
 import { shortDate } from "@/lib/offer/submission";
 import {
+  AddSubjectForm,
   ChangeChoice,
   DiscardButton,
   LinkSubjectForm,
   ProcessForm,
   PublishButton,
+  RemoveOfferSubjectButton,
   ReplacePanel,
   ReviewsDateForm,
   SubmissionActions,
@@ -69,6 +73,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const selected = plans.find((p) => p.id === planParam) ?? plans.find((p) => p.status === "processed") ?? plans[0];
   const published = plans.filter((p) => p.status === "published").length;
   const planImport = selected && selected.status !== "empty" ? await getPlanImport(term.id, selected.id) : null;
+  const offerSubjects = selected && planImport ? await getOfferSubjects(selected.id) : null;
 
   return (
     <Shell>
@@ -116,10 +121,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               title={planName(selected)}
               preview={planImport.preview}
               options={pairableSubjects(await getPlanSubjectOptions(selected.id), planImport.preview)}
+              credits={offerSubjects?.defaultCredits ?? 4}
+              added={offerSubjects?.added ?? []}
             />
           )}
           {selected && planImport?.status === "published" && (
-            <Published termId={term.id} plan={selected} preview={planImport.preview} />
+            <Published termId={term.id} plan={selected} preview={planImport.preview} credits={offerSubjects?.defaultCredits ?? 4} added={offerSubjects?.added ?? []} />
           )}
           <details className="rounded-[18px] border border-line bg-surface px-6 py-4 text-sm">
             <summary className="cursor-pointer font-semibold">Cambiar el cuatrimestre actual</summary>
@@ -211,11 +218,15 @@ function Processed({
   title,
   preview,
   options,
+  credits,
+  added,
 }: {
   planId: string;
   title: string;
   preview: ImportPreview;
   options: { id: number; name: string }[];
+  credits: number;
+  added: OfferSubject[];
 }) {
   return (
     <>
@@ -266,36 +277,92 @@ function Processed({
         </Card>
       )}
 
-      {preview.unmatched.length > 0 && (
-        <Card
-          flush
-          title={
-            <>
-              <h2 className="text-[19px] font-semibold">Materias que no están en el plan</h2>
-              <p className="text-sm text-muted">
-                Si alguna es de este plan con otro nombre, elegí cuál es: queda guardado para los próximos cuatrimestres.
-              </p>
-            </>
-          }
-        >
-          {preview.unmatched.map((u) => (
-            <div key={u.siuCode} className="flex items-center justify-between gap-4 border-t border-line px-6 py-3.5">
-              <div>
-                <div className="font-semibold">{u.siuName}</div>
-                <div className="text-[13px] text-muted">
-                  {u.siuCode} · {u.courses} {u.courses === 1 ? "curso" : "cursos"}
-                </div>
-              </div>
-              <LinkSubjectForm planId={planId} siuCode={u.siuCode} siuName={u.siuName} options={options} />
-            </div>
-          ))}
-        </Card>
-      )}
+      <OutOfPlan planId={planId} preview={preview} options={options} credits={credits} />
+      {added.length > 0 && <AddedSubjects planId={planId} subjects={added} />}
 
       <div className="flex justify-end">
         <PublishButton planId={planId} label={preview.replacing ? "Publicar cambios" : "Publicar"} />
       </div>
     </>
+  );
+}
+
+/**
+ * SIU subjects of the offer that the plan does not have. Each one can be paired with a plan
+ * subject that has another name (only before publishing: `options`) or added to the plan as an
+ * elective (usually a new one); either way it is remembered for the next terms.
+ */
+function OutOfPlan({
+  planId,
+  preview,
+  options,
+  credits,
+}: {
+  planId: string;
+  preview: ImportPreview;
+  options?: { id: number; name: string }[];
+  credits: number;
+}) {
+  if (preview.unmatched.length === 0) return null;
+  return (
+    <Card
+      flush
+      title={
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-[19px] font-semibold">Materias que no están en el plan</h2>
+            <p className="text-sm text-muted">
+              {options
+                ? "Si alguna es de este plan con otro nombre, elegí cuál es. Si es una electiva nueva, agregala al plan: sus cursos aparecen en el Plan del cuatrimestre y la materia, en el mapa. Queda guardado para los próximos cuatrimestres."
+                : "Si alguna es una electiva nueva de este plan, agregala: sus cursos se suman a la oferta publicada y la materia aparece en el mapa. Queda guardado para los próximos cuatrimestres."}
+            </p>
+          </div>
+          {preview.unmatched.length > 1 && <AddSubjectForm planId={planId} credits={credits} />}
+        </div>
+      }
+    >
+      {preview.unmatched.map((u) => (
+        <div key={u.siuCode} className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-6 py-3.5">
+          <div className="min-w-0">
+            <div className="font-semibold">{u.siuName}</div>
+            <div className="text-[13px] text-muted">
+              {u.siuCode} · {u.courses} {u.courses === 1 ? "curso" : "cursos"}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {options && <LinkSubjectForm planId={planId} siuCode={u.siuCode} siuName={u.siuName} options={options} />}
+            <AddSubjectForm planId={planId} siuCode={u.siuCode} siuName={u.siuName} credits={credits} />
+          </div>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+/** Electives an admin added from the offer: they can be taken out while no student marked them. */
+function AddedSubjects({ planId, subjects }: { planId: string; subjects: OfferSubject[] }) {
+  return (
+    <Card
+      flush
+      title={
+        <>
+          <h2 className="text-[19px] font-semibold">Electivas agregadas desde la oferta</h2>
+          <p className="text-sm text-muted">No están en el plan oficial. Se pueden quitar mientras ningún alumno las haya marcado en su mapa.</p>
+        </>
+      }
+    >
+      {subjects.map((s) => (
+        <div key={s.id} className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-6 py-3.5">
+          <div className="min-w-0">
+            <div className="font-semibold">{s.name}</div>
+            <div className="text-[13px] text-muted">
+              {s.siuCodes.join(", ")} · {s.credits} créditos
+            </div>
+          </div>
+          <RemoveOfferSubjectButton planId={planId} subjectId={s.id} name={s.name} />
+        </div>
+      ))}
+    </Card>
   );
 }
 
@@ -305,7 +372,19 @@ const describeBlocks = (c: PublishedCourse) => {
   return inPerson.map((b) => `${DAY[b.weekday]} ${formatHour(b.startsAt)}–${formatHour(b.endsAt)}${b.campus ? ` · ${b.campus}` : ""}`).join(" / ");
 };
 
-async function Published({ termId, plan, preview }: { termId: string; plan: PlanRow; preview: ImportPreview }) {
+async function Published({
+  termId,
+  plan,
+  preview,
+  credits,
+  added,
+}: {
+  termId: string;
+  plan: PlanRow;
+  preview: ImportPreview;
+  credits: number;
+  added: OfferSubject[];
+}) {
   const subjects = await getPublishedOffer(termId, plan.id);
   const courses = subjects.reduce((n, s) => n + s.courses.length, 0);
   const hidden = subjects.reduce((n, s) => n + s.courses.filter((c) => !c.visible).length, 0);
@@ -326,6 +405,8 @@ async function Published({ termId, plan, preview }: { termId: string; plan: Plan
           <ReplacePanel key={plan.id} planId={plan.id} title={planName(plan)} />
         </div>
       </Card>
+      <OutOfPlan planId={plan.id} preview={preview} credits={credits} />
+      {added.length > 0 && <AddedSubjects planId={plan.id} subjects={added} />}
       <Card flush>
         {subjects.map((s) => (
           <div key={s.siuCode}>

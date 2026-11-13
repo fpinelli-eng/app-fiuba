@@ -341,3 +341,35 @@ export function detectCourseChanges(
 export function decisionFor(preview: Pick<ImportPreview, "changes" | "decisions">, key: string): CourseDecision | null {
   return preview.decisions?.[key] ?? preview.changes?.find((c) => c.key === key)?.suggestion ?? null;
 }
+
+const LOWER_WORDS = new Set(["a", "al", "de", "del", "e", "el", "en", "la", "las", "los", "o", "para", "por", "u", "y", "con", "sin"]);
+const ROMAN = /^(i{1,3}|iv|v|vi{1,3}|ix|x)$/;
+
+/**
+ * Name of a subject added from the offer: the SIU writes them in capitals
+ * ("TALLER DE PROGRAMACION II"), the plans in sentence form ("Taller de Programacion II").
+ */
+export function siuDisplayName(siuName: string): string {
+  return siuName
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, i) => {
+      if (ROMAN.test(word)) return word.toUpperCase();
+      if (i > 0 && LOWER_WORDS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+/** Credits suggested for a new elective: the most common among the plan's electives (the SIU has none). */
+export function defaultElectiveCredits(electiveCredits: number[]): number {
+  const counts = new Map<number, number>();
+  for (const c of electiveCredits) if (c > 0) counts.set(c, (counts.get(c) ?? 0) + 1);
+  let best = 4;
+  let bestCount = 0;
+  for (const [credits, count] of counts) {
+    if (count > bestCount || (count === bestCount && credits < best)) [best, bestCount] = [credits, count];
+  }
+  return best;
+}
