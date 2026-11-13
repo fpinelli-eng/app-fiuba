@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { APP_NAME } from "@/lib/app";
-import { getCalendarInfo, getNews } from "@/lib/news/data";
-import { buenosAiresDate, formatNewsDate } from "@/lib/news/model";
-import { deleteNews, setNewsPinned } from "./actions";
+import { getCalendarInfo, getDatesToConfirm, getNews } from "@/lib/news/data";
+import { buenosAiresDate, formatDateRange, formatNewsDate, isImportantDate } from "@/lib/news/model";
+import { ConfirmDateForm } from "./ConfirmDateForm";
+import { deleteConfirmation, deleteNews, setNewsPinned } from "./actions";
 import { NewsForm } from "./NewsForm";
 
 export const metadata: Metadata = { title: `Novedades · Administración · ${APP_NAME}` };
@@ -12,11 +13,14 @@ const secondary =
 
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "");
 
-// Novedades: avisos para los alumnos y el calendario académico cargado (solo lectura).
-// El layout de /admin ya exige ser administrador.
+// Novedades: avisos para los alumnos, las fechas importantes confirmadas por la Secretaría y el
+// calendario académico cargado (solo lectura). El layout de /admin ya exige ser administrador.
 export default async function AdminNewsPage() {
-  const [news, calendar] = await Promise.all([getNews(), getCalendarInfo()]);
+  const [news, calendar, dates] = await Promise.all([getNews(), getCalendarInfo(), getDatesToConfirm()]);
   const today = buenosAiresDate();
+  const confirmed = new Set(dates.confirmations.map((c) => c.replaces));
+  const toConfirm = dates.events.filter((e) => isImportantDate(e.title) && !confirmed.has(e.id));
+  const titleOf = new Map(dates.events.map((e) => [e.id, e]));
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
@@ -67,6 +71,41 @@ export default async function AdminNewsPage() {
           </ul>
         )}
       </section>
+
+      {dates.calendar && <ConfirmDateForm events={toConfirm} />}
+
+      {dates.confirmations.length > 0 && (
+        <section aria-labelledby="confirmed-title" className="overflow-hidden rounded-[18px] border border-line bg-surface">
+          <h2 id="confirmed-title" className="px-6 pt-[18px] pb-2 text-[19px] font-semibold">
+            Fechas confirmadas
+          </h2>
+          <ul className="flex flex-col pb-2">
+            {dates.confirmations.map((c) => {
+              const was = c.replaces === null ? undefined : titleOf.get(c.replaces);
+              return (
+                <li key={c.id} className="flex items-start gap-4 border-t border-line px-6 py-3.5 first:border-t-0">
+                  <div className="min-w-0 flex-auto">
+                    <div className="font-semibold">{c.title}</div>
+                    <div className="text-[13px] text-ink-2 tabular-nums">
+                      {formatDateRange({ ...c, tentative: false })} · {c.note}
+                    </div>
+                    <div className="text-[13px] text-muted tabular-nums">
+                      {c.replaces === null
+                        ? "Fecha nueva"
+                        : `Reemplaza: ${was ? formatDateRange({ ...was, tentative: true }) : "una fecha que ya pasó"}`}
+                    </div>
+                  </div>
+                  <form action={deleteConfirmation.bind(null, c.id)} className="flex-none">
+                    <button type="submit" className={`${secondary} text-danger`}>
+                      Eliminar
+                    </button>
+                  </form>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section aria-labelledby="calendar-title" className="flex flex-col gap-1.5 rounded-[18px] border border-line bg-surface px-6 py-[18px]">
         <h2 id="calendar-title" className="text-[19px] font-semibold">

@@ -10,7 +10,11 @@ import {
   dateBadge,
   daysUntil,
   formatCountdown,
+  formatDateRange,
+  importantDates,
+  isImportantDate,
   sortNews,
+  validateConfirmation,
   validateNews,
   type AcademicEvent,
   type NewsItem,
@@ -145,12 +149,85 @@ describe("calendarHighlights", () => {
     expect(got.upcoming.map((d) => [d.event.title, d.days])).toEqual([["Inscripción", 3], ["Exámenes", 14], ["Receso", 45], ["Verano", 61]]);
   });
   it("lo que falta para que termine", () => {
-    expect([0, 1, 5, 13, 20].map(formatRemaining)).toEqual(["Termina hoy", "Termina mañana", "Quedan 5 días", "Quedan 13 días", "Quedan 3 semanas"]);
+    expect([0, 1, 5, 13, 20].map((d) => formatRemaining(d))).toEqual(["Termina hoy", "Termina mañana", "Quedan 5 días", "Quedan 13 días", "Quedan 3 semanas"]);
   });
   it("fechas y cuenta regresiva", () => {
     expect(dateBadge("2026-11-09")).toEqual({ day: "9", month: "nov" });
     expect(daysUntil("2026-11-06", "2026-11-09")).toBe(3);
     expect(daysUntil("2026-12-30", "2027-01-02")).toBe(3);
-    expect([0, 1, 3, 13, 21].map(formatCountdown)).toEqual(["Hoy", "Mañana", "En 3 días", "En 13 días", "En 3 semanas"]);
+    expect([0, 1, 3, 13, 21].map((d) => formatCountdown(d))).toEqual(["Hoy", "Mañana", "En 3 días", "En 13 días", "En 3 semanas"]);
+  });
+});
+
+describe("importantDates", () => {
+  const cal = [
+    { id: 1, title: "Período de Clases", startsOn: "2026-08-17", endsOn: "2026-12-05", sort: 0 },
+    { id: 2, title: "Inscripción para Cursos de Verano 2027", startsOn: "2026-11-09", endsOn: "2026-11-14", sort: 18 },
+    { id: 3, title: "Recepción de trámites de simultaneidad entre carreras de FIUBA", startsOn: "2026-08-03", endsOn: "2026-11-28", sort: 21 },
+  ];
+
+  it("keeps only the important rows, tentative", () => {
+    const out = importantDates(cal, []);
+    expect(out.map((e) => e.id)).toEqual([1, 2]);
+    expect(out.every((e) => e.tentative)).toBe(true);
+  });
+
+  it("replaces a row with its confirmation, keeping its id and place", () => {
+    const out = importantDates(cal, [
+      { id: 7, title: "Inscripción para Cursos de Verano 2027", startsOn: "2026-11-17", endsOn: "2026-11-18", note: "Mail del 29/10", replaces: 2 },
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out[1]).toMatchObject({ id: 2, startsOn: "2026-11-17", endsOn: "2026-11-18", sort: 18, tentative: false, note: "Mail del 29/10" });
+  });
+
+  it("adds a new confirmed date with a negative id, even if its title is not in the list", () => {
+    const out = importantDates(cal, [
+      { id: 9, title: "Charla de Ingresantes", startsOn: "2027-03-02", endsOn: "2027-03-02", note: "Mail", replaces: null },
+    ]);
+    expect(out.at(-1)).toMatchObject({ id: -9, title: "Charla de Ingresantes", tentative: false });
+  });
+
+  it("knows which titles matter", () => {
+    expect(isImportantDate("Desinscripción de Cursos de Verano")).toBe(true);
+    expect(isImportantDate("Inicio de los Cursos de Verano")).toBe(true);
+    expect(isImportantDate("Inscripción para Cursar Asignaturas")).toBe(true);
+    expect(isImportantDate("Período para abonar el trámite de convalidación para el siguiente cuatrimestre")).toBe(false);
+    expect(isImportantDate("Charla de Ingresantes")).toBe(false);
+  });
+});
+
+describe("tentative dates", () => {
+  it("shows weeks when tentative and days when confirmed", () => {
+    expect(formatDateRange({ startsOn: "2026-11-09", endsOn: "2026-11-14", tentative: true })).toBe("Semana del 9/11");
+    expect(formatDateRange({ startsOn: "2026-11-16", endsOn: "2026-12-05", tentative: true })).toBe("Del 16/11 al 5/12");
+    expect(formatDateRange({ startsOn: "2026-11-17", endsOn: "2026-11-18", tentative: false })).toBe("mar 17/11 → mié 18/11");
+    expect(formatDateRange({ startsOn: "2026-11-12", endsOn: "2026-11-12" })).toBe("jue 12/11");
+  });
+
+  it("counts in weeks when tentative", () => {
+    expect(formatCountdown(3, true)).toBe("La semana que viene");
+    expect(formatCountdown(7, true)).toBe("La semana que viene");
+    expect(formatCountdown(3)).toBe("En 3 días");
+    expect(formatCountdown(14, true)).toBe("En 2 semanas");
+    expect(formatRemaining(2, true)).toBe("Termina esta semana");
+    expect(formatRemaining(2)).toBe("Quedan 2 días");
+    expect(formatRemaining(20, true)).toBe("Quedan 3 semanas");
+  });
+});
+
+describe("validateConfirmation", () => {
+  const ok = { title: "Inscripción a cursos de verano", startsOn: "2026-11-17", endsOn: "2026-11-18", note: "Mail del 29/10", replaces: "12" };
+
+  it("accepts a period and a single day", () => {
+    expect(validateConfirmation(ok).draft).toEqual({ ...ok, replaces: 12 });
+    expect(validateConfirmation({ ...ok, endsOn: "", replaces: "" }).draft).toMatchObject({ endsOn: "2026-11-17", replaces: null });
+  });
+
+  it("rejects what does not make sense", () => {
+    expect(validateConfirmation({ ...ok, title: " " }).error).toBe("Escribí qué trámite es.");
+    expect(validateConfirmation({ ...ok, startsOn: "2026-02-30" }).error).toBe("Elegí el día en que empieza.");
+    expect(validateConfirmation({ ...ok, endsOn: "2026-11-16" }).error).toBe("Termina antes de empezar: revisá las fechas.");
+    expect(validateConfirmation({ ...ok, note: "" }).error).toContain("de dónde sale la fecha");
+    expect(validateConfirmation({ ...ok, replaces: "abc" }).error).toBe("Elegí el trámite de nuevo.");
   });
 });

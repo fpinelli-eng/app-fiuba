@@ -1,5 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
-import { addDays, buenosAiresDate, LATER_DAYS, sortNews, type AcademicEvent, type FiubaNewsItem, type NewsItem } from "./model";
+import {
+  addDays,
+  buenosAiresDate,
+  importantDates,
+  LATER_DAYS,
+  sortNews,
+  type AcademicEvent,
+  type DateConfirmation,
+  type FiubaNewsItem,
+  type NewsItem,
+} from "./model";
 
 // Server-only queries of the Novedades section. The database only lets FIUBA accounts read.
 
@@ -68,30 +78,62 @@ export async function getFiubaNews(limit = 12): Promise<FiubaNewsItem[]> {
   }));
 }
 
-/** Data for /novedades: avisos and the events of the latest calendar that are not over and start within LATER_DAYS. */
-export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; fiuba: FiubaNewsItem[]; events: AcademicEvent[] }> {
-  const today = buenosAiresDate();
-  const [news, fiuba, calendar] = await Promise.all([getNews(), getFiubaNews(), latestCalendar()]);
-  if (!calendar) return { today, news, fiuba, events: [] };
-
+/** The confirmed dates of a calendar (all of them: few rows, and a past one still hides its tentative row). */
+export async function getConfirmations(calendar: string): Promise<DateConfirmation[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("academic_events")
-    .select("id, title, starts_on, ends_on, sort")
+    .from("academic_date_confirmations")
+    .select("id, title, starts_on, ends_on, note, replaces")
     .eq("calendar", calendar)
-    .gte("ends_on", today)
-    .lte("starts_on", addDays(today, LATER_DAYS))
-    .order("starts_on")
-    .order("sort");
+    .order("starts_on");
+  // Until the migration is applied (a preview on the shared database), the table does not exist.
+  if (error?.code === "42P01" || error?.code === "PGRST205") return [];
+  if (error) throw new Error(`academic_date_confirmations: ${error.message}`);
+  return data.map((c) => ({
+    id: c.id as number,
+    title: c.title as string,
+    startsOn: c.starts_on as string,
+    endsOn: c.ends_on as string,
+    note: c.note as string,
+    replaces: (c.replaces as number | null) ?? null,
+  }));
+}
+
+/** The rows of a calendar that are not over on `today` and, with `until`, start by then. */
+async function getEvents(calendar: string, today: string, until: string | null): Promise<AcademicEvent[]> {
+  const supabase = await createClient();
+  let query = supabase.from("academic_events").select("id, title, starts_on, ends_on, sort").eq("calendar", calendar).gte("ends_on", today);
+  if (until) query = query.lte("starts_on", until);
+  const { data, error } = await query.order("starts_on").order("sort");
   if (error) throw new Error(`academic_events: ${error.message}`);
-  const events = data.map((e) => ({
+  return data.map((e) => ({
     id: e.id as number,
     title: e.title as string,
     startsOn: e.starts_on as string,
     endsOn: e.ends_on as string,
     sort: e.sort as number,
   }));
-  return { today, news, fiuba, events };
+}
+
+/**
+ * Data for /novedades: avisos, FIUBA news and the important dates of the latest calendar
+ * (tentative, or confirmed by the Secretaría: importantDates()).
+ */
+export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; fiuba: FiubaNewsItem[]; events: AcademicEvent[] }> {
+  const today = buenosAiresDate();
+  const [news, fiuba, calendar] = await Promise.all([getNews(), getFiubaNews(), latestCalendar()]);
+  if (!calendar) return { today, news, fiuba, events: [] };
+  const [events, confirmations] = await Promise.all([getEvents(calendar, today, addDays(today, LATER_DAYS)), getConfirmations(calendar)]);
+  return { today, news, fiuba, events: importantDates(events, confirmations) };
+}
+
+/** For the admin form: the important rows of the latest calendar that are not over, to confirm. */
+export async function getDatesToConfirm(): Promise<{ calendar: string | null; events: AcademicEvent[]; confirmations: DateConfirmation[] }> {
+  const today = buenosAiresDate();
+  const calendar = await latestCalendar();
+  if (!calendar) return { calendar, events: [], confirmations: [] };
+  const [events, confirmations] = await Promise.all([getEvents(calendar, today, null), getConfirmations(calendar)]);
+  return { calendar, events, confirmations };
 }
 
 /** For the admin screen: what calendar is loaded. */
