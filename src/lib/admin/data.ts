@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile, type Account } from "@/lib/session";
-import type { ImportPreview } from "./offer-import";
+import { defaultElectiveCredits, type ImportPreview } from "./offer-import";
 
 // Reads for the admin screen. Writes are in src/app/admin/actions.ts.
 // Admins see hidden offerings too (RLS): here that is what we want.
@@ -159,6 +159,42 @@ export async function getPlanSubjectOptions(planId: string): Promise<{ id: numbe
     .order("name");
   if (error) throw new Error(`subjects: ${error.message}`);
   return data.map((s) => ({ id: s.id as number, name: s.name as string }));
+}
+
+/** An elective an admin added to the plan from the offer (subjects.added_from_offer). */
+export interface OfferSubject {
+  id: number;
+  name: string;
+  credits: number;
+  siuCodes: string[];
+}
+
+/** Electives added from the offer and the credits suggested for the next one. */
+export async function getOfferSubjects(planId: string): Promise<{ added: OfferSubject[]; defaultCredits: number }> {
+  const supabase = await createClient();
+  const electives = await supabase.from("subjects").select("credits").eq("plan_id", planId).eq("kind", "elective");
+  if (electives.error) throw new Error(`subjects: ${electives.error.message}`);
+  const defaultCredits = defaultElectiveCredits(electives.data.map((s) => s.credits as number));
+  const { data, error } = await supabase
+    .from("subjects")
+    .select("id, name, credits, subject_siu_codes(siu_code)")
+    .eq("plan_id", planId)
+    .eq("added_from_offer", true)
+    .order("name");
+  if (error) {
+    // The migration 20261117120000_offer_subjects is not applied yet (previews use production).
+    if (error.code === "42703") return { added: [], defaultCredits };
+    throw new Error(`subjects: ${error.message}`);
+  }
+  return {
+    defaultCredits,
+    added: data.map((s) => ({
+      id: s.id as number,
+      name: s.name as string,
+      credits: s.credits as number,
+      siuCodes: ((s.subject_siu_codes as { siu_code: string }[] | null) ?? []).map((c) => c.siu_code),
+    })),
+  };
 }
 
 /** An offer sent by a student, waiting for an admin (public.admin_offer_submissions). */
