@@ -38,6 +38,7 @@ export async function getModerationReviews(): Promise<ModerationReview[]> {
     .from("reviews")
     .select("id, course_id, term_id, stars, comment, pinned, hidden_at, created_at")
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(500);
   if (reviews.error) throw new Error(`reviews: ${reviews.error.message}`);
 

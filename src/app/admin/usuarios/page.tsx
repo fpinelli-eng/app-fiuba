@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: `Usuarios · Administración · ${APP
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** "hoy", "ayer", "hace 3 días", "hace 2 semanas" (the database records it at most once per hour). */
+/** "hoy", "ayer", "hace 3 días", "hace 2 semanas" (the database gives only the day). */
 function ago(ms: number): string {
   const days = Math.floor(ms / DAY);
   if (days < 1) return "hoy";
@@ -18,11 +18,12 @@ function ago(ms: number): string {
 }
 
 // Usuarios: quiénes usan la app y qué usaron. El layout de /admin ya exige ser administrador y la
-// función de la base lo vuelve a controlar. De las reseñas se muestra solo cuántas dejó cada uno,
-// nunca cuáles: siguen siendo anónimas.
+// función de la base lo vuelve a controlar. De las reseñas se muestra solo el total de alumnos que
+// dejaron alguna, nunca por alumno: con el número de cada uno se podía saber quién escribió cada reseña.
+// "Último uso" llega solo con el día, por lo mismo.
 // Markup simple con los estilos que ya hay en Administración.
 export default async function AdminUsersPage() {
-  const [{ users, readAt: now }, careers] = await Promise.all([getAdminUsers(), getCareers()]);
+  const [{ users, readAt: now, reviewAuthors }, careers] = await Promise.all([getAdminUsers(), getCareers()]);
   const planName = new Map(careers.flatMap((c) => c.plans.map((p) => [p.id, `${c.shortName} ${p.year}`] as const)));
   const since = (ms: number) => users.filter((u) => now - new Date(u.createdAt).getTime() < ms).length;
   const date = (iso: string) => buenosAiresDate(new Date(iso)).split("-").reverse().join("/");
@@ -34,7 +35,7 @@ export default async function AdminUsersPage() {
     ["Sin carrera", users.filter((u) => !u.planId).length],
     ["Con aprobadas", users.filter((u) => u.subjects > 0).length],
     ["Armaron el Plan", users.filter((u) => u.planCourses > 0).length],
-    ["Dejaron reseñas", users.filter((u) => u.reviews > 0).length],
+    ["Dejaron reseñas", reviewAuthors ?? "—"],
     ["Entraron por QR", users.filter((u) => u.signupSource === "qr").length],
   ] as const;
 
@@ -42,7 +43,7 @@ export default async function AdminUsersPage() {
     <main className="mx-auto flex w-full max-w-[1240px] flex-col gap-[18px] px-4 pt-6 pb-10 md:px-6 md:pt-8 md:pb-14">
       <div>
         <h1 className="text-[30px] font-semibold">Usuarios</h1>
-        <p className="text-muted">Quiénes usan la app. De las reseñas se ve solo cuántas dejó cada uno, nunca cuáles: siguen siendo anónimas.</p>
+        <p className="text-muted">Quiénes usan la app. Las reseñas son anónimas: no se ve quién escribió cuál ni cuántas.</p>
       </div>
 
       <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-8">
@@ -65,7 +66,6 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-2.5 font-semibold">Último uso</th>
               <th className="px-4 py-2.5 font-semibold">Origen</th>
               <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Reseñas</th>
               <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
               <th className="px-4 py-2.5 font-semibold">Historias</th>
             </tr>
@@ -80,7 +80,6 @@ export default async function AdminUsersPage() {
                 <td className="px-4 py-2.5 whitespace-nowrap">{u.lastSeenAt ? ago(now - new Date(u.lastSeenAt).getTime()) : "—"}</td>
                 <td className="px-4 py-2.5 whitespace-nowrap">{u.signupSource === "qr" ? "QR" : "—"}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.subjects}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{u.reviews}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{u.planCourses}</td>
                 <td className="px-4 py-2.5">{u.introSeen ? "Vistas" : "—"}</td>
               </tr>
