@@ -11,8 +11,11 @@ name: Fechas de examen del SIU
 
 on:
   schedule:
-    # Daily, at 09:00 UTC = 06:00 in Buenos Aires: before students look at Finales in the morning.
-    - cron: "0 9 * * *"
+    # Twice a day, at 06:13 and 12:13 in Buenos Aires (09:13 and 15:13 UTC). GitHub delays scheduled
+    # runs when it is busy, above all those on the hour: "0 9 * * *" ran between 12:25 and 14:15
+    # Buenos Aires time. A second run costs nothing (public repository) and changes nothing if the
+    # first one already copied the dates: only plans whose dates changed are replaced.
+    - cron: "13 9,15 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
