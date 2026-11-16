@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: `Política de privacidad · ${APP_NAM
 
 // Política de privacidad (issue #8). Pública: Google la pide para publicar el login.
 // Si cambia qué datos se guardan o dónde, se actualiza este texto y la fecha.
-const UPDATED = "13 de noviembre de 2026";
+const UPDATED = "16 de noviembre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
@@ -37,7 +37,7 @@ export default function PrivacidadPage() {
         <ul className="flex list-disc flex-col gap-2 pl-5">
           <li>
             <b>De tu cuenta de Google @fi.uba.ar:</b> nombre, mail y foto. Los usamos para identificarte y mostrarlos en tu perfil. Los administradores pueden ver tu nombre, tu mail,
-            tu carrera, tu fecha de alta, la última vez que usaste la app y cuántas reseñas dejaste para administrar la app (nunca cuáles escribiste ni qué dicen). No accedemos a tus mails, archivos ni a nada más de tu cuenta.
+            tu carrera, tu fecha de alta y el último día que usaste la app, para administrarla. De las reseñas no ven nada tuyo: ni cuáles escribiste ni cuántas. No accedemos a tus mails, archivos ni a nada más de tu cuenta.
           </li>
           <li>
             <b>Si llegaste por el QR de FIUBI:</b> anotamos solo eso al crear tu cuenta, y lo ven los administradores.
@@ -79,6 +79,10 @@ export default function PrivacidadPage() {
           Para los recordatorios, el mail al que te avisamos y las mesas que elegiste (materia, fecha, hora e inscripción) se copian a una planilla de Google de la cuenta
           del proyecto (avisosfiubi@gmail.com), y los mails (también el de confirmación, con tu nombre) salen desde esa cuenta: Google guarda esa copia y envía los mails. La planilla se actualiza sola: lo que sacás o se borra de la
           web también se borra de ahí.
+        </p>
+        <p>
+          Una vez por semana guardamos una copia de la base como respaldo, por si hay que recuperarla. Queda en GitHub durante 30 días, cifrada con una contraseña que solo
+          tienen los administradores. Si borrás tu cuenta, tus datos desaparecen de los respaldos a medida que vencen, en 30 días como mucho.
         </p>
       </Section>
 
