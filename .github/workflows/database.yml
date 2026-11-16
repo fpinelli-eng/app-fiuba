@@ -19,6 +19,11 @@ on:
       - ".github/workflows/database.yml"
   workflow_dispatch:
 
+# Only reads the repository (checkout); the database is reached with SUPABASE_DB_PASSWORD, not with
+# GitHub's token. Without this block the token gets the repository's default permissions.
+permissions:
+  contents: read
+
 concurrency:
   group: database-${{ github.ref }}
   cancel-in-progress: false
