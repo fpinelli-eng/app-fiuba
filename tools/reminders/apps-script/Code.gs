@@ -52,6 +52,68 @@ var LINKS = {
 };
 var HEADERS = ['Creado', 'Aviso', 'Mail', 'Materia', 'Mesa', 'Fecha', 'Hora', 'Inscripción desde', 'Inscripción hasta', 'Mail enviado'];
 
+
+// ---------------------------------------------------------------------------------------------
+// Sending: through Brevo from avisos@fiubi.com.ar when the property BREVO_API_KEY is set (the
+// domain is authenticated in Brevo, so @fi.uba.ar accounts trust it more than a new Gmail);
+// otherwise MailApp from this Gmail account, as before. Optional property BREVO_SENDER changes
+// the sender address. A Brevo error throws, so the caller does not mark the mail as sent.
+// ---------------------------------------------------------------------------------------------
+
+var BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
+var BREVO_DAILY_LIMIT = 290; // free plan: 300 a day, shared with anything else sent from the account
+var BREVO_DEFAULT_SENDER = 'avisos@fiubi.com.ar';
+var REPLY_TO = 'contacto@fiubi.com.ar';
+
+function brevoKey_() {
+  if (typeof PropertiesService === 'undefined') return ''; // tests without script properties
+  return PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY') || '';
+}
+
+function brevoCountKey_() {
+  return 'BREVO_SENT_' + Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd');
+}
+
+/** Mails left for today on the channel in use. */
+function mailQuota_() {
+  if (!brevoKey_()) return MailApp.getRemainingDailyQuota();
+  var sent = Number(PropertiesService.getScriptProperties().getProperty(brevoCountKey_()) || 0);
+  return Math.max(0, BREVO_DAILY_LIMIT - sent);
+}
+
+/** Same options as MailApp.sendEmail: { to (comma-separated), subject, body, htmlBody, name }. */
+function deliverMail_(m) {
+  var key = brevoKey_();
+  if (!key) {
+    MailApp.sendEmail(m);
+    return;
+  }
+  var props = PropertiesService.getScriptProperties();
+  var to = String(m.to).split(',').map(function (a) { return a.trim(); }).filter(function (a) { return a; });
+  var payload = {
+    sender: { name: m.name || 'FIUBI', email: props.getProperty('BREVO_SENDER') || BREVO_DEFAULT_SENDER },
+    to: to.map(function (a) { return { email: a }; }),
+    replyTo: { email: REPLY_TO, name: 'FIUBI' },
+    subject: m.subject,
+    htmlContent: m.htmlBody,
+    textContent: m.body,
+  };
+  var res = UrlFetchApp.fetch(BREVO_URL, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'api-key': key, accept: 'application/json' },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+  });
+  var code = res.getResponseCode();
+  if (code < 200 || code >= 300) {
+    // Only the status: the body could echo addresses.
+    throw new Error('Brevo no aceptó el mail (HTTP ' + code + '). Revisá BREVO_API_KEY y el remitente.');
+  }
+  var countKey = brevoCountKey_();
+  props.setProperty(countKey, String(Number(props.getProperty(countKey) || 0) + to.length));
+}
+
 // ---------------------------------------------------------------------------------------------
 // Functions to run by hand or from the trigger
 // ---------------------------------------------------------------------------------------------
@@ -107,7 +169,7 @@ function syncSheet() {
 function sendTestMail() {
   var to = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail();
   var mail = buildMail_(sampleRow_());
-  MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  deliverMail_({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   Logger.log('Listo: se mandó un mail de prueba a ' + to + '.');
 }
 
@@ -115,7 +177,7 @@ function sendTestMail() {
 function sendTestConfirmMail() {
   var to = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail();
   var mail = buildConfirmMail_(sampleConfirmRow_());
-  MailApp.sendEmail({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  deliverMail_({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   Logger.log('Listo: se mandó un mail de confirmación de prueba a ' + to + '.');
 }
 
@@ -248,7 +310,7 @@ function sendRows_(rows) {
   // the same students would get the same mail every hour.
   rpc_('avisos_marcar_enviado', { p_reminder_id: 0 });
   for (var i = 0; i < due.length; i++) {
-    if (MailApp.getRemainingDailyQuota() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
+    if (mailQuota_() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
     var row = due[i];
     var mail = buildMail_(row);
     if (!sendMail_(row.email, mail)) continue; // a rejected address never blocks the others
@@ -267,7 +329,7 @@ function sendRows_(rows) {
  */
 function sendMail_(to, mail) {
   try {
-    MailApp.sendEmail({ to: to, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    deliverMail_({ to: to, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
     return true;
   } catch (e) {
     Logger.log('No se pudo mandar un mail: ' + e);
@@ -296,7 +358,7 @@ function sendConfirmations_(rows) {
   // Check that marking works first (no student has this address: it answers 0).
   rpc_('avisos_confirmacion_enviada', { p_email: '' });
   for (var i = 0; i < due.length; i++) {
-    if (MailApp.getRemainingDailyQuota() <= CONFIRM_QUOTA_RESERVE) break;
+    if (mailQuota_() <= CONFIRM_QUOTA_RESERVE) break;
     var row = due[i];
     var mail = buildConfirmMail_(row);
     if (!sendMail_(row.email, mail)) continue; // a rejected address never blocks the others

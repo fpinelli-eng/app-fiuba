@@ -133,3 +133,12 @@ Listo: desde la próxima hora corre solo.
 ## Privacidad
 
 La planilla tiene mails de alumnos (también el otro mail que algunos eligen): no la compartas con nadie más. El registro de ejecuciones muestra solo cantidades. La política de privacidad (`src/app/privacidad/page.tsx`) dice que los datos de los recordatorios se copian a esta planilla y que los mails salen de esta cuenta.
+
+## Envío por Brevo (recomendado)
+
+Los mails de avisosfiubi@gmail.com a cuentas @fi.uba.ar suelen caer en Spam. Si en las **Propiedades del script** está `BREVO_API_KEY` (una clave de **API** de Brevo, no la SMTP: Brevo → SMTP & API → API Keys), todos los mails (recordatorios, confirmaciones, pruebas y avisos del monitor) salen por Brevo desde **avisos@fiubi.com.ar**, con el dominio ya verificado (DKIM y DMARC en el DNS de Vercel). Las respuestas van a contacto@fiubi.com.ar. Sin esa propiedad salen por Gmail, como antes.
+
+- `BREVO_SENDER` (opcional) cambia el remitente; tiene que ser de un dominio verificado en Brevo.
+- Plan gratis: 300 mails por día. El script cuenta hasta 290 por día (`BREVO_SENT_<fecha>` en las propiedades) y deja el resto para la corrida siguiente. Lleva "Sent with Brevo" al pie.
+- Si Brevo rechaza un mail, ese mail no se marca como enviado y se reintenta en la próxima corrida.
+- Para probar: cargá la clave y ejecutá **sendTestMail** (o **sendTestConfirmMail**). Llega desde avisos@fiubi.com.ar.
