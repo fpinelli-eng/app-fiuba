@@ -192,6 +192,7 @@ insert into public.user_extra_credits (name, credits) values ('FIUBATÓN 2025', 
 select test.ok((select count(*) from public.user_extra_credits where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'student adds extra credits');
 select test.fails($$insert into public.user_extra_credits (user_id, name, credits) values ('bbbbbbbb-0000-0000-0000-000000000002', 'x', 2)$$, 'extra credits for another student');
 select test.fails($$select * from public.admin_users()$$, 'student lists the users');
+select test.fails($$select public.admin_review_authors()$$, 'student counts the review authors');
 select public.touch_last_seen();
 select test.ok((select last_seen_at from public.profiles) is not null, 'student marks her last visit');
 select test.fails('update public.profiles set last_seen_at = null', 'student edits her last visit directly');
@@ -308,6 +309,9 @@ set role authenticated;
 select test.ok(public.review_course(2, 3::smallint, '  Bien  ') = 2, 'student reviews a course she did not take');
 select test.ok((select comment from public.reviews where id = 2) = 'Bien', 'free review comment is trimmed');
 select test.ok(public.review_course(2, 5::smallint, null) = 2, 'reviewing again edits the same review');
+select test.ok((select bool_and(created_at = date_trunc('day', created_at, 'America/Argentina/Buenos_Aires')
+                            and updated_at = date_trunc('day', updated_at, 'America/Argentina/Buenos_Aires'))
+                from public.reviews), 'reviews keep only the day they were written and edited');
 select test.ok((select stars = 5 and comment is null from public.reviews where id = 2), 'free review edited');
 select test.ok(public.review_course(1, 2::smallint, null) = 1, 'free review of a taken course edits the pending one');
 select test.ok(public.submit_review(1, 4::smallint, null) = 1, 'pending review edits the existing one');
@@ -341,7 +345,9 @@ delete from public.exam_reminders;  -- RLS: deletes nothing
 select test.ok((select count(*) from public.my_reviews()) = 0, 'another student does not get her review in my_reviews');
 select test.fails('select 1 from public.review_authors', 'admin reads review_authors');
 
+select test.ok(public.admin_review_authors() = 1, 'admin counts how many students wrote reviews');
 update public.reviews set pinned = true, hidden_at = now();
+select test.ok(public.admin_review_authors() = 0, 'the review authors total leaves out hidden reviews');
 select test.ok((select bool_and(pinned and hidden_at is not null) from public.reviews), 'admin pins and hides reviews');
 select test.fails('update public.reviews set stars = 1', 'admin edits the stars of a review');
 select test.fails($$update public.historical_reviews set stars = 1$$, 'admin edits the stars of a Dolly opinion');
@@ -350,8 +356,10 @@ select test.ok((select count(*) from public.historical_reviews where hidden_at i
 select test.ok((select count(*) from public.course_star_counts(array[1::bigint])) = 0, 'course scores leave out hidden reviews, also for admins');
 select test.ok((select count(*) from public.admin_users()) >= 2, 'admin lists the users');
 select test.ok((select email from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees the mails');
-select test.ok((select reviews from public.admin_users() where email = 'ana@fi.uba.ar') >= 0, 'admin sees how many reviews (not which)');
+select test.ok(pg_get_function_result('public.admin_users()'::regprocedure) not like '%review%', 'admins do not get reviews per student');
 select test.ok((select last_seen_at from public.admin_users() where email = 'ana@fi.uba.ar') is not null, 'admin sees when each student last used the app');
+select test.ok((select bool_and(last_seen_at = date_trunc('day', last_seen_at, 'America/Argentina/Buenos_Aires'))
+                from public.admin_users()), 'admins get the last use by day, without the hour');
 select test.ok((select signup_source from public.admin_users() where email = 'ana@fi.uba.ar') = 'qr', 'admin sees who came through the QR');
 select test.ok((select signup_source from public.admin_users() where email = 'beto@fi.uba.ar') is null, 'admin sees no source for the others');
 select test.fails($$update public.profiles set signup_source = null where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'admin edits a signup source');

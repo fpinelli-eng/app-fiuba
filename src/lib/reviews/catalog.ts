@@ -205,7 +205,8 @@ export async function getCourse(courseId: number, planId: string, { allComments 
       .eq("course_id", courseId)
       .is("hidden_at", null)
       .not("comment", "is", null)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
     supabase
       .from("historical_reviews")
       .select("id, stars, comment, teacher, term_label, year", { count: "exact" })
