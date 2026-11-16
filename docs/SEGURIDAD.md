@@ -31,11 +31,11 @@ Revisión del 10 de noviembre de 2026, antes del lanzamiento oficial. Se actuali
 
 Ordenado por importancia. Lo que dice **(Francisco)** se hace desde los paneles; no necesita código.
 
-1. **Verificación en dos pasos (Francisco y Jantus).** El ataque más probable no es contra el código sino contra las cuentas: quien entra a tu GitHub, Vercel, Supabase o Google Cloud tiene la app entera. Activar la verificación en dos pasos (con app de autenticación o llave, no SMS) en las cuatro cuentas, y que Jantus la active en su GitHub.
+1. **Verificación en dos pasos (Francisco y Jantus).** El ataque más probable no es contra el código sino contra las cuentas: quien entra a tu GitHub, Vercel, Supabase o Google Cloud tiene la app entera. Activar la verificación en dos pasos (con app de autenticación o llave, no SMS) en las cuatro cuentas, y que Jantus la active en su GitHub. **Francisco: hecho el 16 de noviembre en todas sus cuentas. Falta Jantus.**
 2. **Supabase → Authentication → Sign In / Providers (Francisco):** dejar habilitado **solo Google**. Si Email, Phone o *Anonymous sign-ins* están activos, alguien podría crear una sesión por la API sin pasar por Google. Hoy eso no le da acceso a nada (la base exige un mail @fi.uba.ar), pero no hay razón para dejar la puerta.
 3. **GitHub → Settings → Code security (en algunas cuentas se llama *Advanced Security*) (Francisco):** activar *Dependabot alerts*, *Dependabot security updates*, *Secret scanning* y *Push protection*. Son gratis en repos públicos: Dependabot habría avisado solo de la vulnerabilidad de Next.js, y *push protection* frena un commit que traiga una clave por error.
 4. **GitHub → Settings → Branches → regla de `main` (Francisco):** exigir que pasen los chequeos antes de integrar (*Require status checks to pass*: "Base de datos" y Vercel). Hoy se puede integrar un PR con las pruebas de la base en rojo.
-5. **Supabase → Advisors → Security Advisor (Francisco):** correrlo y revisar si marca algo que no se ve desde el repo (por ejemplo, configuración del login).
+5. ~~**Supabase → Advisors → Security Advisor (Francisco):**~~ Corrido el 16 de noviembre: **0 errores**. Los 25 avisos y las 3 sugerencias son esperables y no hay que hacer nada (ver "Security Advisor: qué es esperable", más abajo).
 6. ~~**Reseñas: hora exacta.**~~ Hecho el 16 de noviembre (migración `20261117130000_review_anonymity.sql`): `created_at` y `updated_at` de las reseñas guardan solo el día. Además, Administración → Usuarios ya no muestra cuántas reseñas escribió cada alumno (comparándolo con Administración → Reseñas se sabía quién escribió cada una): solo el total de alumnos que dejaron alguna, y "Último uso" llega con el día, sin hora.
 7. **Vistas previas y base compartida.** Las vistas previas de Vercel usan la misma base que producción y no piden sesión de Vercel. Las protege el login de la app, pero un PR con un error puede romper datos reales. Para más adelante: un segundo proyecto de Supabase (el plan gratuito permite dos) solo para las vistas previas.
 8. **Redirect URL de `localhost` (Francisco):** cuando Jantus ya no necesite probar contra la base real, sacar `http://localhost:3000/**` de Supabase → Authentication → URL Configuration.
@@ -56,3 +56,14 @@ Hoy es público porque Vercel gratis solo publica commits de colaboradores en re
 - **GitHub Actions pasa a tener un tope mensual** (hoy es ilimitado). Los workflows actuales deberían entrar sin problema.
 
 Lo que expone hoy el repo público: el código (sin secretos), el identificador del proyecto de Supabase (también visible en la web), los resúmenes del workflow "Relevamiento de usuarios" (solo totales generales, sin desglose por carrera ni por día: con pocos usuarios podían señalar a alguien) y los respaldos cifrados (sin la frase `BACKUP_PASSPHRASE` no se pueden abrir).
+
+## Security Advisor: qué es esperable
+
+Revisado el 16 de noviembre de 2026 (0 errores, 25 avisos, 3 sugerencias). Si vuelve a aparecer algo de esta lista, no es un problema nuevo:
+
+- **"Public Can Execute SECURITY DEFINER"** (rol `anon`): `avisos_pendientes()`, `avisos_marcar_enviado()`, `avisos_confirmaciones()`, `avisos_confirmacion_enviada()` y `salud()`. Las llama el Apps Script de la planilla con la clave pública; cada una exige el token cuyo SHA-256 está en `avisos_config` (probado en `tools/db-test/security.sql`).
+- **"Authenticated Can Execute SECURITY DEFINER"**: las funciones que usa la app con sesión (`submit_review()`, `review_course()`, `my_reviews()`, `choose_my_plan()`, `change_my_plan()`, `delete_my_account()`, `admin_*()`, etc.) y `is_member()` / `is_admin()`, que usan las políticas de RLS. Cada una controla adentro quién la llama (`auth.uid()`, `is_admin()`).
+- **`rls_auto_enable()`**: no es nuestra (no está en las migraciones); la crea Supabase para activar RLS solo en las tablas nuevas. Es una función de *event trigger*: no se puede llamar como función común.
+- **Sugerencias "RLS Enabled No Policy"**: `review_authors`, `avisos_config` y `monitor_state`. Sin políticas a propósito: nadie las lee directo, solo las funciones de arriba.
+
+Una función `security definer` nueva tiene que hacer lo mismo: `revoke execute ... from public`, `grant` solo al rol que la usa, y controlar adentro quién la llama.
