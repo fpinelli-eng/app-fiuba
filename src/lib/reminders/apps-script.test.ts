@@ -380,3 +380,31 @@ describe("doPost (instant confirmations)", () => {
     expect(JSON.parse(sent!)).toEqual({ ok: false, error: "token" });
   });
 });
+
+describe("deliverMail_ through Brevo", () => {
+  it("sends from avisos@fiubi.com.ar with the API key, counts the day and throws on an error", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const props: Record<string, string> = { BREVO_API_KEY: "xkeysib-test" };
+    g.PropertiesService = {
+      getScriptProperties: () => ({ getProperty: (k: string) => props[k] ?? null, setProperty: (k: string, v: string) => (props[k] = v) }),
+    };
+    g.Utilities = { formatDate: () => "2026-11-16" };
+    g.MailApp = { sendEmail: () => { throw new Error("MailApp must not be used"); }, getRemainingDailyQuota: () => 0 };
+    const calls: { url: string; opts: { headers: Record<string, string>; payload: string } }[] = [];
+    let status = 201;
+    g.UrlFetchApp = { fetch: (url: string, opts: { headers: Record<string, string>; payload: string }) => { calls.push({ url, opts }); return { getResponseCode: () => status }; } };
+    const send = (g as unknown as { deliverMail_(m: object): void }).deliverMail_;
+    const quota = (g as unknown as { mailQuota_(): number }).mailQuota_;
+    expect(quota()).toBe(290);
+    send({ to: "a@fi.uba.ar, b@fi.uba.ar", subject: "Hola", body: "texto", htmlBody: "<p>hola</p>", name: "FIUBI" });
+    expect(calls[0].url).toBe("https://api.brevo.com/v3/smtp/email");
+    expect(calls[0].opts.headers["api-key"]).toBe("xkeysib-test");
+    const body = JSON.parse(calls[0].opts.payload);
+    expect(body.sender).toEqual({ name: "FIUBI", email: "avisos@fiubi.com.ar" });
+    expect(body.to).toEqual([{ email: "a@fi.uba.ar" }, { email: "b@fi.uba.ar" }]);
+    expect(quota()).toBe(288);
+    status = 401;
+    expect(() => send({ to: "c@fi.uba.ar", subject: "x", body: "x", htmlBody: "x" })).toThrow(/HTTP 401/);
+    expect(quota()).toBe(288);
+  });
+});

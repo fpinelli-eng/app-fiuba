@@ -65,7 +65,7 @@ function saludProbar() {
 function saludMailDePrueba() {
   var recipients = saludRecipients_(PropertiesService.getScriptProperties().getProperty('ALERT_TO'), saludOwner_());
   var mail = saludBuildMail_(saludSampleProblems_(), [{ key: 'web:https://fiubi.com.ar', title: 'fiubi.com.ar' }], Date.now());
-  MailApp.sendEmail({ to: recipients.join(','), subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  deliverMail_({ to: recipients.join(','), subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   Logger.log('Listo: se mandó un aviso de prueba a ' + recipients.join(', ') + '.');
 }
 
@@ -111,7 +111,7 @@ function saludCheck_(opts) {
     if (r.mail) {
       try {
         var mail = saludBuildMail_(r.problems, r.resolved, now);
-        MailApp.sendEmail({ to: r.recipients.join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+        deliverMail_({ to: r.recipients.join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
       } catch (e) {
         // Not sent: keep the last notified list, so the next run tries again.
         r.state.notified = prev.notified;
@@ -150,7 +150,7 @@ function saludCalendarCheck_(props, recipients, now, dryRun) {
   if (c.mail) {
     // If the mail fails nothing is stored, so the next run tries again.
     var mail = saludCalendarMail_(c.added, c.removed, now);
-    MailApp.sendEmail({ to: recipients.join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    deliverMail_({ to: recipients.join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   }
   if (c.state) props.setProperty('SALUD_CALENDARIO', JSON.stringify(c.state));
   return c;
