@@ -142,8 +142,10 @@ function parseDetail(text: string): Omit<ParseResult, "format"> {
   let commission: Commission | null = null;
   let section: Section | null = null; // commission or subcommission receiving schedules
   const warnings: string[] = [];
+  let ignored = false; // a second listing (another term, e.g. "Cursos de Verano") was pasted after the first
 
   text.split(RE_LINE_BREAK).forEach((rawLine, i) => {
+    if (ignored) return;
     const lineNo = i + 1;
     const line = rawLine.trimEnd();
     if (!line) return;
@@ -153,7 +155,14 @@ function parseDetail(text: string): Omit<ParseResult, "format"> {
     const value = () => line.slice(line.indexOf(":") + 1).trim();
 
     if (line.startsWith("Período lectivo:")) {
-      periodo = value();
+      const next = value();
+      // Only the first term is read: the same subjects come again in the other one, with
+      // the same course numbers, and would be taken as repeated courses of this term.
+      if (periodo && next && next !== periodo) {
+        ignored = true;
+        return warn(`se ignoró lo que sigue, de otro período: '${next}'`);
+      }
+      if (next) periodo = next;
       return;
     }
 

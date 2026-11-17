@@ -165,6 +165,7 @@ export function previewImport(
   const matched: MatchedSubject[] = [];
   const unmatched: UnmatchedSubject[] = [];
   const drafts: OfferingDraft[] = [];
+  const seen = new Set<string>();
 
   for (const subject of offer.materias) {
     const options = courseOptions(subject);
@@ -182,7 +183,17 @@ export function previewImport(
       subjectName: planSubject.name,
       courses: options.length,
     });
-    drafts.push(...options.map((o) => toDraft(o, planSubject.id)));
+    for (const o of options) {
+      const draft = toDraft(o, planSubject.id);
+      // One row per subject, course and practice: a repeat would make the whole publication fail.
+      const key = offeringKey(draft);
+      if (seen.has(key)) {
+        warnings.push(`curso repetido, se usa el primero: ${subject.nombre} ${draft.label}`);
+        continue;
+      }
+      seen.add(key);
+      drafts.push(draft);
+    }
   }
 
   return {

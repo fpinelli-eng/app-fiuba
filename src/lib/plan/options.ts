@@ -3,7 +3,7 @@
 // groups ("CURSO 01A", "CURSO 01B") gives one option per group, each with the shared
 // lectures included.
 
-import type { Campus, Commission, ScheduleBlock, Subject, Teacher } from "../siu/parser";
+import type { Campus, Commission, ScheduleBlock, Subcommission, Subject, Teacher } from "../siu/parser";
 
 export const WEEK_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number] | "Domingo";
@@ -84,6 +84,18 @@ function isExtraSeatsCopy(c: Commission, all: Commission[]): boolean {
   return all.some((other) => other.numero === base);
 }
 
+/**
+ * Same for subcommissions: "CURSO 01i A" / "CURSO 01i B" repeat "CURSO 01A" / "CURSO 01B" with a few
+ * extra seats. Read as practices they would all be practice "I" (repeated rows), so they are
+ * skipped when the commission has other subcommissions. The "i" is lowercase, unlike practice letters.
+ */
+const RE_EXTRA_SEATS_SUB = /^CURS\w*\s*\d+i(?![A-Za-z])/;
+
+function withoutExtraSeatsCopies(subs: Subcommission[]): Subcommission[] {
+  const kept = subs.filter((s) => !RE_EXTRA_SEATS_SUB.test(s.nombre));
+  return kept.length ? kept : subs;
+}
+
 export function courseOptions(subject: Subject): CourseOption[] {
   const options: CourseOption[] = [];
 
@@ -98,8 +110,9 @@ export function courseOptions(subject: Subject): CourseOption[] {
       modality: c.modalidad ?? null,
     };
     const label = number ? `Curso ${Number(number)}` : c.nombre;
-    const practices = c.subcomisiones.filter((s) => practiceLetter(s.nombre) !== "");
-    const shared = c.subcomisiones.filter((s) => practiceLetter(s.nombre) === "");
+    const subs = withoutExtraSeatsCopies(c.subcomisiones);
+    const practices = subs.filter((s) => practiceLetter(s.nombre) !== "");
+    const shared = subs.filter((s) => practiceLetter(s.nombre) === "");
     const sharedBlocks = [...c.horarios, ...shared.flatMap((s) => s.horarios)];
     const listed = [...c.docentes, ...shared.flatMap((s) => s.docentes)];
     // The public SIU table has no teacher list: use the surnames in the course name.

@@ -203,3 +203,52 @@ describe("electives added from the offer", () => {
     expect(defaultElectiveCredits([0, 0])).toBe(4);
   });
 });
+
+describe("previewImport with texts that used to break the publication", () => {
+  const T = "\t";
+  const course = (name: string, day: string, extra = "") =>
+    [`Comisión: ${name}`, "Turno: Sin definir", "Cupo / insc.: 30 / 0", "Instancias: Regularidad", extra, `Tipo de clase${T}Día${T}Horario${T}Aula`, `Teórico${T}${day}${T}19:00 a 22:00${T}L7-PC`]
+      .filter(Boolean)
+      .join("\n");
+  const subjects = [{ id: 1, name: "Higiene y Seguridad" }, { id: 2, name: "Señales y Sistemas" }];
+
+  it("reads only the first term when a second listing (Cursos de Verano) is pasted after it", () => {
+    const text = [
+      "Período lectivo: 2026 - 2do Cuatrimestre",
+      "Actividad: HIGIENE Y SEGURIDAD (TC003)",
+      course("CURSO 01 - RIZZO / CHENLO", "Martes"),
+      "Período lectivo: 2026 - Cursos de Verano 2026-2027",
+      "Actividad: HIGIENE Y SEGURIDAD (TC003)",
+      course("CURSO 01 - RIZZO", "Lunes"),
+    ].join("\n");
+    const { preview, drafts } = previewImport(text, subjects, new Map());
+    expect(preview.periodo).toBe("2026 - 2do Cuatrimestre");
+    expect(drafts.map((d) => [d.course_number, d.blocks[0].weekday])).toEqual([["01", 2]]);
+    expect(preview.warnings.some((w) => w.includes("Cursos de Verano"))).toBe(true);
+  });
+
+  it("skips the extra-seat copies of practices (CURSO 01i A) and never repeats a row", () => {
+    const sub = (name: string, day: string) =>
+      [`Subcomisión: ${name}`, "Cupo / insc.: 10 / 0", `Tipo de clase${T}Día${T}Horario${T}Aula`, `Práctica${T}${day}${T}16:00 a 19:00${T}L15 - PC`].join("\n");
+    const text = [
+      "Período lectivo: 2026 - 2do Cuatrimestre",
+      "Actividad: SEÑALES Y SISTEMAS (TB065)",
+      "Comisión: CURSO 01 - ARINI",
+      "Turno: Sin definir",
+      sub("CURSO 01A - ARINI / CALDENTEY", "Martes"),
+      sub("CURSO 01B - ARINI / SAR", "Miércoles"),
+      sub("CURSO 01 - ARINI", "Lunes"),
+      sub("CURSO 01i A- ARINI / CALDENTEY", "Martes"),
+      sub("CURSO 01i B - ARINI / SAR", "Miércoles"),
+      "Actividad: HIGIENE Y SEGURIDAD (TC003)",
+      course("CURSO 01 - RIZZO", "Martes"),
+      "Actividad: HIGIENE Y SEGURIDAD (TC003)",
+      course("CURSO 01 - OTRO", "Jueves"),
+    ].join("\n");
+    const { drafts, preview } = previewImport(text, subjects, new Map());
+    const keys = drafts.map(offeringKey);
+    expect(keys).toEqual(["TB065|01|A", "TB065|01|B", "TC003|01|"]);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(preview.warnings.some((w) => w.startsWith("curso repetido"))).toBe(true);
+  });
+});
