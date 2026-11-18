@@ -49,12 +49,15 @@ if (!dryRun) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Longer than the app: some searches always take ~17 s in the SIU (Bioingeniería 2024).
+const SYNC_TIMEOUT_MS = 60_000;
+
 /** The page of a plan, retrying once: the SIU sometimes takes long to answer. */
 async function download(url) {
-  const first = await fetchSiuExamsPage(url);
+  const first = await fetchSiuExamsPage(url, SYNC_TIMEOUT_MS);
   if (!("error" in first)) return first;
   await wait(10_000);
-  return fetchSiuExamsPage(url);
+  return fetchSiuExamsPage(url, SYNC_TIMEOUT_MS);
 }
 
 const outcomes = [];
