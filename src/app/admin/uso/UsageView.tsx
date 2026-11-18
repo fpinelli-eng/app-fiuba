@@ -107,7 +107,7 @@ export function UsageView({
 
       <div className="grid grid-cols-1 gap-[18px] md:grid-cols-2">
         {usage && (
-          <Card title="Espacio" id="espacio">
+          <Card title="Espacio en Supabase" id="espacio">
             <Storage bytes={usage.dbBytes} limit={usage.dbLimitBytes} tables={usage.tables} />
           </Card>
         )}
@@ -332,9 +332,8 @@ function Deployments({ result, now }: { result: DeploymentsResult; now: number }
   if (result.kind === "missing") {
     return (
       <p className="text-sm text-ink-2">
-        Para ver los últimos despliegues, agregá <code className="font-mono text-[13px]">VERCEL_TOKEN</code> y{" "}
-        <code className="font-mono text-[13px]">VERCEL_PROJECT_ID</code> en las variables de entorno de Vercel (y{" "}
-        <code className="font-mono text-[13px]">VERCEL_TEAM_ID</code> si el proyecto es de un equipo).
+        Para ver los últimos despliegues, agregá <code className="font-mono text-[13px]">VERCEL_TOKEN</code> en las
+        variables de entorno de Vercel.
       </p>
     );
   }
