@@ -716,6 +716,74 @@ delete from public.exam_reminders where table_name = 'SALUD DEBIDA';
 delete from public.exam_tables where name = 'SALUD DEBIDA';
 delete from public.avisos_config;
 
+-- Aviso on Inicio and push notifications: only admins, while they try them ----------------
+
+-- Ana's browser, as if notifications were already open to everyone (only admins can save one now).
+insert into public.push_subscriptions (user_id, endpoint, p256dh, auth)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 'https://push.example/ana', 'ana-key', 'ana-auth');
+create table test.ana_career as
+  select pl.career_id from public.profiles p join public.plans pl on pl.id = p.plan_id where p.id = 'aaaaaaaa-0000-0000-0000-000000000001';
+grant select on test.ana_career to authenticated;
+
+set role anon;
+select test.fails('select 1 from public.announcements', 'anon reads announcements');
+select test.fails('select 1 from public.push_subscriptions', 'anon reads push subscriptions');
+select test.fails($$select public.save_push_subscription('https://push.example/x', 'k', 'a')$$, 'anon saves a push subscription');
+select test.fails('select * from public.admin_push_targets(null)', 'anon reads the push targets');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+insert into public.announcements (title, body, url, career_id) values ('Probando avisos', 'Solo lo ven los administradores.', '/novedades', null);
+select test.ok((select count(*) from public.announcements) = 1, 'admin creates an announcement');
+select test.fails($$insert into public.announcements (title, body, url) values ('x', 'y', 'javascript:alert(1)')$$, 'announcement with a script link');
+select test.fails($$insert into public.announcements (title, body, url) values ('x', 'y', '//otro.sitio')$$, 'announcement with a protocol-relative link');
+select test.fails($$insert into public.announcements (title, body, created_by) values ('x', 'y', 'aaaaaaaa-0000-0000-0000-000000000001')$$, 'admin signs an announcement as someone else');
+select test.fails($$update public.announcements set title = 'otro'$$, 'announcements are not edited');
+select public.save_push_subscription('https://push.example/beto', 'beto-key', 'beto-auth');
+select test.ok((select count(*) from public.push_subscriptions) = 1, 'admin sees only her own push subscription');
+select test.fails('select p256dh from public.push_subscriptions', 'the keys of a subscription are not readable');
+select test.fails($$insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ('bbbbbbbb-0000-0000-0000-000000000002', 'https://push.example/y', 'k', 'a')$$, 'push subscription saved without the function');
+select test.fails($$select public.save_push_subscription('http://push.example/z', 'k', 'a')$$, 'push subscription without https');
+select test.ok((select count(*) from public.admin_push_targets(null)) = 2, 'admin gets every push target');
+select test.ok((select count(*) from public.admin_push_targets((select career_id from test.ana_career))) = 1, 'admin gets the push targets of one career');
+select test.ok((select count(*) from public.admin_push_targets('no-existe')) = 0, 'no push targets for another career');
+select test.ok((select sum(devices) from public.admin_push_counts()) = 2, 'admin counts the devices');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.announcements) = 0, 'a student does not read announcements yet');
+select test.fails($$insert into public.announcements (title, body) values ('Hola', 'Soy Ana')$$, 'a student creates an announcement');
+delete from public.announcements;  -- RLS: deletes nothing
+select test.fails($$select public.save_push_subscription('https://push.example/ana2', 'k', 'a')$$, 'a student turns on push notifications yet');
+select test.ok((select count(*) from public.push_subscriptions) = 1, 'a student sees only her own push subscription');
+select test.ok((select endpoint from public.push_subscriptions) = 'https://push.example/ana', 'a student reads her own endpoint');
+select test.fails('select * from public.admin_push_targets(null)', 'a student reads the push targets');
+select test.fails('select * from public.admin_push_counts()', 'a student counts the devices');
+select test.fails($$select public.admin_remove_push_subscriptions(array['https://push.example/beto'])$$, 'a student removes push subscriptions');
+delete from public.push_subscriptions where endpoint = 'https://push.example/beto';  -- RLS: deletes nothing
+reset role;
+select test.ok((select count(*) from public.announcements) = 1, 'a student does not delete announcements');
+select test.ok((select count(*) from public.push_subscriptions) = 2, 'a student does not delete another one''s subscription');
+
+-- A shared computer: the browser moves to the account that turns notifications on.
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select public.save_push_subscription('https://push.example/ana', 'new-key', 'new-auth');
+reset role;
+select test.ok((select user_id from public.push_subscriptions where endpoint = 'https://push.example/ana') = 'bbbbbbbb-0000-0000-0000-000000000002', 'a browser moves to the account that saved it last');
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok(public.admin_remove_push_subscriptions(array['https://push.example/ana', 'https://push.example/beto']) = 2, 'admin removes gone subscriptions');
+delete from public.announcements;
+select test.ok((select count(*) from public.announcements) = 0, 'admin deletes an announcement');
+reset role;
+drop table test.ana_career;
+-- For the account deletion below.
+insert into public.push_subscriptions (user_id, endpoint, p256dh, auth)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 'https://push.example/ana', 'ana-key', 'ana-auth');
+
 -- Deleting the account keeps the review, without author ---------------------------
 
 set role anon;
@@ -733,5 +801,6 @@ select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are de
 select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
 select test.ok((select count(*) from public.exam_reminders) = 0, 'exam reminders are deleted with the account');
 select test.ok((select count(*) from public.reminder_confirmations) = 0, 'reminder confirmations are deleted with the account');
+select test.ok((select count(*) from public.push_subscriptions) = 0, 'push subscriptions are deleted with the account');
 
 \echo 'All security checks passed.'
