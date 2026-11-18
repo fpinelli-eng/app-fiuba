@@ -4,7 +4,7 @@ import { supabaseEnv } from "./env";
 import { parseRef, REFERRAL_COOKIE, REFERRAL_MAX_AGE } from "@/lib/referral";
 
 // Rutas que se pueden ver sin sesión.
-const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest", "/robots.txt", "/sitemap.xml"];
+const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest", "/robots.txt", "/sitemap.xml", "/sw.js"];
 
 // Refresca la sesión en cada pedido y manda a /ingresar a quien no la tiene. En la raíz, sin sesión, se ve
 // la presentación (la página de /ingresar) sin cambiar la dirección: es la página que indexan los buscadores.

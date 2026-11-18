@@ -10,6 +10,8 @@ import { CareerMap, formatAverage, sumExtraCredits, totalCredits, type Progress 
 import { requireProfile } from "@/lib/session";
 import { isFirstDay } from "@/lib/intro/data";
 import { IntroButton } from "./perfil/IntroButton";
+import { AnnouncementCard } from "@/components/AnnouncementCard";
+import { getHomeAnnouncement } from "@/lib/broadcast/data";
 
 // Inicio (rediseño del 5 de noviembre de 2026, contrato en .impeccable/surfaces/src-app-app-page-tsx.md):
 // el saludo, el arco de avance, el promedio, las materias aprobadas, las reseñas pendientes,
@@ -20,10 +22,12 @@ const CARD = "rounded-[24px] bg-surface shadow-[0_16px_30px_-28px_var(--card-sha
 
 export default async function InicioPage() {
   const account = await requireProfile();
-  const [data, round, firstDay] = await Promise.all([
+  const [data, round, firstDay, announcement] = await Promise.all([
     getMapData(account.id, account.planId!),
     getReviewRound(account.id, null),
     isFirstDay(account.id),
+    // El aviso de Administración. Mientras lo prueban, solo para los administradores.
+    getHomeAnnouncement(account),
   ]);
   const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
   const courses = await getHomeCourses(account.id, data.subjects);
@@ -62,6 +66,8 @@ export default async function InicioPage() {
           {data.careerName}, plan {data.year}
         </p>
       </div>
+
+      {announcement && <AnnouncementCard key={announcement.id} announcement={announcement} />}
 
       {/* El primer día: para volver a ver las historias de bienvenida. Después quedan en Perfil. */}
       {firstDay && (

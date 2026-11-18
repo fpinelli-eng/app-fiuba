@@ -12,6 +12,8 @@ import { DeleteAccount } from "./DeleteAccount";
 import { MyReviewRow } from "./MyReviewRow";
 import { ThemeChooser } from "./ThemeChooser";
 import { IntroButton } from "./IntroButton";
+import { PushOptIn } from "./PushOptIn";
+import { canUseBroadcasts } from "@/lib/broadcast/model";
 
 export const metadata: Metadata = { title: `Tu perfil · ${APP_NAME}` };
 
@@ -50,6 +52,9 @@ export default async function PerfilPage() {
         </div>
         <IntroButton />
       </Card>
+
+      {/* Notificaciones push: mientras las prueban, solo para los administradores. */}
+      {canUseBroadcasts(account) && <PushOptIn />}
 
       <section aria-label="Mis reseñas" className="overflow-hidden rounded-[18px] border border-line bg-surface">
         <div className="flex flex-wrap items-start justify-between gap-3 px-4 pt-[18px] pb-3.5 md:px-6 md:pt-[22px]">

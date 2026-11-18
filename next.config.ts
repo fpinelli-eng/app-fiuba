@@ -15,7 +15,11 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // El service worker de las notificaciones (public/sw.js): el navegador siempre busca la última versión.
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] },
+    ];
   },
   experimental: {
     // Las secciones del menú se precargan enteras (prefetch del Header) y se reusan hasta 10 min.
