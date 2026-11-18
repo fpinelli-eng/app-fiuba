@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { NavIcon } from "@/components/icons";
-import { addDismissed, DISMISSED_COOKIE, type Announcement } from "@/lib/broadcast/model";
+import { addDismissed, cleanUrl, DISMISSED_COOKIE, type Announcement } from "@/lib/broadcast/model";
 
 // El aviso de FIUBI en el Inicio: amarillo (el único pastel que el Inicio no usa), con la campanita de
 // Novedades. Se cierra una vez: queda en una cookie y el Inicio no lo vuelve a mostrar en este navegador.
@@ -47,7 +47,9 @@ export function AnnouncementCard({
     }, 320);
   }
 
-  const { url } = announcement;
+  // Solo enlaces a una sección de FIUBI o https (la vista previa de Administración pasa lo que se escribe).
+  const link = cleanUrl(announcement.url);
+  const url = "url" in link ? link.url : null;
   const external = url !== null && !url.startsWith("/");
   const linkClass = "inline-block py-2 font-bold underline underline-offset-[3px] hover:no-underline md:-my-2 md:flex-none";
   const titleId = `aviso-${announcement.id}${preview ? "-preview" : ""}`;
@@ -68,8 +70,11 @@ export function AnnouncementCard({
               </h2>
               <p className="text-sm text-pretty md:text-[15px]">{announcement.body}</p>
             </div>
+            {/* En la vista previa de Administración el enlace se muestra pero no se sigue (es lo que se está escribiendo). */}
             {url &&
-              (external ? (
+              (preview ? (
+                <span className={linkClass}>Ver más</span>
+              ) : external ? (
                 <a href={url} target="_blank" rel="noopener noreferrer" className={linkClass}>
                   Ver más<span className="sr-only"> (se abre en otra pestaña)</span>
                 </a>
