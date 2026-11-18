@@ -21,6 +21,7 @@ interface CodeGs {
   firstName_(name: string | null): string;
   dueRows_(rows: Row[]): Row[];
   sheetValues_(rows: Row[]): string[][];
+  panelValues_(rows: Row[], today: string, capacity: number, leftToday: number): { lines: (string | number)[][]; bold: number[]; warn: number[]; ok: number[] };
   deadline_(moment: string): string;
   longDay_(date: string): string;
   timeRange_(start: string | null, end: string | null): string;
@@ -406,5 +407,44 @@ describe("deliverMail_ through Brevo", () => {
     status = 401;
     expect(() => send({ to: "c@fi.uba.ar", subject: "x", body: "x", htmlBody: "x" })).toThrow(/HTTP 401/);
     expect(quota()).toBe(288);
+  });
+});
+
+describe("panelValues_ (Panel tab)", () => {
+  const find = (lines: (string | number)[][], label: string) => lines.find((l) => l[0] === label);
+  const many = (n: number, over: Row) => Array.from({ length: n }, (_, i) => row({ reminder_id: i + 1, ...over }));
+
+  it("says it fits when every day is under the limit", () => {
+    const { lines } = gs.panelValues_(many(3, {}), "2026-11-20", 290, 290);
+    expect(find(lines, "Mails por mandar")?.[1]).toBe(3);
+    expect(String(find(lines, "¿Alcanza?")?.[1])).toMatch(/^Sí/);
+    expect(lines.some((l) => l[0] === "lunes 30/11" && l[1] === 3 && l[6] === "OK")).toBe(true);
+  });
+
+  it("carries what does not fit to the next day, and counts the ones that close first", () => {
+    // 5 mails on 30/11 with a limit of 2: 2 + 2 + 1 over three days; the enrollment closes 1/12 14:00,
+    // so the last one (2/12) is lost.
+    const rows = many(5, { enroll_to: "2026-12-01 14:00" });
+    const { lines } = gs.panelValues_(rows, "2026-11-20", 2, 2);
+    expect(String(find(lines, "¿Alcanza?")?.[1])).toBe("No: 1 mails no llegarían antes del cierre de la inscripción");
+    expect(lines.find((l) => l[0] === "lunes 30/11")?.slice(1)).toEqual([5, 0, 5, 2, 3, "Se atrasan 3"]);
+    expect(lines.find((l) => l[0] === "martes 1/12")?.slice(1)).toEqual([0, 3, 3, 2, 0, "No alcanza: 1 sin mail"]);
+  });
+
+  it("leaves out sent ones and closed enrollments, and lists what was sent", () => {
+    const rows = [
+      row({ sent_at: "2026-11-19 08:05" }),
+      row({ reminder_id: 2, aviso: "2026-11-10", enroll_to: "2026-11-15 14:00" }),
+      row({ reminder_id: 3, aviso: null }),
+    ];
+    const { lines } = gs.panelValues_(rows, "2026-11-20", 290, 290);
+    expect(find(lines, "Mails por mandar")?.[1]).toBe(0);
+    expect(lines.some((l) => l[0] === "jueves 19/11" && l[1] === 1)).toBe(true);
+  });
+
+  it("uses what is left of today's quota for overdue mails", () => {
+    const rows = many(4, { aviso: "2026-11-18", enroll_to: "2026-11-25 14:00" });
+    const { lines } = gs.panelValues_(rows, "2026-11-20", 290, 1);
+    expect(lines.find((l) => l[0] === "viernes 20/11")?.slice(1)).toEqual([4, 0, 4, 1, 3, "Se atrasan 3"]);
   });
 });

@@ -10,7 +10,7 @@ Una vez por hora, el script (`apps-script/Code.gs`, función `hourly`):
 
 1. Le pregunta a la base qué recordatorios hay y a cuáles les toca el mail ahora (`avisos_pendientes()`, migración `20261114120000_avisos_rpc.sql`). La base vuelve a leer cada mesa en `exam_tables` por materia, nombre, tipo y fecha (la sincronización diaria del SIU cambia los ids): si el SIU movió la inscripción, usa las fechas nuevas. De paso borra los recordatorios de exámenes que ya pasaron.
 2. Desde las 8 de la mañana manda los mails que tocan y, después de **cada** mail, lo marca en la base (`avisos_marcar_enviado()`). La base no lo vuelve a ofrecer nunca, aunque alguien toque la planilla.
-3. Reescribe la pestaña **Recordatorios** de la planilla con todos los recordatorios: es solo una copia para mirar. Editarla no cambia nada.
+3. Reescribe la pestaña **Recordatorios** de la planilla con todos los recordatorios: es solo una copia para mirar. Editarla no cambia nada. También reescribe la pestaña **Panel**: cuántos mails tocan cada día contra el límite diario (290 con Brevo, unos 100 con Gmail), cuáles se atrasan y si alguno no llegaría antes del cierre de la inscripción.
 
 Reglas (están en la base, con pruebas en `tools/db-test/security.sql`):
 

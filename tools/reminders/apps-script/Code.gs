@@ -12,7 +12,7 @@
  *      database (avisos_marcar_enviado()): the database never offers it again, even if someone
  *      edits the sheet;
  *   3. rewrites the "Recordatorios" tab with all of them (it is only a copy to look at: editing it
- *      changes nothing);
+ *      changes nothing) and the "Panel" tab: how many mails each day needs against the daily limit;
  *   4. at any hour, sends the confirmation mails ("Activaste tus recordatorios", so the student
  *      finds it now and marks it as "No es spam"): avisos_confirmaciones() lists them and
  *      avisos_confirmacion_enviada() marks each one right after sending it (migration
@@ -39,6 +39,8 @@
 var TIME_ZONE = 'America/Argentina/Buenos_Aires';
 var DEFAULT_SUPABASE_URL = 'https://solnlrkmkncsntyptjjm.supabase.co';
 var SHEET_NAME = 'Recordatorios';
+var PANEL_NAME = 'Panel';
+var GMAIL_DAILY_LIMIT = 100; // consumer Gmail through Apps Script: about 100 recipients a day
 var SEND_FROM_HOUR = 8;
 var PAGE_SIZE = 1000;
 var CONFIRM_QUOTA_RESERVE = 30; // confirmations stop here: the rest of the daily quota is for the reminders
@@ -131,6 +133,7 @@ function hourly() {
       var result = { sent: 0, left: 0 };
       if (Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H')) >= SEND_FROM_HOUR) result = sendRows_(rows);
       writeSheet_(rows);
+      panelSafe_(rows);
       Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
     });
   } catch (e) {
@@ -161,6 +164,7 @@ function syncSheet() {
   withLock_(function () {
     var rows = fetchReminders_();
     writeSheet_(rows);
+    panelSafe_(rows);
     Logger.log('Recordatorios en la planilla: ' + rows.length + '.');
   });
 }
@@ -381,6 +385,39 @@ function writeSheet_(rows) {
   sheet.setFrozenRows(1);
 }
 
+/** The panel is only to look at: if it fails, the mails still go. */
+function panelSafe_(rows) {
+  try {
+    writePanel_(rows);
+  } catch (e) {
+    Logger.log('Panel: ' + e);
+  }
+}
+
+/** The "Panel" tab: mails per day against the daily limit (see panelValues_). Only to look at. */
+function writePanel_(rows) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(PANEL_NAME) || ss.insertSheet(PANEL_NAME);
+  var today = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd');
+  var capacity = brevoKey_() ? BREVO_DAILY_LIMIT : GMAIL_DAILY_LIMIT;
+  var panel = panelValues_(rows, today, capacity, mailQuota_());
+  var width = 7;
+  var values = panel.lines.map(function (line) {
+    var out = line.slice(0, width);
+    while (out.length < width) out.push('');
+    return out.map(function (v) { return typeof v === 'number' ? v : cell_(v); });
+  });
+  sheet.clear();
+  sheet.getRange(1, 1, values.length, width).setValues(values);
+  sheet.getRange(1, 1).setFontWeight('bold').setFontSize(14);
+  panel.bold.forEach(function (r) { sheet.getRange(r + 1, 1, 1, width).setFontWeight('bold'); });
+  panel.warn.forEach(function (r) { sheet.getRange(r + 1, 1, 1, width).setBackground('#fde2dc'); });
+  panel.ok.forEach(function (r) { sheet.getRange(r + 1, 1, 1, width).setBackground('#dff3e4'); });
+  sheet.setColumnWidth(1, 230);
+  sheet.setColumnWidths(2, width - 1, 130);
+  sheet.setFrozenRows(1);
+}
+
 // ---------------------------------------------------------------------------------------------
 // Pure functions (no Google services): tested in the repo
 // ---------------------------------------------------------------------------------------------
@@ -422,6 +459,114 @@ function sameToken_(a, b) {
 function firstName_(name) {
   var first = String(name || '').trim().split(/\s+/)[0] || '';
   return first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : '';
+}
+
+/** 'YYYY-MM-DD' plus n days. */
+function addDays_(date, n) {
+  var p = date.split('-').map(Number);
+  return new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)).toISOString().slice(0, 10);
+}
+
+/** Last day the mail can still go: the enrollment closes at enroll_to, and mails go from 08:00. */
+function lastSendDay_(enrollTo) {
+  var day = enrollTo.slice(0, 10);
+  return enrollTo.slice(11, 16) > '08:00' ? day : addDays_(day, -1);
+}
+
+/**
+ * The "Panel" tab: how many reminder mails each day needs, against the daily limit. One mail per
+ * reminder on its aviso day; what does not fit waits for the next day (those that close first go
+ * first), and those whose enrollment closes before their turn are lost. Today uses what is left of
+ * today's quota. Returns the lines and which ones to paint (0-based).
+ */
+function panelValues_(rows, today, capacity, leftToday) {
+  var lines = [];
+  var bold = [];
+  var warn = [];
+  var ok = [];
+  var byDay = {};
+  var sentByDay = {};
+  var pending = 0;
+  rows.forEach(function (r) {
+    if (r.sent_at) {
+      var d = String(r.sent_at).slice(0, 10);
+      sentByDay[d] = (sentByDay[d] || 0) + 1;
+      return;
+    }
+    if (!r.aviso || !r.enroll_to || !EMAIL_RE.test(r.email || '')) return;
+    var last = lastSendDay_(String(r.enroll_to));
+    if (last < today) return; // its enrollment already closed
+    var day = r.aviso < today ? today : r.aviso; // overdue: it goes as soon as possible
+    (byDay[day] = byDay[day] || []).push(last);
+    pending++;
+  });
+
+  var days = Object.keys(byDay).sort();
+  var queue = [];
+  var table = [];
+  var late = 0;
+  var lost = 0;
+  var peak = { day: '', n: 0 };
+  if (days.length) {
+    var end = days[days.length - 1];
+    for (var day = days[0]; day <= end || queue.length; day = addDays_(day, 1)) {
+      var arriving = byDay[day] || [];
+      var carried = queue.length;
+      queue = queue.concat(arriving).sort();
+      var cap = day === today ? Math.min(capacity, leftToday) : capacity;
+      var toSend = queue.length;
+      var sent = Math.min(cap, toSend);
+      queue = queue.slice(sent);
+      var expired = queue.filter(function (last) { return last <= day; }).length;
+      queue = queue.filter(function (last) { return last > day; });
+      late += queue.length;
+      lost += expired;
+      if (arriving.length > peak.n) peak = { day: day, n: arriving.length };
+      if (arriving.length || carried) {
+        var state = expired ? 'No alcanza: ' + expired + ' sin mail' : queue.length ? 'Se atrasan ' + queue.length : 'OK';
+        table.push([longDay_(day), arriving.length, carried, toSend, sent, queue.length, state]);
+      }
+      if (table.length > 120) break;
+    }
+  }
+
+  lines.push(['Panel de envíos de Recordarme', '', '', '', '', '', 'Actualizado: ' + longDay_(today)]);
+  lines.push([]);
+  lines.push(['Límite por día', capacity]);
+  lines.push(['Quedan hoy', leftToday]);
+  lines.push(['Mails por mandar', pending]);
+  lines.push(['Día con más mails', peak.n ? longDay_(peak.day) + ' (' + peak.n + ')' : '—']);
+  var verdict = !pending ? 'Sí: no hay mails por mandar'
+    : lost ? 'No: ' + lost + ' mails no llegarían antes del cierre de la inscripción'
+    : late ? 'Justo: todos salen a tiempo, pero algunos un día después'
+    : 'Sí: todo sale el día que corresponde';
+  lines.push(['¿Alcanza?', verdict]);
+  (lost || late ? warn : ok).push(lines.length - 1);
+  bold.push(lines.length - 1);
+  lines.push([]);
+
+  lines.push(['Día', 'Tocan ese día', 'Atrasados', 'Para mandar', 'Se mandan', 'Pasan al otro día', 'Estado']);
+  bold.push(lines.length - 1);
+  if (!table.length) lines.push(['No hay mails programados.']);
+  table.forEach(function (t) {
+    lines.push(t);
+    if (t[6] !== 'OK') warn.push(lines.length - 1);
+  });
+  lines.push([]);
+
+  lines.push(['Enviados (últimos 14 días)', 'Mails']);
+  bold.push(lines.length - 1);
+  var any = false;
+  for (var i = 13; i >= 0; i--) {
+    var d = addDays_(today, -i);
+    if (!sentByDay[d]) continue;
+    lines.push([longDay_(d), sentByDay[d]]);
+    any = true;
+  }
+  if (!any) lines.push(['Todavía no se mandó ninguno.']);
+  lines.push([]);
+  lines.push(['Cuenta solo los recordatorios. Las confirmaciones ("Activaste tus recordatorios") usan el mismo límite.']);
+  return { lines: lines, bold: bold, warn: warn, ok: ok };
 }
 
 /** The sheet as values: the headers and one row per reminder. */
