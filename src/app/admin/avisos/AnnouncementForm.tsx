@@ -107,10 +107,11 @@ export function AnnouncementForm({ careers, action: run = publishAnnouncement }:
 
       <div className="flex flex-col gap-2 rounded-[14px] bg-bg p-3 md:p-4">
         <span className="text-[13px] text-muted">Así se ve en Inicio</span>
+        {/* El enlace no pasa a la vista previa: solo se muestra que hay un "Ver más". */}
         {empty ? (
           <p className="rounded-[24px] border border-dashed border-line-strong px-4 py-5 text-center text-sm text-muted">Escribí un título y un texto para ver el aviso.</p>
         ) : (
-          <AnnouncementCard preview announcement={{ id: 0, title: title.trim() || "Título", body: body.trim() || "Texto del aviso", url: url.trim() || null }} />
+          <AnnouncementCard preview announcement={{ id: 0, title: title.trim() || "Título", body: body.trim() || "Texto del aviso", url: url.trim() ? "/" : null }} />
         )}
       </div>
 
