@@ -44,7 +44,7 @@ export async function getOfferNeed(planId: string): Promise<{ needsOffer: boolea
 // the production database until the branch is merged).
 const MISSING_FUNCTION = new Set(["42883", "PGRST202"]);
 
-/** Marks that the student used the app now (the database only writes it once per hour). */
+/** Marks that the student used the app now (the database writes it at most every 5 minutes, plus one usage slot for Administración → Uso). */
 export async function touchLastSeen(): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("touch_last_seen");

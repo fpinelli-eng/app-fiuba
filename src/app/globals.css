@@ -242,7 +242,7 @@ body {
   }
 }
 
-() => inNew/* Celular: el nombre de Novedades se despliega al lado de la campanita y se vuelve a cerrar (Header). */
+/* Celular: el nombre de Novedades se despliega al lado de la campanita y se vuelve a cerrar (Header). */
 @keyframes peek-label {
   0% {
     max-width: 0;
