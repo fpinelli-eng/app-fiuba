@@ -46,12 +46,16 @@ export const PASTE_TEXT_INSTEAD =
   " Si sigue sin andar, copiá la página del SIU (Ctrl+A, Ctrl+C) y pegá el texto acá: se cargan las fechas, sin horarios.";
 
 /** Downloads the page of a link already checked with siuExamsUrl(). Server only. */
-export async function fetchSiuExamsPage(url: string): Promise<{ html: string } | { error: string }> {
+/**
+ * `timeoutMs`: the app waits TIMEOUT_MS; the daily sync (tools/exams) can wait longer, since some
+ * plans (Bioingeniería 2024) always take about 17 s in the SIU.
+ */
+export async function fetchSiuExamsPage(url: string, timeoutMs = TIMEOUT_MS): Promise<{ html: string } | { error: string }> {
   try {
     const res = await fetch(url, {
       redirect: "manual",
       cache: "no-store",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       headers: { accept: "text/html" },
     });
     if (res.status !== 200) return { error: `El SIU respondió con un error (${res.status}). Probá de nuevo en un rato.${PASTE_TEXT_INSTEAD}` };
