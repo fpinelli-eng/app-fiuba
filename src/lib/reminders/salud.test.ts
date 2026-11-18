@@ -374,7 +374,7 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
   it("all fine: reminders, then the monitor; no alert", () => {
     const s = services({});
     load(s.globals).hourly();
-    expect(s.calls).toEqual(["avisos", "sheet", "confirm", "salud", "web", "web", "calendario"]);
+    expect(s.calls).toEqual(["avisos", "sheet", "sheet", "confirm", "salud", "web", "web", "calendario"]);
     expect(s.sent).toEqual([]);
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
     expect(JSON.parse(s.props.SALUD_CALENDARIO)).toEqual({ day: "2026-11-20", files: [PDF_2025, PDF_2026] });
@@ -401,7 +401,7 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
     const gsMocked = load(s.globals);
     gsMocked.hourly();
     expect(() => gsMocked.hourly()).toThrow(/sin cuota/);
-    expect(s.calls.filter((c) => c === "sheet")).toHaveLength(2);
+    expect(s.calls.filter((c) => c === "sheet")).toHaveLength(4); // two runs: the reminders tab and the panel
     // Not sent: nothing is recorded as notified, so the next run tries again.
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
   });
