@@ -40,6 +40,9 @@ var TIME_ZONE = 'America/Argentina/Buenos_Aires';
 var DEFAULT_SUPABASE_URL = 'https://solnlrkmkncsntyptjjm.supabase.co';
 var SHEET_NAME = 'Recordatorios';
 var PANEL_NAME = 'Panel';
+var FAILURES_PREFIX = 'FALLAS_'; // Script Property per day: the mails that failed, {reminder_id: {error, at}}
+var NO_QUOTA_PREFIX = 'SIN_CUPO_'; // Script Property per day: the "sin cupo" alert already went
+var lastMailError_ = '';
 var GMAIL_DAILY_LIMIT = 100; // consumer Gmail through Apps Script: about 100 recipients a day
 var SEND_FROM_HOUR = 8;
 var PAGE_SIZE = 1000;
@@ -132,6 +135,11 @@ function hourly() {
       var rows = fetchReminders_();
       var result = { sent: 0, left: 0 };
       if (Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H')) >= SEND_FROM_HOUR) result = sendRows_(rows);
+      try {
+        alertSendProblems_(result);
+      } catch (e) {
+        Logger.log('Aviso de fallas: ' + e);
+      }
       writeSheet_(rows);
       panelSafe_(rows);
       Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
@@ -309,22 +317,85 @@ function fetchReminders_() {
 function sendRows_(rows) {
   var due = dueRows_(rows);
   var sent = 0;
-  if (!due.length) return { sent: 0, left: 0 };
+  var failed = [];
+  var noQuota = 0;
+  if (!due.length) return { sent: 0, left: 0, failed: failed, noQuota: 0 };
   // First check that marking works (reminder 0 does not exist: it answers false). If it did not,
   // the same students would get the same mail every hour.
   rpc_('avisos_marcar_enviado', { p_reminder_id: 0 });
+  var failures = loadFailures_();
   for (var i = 0; i < due.length; i++) {
-    if (mailQuota_() < 1) break; // Gmail: ~100 recipients a day; the rest go next time
+    if (mailQuota_() < 1) {
+      noQuota = due.length - i; // the rest go next time (tomorrow, if the daily limit is spent)
+      break;
+    }
     var row = due[i];
     var mail = buildMail_(row);
-    if (!sendMail_(row.email, mail)) continue; // a rejected address never blocks the others
+    if (!sendMail_(row.email, mail)) {
+      // A rejected address never blocks the others. It stays due, so it is tried again next hour;
+      // the admins hear about it only the first time each day.
+      if (!failures[row.reminder_id]) failed.push({ row: row, error: lastMailError_ });
+      failures[row.reminder_id] = { error: lastMailError_, at: Utilities.formatDate(new Date(), TIME_ZONE, 'HH:mm') };
+      saveFailures_(failures);
+      continue;
+    }
+    if (failures[row.reminder_id]) {
+      delete failures[row.reminder_id];
+      saveFailures_(failures);
+    }
     // Right after each mail. If marking fails, stop here: at most this one could go twice.
     rpc_('avisos_marcar_enviado', { p_reminder_id: row.reminder_id });
     row.sent_at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
     row.due = false;
     sent++;
   }
-  return { sent: sent, left: due.length - sent };
+  return { sent: sent, left: due.length - sent, failed: failed, noQuota: noQuota };
+}
+
+function todayKey_(prefix) {
+  return prefix + Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd');
+}
+
+/** Today's failed mails, {reminder_id: {error, at}}. Empty without script properties (tests). */
+function loadFailures_() {
+  if (typeof PropertiesService === 'undefined') return {};
+  try {
+    return JSON.parse(PropertiesService.getScriptProperties().getProperty(todayKey_(FAILURES_PREFIX)) || '{}') || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveFailures_(failures) {
+  if (typeof PropertiesService === 'undefined') return;
+  PropertiesService.getScriptProperties().setProperty(todayKey_(FAILURES_PREFIX), JSON.stringify(failures));
+}
+
+/** Who gets the alerts: ALERT_TO (comma-separated), else the account running the script. */
+function alertRecipients_() {
+  var raw = PropertiesService.getScriptProperties().getProperty('ALERT_TO') || '';
+  var list = raw.split(/[,;\s]+/).filter(function (a) { return EMAIL_RE.test(a); });
+  return list.length ? list : [Session.getEffectiveUser().getEmail()];
+}
+
+/**
+ * Mails the admins when reminders failed (new ones today) or the daily limit ran out with mails
+ * still due (once a day). If Brevo itself is what fails, it falls back to Gmail.
+ */
+function alertSendProblems_(result) {
+  if (!result) return;
+  var props = PropertiesService.getScriptProperties();
+  var noQuota = result.noQuota && !props.getProperty(todayKey_(NO_QUOTA_PREFIX)) ? result.noQuota : 0;
+  var failed = result.failed || [];
+  if (!failed.length && !noQuota) return;
+  var mail = buildSendAlert_(failed, noQuota);
+  var m = { to: alertRecipients_().join(','), subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' };
+  try {
+    deliverMail_(m);
+  } catch (e) {
+    MailApp.sendEmail(m);
+  }
+  if (noQuota) props.setProperty(todayKey_(NO_QUOTA_PREFIX), '1');
 }
 
 /**
@@ -334,8 +405,10 @@ function sendRows_(rows) {
 function sendMail_(to, mail) {
   try {
     deliverMail_({ to: to, subject: mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+    lastMailError_ = '';
     return true;
   } catch (e) {
+    lastMailError_ = String((e && e.message) || e).slice(0, 300);
     Logger.log('No se pudo mandar un mail: ' + e);
     return false;
   }
@@ -400,7 +473,8 @@ function writePanel_(rows) {
   var sheet = ss.getSheetByName(PANEL_NAME) || ss.insertSheet(PANEL_NAME);
   var today = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd');
   var capacity = brevoKey_() ? BREVO_DAILY_LIMIT : GMAIL_DAILY_LIMIT;
-  var panel = panelValues_(rows, today, capacity, mailQuota_());
+  var hour = Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H'));
+  var panel = panelValues_(rows, today, capacity, mailQuota_(), loadFailures_(), hour);
   var width = 7;
   var values = panel.lines.map(function (line) {
     var out = line.slice(0, width);
@@ -479,7 +553,8 @@ function lastSendDay_(enrollTo) {
  * first), and those whose enrollment closes before their turn are lost. Today uses what is left of
  * today's quota. Returns the lines and which ones to paint (0-based).
  */
-function panelValues_(rows, today, capacity, leftToday) {
+function panelValues_(rows, today, capacity, leftToday, failures, hour) {
+  failures = failures || {};
   var lines = [];
   var bold = [];
   var warn = [];
@@ -545,6 +620,22 @@ function panelValues_(rows, today, capacity, leftToday) {
   bold.push(lines.length - 1);
   lines.push([]);
 
+  var todays = todayMails_(rows, today, leftToday, failures, hour);
+  var failedToday = todays.filter(function (t) { return /^Falló/.test(t[4]); }).length;
+  lines.push(['Mails de hoy', todays.length ? todays.length + (failedToday ? ' (' + failedToday + ' con error)' : '') : 'ninguno']);
+  bold.push(lines.length - 1);
+  if (failedToday) warn.push(lines.length - 1);
+  if (todays.length) {
+    lines.push(['Materia', 'Mesa', 'Examen', 'Para', 'Estado']);
+    bold.push(lines.length - 1);
+    todays.forEach(function (t) {
+      lines.push(t);
+      if (/^(Falló|Sin cupo|Mail inválido)/.test(t[4])) warn.push(lines.length - 1);
+      else if (/^Enviado/.test(t[4])) ok.push(lines.length - 1);
+    });
+  }
+  lines.push([]);
+
   lines.push(['Día', 'Tocan ese día', 'Atrasados', 'Para mandar', 'Se mandan', 'Pasan al otro día', 'Estado']);
   bold.push(lines.length - 1);
   if (!table.length) lines.push(['No hay mails programados.']);
@@ -567,6 +658,60 @@ function panelValues_(rows, today, capacity, leftToday) {
   lines.push([]);
   lines.push(['Cuenta solo los recordatorios. Las confirmaciones ("Activaste tus recordatorios") usan el mismo límite.']);
   return { lines: lines, bold: bold, warn: warn, ok: ok };
+}
+
+/**
+ * The mails of today for the panel: sent today, failed, or still to go (their day is today, or
+ * earlier and still within the enrollment). One line each: materia, mesa, exam day, to, state.
+ */
+function todayMails_(rows, today, leftToday, failures, hour) {
+  var out = [];
+  rows.forEach(function (r) {
+    var sentToday = r.sent_at && String(r.sent_at).slice(0, 10) === today;
+    var pending = !r.sent_at && r.aviso && r.aviso <= today && r.enroll_to && lastSendDay_(String(r.enroll_to)) >= today;
+    if (!sentToday && !pending) return;
+    var state;
+    var fail = failures[r.reminder_id];
+    if (sentToday) state = 'Enviado ' + String(r.sent_at).slice(11, 16);
+    else if (!EMAIL_RE.test(r.email || '')) state = 'Mail inválido: no se puede mandar';
+    else if (fail) state = 'Falló (' + fail.at + '): ' + fail.error;
+    else if (hour !== undefined && hour < SEND_FROM_HOUR) state = 'Sale a las ' + SEND_FROM_HOUR + ':00';
+    else if (leftToday < 1) state = 'Sin cupo hoy: sale mañana';
+    else state = 'Pendiente: sale en la próxima corrida';
+    out.push([r.subject_name, tableLabel_(r), r.exam_date ? longDay_(r.exam_date) : '', r.email || '', state]);
+  });
+  return out;
+}
+
+/** The alert to the admins: mails that failed today (first time) and/or the daily limit spent. */
+function buildSendAlert_(failed, noQuota) {
+  var n = failed.length;
+  var parts = [];
+  if (n) parts.push(n === 1 ? '1 mail no salió' : n + ' mails no salieron');
+  if (noQuota) parts.push('se terminó el cupo del día');
+  var subject = 'FIUBI · Recordarme: ' + parts.join(' y ');
+  var text = [];
+  var html = [];
+  if (n) {
+    text.push('Estos recordatorios no se pudieron mandar. Se vuelven a intentar cada hora:');
+    html.push('<p>Estos recordatorios no se pudieron mandar. Se vuelven a intentar cada hora:</p><ul>');
+    failed.forEach(function (f) {
+      var r = f.row;
+      var line = r.subject_name + ' · ' + tableLabel_(r) + ' → ' + (r.email || '(sin mail)') + ': ' + (f.error || 'error desconocido');
+      text.push('- ' + line);
+      html.push('<li>' + escape_(line) + '</li>');
+    });
+    html.push('</ul>');
+  }
+  if (noQuota) {
+    var q = 'Se terminó el cupo de mails de hoy y quedan ' + noQuota + ' recordatorios por mandar: salen mañana desde las ' + SEND_FROM_HOUR + ':00, si la inscripción sigue abierta.';
+    text.push('', q);
+    html.push('<p>' + escape_(q) + '</p>');
+  }
+  var foot = 'El detalle está en la pestaña Panel de la planilla.';
+  text.push('', foot);
+  html.push('<p style="color:#5b6275">' + foot + '</p>');
+  return { subject: subject, text: text.join('\n'), html: '<div style="font-family:Arial,sans-serif;font-size:14px;color:#1f2537">' + html.join('') + '</div>' };
 }
 
 /** The sheet as values: the headers and one row per reminder. */

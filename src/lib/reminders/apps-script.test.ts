@@ -21,7 +21,8 @@ interface CodeGs {
   firstName_(name: string | null): string;
   dueRows_(rows: Row[]): Row[];
   sheetValues_(rows: Row[]): string[][];
-  panelValues_(rows: Row[], today: string, capacity: number, leftToday: number): { lines: (string | number)[][]; bold: number[]; warn: number[]; ok: number[] };
+  buildSendAlert_(failed: { row: Row; error: string }[], noQuota: number): Mail;
+  panelValues_(rows: Row[], today: string, capacity: number, leftToday: number, failures?: Record<string, { error: string; at: string }>, hour?: number): { lines: (string | number)[][]; bold: number[]; warn: number[]; ok: number[] };
   deadline_(moment: string): string;
   longDay_(date: string): string;
   timeRange_(start: string | null, end: string | null): string;
@@ -179,7 +180,7 @@ describe("sendRows_ (Google services faked)", () => {
       "mail c@fi.uba.ar",
       "avisos_marcar_enviado 3",
     ]);
-    expect({ ...result }).toEqual({ sent: 2, left: 1 });
+    expect({ ...result }).toEqual({ sent: 2, left: 1, failed: [], noQuota: 1 });
     expect(rows.map((r) => r.sent_at)).toEqual(["2026-11-30 14:05", null, "2026-11-30 14:05", null]);
   });
 
@@ -188,7 +189,7 @@ describe("sendRows_ (Google services faked)", () => {
     g.rpc_ = () => {
       throw new Error("no call expected");
     };
-    expect({ ...(g as unknown as { sendRows_(r: Row[]): object }).sendRows_([row()]) }).toEqual({ sent: 0, left: 0 });
+    expect({ ...(g as unknown as { sendRows_(r: Row[]): object }).sendRows_([row()]) }).toEqual({ sent: 0, left: 0, failed: [], noQuota: 0 });
   });
 });
 
@@ -319,7 +320,8 @@ describe("a rejected address never blocks the others", () => {
     g.rpc_ = (name: string, args: { p_reminder_id?: number; p_email?: string }) => log.push(`${name} ${args.p_reminder_id ?? args.p_email}`);
     const reminders = [row({ reminder_id: 1, email: "malo@gmail.com", due: true }), row({ reminder_id: 2, email: "b@fi.uba.ar", due: true })];
     const r1 = (g as unknown as { sendRows_(r: Row[]): object }).sendRows_(reminders);
-    expect({ ...r1 }).toEqual({ sent: 1, left: 1 });
+    expect({ ...r1 }).toMatchObject({ sent: 1, left: 1, noQuota: 0 });
+    expect((r1 as { failed: { row: Row; error: string }[] }).failed.map((f) => [f.row.reminder_id, f.error])).toEqual([[1, "Invalid email"]]);
     const r2 = (g as unknown as { sendConfirmations_(r: Row[]): object }).sendConfirmations_([
       { email: "malo@gmail.com", first_name: "A", mesas: 1 },
       { email: "c@gmail.com", first_name: "C", mesas: 1 },
@@ -446,5 +448,38 @@ describe("panelValues_ (Panel tab)", () => {
     const rows = many(4, { aviso: "2026-11-18", enroll_to: "2026-11-25 14:00" });
     const { lines } = gs.panelValues_(rows, "2026-11-20", 290, 1);
     expect(lines.find((l) => l[0] === "viernes 20/11")?.slice(1)).toEqual([4, 0, 4, 1, 3, "Se atrasan 3"]);
+  });
+});
+
+describe("today's mails in the panel and the alert to the admins", () => {
+  const today = "2026-11-30";
+  const rows = [
+    row({ reminder_id: 1, email: "a@fi.uba.ar", sent_at: "2026-11-30 08:04" }),
+    row({ reminder_id: 2, email: "b@fi.uba.ar", subject_name: "Física II" }),
+    row({ reminder_id: 3, email: "c@fi.uba.ar", aviso: "2026-12-02" }),
+  ];
+
+  it("lists what goes today with its state", () => {
+    const { lines } = gs.panelValues_(rows, today, 290, 288, { 2: { error: "Brevo no aceptó el mail (HTTP 400)", at: "09:00" } }, 10);
+    expect(lines.find((l) => l[0] === "Mails de hoy")?.[1]).toBe("2 (1 con error)");
+    expect(lines.find((l) => l[3] === "a@fi.uba.ar")?.[4]).toBe("Enviado 08:04");
+    expect(lines.find((l) => l[3] === "b@fi.uba.ar")?.[4]).toBe("Falló (09:00): Brevo no aceptó el mail (HTTP 400)");
+    expect(lines.some((l) => l[3] === "c@fi.uba.ar")).toBe(false);
+  });
+
+  it("says when they go before 08:00 and when the quota ran out", () => {
+    const early = gs.panelValues_(rows, today, 290, 290, {}, 6).lines;
+    expect(early.find((l) => l[3] === "b@fi.uba.ar")?.[4]).toBe("Sale a las 8:00");
+    const spent = gs.panelValues_(rows, today, 290, 0, {}, 15).lines;
+    expect(spent.find((l) => l[3] === "b@fi.uba.ar")?.[4]).toBe("Sin cupo hoy: sale mañana");
+  });
+
+  it("the alert lists the failed mails and the spent quota", () => {
+    const mail = gs.buildSendAlert_([{ row: row({ email: "b@fi.uba.ar" }), error: "HTTP 400" }], 12);
+    expect(mail.subject).toBe("FIUBI · Recordarme: 1 mail no salió y se terminó el cupo del día");
+    expect(mail.text).toContain("Álgebra Lineal · MESA 01 → b@fi.uba.ar: HTTP 400");
+    expect(mail.text).toContain("quedan 12 recordatorios");
+    expect(gs.buildSendAlert_([], 3).subject).toBe("FIUBI · Recordarme: se terminó el cupo del día");
+    expect(gs.buildSendAlert_([{ row: row({ subject_name: "<b>x</b>" }), error: "e" }], 0).html).not.toContain("<b>x</b>");
   });
 });
