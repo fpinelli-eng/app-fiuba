@@ -1,6 +1,6 @@
-// Administración → Uso: how the app is used and how the server is doing, read with admin_uso()
-// (migration 20261118150000_admin_uso.sql) when the page loads. Only counts, dates and table names.
-// Pure helpers (formatting and shaping the series), tested in usage.test.ts.
+// Administración → Usuarios: how the app is used, how big the database is and who the students are,
+// read with one call to admin_uso() (migration 20261119180000_menos_escrituras.sql) when the page loads.
+// Pure helpers (formatting and shaping the jsonb), tested in usage.test.ts.
 
 const TZ = "America/Argentina/Buenos_Aires";
 
@@ -13,57 +13,69 @@ export interface SiteCheck {
   ms: number | null;
 }
 
-export interface Peak {
-  users: number;
-  at: string;
+/** One student, for the table of Administración → Usuarios. */
+export interface AdminUser {
+  fullName: string;
+  email: string;
+  planId: string | null;
+  /** "Ing. Industrial 2023", or null if admin_uso() didn't send it (older version) or there is no plan. */
+  plan: string | null;
+  createdAt: string;
+  introSeen: boolean;
+  /** Subjects marked as approved in the map. */
+  subjects: number;
+  planCourses: number;
+  /** How they arrived before signing up ("qr": the printed QR), or null if unknown. */
+  signupSource: string | null;
 }
 
 export interface Usage {
   checkedAt: string;
-  onlineNow: number;
   active24h: number;
   active7d: number;
   active30d: number;
   users: number;
   byCareer: { name: string; users: number; noPlan: boolean }[];
-  peakToday: Peak | null;
-  peak7d: Peak | null;
-  /** Last 24 hours, oldest first: the most students at the same time in each hour. */
-  hourly: { at: string; users: number }[];
-  /** Last 14 days, oldest first (YYYY-MM-DD, Buenos Aires): students who used the app that day. */
-  daily: { day: string; users: number }[];
   dbBytes: number;
   dbLimitBytes: number;
-  tables: { name: string; bytes: number }[];
+  /** Students with at least one visible review (null: not sent, older admin_uso()). */
+  reviewAuthors: number | null;
+  /** The students, newest first (null: not sent, older admin_uso(); read them with admin_users()). */
+  people: AdminUser[] | null;
 }
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0)) || 0;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 const list = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
 
-function peak(v: unknown): Peak | null {
-  if (!v || typeof v !== "object") return null;
-  const r = v as Record<string, unknown>;
-  return num(r.users) > 0 && str(r.at) ? { users: num(r.users), at: str(r.at) } : null;
+/** A row of admin_uso().people or of admin_users() as AdminUser (extra fields, like last_seen_at, are ignored). */
+export function toAdminUser(u: Record<string, unknown>): AdminUser {
+  return {
+    fullName: str(u.full_name),
+    email: str(u.email),
+    planId: str(u.plan_id) || null,
+    plan: str(u.plan) || null,
+    createdAt: str(u.created_at),
+    introSeen: u.intro_seen === true,
+    subjects: num(u.subjects),
+    planCourses: num(u.plan_courses),
+    signupSource: str(u.signup_source) || null,
+  };
 }
 
-/** The jsonb of admin_uso() as Usage. */
+/** The jsonb of admin_uso() as Usage. Tolerates the older shape (20261118150000): its extra fields are ignored. */
 export function toUsage(r: Record<string, unknown>): Usage {
   return {
     checkedAt: str(r.checked_at) || new Date().toISOString(),
-    onlineNow: num(r.online_now),
     active24h: num(r.active_24h),
     active7d: num(r.active_7d),
     active30d: num(r.active_30d),
     users: num(r.users),
     byCareer: list(r.by_career).map((c) => ({ name: str(c.name), users: num(c.users), noPlan: c.no_plan === true })),
-    peakToday: peak(r.peak_today),
-    peak7d: peak(r.peak_7d),
-    hourly: list(r.hourly).map((h) => ({ at: str(h.at), users: num(h.users) })),
-    daily: list(r.daily).map((d) => ({ day: str(d.day), users: num(d.users) })),
     dbBytes: num(r.db_bytes),
     dbLimitBytes: num(r.db_limit_bytes) || 500 * 1024 * 1024,
-    tables: list(r.tables).map((t) => ({ name: str(t.name), bytes: num(t.bytes) })),
+    reviewAuthors: r.review_authors === undefined || r.review_authors === null ? null : num(r.review_authors),
+    people: Array.isArray(r.people) ? list(r.people).map(toAdminUser) : null,
   };
 }
 
@@ -99,18 +111,6 @@ export function storageLevel(p: number): Level {
   return p >= 90 ? "bad" : p >= 70 ? "warn" : "ok";
 }
 
-/** Bars of a chart: the height of each one, 0–100, against the biggest (at least 1, so an empty chart stays flat). */
-export function barHeights(values: number[]): { max: number; heights: number[] } {
-  const max = Math.max(1, ...values);
-  return { max, heights: values.map((v) => percent(v, max)) };
-}
-
-/** "14 h" (Buenos Aires) for an instant. */
-export function hourLabel(iso: string): string {
-  const h = new Date(iso).toLocaleString("es-AR", { timeZone: TZ, hour: "numeric", hourCycle: "h23" });
-  return `${Number(h)} h`;
-}
-
 /** "14:35" (Buenos Aires). */
 export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -130,22 +130,10 @@ export function buenosAiresDay(iso: string): string {
   return new Date(iso).toLocaleDateString("sv-SE", { timeZone: TZ });
 }
 
-/** When a peak happened: "a las 14:35" today, "el mar 17/11 a las 19:10" another day. */
-export function peakWhen(p: Peak, now: string): string {
-  const day = buenosAiresDay(p.at);
-  const time = `a las ${timeLabel(p.at)}`;
-  return day === buenosAiresDay(now) ? time : `el ${dayLabel(day)} ${time}`;
-}
-
 /** Response time of a check: fast, slow or failed. */
 export function latencyLevel(ms: number | null, ok = true): Level {
   if (!ok || ms === null) return "bad";
   return ms < 800 ? "ok" : ms < 2000 ? "warn" : "bad";
-}
-
-/** "1 alumno", "3 alumnos". */
-export function students(n: number): string {
-  return `${n.toLocaleString("es-AR")} ${n === 1 ? "alumno" : "alumnos"}`;
 }
 
 export interface Deployment {

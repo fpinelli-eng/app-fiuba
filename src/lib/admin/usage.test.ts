@@ -1,22 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
-  barHeights,
   dayLabel,
   deploymentState,
   formatBytes,
   formatPercent,
-  hourLabel,
   latencyLevel,
-  peakWhen,
   percent,
   storageLevel,
-  students,
+  timeLabel,
+  toAdminUser,
   toDeployments,
   toUsage,
 } from "./usage";
-
-// toLocaleString("es-AR") may use a narrow no-break space; compare with plain spaces.
-const plain = (s: string) => s.replace(/\s/g, " ");
 
 describe("formatBytes", () => {
   it("uses powers of 1024 and a decimal comma", () => {
@@ -52,39 +47,15 @@ describe("percent", () => {
   });
 });
 
-describe("barHeights", () => {
-  it("scales against the biggest bar", () => {
-    expect(barHeights([0, 5, 10])).toEqual({ max: 10, heights: [0, 50, 100] });
-  });
-
-  it("stays flat with no data", () => {
-    expect(barHeights([0, 0])).toEqual({ max: 1, heights: [0, 0] });
-    expect(barHeights([])).toEqual({ max: 1, heights: [] });
-  });
-});
-
 describe("labels in Buenos Aires time", () => {
-  it("hours", () => {
-    expect(hourLabel("2026-11-18T17:00:00Z")).toBe("14 h");
-    expect(hourLabel("2026-11-18T03:00:00Z")).toBe("0 h");
-  });
-
   it("days", () => {
     expect(dayLabel("2026-11-17")).toBe("mar 17/11");
     expect(dayLabel("2026-11-22")).toBe("dom 22/11");
   });
 
-  it("when a peak happened", () => {
-    const now = "2026-11-18T20:00:00Z";
-    expect(peakWhen({ users: 3, at: "2026-11-18T17:35:00Z" }, now)).toBe("a las 14:35");
-    expect(peakWhen({ users: 3, at: "2026-11-17T22:10:00Z" }, now)).toBe("el mar 17/11 a las 19:10");
-    // 01:00 UTC on the 18th is still the 17th in Buenos Aires.
-    expect(peakWhen({ users: 3, at: "2026-11-18T01:00:00Z" }, now)).toBe("el mar 17/11 a las 22:00");
-  });
-
-  it("students", () => {
-    expect(students(1)).toBe("1 alumno");
-    expect(plain(students(1200))).toBe("1.200 alumnos");
+  it("times", () => {
+    expect(timeLabel("2026-11-18T17:35:00Z")).toBe("14:35");
+    expect(timeLabel("2026-11-18T03:05:00Z")).toBe("00:05");
   });
 });
 
@@ -98,11 +69,22 @@ describe("latencyLevel", () => {
   });
 });
 
+const ana = {
+  full_name: "Ana",
+  email: "ana@fi.uba.ar",
+  plan_id: "industrial-2023",
+  plan: "Ing. Industrial 2023",
+  created_at: "2026-11-01T12:00:00+00:00",
+  intro_seen: true,
+  subjects: 3,
+  plan_courses: 2,
+  signup_source: "qr",
+};
+
 describe("toUsage", () => {
-  it("reads the jsonb of admin_uso()", () => {
+  it("reads the jsonb of admin_uso(), with the students", () => {
     const u = toUsage({
-      checked_at: "2026-11-18T20:00:00+00:00",
-      online_now: 2,
+      checked_at: "2026-11-19T20:00:00+00:00",
       active_24h: 10,
       active_7d: 30,
       active_30d: 50,
@@ -111,21 +93,46 @@ describe("toUsage", () => {
         { name: "Ing. Industrial", users: 40, no_plan: false },
         { name: "Sin plan", users: 5, no_plan: true },
       ],
+      db_bytes: 1024,
+      db_limit_bytes: 524288000,
+      review_authors: 7,
+      people: [ana],
+    });
+    expect(u.active24h).toBe(10);
+    expect(u.byCareer[1]).toEqual({ name: "Sin plan", users: 5, noPlan: true });
+    expect(u.dbLimitBytes).toBe(524288000);
+    expect(u.reviewAuthors).toBe(7);
+    expect(u.people).toEqual([
+      {
+        fullName: "Ana",
+        email: "ana@fi.uba.ar",
+        planId: "industrial-2023",
+        plan: "Ing. Industrial 2023",
+        createdAt: "2026-11-01T12:00:00+00:00",
+        introSeen: true,
+        subjects: 3,
+        planCourses: 2,
+        signupSource: "qr",
+      },
+    ]);
+  });
+
+  it("tolerates the older shape: extra fields ignored, no students", () => {
+    const u = toUsage({
+      checked_at: "2026-11-18T20:00:00+00:00",
+      online_now: 2,
+      active_24h: 10,
+      users: 60,
       peak_today: { users: 4, at: "2026-11-18T17:35:00+00:00" },
-      peak_7d: null,
       hourly: [{ at: "2026-11-18T19:00:00+00:00", users: 3 }],
       daily: [{ day: "2026-11-18", users: 10 }],
       db_bytes: 1024,
-      db_limit_bytes: 524288000,
       tables: [{ name: "subjects", bytes: 512 }],
     });
-    expect(u.onlineNow).toBe(2);
-    expect(u.byCareer[1]).toEqual({ name: "Sin plan", users: 5, noPlan: true });
-    expect(u.peakToday).toEqual({ users: 4, at: "2026-11-18T17:35:00+00:00" });
-    expect(u.peak7d).toBeNull();
-    expect(u.hourly).toHaveLength(1);
-    expect(u.dbLimitBytes).toBe(524288000);
-    expect(u.tables[0].name).toBe("subjects");
+    expect(u.active24h).toBe(10);
+    expect(u.people).toBeNull();
+    expect(u.reviewAuthors).toBeNull();
+    expect(Object.keys(u)).not.toContain("onlineNow");
   });
 
   it("survives missing fields", () => {
@@ -133,7 +140,18 @@ describe("toUsage", () => {
     expect(u.users).toBe(0);
     expect(u.byCareer).toEqual([]);
     expect(u.dbLimitBytes).toBe(500 * 1024 * 1024);
-    expect(u.peakToday).toBeNull();
+    expect(u.people).toBeNull();
+  });
+});
+
+describe("toAdminUser", () => {
+  it("reads a row of admin_users() too, without the last use", () => {
+    const u = toAdminUser({ ...ana, plan: undefined, subjects: "3", plan_id: null, signup_source: null, last_seen_at: "2026-11-19T03:00:00+00:00" });
+    expect(u.subjects).toBe(3);
+    expect(u.planId).toBeNull();
+    expect(u.plan).toBeNull();
+    expect(u.signupSource).toBeNull();
+    expect(Object.keys(u)).not.toContain("lastSeenAt");
   });
 });
 

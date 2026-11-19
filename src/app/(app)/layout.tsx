@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
 import { WelcomeStories } from "@/components/WelcomeStories";
-import { getIntroSeen, getOfferNeed, touchLastSeen } from "@/lib/intro/data";
+import { getIntroSeen, getOfferNeed } from "@/lib/intro/data";
 import { countPendingReviews } from "@/lib/reviews/pending";
 import { requireProfile } from "@/lib/session";
 
-// Todas las secciones de la app exigen una sesión @fi.uba.ar válida.
+// Todas las secciones de la app exigen una sesión @fi.uba.ar válida. El último uso (last_seen_at) lo
+// anota el proxy, como mucho una vez por hora.
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const profile = await requireProfile();
   const [pendingReviews, introSeen, offer] = await Promise.all([
     countPendingReviews(profile.id),
     getIntroSeen(profile.id),
     getOfferNeed(profile.planId!),
-    touchLastSeen(),
   ]);
   return (
     <>

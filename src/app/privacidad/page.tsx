@@ -56,7 +56,7 @@ export default function PrivacidadPage() {
             y los podés sacar (y volver a tu mail de la facultad) cuando quieras desde Finales.
           </li>
           <li>
-            <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada y tu preferencia de tema (claro u oscuro).
+            <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada, otra que dura una hora para anotar como mucho una vez por hora que usaste la app, y tu preferencia de tema (claro u oscuro).
           </li>
         </ul>
         <p>No hay publicidad ni herramientas de seguimiento de terceros. No vendemos ni compartimos tus datos.</p>

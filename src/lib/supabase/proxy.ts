@@ -3,6 +3,12 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseEnv } from "./env";
 import { parseRef, REFERRAL_COOKIE, REFERRAL_MAX_AGE } from "@/lib/referral";
 
+// Cookie de "ya anotamos que usaste la app en la última hora" (ver touch_last_seen más abajo).
+const SEEN_COOKIE = "fiubi_seen";
+const SEEN_MAX_AGE = 60 * 60; // 1 hora, en segundos
+// touch_last_seen() todavía no está en la base (las vistas previas de Vercel usan la de producción).
+const MISSING_FUNCTION = new Set(["42883", "PGRST202"]);
+
 // Rutas que se pueden ver sin sesión.
 const PUBLIC_PATHS = ["/ingresar", "/auth", "/privacidad", "/manifest.webmanifest", "/robots.txt", "/sitemap.xml"];
 
@@ -28,12 +34,24 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifica la firma del token en el servidor, sin ir a Supabase cuando el proyecto
   // usa claves asimétricas (si no, consulta a Supabase como getUser). También renueva el token vencido.
-  let loggedIn = false;
+  let userId: string | null = null;
   try {
     const { data } = await supabase.auth.getClaims();
-    loggedIn = !!data?.claims.sub;
+    userId = data?.claims.sub ?? null;
   } catch {
-    loggedIn = false;
+    userId = null;
+  }
+  const loggedIn = !!userId;
+
+  // "Activos" en Administración: profiles.last_seen_at se anota como mucho una vez por hora por alumno.
+  // La cookie fiubi_seen (con el id, por si cambia la cuenta en el navegador) evita llamar a la base en
+  // cada página: sin ella serían una escritura o un intento por cada vista. Va antes de la cookie del QR
+  // porque las cookies de `response` se copian a las redirecciones de abajo.
+  if (userId && request.cookies.get(SEEN_COOKIE)?.value !== userId) {
+    const { error } = await supabase.rpc("touch_last_seen");
+    // Si la base falla, se reintenta en 5 minutos y no en cada pedido.
+    const maxAge = error && !MISSING_FUNCTION.has(error.code) ? 5 * 60 : SEEN_MAX_AGE;
+    response.cookies.set(SEEN_COOKIE, userId, { httpOnly: true, sameSite: "lax", secure: true, maxAge, path: "/" });
   }
 
   // Llegó por el QR impreso (?ref=qr): se recuerda en una cookie propia hasta que cree la cuenta
