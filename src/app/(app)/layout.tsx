@@ -21,7 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <WelcomeStories firstName={profile.firstName} open={!introSeen} needsOffer={offer.needsOffer} term={offer.term} />
       {children}
       {/* Celular: lugar para la barra de pestañas fija de abajo (60 px + borde + zona segura del iPhone). */}
-      <div aria-hidden="true" className="h-[calc(61px+env(safe-area-inset-bottom))] md:hidden print:hidden" />
+      <div aria-hidden="true" className="h-[calc(61px+env(safe-area-inset-bottom))] md:hidden" />
     </>
   );
 }
