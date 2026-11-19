@@ -80,18 +80,3 @@ export function Check({ size = 12, className }: { size?: number; className?: str
     </svg>
   );
 }
-
-/** Abre la lámina del plan (/plan/imprimir) para imprimirla o guardarla como PDF. */
-export function PrintButton({ onClick, className = "h-[38px]" }: { onClick: () => void; className?: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-ink-2 hover:text-ink ${className}`}
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
-      </svg>
-      Descargar PDF
-    </button>
-  );
-}

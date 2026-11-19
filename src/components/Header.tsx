@@ -49,7 +49,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
 
   return (
     <>
-      <header className="flex min-h-[56px] print:hidden items-center justify-between gap-3 bg-header px-4 md:min-h-[72px] md:gap-6 md:px-8">
+      <header className="flex min-h-[56px] items-center justify-between gap-3 bg-header px-4 md:min-h-[72px] md:gap-6 md:px-8">
         <Link href="/" className="-my-1.5 py-1.5">
           <Logo className="h-[15px] md:h-[16px]" />
         </Link>
@@ -136,7 +136,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
       {/* Celular: pestañas fijas abajo, como en una app. El layout deja ese lugar libre al final de la página. */}
       <nav
         aria-label="Secciones"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="mx-auto grid h-[60px] max-w-[520px] grid-cols-5">
           {NAV.filter((item) => item.mobile === "tab").map((item) => {
