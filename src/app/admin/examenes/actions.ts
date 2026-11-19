@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/data";
+import { examsTag } from "@/lib/cache/keys";
+import { expireTags } from "@/lib/cache/shared";
 import { examPreviewRows, examRows, examStats, planMismatch, type ExamPreview } from "@/lib/admin/exams";
 import { parseSiuExams, type ExamParseResult } from "@/lib/siu/exams";
 import { PASTE_TEXT_INSTEAD, fetchSiuExamsPage, isLink, siuExamsUrl } from "@/lib/siu/exams-fetch";
@@ -80,8 +82,11 @@ export async function publishExams(_prev: ExamState, formData: FormData): Promis
   const supabase = await createClient();
   // The plan's exam dates are replaced as a whole: nothing points to these rows.
   const removed = await supabase.from("exam_tables").delete().eq("plan_id", planId);
+  // Exam tables belong to one plan: only its cached dates change (also if the insert fails below).
+  expireTags(examsTag(planId));
   if (removed.error) return { error: "No pudimos reemplazar las fechas.", preview, published: false };
   const added = await supabase.from("exam_tables").insert(rows);
+  expireTags(examsTag(planId));
   if (added.error) return { error: "No pudimos guardar las fechas. El plan quedó sin fechas: publicá de nuevo.", preview, published: false };
   const saved = await supabase
     .from("exam_imports")

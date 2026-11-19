@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getMapData } from "@/lib/map/data";
 import { CareerMap, normalizeText, progressFrom, type SubjectKind } from "@/lib/map/model";
 import { campusQuery, withCampus, type CampusCode } from "@/lib/campus/infer";
-import { courseScores } from "@/lib/reviews/catalog";
+import { offerScores } from "@/lib/reviews/catalog";
+import { getCurrentTermRow, getSharedPlan, getTermOffer } from "@/lib/cache/catalog";
 import type { Campus } from "@/lib/siu/parser";
 import { getMySubmission } from "@/lib/offer/data";
 import type { MySubmission } from "@/lib/offer/submission";
@@ -125,42 +126,28 @@ export async function getMyActivities(userId: string, termId: string): Promise<P
 
 export async function getPlanData(userId: string, planId: string): Promise<PlanData> {
   const supabase = await createClient();
-  const [map, termRow] = await Promise.all([
-    getMapData(userId, planId),
-    supabase.from("terms").select("id, year, half").eq("is_current", true).maybeSingle(),
-  ]);
-  if (termRow.error) throw new Error(`terms: ${termRow.error.message}`);
+  // The plan, the term, the offer and the scores come from the shared cache (src/lib/cache/);
+  // choices, courses taken and activities are the student's.
+  const [map, plan, termRow] = await Promise.all([getMapData(userId, planId), getSharedPlan(planId), getCurrentTermRow()]);
   const career = `${map.careerName.replace(/^Ingeniería /, "Ing. ")} · Plan ${map.year}`;
-  if (!termRow.data) return empty(null, career);
-  const term = { id: termRow.data.id as string, label: `${termRow.data.half}C ${termRow.data.year}` };
+  if (!termRow) return empty(null, career);
+  const term = { id: termRow.id, label: `${termRow.half}C ${termRow.year}` };
 
   const careerMap = new CareerMap(map.subjects, map.requirements);
   const progress = progressFrom(map.progress);
   const credits = careerMap.approvedCredits(progress);
 
-  const [codes, offerings] = await Promise.all([
-    supabase.from("subject_siu_codes").select("subject_id, siu_code").in("subject_id", map.subjects.map((s) => s.id)),
-    supabase
-      .from("offerings")
-      .select(
-        "id, course_id, siu_subject_code, siu_subject_name, course_number, practice, label, modality, teachers, quota, enrolled, offering_blocks(weekday, starts_at, ends_at, class_type, room, campus, is_async)",
-      )
-      .eq("term_id", term.id)
-      .eq("plan_id", planId)
-      .eq("visible", true), // admins see hidden offerings too: the plan never shows them
-  ]);
-  if (codes.error) throw new Error(`subject_siu_codes: ${codes.error.message}`);
-  if (offerings.error) throw new Error(`offerings: ${offerings.error.message}`);
-  const rows = offerings.data as unknown as OfferingRow[];
+  // Only visible offerings (admins could read hidden ones too: the plan never shows them).
+  const rows: OfferingRow[] = await getTermOffer(term.id, planId);
   if (rows.length === 0) return { ...empty(term.label, career), noOffer: { submission: await getMySubmission(userId, term.id, planId) } };
 
-  const byCode = new Map(codes.data.map((c) => [c.siu_code as string, c.subject_id as number]));
+  const byCode = new Map(plan.siuCodes.map((c) => [c.siu_code, c.subject_id]));
   const byName = new Map(map.subjects.map((s) => [normalizeText(s.name), s.id]));
   const subjectOf = (o: OfferingRow) => byCode.get(o.siu_subject_code) ?? byName.get(normalizeText(o.siu_subject_name));
 
   const ids = rows.map((o) => o.id);
   const [scoreOf, choices, taken, activities] = await Promise.all([
-    courseScores([...new Set(rows.map((o) => o.course_id))]), // app reviews and Dolly opinions
+    offerScores(term.id, planId), // app reviews and Dolly opinions
     supabase.from("plan_choices").select("option, offering_id").eq("user_id", userId).in("offering_id", ids),
     supabase.from("user_courses").select("offering_id").eq("user_id", userId).in("offering_id", ids),
     getMyActivities(userId, term.id),

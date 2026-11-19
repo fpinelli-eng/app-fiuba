@@ -26,7 +26,7 @@ export default async function InicioPage() {
     isFirstDay(account.id),
   ]);
   const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
-  const courses = await getHomeCourses(account.id, data.subjects);
+  const courses = await getHomeCourses(account.id, account.planId!, data.subjects);
   const map = new CareerMap(data.subjects, data.requirements);
   const progress = progressFrom(data.progress);
 
