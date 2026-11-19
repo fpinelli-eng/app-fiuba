@@ -10,31 +10,28 @@ import { Avatar } from "@/components/Avatar";
 import { NavIcon } from "@/components/icons";
 import type { Profile } from "@/lib/auth";
 
-// Las secciones del menú quedan precargadas (prefetch de los links). Para que nunca venzan
-// mientras se usa la web, se renuevan cada 4 minutos con la pestaña a la vista, y al volver
-// a la pestaña (por si algo cambió desde otro dispositivo). Vencen a los 10 (next.config.ts).
-const RENEW_MS = 4 * 60 * 1000;
+// Las secciones del menú quedan precargadas (prefetch de los links) y vencen a los 10 minutos
+// (next.config.ts). Antes se renovaban solas cada 4 minutos con la pestaña a la vista: con muchos
+// alumnos con la web abierta eran cientos de consultas por minuto a la base sin que nadie tocara
+// nada (el 19/11 la base se quedó sin memoria). Ahora solo se renuevan al volver a la pestaña
+// después de un rato (por si algo cambió desde otro dispositivo); si vencieron, el link carga
+// la sección al tocarlo, como cualquier página.
+const RENEW_AFTER_AWAY_MS = 10 * 60 * 1000;
 
 function useFreshPrefetches() {
   const router = useRouter();
   useEffect(() => {
-    let last = Date.now();
-    const renew = () => {
-      if (document.visibilityState !== "visible") return;
-      last = Date.now();
-      router.refresh();
+    let hiddenAt = 0;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+        return;
+      }
+      if (hiddenAt && Date.now() - hiddenAt > RENEW_AFTER_AWAY_MS) router.refresh();
+      hiddenAt = 0;
     };
-    const timer = setInterval(() => {
-      if (Date.now() - last >= RENEW_MS) renew();
-    }, 30 * 1000);
-    const onVisible = () => {
-      if (document.visibilityState === "visible" && Date.now() - last > 60 * 1000) renew();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [router]);
 }
 
