@@ -1,7 +1,8 @@
 // Daily copy of the SIU's exam dates for every mapped plan (tools/exams/sync.mjs, workflow
 // "Fechas de examen del SIU"). Pure (no network, no database): the script downloads each plan's
 // public "Fechas de examen" search, parses it with parseSiuExamsHtml() and uses these helpers to
-// decide whether the result is safe to publish and what changed against the rows in the database.
+// decide whether the result is safe to publish and which rows to insert, update or delete
+// (planExamChanges(): only the rows that changed are written, never a whole plan).
 // Runs in Node with type stripping, so: only type annotations, no enums or path aliases.
 
 import type { ExamRow } from "../admin/exams";
@@ -175,47 +176,137 @@ const signature = (r: SyncRow) =>
     r.siu_subject_name, r.enroll_from, r.enroll_to, r.start_time, r.end_time, r.room, r.drop_until, r.teachers,
   ]);
 
-/** What replacing `before` with `after` changes. A new day for a table counts as removed + added. */
-export function diffExamRows(before: SyncRow[], after: SyncRow[]): ExamDiff {
-  const groups = new Map<string, { before: string[]; after: string[] }>();
-  const add = (r: SyncRow, side: "before" | "after") => {
+/** A row of exam_tables as current.sql prints it: its id and the parser's formats. */
+export type StoredRow = SyncRow & { id: number };
+
+/** normalizeRow() keeping the row's id, which must be a positive integer. Throws otherwise. */
+export function storedRow(row: Record<string, unknown>): StoredRow {
+  const id = Number(row.id);
+  if (!Number.isSafeInteger(id) || id <= 0) throw new Error(`exam_tables: id inválido: ${String(row.id)}`);
+  return { id, ...normalizeRow(row) };
+}
+
+/**
+ * The row-level changes that turn the rows in the database into the SIU's, matched by the natural
+ * key (subject code, table name, kind and day; the same one exam_reminders uses):
+ * - a row with the same key and the same details stays untouched;
+ * - a row with the same key and other details (time, room, enrollment, teachers…) is updated in
+ *   place, so its key, id and created_at do not change and reminders keep matching it;
+ * - the rest of the SIU's rows are inserted, and the rest of the database's rows deleted.
+ * Repeated keys (the SIU lists some tables twice) are paired one by one, in the database's order.
+ */
+export interface ExamChanges {
+  diff: ExamDiff;
+  inserts: SyncRow[];
+  /** The new values of each changed row, by its id. */
+  updates: StoredRow[];
+  /** Ids of the rows that are no longer in the SIU. */
+  deletes: number[];
+}
+
+export function planExamChanges(before: StoredRow[], after: SyncRow[]): ExamChanges {
+  const groups = new Map<string, { before: StoredRow[]; after: SyncRow[] }>();
+  const group = (r: SyncRow) => {
     const key = identity(r);
     const g = groups.get(key) ?? { before: [], after: [] };
-    g[side].push(signature(r));
     groups.set(key, g);
+    return g;
   };
-  before.forEach((r) => add(r, "before"));
-  after.forEach((r) => add(r, "after"));
+  before.forEach((r) => group(r).before.push(r));
+  after.forEach((r) => group(r).after.push(r));
 
-  const diff: ExamDiff = { added: 0, removed: 0, changed: 0, unchanged: 0 };
+  const out: ExamChanges = { diff: { added: 0, removed: 0, changed: 0, unchanged: 0 }, inserts: [], updates: [], deletes: [] };
   for (const g of groups.values()) {
     const rest = [...g.before];
-    let unmatched = 0;
-    for (const s of g.after) {
-      const i = rest.indexOf(s);
+    const unmatched: SyncRow[] = [];
+    for (const r of g.after) {
+      const s = signature(r);
+      const i = rest.findIndex((b) => signature(b) === s);
       if (i >= 0) {
         rest.splice(i, 1);
-        diff.unchanged++;
+        out.diff.unchanged++;
       } else {
-        unmatched++;
+        unmatched.push(r);
       }
     }
-    const changed = Math.min(unmatched, rest.length);
-    diff.changed += changed;
-    diff.added += unmatched - changed;
-    diff.removed += rest.length - changed;
+    const changed = Math.min(unmatched.length, rest.length);
+    for (let i = 0; i < changed; i++) out.updates.push({ ...unmatched[i], id: rest[i].id });
+    out.inserts.push(...unmatched.slice(changed));
+    out.deletes.push(...rest.slice(changed).map((r) => r.id));
   }
-  return diff;
+  out.diff.changed = out.updates.length;
+  out.diff.added = out.inserts.length;
+  out.diff.removed = out.deletes.length;
+  return out;
+}
+
+/** What replacing `before` with `after` changes. A new day for a table counts as removed + added. */
+export function diffExamRows(before: SyncRow[], after: SyncRow[]): ExamDiff {
+  return planExamChanges(before.map((r, i) => ({ ...r, id: i + 1 })), after).diff;
 }
 
 export const hasChanges = (d: ExamDiff) => d.added + d.removed + d.changed > 0;
+
+/** What tools/exams/apply.sql receives for one plan with changes (the 'exams.payload' setting). */
+export interface PlanWrite {
+  plan_id: string;
+  /** For exam_imports, from all the SIU's rows: { subjects, tables, from, to }. */
+  stats: { subjects: number; tables: number; from: string; to: string };
+  /** How many rows the plan had when current.sql read it: apply.sql stops if that moved. */
+  before: number;
+  inserts: SyncRow[];
+  updates: StoredRow[];
+  deletes: number[];
+}
+
+export function planWrite(planId: string, before: StoredRow[], after: SyncRow[], changes: ExamChanges): PlanWrite {
+  const dates = after.map((r) => r.exam_date).sort();
+  const subjects = new Set(after.map((r) => r.siu_subject_code)).size;
+  return {
+    plan_id: planId,
+    stats: { subjects, tables: after.length, from: dates[0] ?? "", to: dates.at(-1) ?? "" },
+    before: before.length,
+    inserts: changes.inserts,
+    updates: changes.updates,
+    deletes: changes.deletes,
+  };
+}
+
+/** Rows written by these plans' changes (inserted, updated or deleted), for the summary. */
+export const writtenRows = (writes: PlanWrite[]) =>
+  writes.reduce((n, w) => n + w.inserts.length + w.updates.length + w.deletes.length, 0);
+
+/**
+ * The whole SQL file of a run, for psql -v ON_ERROR_STOP=1 -f: one transaction with the changes
+ * (if any) and the checked_at of the plans read. The payload goes as a dollar-quoted literal with
+ * `tag`, which must not appear in it (nothing in the SIU's text can close it); length() so that
+ * psql prints a number, not the payload (teacher names) into the public log. `applyPath` is
+ * tools/exams/apply.sql by its full path (the generated file lives in the runner's temp folder).
+ * Without changes it writes nothing but exam_imports.checked_at.
+ */
+export function changesSql(writes: PlanWrite[], readPlanIds: string[], applyPath: string, tag: string): string {
+  const sql = ["\\set ON_ERROR_STOP on", "begin;"];
+  if (writes.length) {
+    const payload = JSON.stringify({ plans: writes });
+    if (!/^[a-z_][a-z0-9_]*$/.test(tag) || payload.includes(tag)) throw new Error("Etiqueta inválida para el SQL");
+    sql.push(
+      `select length(set_config('exams.payload', $${tag}$${payload}$${tag}$, true)) as payload_chars;`,
+      `\\i '${applyPath.replaceAll("\\", "/").replaceAll("'", "''")}'`,
+    );
+  } else {
+    sql.push("-- Sin cambios en las fechas.");
+  }
+  // Also without changes: the plans read now, for the health monitor (Administración → Estado).
+  sql.push(checkedSql(readPlanIds), "commit;", "");
+  return sql.join("\n");
+}
 
 export type PlanOutcome =
   | { planId: string; skip: string }
   | { planId: string; tables: number; diff: ExamDiff | null };
 
 /** Markdown for the job summary: one line per plan, counts only (the repository and its logs are public). */
-export function summaryMarkdown(outcomes: PlanOutcome[], dryRun: boolean): string {
+export function summaryMarkdown(outcomes: PlanOutcome[], dryRun: boolean, written?: number): string {
   const lines = outcomes.map((o) => {
     if ("skip" in o) return `| ${o.planId} | — | salteado: ${o.skip} |`;
     if (!o.diff) return `| ${o.planId} | ${o.tables} | prueba, sin comparar con la base |`;
@@ -227,7 +318,8 @@ export function summaryMarkdown(outcomes: PlanOutcome[], dryRun: boolean): strin
   const changed = outcomes.filter((o) => "diff" in o && o.diff && hasChanges(o.diff)).length;
   const head = dryRun
     ? `Prueba: ${ok} de ${outcomes.length} planes leídos, nada se guardó.`
-    : `${ok} de ${outcomes.length} planes leídos; ${changed} con cambios se actualizaron.`;
+    : `${ok} de ${outcomes.length} planes leídos; ${changed} con cambios se actualizaron` +
+      (written === undefined ? "." : ` (${written} ${written === 1 ? "fila escrita" : "filas escritas"} en exam_tables).`);
   return ["### Fechas de examen del SIU", "", head, "", "| Plan | Mesas | Cambios |", "|---|---:|---|", ...lines, ""].join("\n");
 }
 

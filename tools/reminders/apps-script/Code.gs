@@ -47,6 +47,9 @@ var GMAIL_DAILY_LIMIT = 100; // consumer Gmail through Apps Script: about 100 re
 var SEND_FROM_HOUR = 8;
 var PAGE_SIZE = 1000;
 var CONFIRM_QUOTA_RESERVE = 30; // confirmations stop here: the rest of the daily quota is for the reminders
+// Milliseconds the first page of avisos_pendientes() took in this run (null until it answers):
+// the health monitor (Salud.gs) alerts when the database is slow.
+var AVISOS_ELAPSED_MS = null;
 var SENDER = 'avisosfiubi@gmail.com';
 // A plain address (the database checks the same): no spaces, commas or brackets, one @.
 var EMAIL_RE = /^(?=[^@]{1,64}@)[a-z0-9_%+-]+(\.[a-z0-9_%+-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
@@ -306,7 +309,9 @@ function rpc_(name, args, query) {
 function fetchReminders_() {
   var all = [];
   for (var page = 0; page < 100; page++) {
+    var started = Date.now();
     var rows = rpc_('avisos_pendientes', {}, 'limit=' + PAGE_SIZE + '&offset=' + all.length);
+    if (page === 0) AVISOS_ELAPSED_MS = Date.now() - started;
     if (!rows.length) return all;
     all = all.concat(rows);
   }

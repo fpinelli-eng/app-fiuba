@@ -1,5 +1,5 @@
 // Reads the SIU's public "Fechas de examen" search of every plan in data/siu/exam-filters.json and
-// writes the SQL that replaces the exam tables of the plans that changed, for the workflow
+// writes the SQL that inserts, updates and deletes only the exam tables that changed, for the workflow
 // "Fechas de examen del SIU" (tools/exams/README.md). Run with:
 //
 //   node --experimental-strip-types tools/exams/sync.mjs [--current current.json] [--sql apply.sql]
@@ -18,7 +18,7 @@ import "./ts-resolve.mjs";
 
 const { fetchSiuExamsPage, siuExamsUrl } = await import("../../src/lib/siu/exams-fetch.ts");
 const { parseSiuExamsHtml } = await import("../../src/lib/siu/exams-html.ts");
-const { validateFilters, groupFilters, siuSearchUrl, checkPlanSync, normalizeRow, diffExamRows, hasChanges, summaryMarkdown, checkedSql } =
+const { validateFilters, groupFilters, siuSearchUrl, checkPlanSync, storedRow, planExamChanges, hasChanges, planWrite, writtenRows, summaryMarkdown, changesSql } =
   await import("../../src/lib/exams/siu-sync.ts");
 
 const { values: args } = parseArgs({
@@ -37,12 +37,12 @@ const only = args.only ? new Set(args.only.split(",")) : null;
 // A plan can have more than one SIU search (exam-filters.json): its tables are the union.
 const plans = [...groupFilters(filters.plans.filter((p) => !only || only.has(p.planId)))];
 
-/** Current rows per plan, in the parser's formats. */
+/** Current rows per plan, with their ids, in the parser's formats. */
 const current = new Map();
 if (!dryRun) {
   for (const row of JSON.parse(readFileSync(args.current, "utf8"))) {
     const list = current.get(row.plan_id) ?? [];
-    list.push(normalizeRow(row));
+    list.push(storedRow(row));
     current.set(row.plan_id, list);
   }
 }
@@ -82,39 +82,25 @@ for (const [planId, searches] of plans) {
     outcomes.push({ planId, skip: check.skip });
     continue;
   }
-  const diff = dryRun ? null : diffExamRows(current.get(planId) ?? [], check.rows);
-  outcomes.push({ planId, tables: check.rows.length, diff });
-  if (diff && hasChanges(diff)) {
-    const dates = check.rows.map((r) => r.exam_date).sort();
-    const subjects = new Set(check.rows.map((r) => r.siu_subject_code)).size;
-    const stats = { subjects, tables: check.rows.length, from: dates[0], to: dates.at(-1) };
-    writes.push({ plan_id: planId, stats, rows: check.rows });
-  }
+  const before = current.get(planId) ?? [];
+  const changes = dryRun ? null : planExamChanges(before, check.rows);
+  outcomes.push({ planId, tables: check.rows.length, diff: changes?.diff ?? null });
+  if (changes && hasChanges(changes.diff)) writes.push(planWrite(planId, before, check.rows, changes));
 }
 
-const summary = summaryMarkdown(outcomes, dryRun);
+const summary = summaryMarkdown(outcomes, dryRun, dryRun ? undefined : writtenRows(writes));
 console.log(summary);
 if (args.summary) appendFileSync(args.summary, summary + "\n");
 
 if (!dryRun) {
-  // Dollar-quoted literal with a random tag: nothing in the SIU's text can close it. It goes in a
-  // file, not in psql's arguments, so its size does not matter. length() so that psql prints a
-  // number, not the payload (teacher names) into the public log.
-  const payload = JSON.stringify({ plans: writes });
+  // Dollar-quoted payload with a random tag that does not appear in it (changesSql() checks it).
+  // It goes in a file, not in psql's arguments, so its size does not matter.
+  const payload = JSON.stringify(writes);
   let tag;
   do tag = `exams_${randomBytes(6).toString("hex")}`;
   while (payload.includes(tag));
-  const sql = writes.length
-    ? [
-        "\\set ON_ERROR_STOP on",
-        `select length(set_config('exams.payload', $${tag}$${payload}$${tag}$, false)) as payload_chars;`,
-        // By its full path: the generated file lives elsewhere (the runner's temp folder).
-        `\\i '${fileURLToPath(new URL("apply.sql", import.meta.url)).replaceAll("\\", "/").replaceAll("'", "''")}'`,
-      ]
-    : ["-- Sin cambios en las fechas."];
-  // Also without changes: the plans read now, for the health monitor (Administración → Estado).
-  sql.push(checkedSql(outcomes.filter((o) => !("skip" in o)).map((o) => o.planId)), "");
-  writeFileSync(args.sql, sql.join("\n"));
+  const read = outcomes.filter((o) => !("skip" in o)).map((o) => o.planId);
+  writeFileSync(args.sql, changesSql(writes, read, fileURLToPath(new URL("apply.sql", import.meta.url)), tag));
 }
 
 for (const o of outcomes) if ("skip" in o) console.log(`::warning title=Fechas de examen::${o.planId}: ${o.skip}`);
