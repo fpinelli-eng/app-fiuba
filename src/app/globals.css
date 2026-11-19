@@ -219,6 +219,20 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
+/*
+ * Actividades propias del Plan (ayudantía, trabajo): rayado en diagonal con el color pastel que
+ * eligió el alumno, para que no se confundan con los cursos (lisos). El color va en --hatch
+ * (por ejemplo, la clase [--hatch:var(--mint)]).
+ */
+@utility bg-hatch {
+  background-color: var(--hatch);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 7px,
+    color-mix(in srgb, var(--surface) 55%, transparent) 7px 14px
+  );
+}
+
 /* Tailwind 4 deja los botones con la flecha: la manito avisa que se puede tocar. */
 @layer base {
   /* Títulos de página con la tipografía de títulos (rediseño del 5 de noviembre de 2026). */

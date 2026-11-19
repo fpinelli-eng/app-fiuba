@@ -6,6 +6,7 @@ import { courseScores } from "@/lib/reviews/catalog";
 import type { Campus } from "@/lib/siu/parser";
 import { getMySubmission } from "@/lib/offer/data";
 import type { MySubmission } from "@/lib/offer/submission";
+import { fromRow, type ActivityRow, type PlanActivity } from "./activities";
 import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
 import type { ClassBlock, CourseOption, WeekDay } from "./options";
@@ -47,6 +48,12 @@ export interface PlanData {
   /** Courses of this term the student confirmed ("Confirmar mi cursada"). */
   enrolled: string[];
   /**
+   * The student's own activities this term (ayudantías, trabajo), shared by Opción A and B.
+   * null while the table does not exist (Vercel previews use the production database): the
+   * Plan works and hides "Agregar actividad".
+   */
+  activities: PlanActivity[] | null;
+  /**
    * The plan has no offer this term: the student can send it from the SIU. With their latest
    * submission, if any. Absent when there is an offer or no term.
    */
@@ -87,7 +94,34 @@ type OfferingRow = {
   }[];
 };
 
-const empty = (term: string | null, career: string): PlanData => ({ term, career, subjects: [], saved: { A: [], B: [] }, enrolled: [] });
+const empty = (term: string | null, career: string): PlanData => ({
+  term,
+  career,
+  subjects: [],
+  saved: { A: [], B: [] },
+  enrolled: [],
+  activities: null,
+});
+
+// Undefined table, column or function: the migration 20261119130000_plan_actividades is not applied
+// yet (Vercel previews use the production database, which only gets it when the branch is merged).
+export const ACTIVITIES_NOT_YET = new Set(["42P01", "PGRST205", "42703", "PGRST204", "42883", "PGRST202"]);
+
+/** The student's activities of a term (RLS: only their own); null if the table is not there yet. */
+export async function getMyActivities(userId: string, termId: string): Promise<PlanActivity[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plan_activities")
+    .select("id, name, place, color, blocks")
+    .eq("user_id", userId)
+    .eq("term_id", termId)
+    .order("created_at");
+  if (error) {
+    if (ACTIVITIES_NOT_YET.has(error.code)) return null;
+    throw new Error(`plan_activities: ${error.message}`);
+  }
+  return (data as ActivityRow[]).map(fromRow);
+}
 
 export async function getPlanData(userId: string, planId: string): Promise<PlanData> {
   const supabase = await createClient();
@@ -125,10 +159,11 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   const subjectOf = (o: OfferingRow) => byCode.get(o.siu_subject_code) ?? byName.get(normalizeText(o.siu_subject_name));
 
   const ids = rows.map((o) => o.id);
-  const [scoreOf, choices, taken] = await Promise.all([
+  const [scoreOf, choices, taken, activities] = await Promise.all([
     courseScores([...new Set(rows.map((o) => o.course_id))]), // app reviews and Dolly opinions
     supabase.from("plan_choices").select("option, offering_id").eq("user_id", userId).in("offering_id", ids),
     supabase.from("user_courses").select("offering_id").eq("user_id", userId).in("offering_id", ids),
+    getMyActivities(userId, term.id),
   ]);
   if (choices.error) throw new Error(`plan_choices: ${choices.error.message}`);
   if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
@@ -210,5 +245,5 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
     if (subject && !saved[option].some((e) => e.subject === subject)) saved[option].push({ subject, course });
   }
 
-  return { term: term.label, career, subjects, saved, enrolled: taken.data.map((t) => String(t.offering_id)) };
+  return { term: term.label, career, subjects, saved, enrolled: taken.data.map((t) => String(t.offering_id)), activities };
 }

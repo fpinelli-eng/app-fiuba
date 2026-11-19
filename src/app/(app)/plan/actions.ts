@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
-import type { Entry, OptionKey } from "@/lib/plan/data";
+import { ACTIVITIES_NOT_YET, type Entry, type OptionKey } from "@/lib/plan/data";
+import { MAX_ACTIVITIES, fromRow, toRow, validateActivity, type ActivityRow, type PlanActivity } from "@/lib/plan/activities";
 import { getPlanCatalog } from "@/lib/admin/catalog";
 import { previewImport } from "@/lib/admin/offer-import";
 import { NOT_YET } from "@/lib/offer/data";
@@ -101,6 +102,59 @@ export async function confirmCourses(entries: Entry[], droppedSubjects: string[]
 
   revalidatePath("/");
   revalidatePath("/mapa");
+  return { error: null };
+}
+
+export type ActivityResult = { error: string | null; activity?: PlanActivity };
+
+const ACTIVITY_COLUMNS = "id, name, place, color, blocks";
+
+// Crea (sin id) o edita una actividad propia del plan: ayudantía, trabajo, gimnasio. Va al
+// cuatrimestre actual y sirve para la Opción A y la B. La base controla que sea del alumno, del
+// cuatrimestre actual y que no pase de 30.
+export async function saveActivity(id: string | null, input: unknown): Promise<ActivityResult> {
+  const account = await requireProfile();
+  const checked = validateActivity(input);
+  if (checked.error !== null) return { error: checked.error };
+  const row = toRow(checked.value);
+  const supabase = await createClient();
+
+  if (id !== null) {
+    const activityId = Number(id);
+    if (!Number.isInteger(activityId) || activityId <= 0) return { error: "Actividad inválida." };
+    const updated = await supabase
+      .from("plan_activities")
+      .update(row)
+      .eq("id", activityId)
+      .eq("user_id", account.id)
+      .select(ACTIVITY_COLUMNS)
+      .maybeSingle();
+    if (updated.error || !updated.data) return { error: "No pudimos guardar la actividad." };
+    return { error: null, activity: fromRow(updated.data as ActivityRow) };
+  }
+
+  const term = await supabase.from("terms").select("id").eq("is_current", true).maybeSingle();
+  if (term.error || !term.data) return { error: "No hay un cuatrimestre abierto." };
+  const added = await supabase
+    .from("plan_activities")
+    .insert({ ...row, term_id: term.data.id })
+    .select(ACTIVITY_COLUMNS)
+    .single();
+  if (added.error) {
+    if (ACTIVITIES_NOT_YET.has(added.error.code)) return { error: "Todavía no se pueden agregar actividades." };
+    if (added.error.hint === "too_many_activities") return { error: `Podés tener hasta ${MAX_ACTIVITIES} actividades por cuatrimestre.` };
+    return { error: "No pudimos guardar la actividad." };
+  }
+  return { error: null, activity: fromRow(added.data as ActivityRow) };
+}
+
+export async function deleteActivity(id: string): Promise<SaveResult> {
+  const account = await requireProfile();
+  const activityId = Number(id);
+  if (!Number.isInteger(activityId) || activityId <= 0) return { error: "Actividad inválida." };
+  const supabase = await createClient();
+  const removed = await supabase.from("plan_activities").delete().eq("id", activityId).eq("user_id", account.id);
+  if (removed.error) return { error: "No pudimos borrar la actividad." };
   return { error: null };
 }
 

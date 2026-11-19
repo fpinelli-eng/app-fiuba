@@ -2,6 +2,7 @@
 // rushed trips between campuses, and totals. Asynchronous classes are listed apart.
 
 import type { Campus } from "../siu/parser";
+import { activityClassBlocks, activityKey, isActivityKey, type PlanActivity } from "./activities";
 import { WEEK_DAYS, type ClassBlock, type CourseOption, type WeekDay } from "./options";
 
 /** Less time than this between classes at different campuses is a rushed trip. */
@@ -17,6 +18,7 @@ export interface Overlap {
   day: WeekDay;
   start: number;
   end: number;
+  /** Course ids, or activityKey(id) for the student's own activities. */
   courseIds: [string, string];
 }
 
@@ -43,7 +45,12 @@ export interface PlanAnalysis {
 
 type PlacedBlock = ClassBlock & { courseId: string };
 
-export function analyzePlan(courses: PlannedCourse[]): PlanAnalysis {
+/**
+ * Activities (a teaching assistantship, a job) are placed like in-person classes, with
+ * activityKey(id) as their id: they raise overlaps with courses and with each other, but never
+ * rushed trips (their place is free text) and never count as subjects, credits or class hours.
+ */
+export function analyzePlan(courses: PlannedCourse[], activities: PlanActivity[] = []): PlanAnalysis {
   const placed: PlacedBlock[] = [];
   const asyncClasses: PlanAnalysis["asyncClasses"] = [];
   let weeklyMinutes = 0;
@@ -59,6 +66,9 @@ export function analyzePlan(courses: PlannedCourse[]): PlanAnalysis {
         placed.push({ ...block, courseId: option.id });
       }
     }
+  }
+  for (const activity of activities) {
+    for (const block of activityClassBlocks(activity)) placed.push({ ...block, courseId: activityKey(activity.id) });
   }
 
   const overlaps: Overlap[] = [];
@@ -84,9 +94,11 @@ export function analyzePlan(courses: PlannedCourse[]): PlanAnalysis {
       }
     }
 
-    for (let i = 0; i + 1 < list.length; i++) {
-      const a = list[i];
-      const b = list[i + 1];
+    // Trips: only between classes (an activity in between does not hide a rushed trip).
+    const classes = list.filter((b) => !isActivityKey(b.courseId));
+    for (let i = 0; i + 1 < classes.length; i++) {
+      const a = classes[i];
+      const b = classes[i + 1];
       const gap = b.start - a.end;
       if (gap >= 0 && gap < MIN_TRANSFER_MINUTES && a.campus && b.campus && a.campus !== b.campus) {
         rushedTransfers.push({

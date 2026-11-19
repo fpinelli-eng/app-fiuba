@@ -3,11 +3,22 @@
 import { useMemo, useRef, useState } from "react";
 import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
-import { WEEK_DAYS, type ClassBlock } from "@/lib/plan/options";
+import { type ClassBlock } from "@/lib/plan/options";
+import {
+  activityClassBlocks,
+  activityKey,
+  blockPosition,
+  daysToShow,
+  hourRange,
+  nextColor,
+  type ActivityColor,
+  type PlanActivity,
+} from "@/lib/plan/activities";
 import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { enrolledEntries, startingEntries } from "@/lib/plan/cursada";
 import { confirmCourses, savePlanOption } from "./actions";
 import { ConfirmCourses } from "./ConfirmCourses";
+import { ACTIVITY_STYLE, ActivityDialog, ActivityList, AddActivityButton, hatchClass } from "./activities";
 import { OfferSubmit } from "./OfferSubmit";
 import { PlanMobile } from "./PlanMobile";
 import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
@@ -18,8 +29,6 @@ import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, o
 // Desde md (768 px) se ve la versión de escritorio; en celular, PlanMobile, con el mismo
 // estado y las mismas acciones.
 
-const FIRST_HOUR = 7;
-const LAST_HOUR = 23;
 const HOUR_PX = 38;
 
 const removeAccents = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -37,6 +46,10 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [hover, setHover] = useState<Entry | null>(null);
+  // Actividades propias (null: la tabla todavía no está en la base y no se muestran).
+  const [activities, setActivities] = useState<PlanActivity[] | null>(data.activities);
+  // Actividad que se está editando ("nueva" para crear una; null: el diálogo está cerrado).
+  const [editing, setEditing] = useState<PlanActivity | "nueva" | null>(null);
 
   const subjects = useMemo(() => new Map(data.subjects.map((s) => [s.code, s])), [data.subjects]);
   const courseOf = (e: Entry) => subjects.get(e.subject)?.courses.find((c) => c.id === e.course);
@@ -46,9 +59,18 @@ export function PlanBuilder({ data }: { data: PlanData }) {
     .map((e, i) => ({ subject: subjects.get(e.subject), course: courseOf(e), color: PALETTE[i % PALETTE.length] }))
     .filter((s): s is { subject: PlanSubject; course: PlanCourse; color: Color } => !!s.subject && !!s.course);
   const colorOf = new Map(selected.map((s) => [s.subject.code, s.color]));
-  const nameOfCourse = new Map(selected.map((s) => [s.course.id, s.subject.name]));
+  const mine = activities ?? [];
+  const nameOfCourse = new Map([
+    ...selected.map((s) => [s.course.id, s.subject.name] as const),
+    ...mine.map((a) => [activityKey(a.id), a.name] as const),
+  ]);
 
-  const analysis = analyzePlan(selected.map((s) => ({ option: s.course, credits: s.subject.credits ?? undefined })));
+  const analysis = analyzePlan(
+    selected.map((s) => ({ option: s.course, credits: s.subject.credits ?? undefined })),
+    mine,
+  );
+  const addActivity = activities ? () => setEditing("nueva") : undefined;
+  const editActivity = (a: PlanActivity) => setEditing(a);
 
   const setPlan = (next: Entry[]) => {
     setPlans({ ...plans, [active]: next });
@@ -178,6 +200,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
               Confirmar mi cursada
             </button>
           )}
+          {addActivity && <AddActivityButton onClick={addActivity} />}
           <button
             onClick={() => setPlan([])}
             className="h-[38px] rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted hover:text-ink"
@@ -236,7 +259,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
           className="flex min-w-0 flex-auto flex-col gap-3 rounded-2xl border border-line bg-surface px-[18px] py-4"
         >
           <div className="flex flex-col gap-1.5">
-            {selected.length > 0 && warnings.length === 0 && (
+            {selected.length + mine.length > 0 && warnings.length === 0 && (
               <Warning tone="ok">Sin superposiciones ni traslados apurados entre sedes</Warning>
             )}
             {warnings.map((w) => (
@@ -245,7 +268,12 @@ export function PlanBuilder({ data }: { data: PlanData }) {
               </Warning>
             ))}
           </div>
-          <WeekGrid selected={selected} ghost={ghost ? { course: ghost, name: subjects.get(hover!.subject)!.name } : undefined} />
+          <WeekGrid
+            selected={selected}
+            activities={mine}
+            onEditActivity={editActivity}
+            ghost={ghost ? { course: ghost, name: subjects.get(hover!.subject)!.name } : undefined}
+          />
           {analysis.asyncClasses.length > 0 && (
             <div className="flex flex-wrap items-center gap-2.5 border-t border-line pt-2.5">
               <span className="text-[11px] font-semibold tracking-[0.08em] text-muted">ASINCRÓNICAS</span>
@@ -265,6 +293,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
               })}
             </div>
           )}
+          {addActivity && mine.length > 0 && <ActivityList activities={mine} onEdit={editActivity} onAdd={addActivity} />}
         </section>
       </div>
       </div>
@@ -285,7 +314,21 @@ export function PlanBuilder({ data }: { data: PlanData }) {
         onClear={() => setPlan([])}
         cursadaCount={cursada.length}
         onConfirm={openConfirm}
+        activities={mine}
+        onAddActivity={addActivity}
+        onEditActivity={editActivity}
       />
+
+      {editing && (
+        <ActivityDialog
+          activity={editing === "nueva" ? null : editing}
+          defaultColor={nextColor(mine)}
+          term={data.term}
+          onSaved={(a) => setActivities((list) => (list?.some((x) => x.id === a.id) ? list.map((x) => (x.id === a.id ? a : x)) : [...(list ?? []), a]))}
+          onDeleted={(id) => setActivities((list) => (list ?? []).filter((x) => x.id !== id))}
+          onClose={() => setEditing(null)}
+        />
+      )}
 
       {confirming && (
         <ConfirmCourses
@@ -419,29 +462,69 @@ function SubjectRow({
   );
 }
 
-type Placed = { block: ClassBlock; name: string; course: PlanCourse; color?: Color; ghost: boolean; clash: boolean; lane: number };
+// Lo que va en el calendario: una clase de un curso (o su vista previa) o un horario de una actividad.
+type Item = {
+  /** Course id, or activityKey(id). */
+  id: string;
+  block: ClassBlock;
+  name: string;
+  detail: string;
+  color?: Color;
+  activity?: PlanActivity;
+  ghost: boolean;
+};
+type Placed = Item & { clash: boolean; lane: number };
+
+const where = (block: ClassBlock) =>
+  block.campus ? CAMPUS_SHORT[block.campus] : isVirtualRoom(block.room) ? "Virtual" : "sede a conf.";
 
 function WeekGrid({
   selected,
+  activities,
+  onEditActivity,
   ghost,
 }: {
   selected: { subject: PlanSubject; course: PlanCourse; color: Color }[];
+  activities: PlanActivity[];
+  onEditActivity: (a: PlanActivity) => void;
   ghost?: { course: PlanCourse; name: string };
 }) {
-  const real = selected.flatMap((s) =>
-    s.course.blocks.filter((b) => !b.async).map((block) => ({ block, name: s.subject.name, course: s.course, color: s.color, ghost: false })),
-  );
-  const preview = (ghost?.course.blocks ?? [])
-    .filter((b) => !b.async)
-    .map((block) => ({ block, name: ghost!.name, course: ghost!.course, color: undefined, ghost: true }));
+  const courseItems = (course: PlanCourse, name: string, color: Color | undefined, isGhost: boolean) =>
+    course.blocks
+      .filter((b) => !b.async)
+      .map((block): Item => ({
+        id: course.id,
+        block,
+        name,
+        detail: `${course.label.replace(" · práctica ", " ")} · ${where(block)}`,
+        color,
+        ghost: isGhost,
+      }));
+  const real: Item[] = [
+    ...selected.flatMap((s) => courseItems(s.course, s.subject.name, s.color, false)),
+    ...activities.flatMap((a) =>
+      activityClassBlocks(a).map(
+        (block): Item => ({ id: activityKey(a.id), block, name: a.name, detail: a.place ?? "Actividad", activity: a, ghost: false }),
+      ),
+    ),
+  ];
+  const preview = ghost ? courseItems(ghost.course, ghost.name, undefined, true) : [];
 
-  const hours = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, i) => FIRST_HOUR + i);
+  const all = [...real, ...preview];
+  const days = daysToShow(all.map((p) => p.block));
+  const range = hourRange(all.map((p) => p.block));
+  const hours = Array.from({ length: range.last - range.first }, (_, i) => range.first + i);
+  const seven = days.length === 7;
 
   return (
     <div className="overflow-x-auto">
-      <div className="grid min-w-[720px] grid-cols-[44px_repeat(6,minmax(110px,1fr))] gap-x-1.5">
+      <div
+        className={`grid gap-x-1.5 ${
+          seven ? "min-w-[800px] grid-cols-[44px_repeat(7,minmax(100px,1fr))]" : "min-w-[720px] grid-cols-[44px_repeat(6,minmax(110px,1fr))]"
+        }`}
+      >
         <div />
-        {WEEK_DAYS.map((d) => (
+        {days.map((d) => (
           <div key={d} className="pb-2 text-xs font-semibold text-muted">
             {d.toUpperCase()}
           </div>
@@ -453,10 +536,8 @@ function WeekGrid({
             </div>
           ))}
         </div>
-        {WEEK_DAYS.map((day) => {
-          const list = [...real, ...preview]
-            .filter((p) => p.block.day === day)
-            .sort((a, b) => a.block.start - b.block.start);
+        {days.map((day) => {
+          const list = all.filter((p) => p.block.day === day).sort((a, b) => a.block.start - b.block.start);
           // Carriles: los bloques que se pisan se reparten el ancho de la columna.
           const lanesEnd: number[] = [];
           const placed: Placed[] = list.map((p) => {
@@ -465,8 +546,7 @@ function WeekGrid({
               lane = lanesEnd.length;
               lanesEnd.push(p.block.end);
             } else lanesEnd[lane] = p.block.end;
-            const clash =
-              !p.ghost && real.some((o) => o.course.id !== p.course.id && overlaps(o.block, p.block));
+            const clash = !p.ghost && real.some((o) => o.id !== p.id && overlaps(o.block, p.block));
             return { ...p, lane, clash };
           });
           const width = 100 / Math.max(1, lanesEnd.length);
@@ -474,10 +554,16 @@ function WeekGrid({
             <div
               key={day}
               className="relative rounded-lg bg-bg bg-[linear-gradient(var(--line)_1px,transparent_1px)]"
-              style={{ height: (LAST_HOUR - FIRST_HOUR) * HOUR_PX, backgroundSize: `100% ${HOUR_PX}px` }}
+              style={{ height: (range.last - range.first) * HOUR_PX, backgroundSize: `100% ${HOUR_PX}px` }}
             >
               {placed.map((p) => (
-                <CalendarBlock key={`${p.course.id}-${p.block.start}-${p.ghost}`} placed={p} width={width} />
+                <CalendarBlock
+                  key={`${p.id}-${p.block.start}-${p.ghost}`}
+                  placed={p}
+                  width={width}
+                  firstHour={range.first}
+                  onEdit={p.activity ? () => onEditActivity(p.activity!) : undefined}
+                />
               ))}
             </div>
           );
@@ -487,30 +573,46 @@ function WeekGrid({
   );
 }
 
-function CalendarBlock({ placed: p, width }: { placed: Placed; width: number }) {
+function CalendarBlock({
+  placed: p,
+  width,
+  firstHour,
+  onEdit,
+}: {
+  placed: Placed;
+  width: number;
+  firstHour: number;
+  onEdit?: () => void;
+}) {
   const { block } = p;
-  const top = ((block.start - FIRST_HOUR * 60) / 60) * HOUR_PX + 1;
-  const height = ((block.end - block.start) / 60) * HOUR_PX - 3;
-  const where = block.campus
-    ? CAMPUS_SHORT[block.campus]
-    : isVirtualRoom(block.room)
-      ? "Virtual"
-      : "sede a conf.";
+  const { top, height } = blockPosition(block.start, block.end, firstHour, HOUR_PX);
+  const color: ActivityColor | undefined = p.activity?.color;
   const style = p.ghost
     ? "border-[1.5px] border-dashed border-accent bg-accent/10 text-lavender-ink"
-    : `${p.color!.bg} ${p.color!.ink} ${p.clash ? "border-2 border-danger" : `border ${p.color!.border}`}`;
-  return (
-    <div
-      className={`absolute overflow-hidden rounded-lg px-2 py-1.5 text-xs leading-tight ${style}`}
-      style={{ top, height, left: `calc(${p.lane * width}% + 2px)`, width: `calc(${width}% - 4px)` }}
-    >
+    : color
+      ? `${hatchClass(color)} ${p.clash ? "border-2 border-danger" : `border border-dashed ${ACTIVITY_STYLE[color].border}`}`
+      : `${p.color!.bg} ${p.color!.ink} ${p.clash ? "border-2 border-danger" : `border ${p.color!.border}`}`;
+  const content = (
+    <>
       <div className="line-clamp-2 font-semibold">{p.name}</div>
-      <div className="opacity-90">
-        {p.course.label.replace(" · práctica ", " ")} · {where}
-      </div>
+      <div className="truncate opacity-90">{p.detail}</div>
       <div className="opacity-90">
         {formatHour(block.start)}–{formatHour(block.end)} hs
       </div>
+    </>
+  );
+  const box = `absolute overflow-hidden rounded-lg px-2 py-1.5 text-left text-xs leading-tight ${style}`;
+  const position = { top, height, left: `calc(${p.lane * width}% + 2px)`, width: `calc(${width}% - 4px)` };
+  if (onEdit) {
+    return (
+      <button onClick={onEdit} aria-haspopup="dialog" aria-label={`Editar ${p.name}`} className={`${box} flex flex-col justify-start`} style={position}>
+        {content}
+      </button>
+    );
+  }
+  return (
+    <div className={box} style={position}>
+      {content}
     </div>
   );
 }
