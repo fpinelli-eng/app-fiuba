@@ -69,7 +69,8 @@ export async function GET() {
       codigo: byId.get(s.subjectId)?.code ?? null,
       materia: byId.get(s.subjectId)?.name ?? null,
       estado: { approved: "aprobada", final_pending: "final pendiente", in_progress: "cursando" }[s.status],
-      nota: s.grade,
+      // Aprobada por equivalencia: sin nota numérica.
+      nota: s.equivalence ? "equivalencia" : s.grade,
     })),
     requisitos_aprobados: map.requirements.filter((r) => map.progress.requirements.includes(r.id)).map((r) => r.name),
     creditos_extra: map.progress.extraCredits.map((e) => ({ nombre: e.name, creditos: e.credits })),

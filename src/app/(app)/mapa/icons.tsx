@@ -1,4 +1,17 @@
-import type { DisplayState } from "@/lib/map/model";
+import { approvedLabel, gradeMarkShort, type DisplayState, type GradeMark } from "@/lib/map/model";
+
+/** La nota de una aprobada en el mapa: el número grande, o "Equiv." más chico (aprobada por equivalencia). */
+export function GradeMarkText({ mark, big = false }: { mark: GradeMark; big?: boolean }) {
+  if (mark === null) return null;
+  if (mark === "equivalence") {
+    return (
+      <span title="Aprobada por equivalencia" className={`leading-none font-semibold ${big ? "text-xs" : "text-[11px]"}`}>
+        {gradeMarkShort(mark)}
+      </span>
+    );
+  }
+  return <span className={`leading-none font-bold ${big ? "text-lg" : "text-base"}`}>{mark}</span>;
+}
 
 // Íconos de estado del mapa (los mismos del prototipo 06-mapa).
 export function StateIcon({ state, size = 12 }: { state: DisplayState; size?: number }) {
@@ -67,8 +80,8 @@ export const STATE_STYLE: Record<DisplayState, string> = {
   blocked: "bg-blocked border border-dashed border-blocked-line text-blocked-ink",
 };
 
-/** Texto del estado para lectores de pantalla: "Aprobada con 8", "Bloqueada"… */
-export function STATE_ICON_LABEL(state: DisplayState, grade: number | null): string {
+/** Texto del estado para lectores de pantalla: "Aprobada con 8", "Aprobada por equivalencia", "Bloqueada"… */
+export function STATE_ICON_LABEL(state: DisplayState, grade: GradeMark): string {
   const labels: Record<DisplayState, string> = {
     approved: "Aprobada",
     final_pending: "Final pendiente",
@@ -76,5 +89,5 @@ export function STATE_ICON_LABEL(state: DisplayState, grade: number | null): str
     enabled: "Habilitada",
     blocked: "Bloqueada",
   };
-  return state === "approved" && grade !== null ? `Aprobada con ${grade}` : labels[state];
+  return state === "approved" ? approvedLabel(grade) : labels[state];
 }

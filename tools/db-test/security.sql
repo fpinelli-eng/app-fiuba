@@ -185,6 +185,30 @@ select test.fails($$insert into public.user_subjects values ('aaaaaaaa-0000-0000
 select test.fails($$insert into public.user_subjects values ('bbbbbbbb-0000-0000-0000-000000000002', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'QB'), 'in_progress', null)$$,
   'subject for another student');
 
+-- Approved by equivalence (20261119120000_equivalencia): no grade, never both.
+insert into public.user_subjects (user_id, subject_id, status, grade, by_equivalence)
+values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'approved', null, true);
+select test.ok((select by_equivalence and grade is null from public.user_subjects where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII')),
+  'student approves a subject by equivalence');
+select test.ok((select not by_equivalence from public.user_subjects where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL')),
+  'subjects with a grade are not by equivalence');
+select test.fails($$update public.user_subjects set grade = 8 where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII')$$,
+  'approved by equivalence and with a grade');
+select test.fails($$update public.user_subjects set by_equivalence = true where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AL')$$,
+  'equivalence on top of a grade');
+select test.fails($$update public.user_subjects set status = 'in_progress' where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII')$$,
+  'in progress by equivalence');
+select test.fails($$insert into public.user_subjects (user_id, subject_id, status, grade, by_equivalence) values ('bbbbbbbb-0000-0000-0000-000000000002', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'QB'), 'approved', null, true)$$,
+  'equivalence for another student');
+-- From equivalence to a grade, as the map sends it (upsert with both fields).
+insert into public.user_subjects (user_id, subject_id, status, grade, by_equivalence)
+values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII'), 'approved', 7, false)
+on conflict (user_id, subject_id) do update
+set status = excluded.status, grade = excluded.grade, by_equivalence = excluded.by_equivalence;
+select test.ok((select grade = 7 and not by_equivalence from public.user_subjects where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII')),
+  'student changes an equivalence for a grade');
+delete from public.user_subjects where subject_id = (select id from public.subjects where plan_id = 'industrial-2023' and code = 'AMII');
+
 insert into public.user_requirements (user_id, requirement_id)
 values ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.plan_requirements where plan_id = 'industrial-2023'));
 

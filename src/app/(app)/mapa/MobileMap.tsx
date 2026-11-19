@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { STATE_LABEL, normalizeText, subjectKey, type DisplayState, type MapItem, type Subject } from "@/lib/map/model";
-import { STATE_ICON_LABEL, STATE_STYLE, StateIcon } from "./icons";
+import { STATE_LABEL, normalizeText, subjectKey, type DisplayState, type GradeMark, type MapItem, type Subject } from "@/lib/map/model";
+import { GradeMarkText, STATE_ICON_LABEL, STATE_STYLE, StateIcon } from "./icons";
 
 // Mapa en el celular (menos de 768 px): en vez de las columnas, una lista por cuatrimestre
 // y las electivas en otra pestaña. El estado y el guardado son los mismos del mapa de escritorio
@@ -23,7 +23,7 @@ interface Props {
   electiveGroups: { name: string | null; items: Subject[] }[];
   items: Map<string, MapItem>;
   stateOf: (item: MapItem) => DisplayState;
-  gradeOf: (item: MapItem) => number | null;
+  gradeOf: (item: MapItem) => GradeMark;
   credits: number;
   sel: string | null;
   firstLoad: boolean;
@@ -222,7 +222,7 @@ function ElectivesList(props: Props & { q: string; row: (item: MapItem) => React
   );
 }
 
-function Row(props: { item: MapItem; state: DisplayState; grade: number | null; credits: number; selected: boolean; onPick: () => void }) {
+function Row(props: { item: MapItem; state: DisplayState; grade: GradeMark; credits: number; selected: boolean; onPick: () => void }) {
   const { item, state, grade, credits, selected, onPick } = props;
   const name = nameOf(item);
   const subject = item.type === "subject" ? item.subject : null;
@@ -246,7 +246,7 @@ function Row(props: { item: MapItem; state: DisplayState; grade: number | null; 
         <span className="block text-sm leading-tight font-semibold break-words">{name}</span>
         <span className="mt-0.5 block text-xs opacity-80">{label}</span>
       </span>
-      {state === "approved" && grade !== null && <span className="text-lg leading-none font-bold">{grade}</span>}
+      {state === "approved" && <GradeMarkText mark={grade} big />}
       {subject && <span className="text-xs font-medium whitespace-nowrap opacity-75">{subject.credits} C</span>}
     </button>
   );

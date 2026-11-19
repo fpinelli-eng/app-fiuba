@@ -6,7 +6,7 @@ import { arcStations } from "@/lib/home/arc";
 import { getHomeCourses } from "@/lib/home/courses";
 import { getMapData } from "@/lib/map/data";
 import { getReviewRound } from "@/lib/reviews/pending";
-import { CareerMap, formatAverage, sumExtraCredits, totalCredits, type Progress } from "@/lib/map/model";
+import { CareerMap, formatAverage, progressFrom, totalCredits } from "@/lib/map/model";
 import { requireProfile } from "@/lib/session";
 import { isFirstDay } from "@/lib/intro/data";
 import { IntroButton } from "./perfil/IntroButton";
@@ -28,11 +28,7 @@ export default async function InicioPage() {
   const pendingReviews = round ? round.tasks.filter((t) => t.sentStars === null).length : 0;
   const courses = await getHomeCourses(account.id, data.subjects);
   const map = new CareerMap(data.subjects, data.requirements);
-  const progress: Progress = {
-    subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
-    requirements: new Set(data.progress.requirements),
-    extraCredits: sumExtraCredits(data.progress.extraCredits),
-  };
+  const progress = progressFrom(data.progress);
 
   const total = totalCredits(data.creditRules) ?? map.subjects.reduce((a, s) => a + s.credits, 0);
   const credits = map.approvedCredits(progress);

@@ -39,8 +39,33 @@ export interface Requirement {
   shortName: string;
 }
 
+/**
+ * A subject the student marked. "approved" has a grade, or is by equivalence (the SIU gives it
+ * after a change of career: it counts as approved, without a grade, and stays out of the average).
+ */
+export interface SubjectProgress {
+  status: SubjectStatus;
+  grade: number | null;
+  equivalence?: boolean;
+}
+
+/** What the map shows next to an approved subject: its grade, "equivalence", or nothing. */
+export type GradeMark = number | "equivalence" | null;
+
+export function gradeMark(p: SubjectProgress | null | undefined): GradeMark {
+  if (p?.status !== "approved") return null;
+  return p.equivalence ? "equivalence" : p.grade;
+}
+
+/** Short text of a grade mark where space is tight: "8", "Equiv.". */
+export const gradeMarkShort = (g: Exclude<GradeMark, null>) => (g === "equivalence" ? "Equiv." : String(g));
+
+/** "Aprobada con 8", "Aprobada por equivalencia", "Aprobada". */
+export const approvedLabel = (g: GradeMark) =>
+  g === "equivalence" ? "Aprobada por equivalencia" : g === null ? "Aprobada" : `Aprobada con ${g}`;
+
 export interface Progress {
-  subjects: Map<number, { status: SubjectStatus; grade: number | null }>;
+  subjects: Map<number, SubjectProgress>;
   /** Approved requirements. */
   requirements: Set<number>;
   /** Credits that do not come from a subject of the plan (FIUBATÓN, old plan…); they count as electives. */
@@ -64,6 +89,19 @@ export const EXTRA_KIND_LABEL: Record<ExtraCreditKind, string> = {
 };
 
 export const sumExtraCredits = (list: { credits: number }[]) => list.reduce((a, e) => a + e.credits, 0);
+
+/** Progress from the serializable form the server sends (MapData.progress). */
+export function progressFrom(p: {
+  subjects: ({ subjectId: number } & SubjectProgress)[];
+  requirements: number[];
+  extraCredits: { credits: number }[];
+}): Progress {
+  return {
+    subjects: new Map(p.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade, equivalence: s.equivalence ?? false }])),
+    requirements: new Set(p.requirements),
+    extraCredits: sumExtraCredits(p.extraCredits),
+  };
+}
 
 /** One box in the map or one row in the electives panel. */
 export type MapItem =
@@ -132,13 +170,13 @@ export class CareerMap {
     return this.approvedCredits(progress, (s) => s.kind === "elective") + (progress.extraCredits ?? 0);
   }
 
-  /** Average of approved grades, CBC included. null if there are none. */
+  /** Average of approved grades, CBC included; subjects approved by equivalence stay out. null if there are none. */
   average(progress: Progress): number | null {
     let sum = 0;
     let n = 0;
     for (const s of this.subjects) {
       const p = progress.subjects.get(s.id);
-      if (p?.status === "approved" && p.grade !== null) {
+      if (p?.status === "approved" && !p.equivalence && p.grade !== null) {
         sum += p.grade;
         n += 1;
       }

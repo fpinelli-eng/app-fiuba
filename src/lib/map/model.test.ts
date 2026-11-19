@@ -3,9 +3,13 @@ import plan from "../../../data/planes/industrial-2020.json";
 import areasFile from "../../../data/planes/areas.json";
 import {
   CareerMap,
+  approvedLabel,
   electiveTarget,
   formatAverage,
+  gradeMark,
+  gradeMarkShort,
   normalizeText,
+  progressFrom,
   requirementKey,
   subjectKey,
   sumExtraCredits,
@@ -45,9 +49,15 @@ const english = { id: 1, name: "Prueba de nivel de idioma inglés", shortName: "
 const map = new CareerMap(subjects, [english]);
 const id = (code: string) => idOf.get(code)!;
 
-function progress(entries: [string, SubjectStatus, number?][] = [], requirements: number[] = []): Progress {
+/** A grade, or "equiv" for a subject approved by equivalence. */
+function progress(entries: [string, SubjectStatus, (number | "equiv")?][] = [], requirements: number[] = []): Progress {
   return {
-    subjects: new Map(entries.map(([code, status, grade]) => [id(code), { status, grade: grade ?? null }])),
+    subjects: new Map(
+      entries.map(([code, status, grade]) => [
+        id(code),
+        grade === "equiv" ? { status, grade: null, equivalence: true } : { status, grade: grade ?? null },
+      ]),
+    ),
     requirements: new Set(requirements),
   };
 }
@@ -107,6 +117,56 @@ describe("credits and average", () => {
     expect(map.electiveCredits(p)).toBe(elective.credits + 4);
     expect(map.approvedCredits(p, (s) => s.kind === "elective")).toBe(elective.credits);
     expect(sumExtraCredits([{ credits: 2 }, { credits: 4 }])).toBe(6);
+  });
+});
+
+describe("approved by equivalence", () => {
+  it("counts its credits but stays out of the average", () => {
+    const p = progress([...CBC, ["AMII", "approved", "equiv"]]);
+    expect(map.approvedCredits(p)).toBe(38 + 8);
+    expect(formatAverage(map.average(p))).toBe("7,83"); // the CBC grades only
+    expect(map.average(progress([["CBC66", "approved", "equiv"]]))).toBeNull();
+  });
+
+  it("unlocks prerequisites and completes the CBC like any approved subject", () => {
+    const cbcByEquivalence = CBC.map(([code]): [string, SubjectStatus, "equiv"] => [code, "approved", "equiv"]);
+    const p = progress([...cbcByEquivalence, ["AMII", "approved", "equiv"], ["FSP", "approved", "equiv"]]);
+    expect(map.cbcComplete(p)).toBe(true);
+    expect(map.displayState(p, id("AMII"))).toBe("approved");
+    expect(map.displayState(p, id("ERM"))).toBe("enabled"); // needs AMII and FSP
+  });
+
+  it("counts for the electives and the home categories", () => {
+    const elective = subjects.find((s) => s.kind === "elective")!;
+    const p: Progress = { subjects: new Map([[elective.id, { status: "approved", grade: null, equivalence: true }]]), requirements: new Set() };
+    expect(map.electiveCredits(p)).toBe(elective.credits);
+    expect(map.creditsByCategory(p, { electivas: 24 }).electives.done).toBe(elective.credits);
+    expect(map.average(p)).toBeNull();
+  });
+
+  it("shows Equivalencia instead of a grade", () => {
+    expect(gradeMark({ status: "approved", grade: null, equivalence: true })).toBe("equivalence");
+    expect(gradeMark({ status: "approved", grade: 8 })).toBe(8);
+    expect(gradeMark({ status: "in_progress", grade: null })).toBeNull();
+    expect(gradeMark(undefined)).toBeNull();
+    expect(approvedLabel("equivalence")).toBe("Aprobada por equivalencia");
+    expect(approvedLabel(8)).toBe("Aprobada con 8");
+    expect(gradeMarkShort("equivalence")).toBe("Equiv.");
+  });
+
+  it("reads the flag from the server data", () => {
+    const p = progressFrom({
+      subjects: [
+        { subjectId: id("AMII"), status: "approved", grade: null, equivalence: true },
+        { subjectId: id("AL"), status: "approved", grade: 9 },
+      ],
+      requirements: [],
+      extraCredits: [{ credits: 2 }],
+    });
+    expect(p.subjects.get(id("AMII"))?.equivalence).toBe(true);
+    expect(p.subjects.get(id("AL"))?.equivalence).toBe(false);
+    expect(map.average(p)).toBe(9);
+    expect(p.extraCredits).toBe(2);
   });
 });
 

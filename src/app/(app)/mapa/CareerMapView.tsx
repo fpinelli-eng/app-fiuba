@@ -9,20 +9,25 @@ import {
   GRADES,
   STATE_LABEL,
   electiveTarget,
+  approvedLabel,
   formatAverage,
+  gradeMark,
   normalizeText,
+  progressFrom,
   requirementKey,
   subjectKey,
   totalCredits,
   type DisplayState,
+  type GradeMark,
   type MapItem,
   sumExtraCredits,
   type Progress,
   type Subject,
+  type SubjectProgress,
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
-import { CloseIcon, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
+import { CloseIcon, GradeMarkText, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
 import { ExtrasDialog } from "./ExtrasDialog";
 import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 
@@ -48,11 +53,9 @@ interface Props {
 
 export function CareerMapView({ userId, data, firstLoad }: Props) {
   const map = useMemo(() => new CareerMap(data.subjects, data.requirements), [data]);
-  const [progress, setProgress] = useState<Progress>(() => ({
-    subjects: new Map(data.progress.subjects.map((s) => [s.subjectId, { status: s.status, grade: s.grade }])),
-    requirements: new Set(data.progress.requirements),
-    extraCredits: sumExtraCredits(data.progress.extraCredits),
-  }));
+  const [progress, setProgress] = useState<Progress>(() => progressFrom(data.progress));
+  // "Por equivalencia" solo cuando la base ya tiene la columna (las vistas previas usan la de producción).
+  const canEquivalence = data.equivalenceReady;
   const sequence = useMemo(() => map.loadSequence(), [map]);
   const [sel, setSel] = useState<string | null>(firstLoad ? (sequence[0] ?? null) : null);
   const [pending, setPending] = useState<string | null>(null); // "Aprobada" elegida, falta la nota
@@ -123,7 +126,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     return out;
   }, [items, map, progress, credits]);
   const stateOf = useCallback((item: MapItem): DisplayState => states.get(item.key) ?? "blocked", [states]);
-  const gradeOf = (item: MapItem) => (item.type === "subject" ? (progress.subjects.get(item.subject.id)?.grade ?? null) : null);
+  const gradeOf = (item: MapItem): GradeMark => (item.type === "subject" ? gradeMark(progress.subjects.get(item.subject.id)) : null);
 
   const selItem = sel ? (items.get(sel) ?? null) : null;
   const selSubject = selItem?.type === "subject" ? selItem.subject : null;
@@ -159,7 +162,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
 
   const fail = () => setSaveError("No pudimos guardar el cambio. Probá de nuevo.");
 
-  async function saveSubject(id: number, next: { status: SubjectStatus; grade: number | null } | null) {
+  async function saveSubject(id: number, next: SubjectProgress | null) {
     const before = progress.subjects.get(id) ?? null;
     setSaveError(null);
     setProgress((p) => {
@@ -171,7 +174,17 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     const { error } = next
       ? await supabase
           .from("user_subjects")
-          .upsert({ user_id: userId, subject_id: id, status: next.status, grade: next.grade }, { onConflict: "user_id,subject_id" })
+          .upsert(
+            {
+              user_id: userId,
+              subject_id: id,
+              status: next.status,
+              grade: next.grade,
+              // Sin la columna todavía, no se manda (el upsert fallaría).
+              ...(canEquivalence ? { by_equivalence: next.equivalence === true } : {}),
+            },
+            { onConflict: "user_id,subject_id" },
+          )
       : await supabase.from("user_subjects").delete().eq("user_id", userId).eq("subject_id", id);
     if (!error) refreshSoon();
     if (error) {
@@ -216,10 +229,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     setSel(i >= 0 ? (sequence[i + 1] ?? null) : null);
   };
 
-  function pickGrade(item: MapItem, grade: number) {
+  /** Una nota, o "equivalence": aprobada por equivalencia (sin nota, fuera del promedio). */
+  function pickGrade(item: MapItem, grade: Exclude<GradeMark, null>) {
     if (item.type !== "subject") return;
     setPending(null);
-    void saveSubject(item.subject.id, { status: "approved", grade });
+    void saveSubject(
+      item.subject.id,
+      grade === "equivalence" ? { status: "approved", grade: null, equivalence: true } : { status: "approved", grade, equivalence: false },
+    );
     advance(item);
   }
 
@@ -238,7 +255,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       return;
     }
     setPending(null);
-    void saveSubject(id, state === "none" ? null : { status: state, grade: null });
+    void saveSubject(id, state === "none" ? null : { status: state, grade: null, equivalence: false });
     advance(item);
   }
 
@@ -400,7 +417,8 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             related={related}
             items={items}
             onPick={select}
-            onGrade={(g) => pickGrade(selItem, g)}
+            canEquivalence={canEquivalence}
+                  onGrade={(g) => pickGrade(selItem, g)}
             onState={(s) => pickState(selItem, s)}
             onPrev={() => {
               const i = sequence.indexOf(selItem.key);
@@ -492,7 +510,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                   key={key}
                   item={item}
                   state={state}
-                  grade={item.type === "subject" ? (progress.subjects.get(item.subject.id)?.grade ?? null) : null}
+                  grade={gradeOf(item)}
                   x={pos.x}
                   y={pos.y}
                   opacity={opacity}
@@ -513,6 +531,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                   firstLoad={firstLoad}
                   pending={pending === selItem.key}
                   inSequence={sequence.includes(selItem.key)}
+                  canEquivalence={canEquivalence}
                   onGrade={(g) => pickGrade(selItem, g)}
                   onState={(s) => pickState(selItem, s)}
                   onPrev={() => {
@@ -590,7 +609,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                         const item = items.get(subjectKey(s.id))!;
                         const state = stateOf(item);
                         const { opacity, outline, isSel } = emphasis(item);
-                        const grade = progress.subjects.get(s.id)?.grade ?? null;
+                        const grade = gradeMark(progress.subjects.get(s.id));
                         return (
                           <button
                             key={s.id}
@@ -602,7 +621,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                           >
                             <StateIcon state={state} size={13} />
                             <span className="flex-auto font-medium">{s.name}</span>
-                            {state === "approved" && grade !== null && <span className="text-base leading-none font-bold">{grade}</span>}
+                            {state === "approved" && <GradeMarkText mark={grade} />}
                             <span className="text-[10.5px] font-medium whitespace-nowrap opacity-75">{s.credits} C</span>
                           </button>
                         );
@@ -626,7 +645,8 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               pending={pending === selItem.key}
               inSequence={false}
               electiveGroup={selSubject?.kind === "orientation" ? selSubject.category : (selSubject?.area?.name ?? null)}
-              onGrade={(g) => pickGrade(selItem, g)}
+              canEquivalence={canEquivalence}
+                  onGrade={(g) => pickGrade(selItem, g)}
               onState={(s) => pickState(selItem, s)}
               onPrev={() => {}}
               onNext={() => {}}
@@ -665,7 +685,7 @@ function Legend() {
 function MapNode(props: {
   item: MapItem;
   state: DisplayState;
-  grade: number | null;
+  grade: GradeMark;
   x: number;
   y: number;
   opacity: number;
@@ -692,7 +712,7 @@ function MapNode(props: {
           <span className="flex items-center gap-1 font-medium">
             <StateIcon state={state} />
             {short}
-            {state === "approved" && grade !== null && <span className="text-base leading-none font-bold">{grade}</span>}
+            {state === "approved" && <GradeMarkText mark={grade} />}
           </span>
           {item.type === "subject" && <span className="text-[10.5px] font-medium whitespace-nowrap opacity-75">{item.subject.credits} C</span>}
         </span>
@@ -741,25 +761,28 @@ function SubjectCard(props: {
   related?: { needs: Set<string>; unlocks: Set<string> };
   items?: Map<string, MapItem>;
   onPick?: (key: string) => void;
-  onGrade: (grade: number) => void;
+  /** Muestra "Por equivalencia" junto a las notas (la base ya tiene la columna). */
+  canEquivalence: boolean;
+  onGrade: (grade: Exclude<GradeMark, null>) => void;
   onState: (state: ButtonState) => void;
   onPrev: () => void;
   onNext: () => void;
   onClose: () => void;
 }) {
-  const { item, progress, credits, stateOf, firstLoad, pending, inSequence, electiveGroup, onGrade, onState, onPrev, onNext, onClose } = props;
+  const { item, progress, credits, stateOf, firstLoad, pending, inSequence, electiveGroup, canEquivalence, onGrade, onState, onPrev, onNext, onClose } =
+    props;
   const sheet = props.variant === "sheet";
   const state = stateOf(item);
   const isReq = item.type === "requirement";
   const subject = item.type === "subject" ? item.subject : null;
   const own = subject ? (progress.subjects.get(subject.id) ?? null) : null;
-  const grade = own?.status === "approved" ? own.grade : null;
+  const grade = gradeMark(own);
   const name = subject ? subject.name : item.type === "requirement" ? item.requirement.name : "";
   const isElective = subject?.kind === "elective" || subject?.kind === "orientation";
 
   const sub = isReq
     ? `Requisito · ${state === "approved" ? "Aprobada" : "Pendiente"}`
-    : `${subject!.credits} créditos · ${state === "approved" && grade !== null ? `Aprobada con ${grade}` : STATE_LABEL[state]}`;
+    : `${subject!.credits} créditos · ${state === "approved" ? approvedLabel(grade) : STATE_LABEL[state]}`;
 
   // Si está bloqueada por créditos, se dice cuántos pide (las correlativas ya se ven resaltadas en el mapa).
   const rc = subject?.requiredCredits ?? null;
@@ -784,24 +807,43 @@ function SubjectCard(props: {
         ];
   const current: ButtonState = isReq ? (state === "approved" ? "approved" : "none") : (own?.status ?? "none");
 
+  const gradeSize = (big: boolean) => (sheet ? "h-11 text-[15px]" : big ? "h-9 text-sm" : "h-[30px] text-[13px]");
+  const gradeLook = (on: boolean) => (on ? "border border-accent bg-accent text-on-accent" : "border border-line bg-surface text-ink");
+  const equivalence = grade === "equivalence";
   const gradeButtons = (big: boolean) => (
-    <div className="flex gap-1">
-      {GRADES.map((g) => {
-        const on = grade === g;
-        return (
+    <>
+      <div className="flex gap-1">
+        {GRADES.map((g) => {
+          const on = grade === g;
+          return (
+            <button
+              key={g}
+              type="button"
+              aria-pressed={on}
+              aria-label={`Nota ${g}`}
+              onClick={() => onGrade(g)}
+              className={`flex-1 rounded-[7px] p-0 font-semibold ${gradeSize(big)} ${gradeLook(on)}`}
+            >
+              {g}
+            </button>
+          );
+        })}
+      </div>
+      {/* Cambio de carrera: el SIU la da por aprobada sin nota. Va en lugar de la nota, no además. */}
+      {canEquivalence && (
+        <>
           <button
-            key={g}
             type="button"
-            aria-pressed={on}
-            aria-label={`Nota ${g}`}
-            onClick={() => onGrade(g)}
-            className={`flex-1 rounded-[7px] p-0 font-semibold ${sheet ? "h-11 text-[15px]" : big ? "h-9 text-sm" : "h-[30px] text-[13px]"} ${on ? "border border-accent bg-accent text-on-accent" : "border border-line bg-surface text-ink"}`}
+            aria-pressed={equivalence}
+            onClick={() => onGrade("equivalence")}
+            className={`w-full rounded-[7px] px-2 font-semibold ${gradeSize(big)} ${gradeLook(equivalence)}`}
           >
-            {g}
+            Por equivalencia
           </button>
-        );
-      })}
-    </div>
+          {equivalence && <p className="text-xs text-muted">Suma los créditos, pero no cuenta para el promedio.</p>}
+        </>
+      )}
+    </>
   );
 
   return (
