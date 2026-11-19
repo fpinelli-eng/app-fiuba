@@ -319,7 +319,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             onClick={() => setExtrasOpen(true)}
             className="inline-flex h-[42px] shrink-0 items-center rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-semibold md:px-[18px]"
           >
-            Extras
+            Créditos extras
           </button>
           {!firstLoad && (
             <Link
