@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMapData } from "@/lib/map/data";
+import { fromRow, timeValue, type ActivityRow } from "@/lib/plan/activities";
 import { titleCase } from "@/lib/plan/format";
 import { getMyReviews, termLabel } from "@/lib/reviews/mine";
 import { createClient } from "@/lib/supabase/server";
@@ -47,9 +48,15 @@ export async function GET() {
   // vistas previas (base de producción) no tienen hasta integrar la rama.
   const source = await supabase.from("profiles").select("signup_source").eq("id", account.id).maybeSingle();
   // Igual: llegan con la migración 20261116130000_recordarme_confirmacion.
-  const [reminderEmail, confirmations] = await Promise.all([
+  // Igual las actividades del Plan: llegan con la migración 20261119130000_plan_actividades.
+  const [reminderEmail, confirmations, activities] = await Promise.all([
     supabase.from("profiles").select("reminder_email").eq("id", account.id).maybeSingle(),
     supabase.from("reminder_confirmations").select("email, sent_at").eq("user_id", account.id).order("sent_at"),
+    supabase
+      .from("plan_activities")
+      .select("id, term_id, name, place, color, blocks, created_at")
+      .eq("user_id", account.id)
+      .order("created_at"),
   ]);
   if (failed?.error) return NextResponse.json({ error: failed.error.message }, { status: 500 });
 
@@ -80,6 +87,20 @@ export async function GET() {
       ...course(c.offerings as unknown as OfferingRef),
       elegido: c.created_at,
     })),
+    // Actividades propias que agregó al calendario del Plan (ayudantías, trabajo…), por cuatrimestre.
+    actividades_del_plan: activities.error
+      ? []
+      : (activities.data ?? []).map((a) => {
+          const activity = fromRow(a as unknown as ActivityRow);
+          return {
+            cuatrimestre: termLabel(a.term_id as string),
+            nombre: activity.name,
+            lugar_o_nota: activity.place,
+            color: activity.color,
+            horarios: activity.blocks.map((b) => ({ dia: b.day, desde: timeValue(b.start), hasta: timeValue(b.end) })),
+            creada: a.created_at,
+          };
+        }),
     cursadas: (courses.data ?? []).map((c) => ({ ...course(c.offerings as unknown as OfferingRef), confirmada: c.created_at })),
     recordatorios_de_finales: reminders.data ?? [],
     // "¿Preferís recibir los avisos en otro mail?" (null: a tu cuenta) y los mails de confirmación enviados.

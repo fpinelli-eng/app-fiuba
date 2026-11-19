@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { PlanAnalysis } from "@/lib/plan/analyze";
 import { DAY_SHORT, describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
-import { WEEK_DAYS, type ClassBlock, type WeekDay } from "@/lib/plan/options";
+import { type ClassBlock, type WeekDay } from "@/lib/plan/options";
+import { ALL_DAYS, activityClassBlocks, activityKey, daysToShow, type PlanActivity } from "@/lib/plan/activities";
 import { firstDayToShow } from "@/lib/home/calendar";
 import type { Entry, OptionKey, PlanCourse, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { Check, DAY_LONG, GROUP_TITLE, Rating, Warning, overlaps, type Color } from "./shared";
+import { ACTIVITY_STYLE, ActivityList, AddActivityButton, hatchClass } from "./activities";
 
 // Plan del cuatrimestre en celular (menos de 768 px). No copia el escritorio: dos vistas,
 // "Materias" (lista; cada materia abre una hoja con sus cursos) y "Semana" (agenda día por
@@ -20,10 +22,10 @@ type View = "materias" | "semana";
 const ABOVE_TAB_BAR = "bottom-[calc(61px+env(safe-area-inset-bottom))]";
 
 const noSubscribe = () => () => {};
-// Día de hoy según el dispositivo (domingo → lunes). En el servidor, lunes.
-const useToday = (): WeekDay => {
+// Día de hoy según el dispositivo: 0 = lunes … 6 = domingo. En el servidor, lunes.
+const useTodayIndex = (): number => {
   const day = useSyncExternalStore(noSubscribe, () => new Date().getDay(), () => 1);
-  return WEEK_DAYS[day === 0 ? 0 : day - 1];
+  return day === 0 ? 6 : day - 1;
 };
 
 export function PlanMobile({
@@ -42,6 +44,9 @@ export function PlanMobile({
   onClear,
   cursadaCount,
   onConfirm,
+  activities,
+  onAddActivity,
+  onEditActivity,
 }: {
   active: OptionKey;
   onOption: (k: OptionKey) => void;
@@ -59,6 +64,11 @@ export function PlanMobile({
   /** Subjects of the confirmed cursada (0 if not confirmed yet). */
   cursadaCount: number;
   onConfirm: () => void;
+  /** The student's own activities (ayudantía, trabajo), in both options. */
+  activities: PlanActivity[];
+  /** Absent while the table is not in the database yet: no "Agregar actividad". */
+  onAddActivity?: () => void;
+  onEditActivity: (a: PlanActivity) => void;
 }) {
   const [view, setView] = useState<View>(() => (plan.length > 0 ? "semana" : "materias"));
   const [sheet, setSheet] = useState<string | null>(null);
@@ -112,10 +122,13 @@ export function PlanMobile({
         <Week
           option={active}
           selected={selected}
+          activities={activities}
           analysis={analysis}
           warnings={warnings}
           onChoose={() => setView("materias")}
           onClear={onClear}
+          onAddActivity={onAddActivity}
+          onEditActivity={onEditActivity}
         />
       )}
 
@@ -358,54 +371,77 @@ function CourseSheet({
   );
 }
 
+// Lo que va en la agenda de un día: una clase de un curso o un horario de una actividad propia.
+type DayItem = { id: string; block: ClassBlock } & (
+  | { course: Selected; activity?: undefined }
+  | { course?: undefined; activity: PlanActivity }
+);
+
 function Week({
   option,
   selected,
+  activities,
   analysis,
   warnings,
   onChoose,
   onClear,
+  onAddActivity,
+  onEditActivity,
 }: {
   option: OptionKey;
   selected: Selected[];
+  activities: PlanActivity[];
   analysis: PlanAnalysis;
   warnings: PlanWarning[];
   onChoose: () => void;
   onClear: () => void;
+  onAddActivity?: () => void;
+  onEditActivity: (a: PlanActivity) => void;
 }) {
-  const today = useToday();
+  const todayIndex = useTodayIndex();
   const [picked, setPicked] = useState<WeekDay | null>(null);
-  const classes = selected.flatMap((s) => s.course.blocks.filter((b) => !b.async).map((block) => ({ ...s, block })));
+  const items: DayItem[] = [
+    ...selected.flatMap((s) => s.course.blocks.filter((b) => !b.async).map((block) => ({ id: s.course.id, block, course: s }))),
+    ...activities.flatMap((a) => activityClassBlocks(a).map((block) => ({ id: activityKey(a.id), block, activity: a }))),
+  ];
+  const days = daysToShow(items.map((c) => c.block));
+  const today = ALL_DAYS[todayIndex];
   // Sin elegir, arranca en hoy si tiene clases; si no, en el próximo día que tenga (como el inicio).
-  const byDay = WEEK_DAYS.map((d) => classes.filter((c) => c.block.day === d));
-  const day = picked ?? WEEK_DAYS[firstDayToShow(byDay, (WEEK_DAYS as readonly WeekDay[]).indexOf(today))];
+  const byDay = days.map((d) => items.filter((c) => c.block.day === d));
+  const firstIndex = days.length === 7 && todayIndex === 6 && byDay[6].length ? 6 : firstDayToShow(byDay.slice(0, 6), todayIndex);
+  const day = picked && days.includes(picked) ? picked : days[firstIndex];
 
-  if (selected.length === 0) {
+  if (items.length === 0 && analysis.asyncClasses.length === 0) {
     return (
       <div className="flex flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-4">
         <p className="text-ink-2">Todavía no elegiste materias para la Opción {option}.</p>
-        <button onClick={onChoose} className="h-10 rounded-[10px] bg-accent px-4 text-sm font-semibold text-on-accent">
-          Elegir materias
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={onChoose} className="h-10 rounded-[10px] bg-accent px-4 text-sm font-semibold text-on-accent">
+            Elegir materias
+          </button>
+          {onAddActivity && <AddActivityButton onClick={onAddActivity} />}
+        </div>
       </div>
     );
   }
 
-  const ofDay = classes.filter((c) => c.block.day === day).sort((a, b) => a.block.start - b.block.start || a.block.end - b.block.end);
+  const ofDay = items.filter((c) => c.block.day === day).sort((a, b) => a.block.start - b.block.start || a.block.end - b.block.end);
   const dayWarnings = warnings.filter((w) => w.day === day);
 
   return (
     <section aria-label="Semana" className="flex flex-col gap-3">
-      <div role="tablist" aria-label="Día" className="grid grid-cols-6 gap-1.5">
-        {WEEK_DAYS.map((d) => {
-          const colors = [...new Set(classes.filter((c) => c.block.day === d).map((c) => c.color))];
+      <div role="tablist" aria-label="Día" className={`grid gap-1.5 ${days.length === 7 ? "grid-cols-7" : "grid-cols-6"}`}>
+        {days.map((d) => {
+          const ofD = items.filter((c) => c.block.day === d);
+          const dots = [...new Set(ofD.map((c) => (c.course ? c.course.color.dot : ACTIVITY_STYLE[c.activity.color].dot)))];
+          const count = new Set(ofD.map((c) => c.id)).size;
           const problem = warnings.some((w) => w.day === d);
           return (
             <button
               key={d}
               role="tab"
               aria-selected={d === day}
-              aria-label={`${d}${colors.length ? `, ${colors.length} ${colors.length === 1 ? "materia" : "materias"}` : ", sin clases"}${problem ? ", con avisos" : ""}`}
+              aria-label={`${d}${count ? `, ${count} ${count === 1 ? "cosa" : "cosas"} en tu semana` : ", libre"}${problem ? ", con avisos" : ""}`}
               onClick={() => setPicked(d)}
               className={`relative flex h-14 flex-col items-center justify-center gap-1.5 rounded-xl border text-[13px] ${
                 d === day ? "border-transparent bg-lavender font-semibold text-lavender-ink" : "border-line bg-surface text-ink-2"
@@ -413,8 +449,8 @@ function Week({
             >
               {DAY_SHORT[d]}
               <span className="flex h-1.5 gap-[3px]" aria-hidden="true">
-                {colors.slice(0, 4).map((c) => (
-                  <span key={c.dot} className={`size-1.5 rounded-full ${c.dot}`} />
+                {dots.slice(0, 4).map((dot) => (
+                  <span key={dot} className={`size-1.5 rounded-full ${dot}`} />
                 ))}
               </span>
               {problem && <span className="absolute top-1 right-1 size-2 rounded-full bg-danger" aria-hidden="true" />}
@@ -431,17 +467,21 @@ function Week({
       ))}
 
       {ofDay.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-sm text-muted">Sin clases el {DAY_LONG[day]}.</p>
+        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-sm text-muted">Libre el {DAY_LONG[day]}.</p>
       ) : (
         <ol className="flex flex-col gap-2">
           {ofDay.map((c, i) => {
             const prev = ofDay[i - 1];
             const gap = prev ? c.block.start - Math.max(...ofDay.slice(0, i).map((p) => p.block.end)) : 0;
-            const clash = classes.some((o) => o.course.id !== c.course.id && overlaps(o.block, c.block));
+            const clash = items.some((o) => o.id !== c.id && overlaps(o.block, c.block));
             return (
-              <li key={`${c.course.id}-${c.block.start}-${c.block.type}`} className="flex flex-col gap-2">
+              <li key={`${c.id}-${c.block.start}-${c.block.type}`} className="flex flex-col gap-2">
                 {gap >= 60 && <div className="text-center text-xs text-muted">Libre {formatHours(gap)} h</div>}
-                <AgendaItem block={c.block} name={c.subject.name} course={c.course} color={c.color} clash={clash} />
+                {c.course ? (
+                  <AgendaItem block={c.block} name={c.course.subject.name} course={c.course.course} color={c.course.color} clash={clash} />
+                ) : (
+                  <ActivityAgendaItem block={c.block} activity={c.activity} clash={clash} onEdit={() => onEditActivity(c.activity)} />
+                )}
               </li>
             );
           })}
@@ -462,10 +502,57 @@ function Week({
         </div>
       )}
 
-      <button onClick={onClear} className="h-10 self-start rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted">
-        Vaciar plan
-      </button>
+      {onAddActivity &&
+        (activities.length > 0 ? (
+          <ActivityList activities={activities} onEdit={onEditActivity} onAdd={onAddActivity} />
+        ) : (
+          <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+            <p className="text-[13px] leading-snug text-muted">¿Ayudantía, trabajo o algo fuera de la facu? Sumalo a tu semana.</p>
+            <AddActivityButton onClick={onAddActivity} small />
+          </div>
+        ))}
+
+      {selected.length > 0 && (
+        <button onClick={onClear} className="h-10 self-start rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted">
+          Vaciar plan
+        </button>
+      )}
     </section>
+  );
+}
+
+function ActivityAgendaItem({
+  block,
+  activity,
+  clash,
+  onEdit,
+}: {
+  block: ClassBlock;
+  activity: PlanActivity;
+  clash: boolean;
+  onEdit: () => void;
+}) {
+  return (
+    <button
+      onClick={onEdit}
+      aria-haspopup="dialog"
+      className={`flex w-full gap-3 rounded-xl px-3 py-2.5 text-left ${hatchClass(activity.color)} ${
+        clash ? "border-2 border-danger" : `border border-dashed ${ACTIVITY_STYLE[activity.color].border}`
+      }`}
+    >
+      <div className="w-12 flex-none leading-tight">
+        <div className="text-[15px] font-semibold">{formatHour(block.start)}</div>
+        <div className="text-xs opacity-80">a {formatHour(block.end)} hs</div>
+      </div>
+      <div className="min-w-0 flex-auto text-[13px] leading-snug">
+        <div className="text-[14.5px] leading-tight font-semibold">{activity.name}</div>
+        <div className="opacity-90">Actividad{activity.place ? ` · ${activity.place}` : ""}</div>
+        {clash && (
+          <span className="mt-1 inline-block rounded-full bg-surface px-2 py-px text-[11px] font-semibold text-danger">Se superpone</span>
+        )}
+      </div>
+      <span className="self-center text-xs font-semibold underline underline-offset-2 opacity-80">Editar</span>
+    </button>
   );
 }
 

@@ -492,6 +492,68 @@ reset role;
 
 update public.terms set is_current = false where id = '2026-1C';
 
+-- Personal activities in the Plan (plan_activities) ------------------------------------
+
+update public.terms set is_current = true where id = '2026-1C';
+
+set role anon;
+select test.fails('select 1 from public.plan_activities limit 1', 'anon reads activities');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"cccccccc-0000-0000-0000-000000000003","email":"otro@gmail.com"}', false);
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'gmail account creates an activity');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+insert into public.plan_activities (term_id, name, place, color, blocks)
+values ('2026-1C', 'Ayudantía Análisis II', 'Paseo Colón', 'sky', '[{"weekday": 2, "starts_at": 1080, "ends_at": 1200}, {"weekday": 7, "starts_at": 600, "ends_at": 660}]');
+select test.ok((select count(*) from public.plan_activities) = 1, 'student creates an activity');
+select test.ok((select user_id from public.plan_activities) = 'aaaaaaaa-0000-0000-0000-000000000001', 'the activity is hers');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks, user_id) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]', 'bbbbbbbb-0000-0000-0000-000000000002')$$, 'student creates an activity for another student');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-2C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'student creates an activity in a term that is not the current one');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', '   ', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'activity without a name');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', repeat('a', 61), 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'activity with a name too long');
+select test.fails($$insert into public.plan_activities (term_id, name, place, color, blocks) values ('2026-1C', 'Trabajo', repeat('a', 81), 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'activity with a place too long');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'red', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080}]')$$, 'activity with a color outside the palette');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[]')$$, 'activity without blocks');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '{"weekday": 1, "starts_at": 540, "ends_at": 1080}')$$, 'activity with blocks that are not a list');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 8, "starts_at": 540, "ends_at": 1080}]')$$, 'activity on day 8');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 1080, "ends_at": 540}]')$$, 'activity that ends before it starts');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1500}]')$$, 'activity that ends after midnight');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1.5, "starts_at": 540, "ends_at": 1080}]')$$, 'activity with a fractional day');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": "1", "starts_at": 540, "ends_at": 1080}]')$$, 'activity with a day as text');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Trabajo', 'mint', '[{"weekday": 1, "starts_at": 540, "ends_at": 1080, "extra": "x"}]')$$, 'activity block with extra keys');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) select '2026-1C', 'Trabajo', 'mint', jsonb_agg(jsonb_build_object('weekday', 1, 'starts_at', n * 60, 'ends_at', n * 60 + 30)) from generate_series(1, 11) n$$, 'activity with more than 10 blocks');
+update public.plan_activities set name = 'Ayudantía de Análisis II', color = 'peach', place = null, blocks = '[{"weekday": 3, "starts_at": 1080, "ends_at": 1200}]';
+select test.ok((select name = 'Ayudantía de Análisis II' and color = 'peach' and place is null and blocks -> 0 ->> 'weekday' = '3' from public.plan_activities), 'student edits her activity');
+select test.fails($$update public.plan_activities set blocks = '[]'$$, 'student edits an activity without blocks');
+select test.fails($$update public.plan_activities set term_id = '2026-2C'$$, 'student moves an activity to another term');
+select test.fails($$update public.plan_activities set user_id = 'bbbbbbbb-0000-0000-0000-000000000002'$$, 'student gives an activity to another student');
+-- At most 30 per student and term.
+insert into public.plan_activities (term_id, name, color, blocks) select '2026-1C', 'Límite ' || n, 'mint', '[{"weekday": 6, "starts_at": 600, "ends_at": 660}]' from generate_series(1, 29) n;
+select test.ok((select count(*) from public.plan_activities) = 30, 'student creates 30 activities');
+select test.fails($$insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Límite 30', 'mint', '[{"weekday": 6, "starts_at": 600, "ends_at": 660}]')$$, 'student creates more than 30 activities in a term');
+delete from public.plan_activities where name like 'Límite %';
+select test.ok((select count(*) from public.plan_activities) = 1, 'student deletes activities');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
+select test.ok((select count(*) from public.plan_activities) = 0, 'another student (an admin) does not see her activities');
+update public.plan_activities set name = 'Hackeado';  -- RLS: updates nothing
+delete from public.plan_activities;  -- RLS: deletes nothing
+insert into public.plan_activities (term_id, name, color, blocks) values ('2026-1C', 'Gimnasio', 'lavender', '[{"weekday": 1, "starts_at": 420, "ends_at": 480}]');
+select test.ok((select count(*) from public.plan_activities) = 1, 'another student sees only his activity');
+reset role;
+
+select test.ok((select count(*) from public.plan_activities) = 2, 'another student cannot edit or delete her activities');
+select test.ok((select name from public.plan_activities where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 'Ayudantía de Análisis II', 'her activity keeps its name');
+delete from public.plan_activities where user_id = 'bbbbbbbb-0000-0000-0000-000000000002';
+
+update public.terms set is_current = false where id = '2026-1C';
+
 -- Changing career or plan: subjects and the semester plan go, cursadas and reviews stay ------
 
 set role anon;
@@ -509,6 +571,7 @@ select test.ok((select count(*) from public.user_subjects) = 0, 'changing plan d
 select test.ok((select count(*) from public.user_requirements) = 0, 'changing plan deletes the requirements');
 select test.ok((select count(*) from public.plan_choices) = 0, 'changing plan deletes the semester plan');
 select test.ok((select count(*) from public.user_courses) = 1, 'changing plan keeps the cursadas');
+select test.ok((select count(*) from public.plan_activities) = 1, 'changing plan keeps the activities');
 select test.ok((select count(*) from public.my_reviews()) = (select n from ana_reviews) and (select n from ana_reviews) > 0, 'changing plan keeps the reviews');
 -- Back to Industrial, with a subject and a plan choice, for the checks below.
 select public.change_my_plan('industrial-2023');
@@ -775,6 +838,7 @@ select test.ok((select count(*) from public.review_authors) = 0, 'authorship is 
 select test.ok((select count(*) from public.user_subjects) = 0, 'subjects are deleted with the account');
 select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is deleted with the account');
 select test.ok((select count(*) from public.exam_reminders) = 0, 'exam reminders are deleted with the account');
+select test.ok((select count(*) from public.plan_activities) = 0, 'activities are deleted with the account');
 select test.ok((select count(*) from public.reminder_confirmations) = 0, 'reminder confirmations are deleted with the account');
 select test.ok((select count(*) from public.usage_slots) = 0, 'usage slots are deleted with the account');
 
