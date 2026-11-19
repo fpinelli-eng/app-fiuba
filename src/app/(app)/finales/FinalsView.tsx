@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { NavIcon } from "@/components/icons";
-import { normalizeText } from "@/lib/map/model";
 import {
   enrollmentStatus,
   formatEnrollMoment,
   formatExamDay,
   formatExamTime,
   formatTeachers,
+  searchSubjects,
   type ExamSubjectView,
   type ExamTableView,
   type FinalsData,
@@ -21,6 +21,57 @@ import { RemindersDialog, type SavedNotice } from "./RemindersDialog";
 
 const plural = (n: number, one: string, many: string) =>
   `${n} ${n === 1 ? one : many}`;
+
+// "Tus finales pendientes" abierto o cerrado, recordado por dispositivo (abierto la primera vez).
+// localStorage puede no estar (modo privado, datos bloqueados): entonces vale mientras la página siga abierta.
+const MINE_KEY = "finales-pendientes";
+let mineMemory: boolean | null = null;
+const mineListeners = new Set<() => void>();
+
+function readMineOpen(): boolean {
+  if (mineMemory !== null) return mineMemory;
+  try {
+    return localStorage.getItem(MINE_KEY) !== "cerrado";
+  } catch {
+    return true;
+  }
+}
+
+function saveMineOpen(open: boolean) {
+  mineMemory = open;
+  try {
+    localStorage.setItem(MINE_KEY, open ? "abierto" : "cerrado");
+  } catch {
+    // Sin localStorage queda en memoria.
+  }
+  mineListeners.forEach((listener) => listener());
+}
+
+function subscribeMine(listener: () => void) {
+  mineListeners.add(listener);
+  return () => {
+    mineListeners.delete(listener);
+  };
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`motion-safe:transition-transform motion-safe:duration-200 ${open ? "rotate-180" : ""}`}
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
 
 function EnrollmentChip({ table, now }: { table: ExamTableView; now: string }) {
   const status = enrollmentStatus(table, now);
@@ -101,7 +152,10 @@ export function FinalsView({
   reminderMail: ReminderMailState | null;
 }) {
   const [query, setQuery] = useState("");
-  const q = normalizeText(query);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const titleRow = useRef<HTMLDivElement>(null);
+  const searching = query.trim() !== "";
+  const mineOpen = useSyncExternalStore(subscribeMine, readMineOpen, () => true);
   const { now, pending, all } = data;
   const [reminders, setReminders] = useState<ExamReminderView[] | null>(
     data.reminders,
@@ -119,13 +173,17 @@ export function FinalsView({
     );
     return table?.enrollTo ? [{ name: s.name, until: table.enrollTo }] : [];
   });
-  const shown = q ? all.filter((s) => normalizeText(s.name).includes(q)) : all;
+  const shown = searchSubjects(all, query);
+  const pendingKeys = new Set(pending.map((s) => s.key));
   // Dates loaded with the SIU link have times: the date column makes room for them.
   const timed = all.some((s) => s.tables.some((t) => t.startTime));
 
   return (
     <main className="mx-auto flex w-full max-w-[980px] flex-col gap-4 px-4 pt-5 pb-8 md:gap-[18px] md:px-6 md:pt-8 md:pb-14">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div
+        ref={titleRow}
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
         <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">
           Finales
         </h1>
@@ -223,7 +281,92 @@ export function FinalsView({
 
       {data.loaded && (
         <>
-          {open.length > 0 && (
+          {/* El buscador va arriba de todo y queda pegado al borde de arriba al bajar (sobre todo en el
+              celular): se busca cualquier materia sin pasar por la lista de pendientes. */}
+          <search className="sticky top-0 z-20 -mx-4 -my-2 bg-bg px-4 py-2 md:-mx-6 md:px-6">
+            <div className="relative">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="pointer-events-none absolute top-[15px] left-4 text-muted"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+              <label htmlFor="q" className="sr-only">
+                Buscar mesas de cualquier materia
+              </label>
+              <input
+                ref={searchInput}
+                id="q"
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  // Si se empieza a buscar con la página bajada, se sube hasta el buscador para ver los resultados.
+                  const top = titleRow.current?.getBoundingClientRect().bottom;
+                  if (!searching && top !== undefined && top < 0) {
+                    window.scrollBy({ top });
+                  }
+                  setQuery(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && query) {
+                    e.preventDefault();
+                    setQuery("");
+                  }
+                }}
+                autoComplete="off"
+                enterKeyHint="search"
+                placeholder="Buscá cualquier materia"
+                className="h-[50px] w-full rounded-xl border border-line-strong bg-surface pr-12 pl-[46px] text-base text-ink [&::-webkit-search-cancel-button]:appearance-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="Borrar la búsqueda"
+                  onClick={() => {
+                    setQuery("");
+                    searchInput.current?.focus();
+                  }}
+                  className="absolute top-[3px] right-[3px] flex size-11 items-center justify-center rounded-[10px] text-muted hover:text-ink"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </search>
+
+          {/* Siempre en la página, para que el lector de pantalla diga cuántas materias encontró. */}
+          <p
+            role="status"
+            className={searching ? "-mb-1.5 px-1 text-[13.5px] text-muted" : "sr-only"}
+          >
+            {searching &&
+              (shown.length > 0
+                ? plural(shown.length, "materia con mesas", "materias con mesas")
+                : "Ninguna materia con mesas coincide con la búsqueda.")}
+          </p>
+
+          {/* Mientras se busca, los pendientes se hacen a un lado y los resultados quedan bajo el buscador. */}
+          {!searching && open.length > 0 && (
             <div className="rounded-[14px] bg-mint px-4 py-3.5 text-mint-ink md:px-[18px]">
               <b>Inscripción abierta:</b>{" "}
               {open
@@ -234,93 +377,88 @@ export function FinalsView({
             </div>
           )}
 
-          <section
-            aria-labelledby="pending-title"
-            className="overflow-hidden rounded-2xl border border-line bg-surface"
-          >
-            <h2
-              id="pending-title"
-              className="px-4 pt-4 pb-2 text-[19px] font-semibold md:px-[22px]"
+          {!searching && (
+            <section
+              aria-labelledby="pending-title"
+              className="overflow-hidden rounded-2xl border border-line bg-surface"
             >
-              Tus finales pendientes
-            </h2>
-            {pending.length === 0 ? (
-              <div className="px-4 pb-4 text-sm text-muted md:px-[22px]">
-                No tenés finales pendientes en tu mapa.{" "}
-                <Link
-                  href="/mapa"
-                  className="font-semibold text-ink-2 underline"
+              <h2 id="pending-title">
+                <button
+                  type="button"
+                  aria-expanded={mineOpen}
+                  aria-controls="pending-list"
+                  onClick={() => saveMineOpen(!mineOpen)}
+                  className="flex min-h-[56px] w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent md:px-[22px]"
                 >
-                  Ir al mapa
-                </Link>
+                  <span className="text-[19px] font-semibold">
+                    Tus finales pendientes
+                  </span>{" "}
+                  <span className="flex flex-none items-center gap-2 text-[13px] font-normal text-muted">
+                    {pending.length > 0 &&
+                      plural(pending.length, "materia", "materias")}
+                    <Chevron open={mineOpen} />
+                  </span>
+                </button>
+              </h2>
+              {/* Se pliega con una transición corta de alto (nada con "reducir movimiento"); cerrado queda inerte. */}
+              <div
+                id="pending-list"
+                inert={!mineOpen}
+                className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-out ${mineOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  {pending.length === 0 ? (
+                    <div className="px-4 pb-4 text-sm text-muted md:px-[22px]">
+                      No tenés finales pendientes en tu mapa.{" "}
+                      <Link
+                        href="/mapa"
+                        className="font-semibold text-ink-2 underline"
+                      >
+                        Ir al mapa
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col pb-2">
+                      {pending.map((s) => (
+                        <div
+                          key={s.key}
+                          className="border-t border-line first:border-t-0"
+                        >
+                          <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">
+                            {s.name}
+                          </h3>
+                          {s.tables.length === 0 ? (
+                            <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">
+                              Sin mesas cargadas.
+                            </div>
+                          ) : (
+                            s.tables
+                              .slice(0, 3)
+                              .map((t) => (
+                                <TableRow
+                                  key={t.id}
+                                  table={t}
+                                  now={now}
+                                  timed={timed}
+                                />
+                              ))
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="flex flex-col pb-2">
-                {pending.map((s) => (
-                  <div
-                    key={s.key}
-                    className="border-t border-line first:border-t-0"
-                  >
-                    <h3 className="px-4 pt-3 pb-1 text-[15px] font-semibold md:px-[22px]">
-                      {s.name}
-                    </h3>
-                    {s.tables.length === 0 ? (
-                      <div className="px-4 pb-3 md:px-[22px] text-[13px] text-muted">
-                        Sin mesas cargadas.
-                      </div>
-                    ) : (
-                      s.tables
-                        .slice(0, 3)
-                        .map((t) => (
-                          <TableRow
-                            key={t.id}
-                            table={t}
-                            now={now}
-                            timed={timed}
-                          />
-                        ))
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+            </section>
+          )}
 
-          <h2 className="mt-2 text-[22px] font-semibold">Todas las mesas</h2>
-          <div className="relative">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="absolute top-[15px] left-4 text-muted"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" />
-            </svg>
-            <label htmlFor="q" className="sr-only">
-              Buscar por materia
-            </label>
-            <input
-              id="q"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscá por materia"
-              className="h-[50px] w-full rounded-xl border border-line-strong bg-surface pr-4 pl-[46px] text-base text-ink"
-            />
-          </div>
+          {!searching && (
+            <h2 className="mt-2 text-[22px] font-semibold">Todas las mesas</h2>
+          )}
 
-          {shown.length === 0 && (
+          {!searching && shown.length === 0 && (
             <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center text-muted">
-              {q
-                ? "No encontramos materias con esa búsqueda."
-                : "No hay mesas próximas cargadas."}
+              No hay mesas próximas cargadas.
             </div>
           )}
 
@@ -336,6 +474,12 @@ export function FinalsView({
                     {s.name}
                   </h3>
                   <span className="text-[13px] whitespace-nowrap text-lavender-ink/80">
+                    {/* Al buscar no se ven los pendientes: se marca si la materia es uno de ellos. */}
+                    {searching && pendingKeys.has(s.key) && (
+                      <span className="mr-2 rounded-full bg-surface px-2 py-0.5 text-[12px] font-semibold text-lavender-ink">
+                        Pendiente
+                      </span>
+                    )}
                     {plural(s.tables.length, "mesa", "mesas")}
                   </span>
                 </div>

@@ -1,5 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { enrollmentStatus, formatEnrollMoment, formatExamDay, formatExamTime, formatTeachers } from "./types";
+import { enrollmentStatus, formatEnrollMoment, formatExamDay, formatExamTime, formatTeachers, searchSubjects } from "./types";
+
+describe("searchSubjects", () => {
+  const subjects = [
+    { name: "Análisis Matemático II", code: "CB002" },
+    { name: "Álgebra Lineal", code: "CB005" },
+    { name: "Química", code: "TC010" },
+  ];
+  const names = (query: string) => searchSubjects(subjects, query).map((s) => s.name);
+
+  it("keeps every subject with an empty query", () => {
+    expect(searchSubjects(subjects, "")).toBe(subjects);
+    expect(searchSubjects(subjects, "   ")).toBe(subjects);
+  });
+
+  it("ignores accents and case", () => {
+    expect(names("analisis")).toEqual(["Análisis Matemático II"]);
+    expect(names("ÁLGEBRA")).toEqual(["Álgebra Lineal"]);
+  });
+
+  it("matches every word in any order", () => {
+    expect(names("ii analisis")).toEqual(["Análisis Matemático II"]);
+    expect(names("analisis lineal")).toEqual([]);
+  });
+
+  it("finds subjects by their SIU code", () => {
+    expect(names("tc010")).toEqual(["Química"]);
+    expect(names("cb00")).toEqual(["Análisis Matemático II", "Álgebra Lineal"]);
+  });
+});
 
 describe("enrollmentStatus", () => {
   const table = { enrollFrom: "2026-11-30T14:00", enrollTo: "2026-12-07T14:00" };

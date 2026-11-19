@@ -1,5 +1,6 @@
 // Types and formatting of the Finales section. No database access: client components import from here.
 
+import { normalizeText } from "../map/model";
 import { shortTeacherList, surname } from "../plan/format";
 import type { ExamReminderView } from "../reminders/model";
 
@@ -100,4 +101,17 @@ export function formatEnrollMoment(moment: string): string {
   const [date, time] = moment.split("T");
   const [, m, d] = date.split("-").map(Number);
   return time && time !== "00:00" && time !== "23:59" ? `${d}/${m} ${time}` : `${d}/${m}`;
+}
+
+/**
+ * Finales search: the subjects whose name or SIU code contain every word of the query, in any order,
+ * ignoring accents and case ("analisis ii", "TC010"). An empty query keeps them all.
+ */
+export function searchSubjects<T extends Pick<ExamSubjectView, "name" | "code">>(subjects: T[], query: string): T[] {
+  const words = normalizeText(query).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return subjects;
+  return subjects.filter((s) => {
+    const text = normalizeText(`${s.name} ${s.code}`);
+    return words.every((w) => text.includes(w));
+  });
 }
