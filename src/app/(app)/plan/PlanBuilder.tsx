@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
@@ -21,7 +22,7 @@ import { ConfirmCourses } from "./ConfirmCourses";
 import { ACTIVITY_STYLE, ActivityDialog, ActivityList, AddActivityButton, hatchClass } from "./activities";
 import { OfferSubmit } from "./OfferSubmit";
 import { PlanMobile } from "./PlanMobile";
-import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
+import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, PrintButton, Rating, Warning, overlaps, type Color } from "./shared";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
 // Cada cambio se guarda solo en la base (plan_choices), como en el mapa: las opciones A y B son
@@ -70,6 +71,13 @@ export function PlanBuilder({ data }: { data: PlanData }) {
     mine,
   );
   const addActivity = activities ? () => setEditing("nueva") : undefined;
+  // La lámina para la pared: la opción que se está viendo, después del último guardado.
+  const router = useRouter();
+  const canPrint = selected.length + mine.length > 0;
+  const printPlan = async () => {
+    await saving.current;
+    router.push(`/plan/imprimir?opcion=${active}&imprimir=1`);
+  };
   const editActivity = (a: PlanActivity) => setEditing(a);
 
   const setPlan = (next: Entry[]) => {
@@ -201,6 +209,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
             </button>
           )}
           {addActivity && <AddActivityButton onClick={addActivity} />}
+          {canPrint && <PrintButton onClick={printPlan} />}
           <button
             onClick={() => setPlan([])}
             className="h-[38px] rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted hover:text-ink"
@@ -317,6 +326,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
         activities={mine}
         onAddActivity={addActivity}
         onEditActivity={editActivity}
+        onPrint={canPrint ? printPlan : undefined}
       />
 
       {editing && (
