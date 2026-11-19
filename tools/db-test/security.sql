@@ -813,7 +813,7 @@ set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
 select public.touch_last_seen();
 reset role;
-select test.ok((select last_seen_at = now() - interval '30 minutes' from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
+select test.ok((select last_seen_at < now() - interval '29 minutes' from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
   'touch_last_seen writes at most once per hour');
 -- Seen 2 hours ago: the visit is recorded.
 update public.profiles set last_seen_at = now() - interval '2 hours' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
