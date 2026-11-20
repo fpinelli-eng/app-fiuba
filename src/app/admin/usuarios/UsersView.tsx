@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { ago } from "@/lib/admin/health";
+import { groupUsersByCareer } from "@/lib/admin/by-career";
+import type { CareerOption } from "@/lib/plans";
 import {
   buenosAiresDay,
   dayLabel,
@@ -17,6 +19,8 @@ import {
   type SiteCheck,
   type Usage,
 } from "@/lib/admin/usage";
+import { CareerPanels } from "./CareerPanels";
+import { LiveOnline, type PresencePlan } from "./LiveOnline";
 
 // Vercel's links that open the logged-in user's team and project ("[team]" and "[project]" are picked there).
 const VERCEL_USAGE = "https://vercel.com/d?to=%2F%5Bteam%5D%2F~%2Fusage&title=Uso";
@@ -32,6 +36,7 @@ export function UsersView({
   dbMs,
   site,
   deployments,
+  careers,
   now,
 }: {
   usage: Usage | null;
@@ -40,11 +45,16 @@ export function UsersView({
   dbMs: number;
   site: SiteCheck;
   deployments: DeploymentsResult;
+  /** Careers and plans of the catalog (shared cache): for the panels and the online channels. */
+  careers: CareerOption[];
   now: number;
 }) {
   const count = (keep: (u: AdminUser) => boolean) => users.filter(keep).length;
-  const date = (iso: string) => buenosAiresDay(iso).split("-").reverse().join("/");
   const dash = "—";
+  const groups = groupUsersByCareer(users, careers, usage?.byCareer ?? null);
+  const presencePlans: PresencePlan[] = careers.flatMap((c) =>
+    c.plans.map((p) => ({ id: p.id, careerId: c.id, careerName: c.shortName })),
+  );
 
   const stats: (readonly [string, number | string])[] = [
     ["En total", users.length],
@@ -82,13 +92,19 @@ export function UsersView({
       </p>
 
       <div className="grid grid-cols-1 items-start gap-[18px] md:grid-cols-2">
-        <Card title="Por carrera" id="por-carrera">
-          {usage ? (
-            <CareerBars rows={usage.byCareer} total={usage.users} />
-          ) : (
-            <p className="text-sm text-muted">Disponible cuando se aplique la migración de la base.</p>
-          )}
-        </Card>
+        <div className="flex min-w-0 flex-col gap-[18px]">
+          <Card title="En línea ahora" id="en-linea">
+            <LiveOnline plans={presencePlans} />
+          </Card>
+
+          <Card title="Por carrera" id="por-carrera">
+            {usage ? (
+              <CareerBars rows={usage.byCareer} total={usage.users} />
+            ) : (
+              <p className="text-sm text-muted">Disponible cuando se aplique la migración de la base.</p>
+            )}
+          </Card>
+        </div>
 
         <div className="flex min-w-0 flex-col gap-[18px]">
           {usage && (
@@ -129,36 +145,7 @@ export function UsersView({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
-        <table className="w-full text-left text-sm">
-          <thead className="text-[13px] text-muted">
-            <tr className="border-b border-line">
-              <th className="px-4 py-2.5 font-semibold">Nombre</th>
-              <th className="px-4 py-2.5 font-semibold">Mail</th>
-              <th className="px-4 py-2.5 font-semibold">Carrera</th>
-              <th className="px-4 py-2.5 font-semibold">Alta</th>
-              <th className="px-4 py-2.5 font-semibold">Origen</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
-              <th className="px-4 py-2.5 font-semibold">Historias</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.email} className="border-b border-line last:border-b-0">
-                <td className="px-4 py-2.5 font-semibold whitespace-nowrap">{u.fullName || dash}</td>
-                <td className="px-4 py-2.5 whitespace-nowrap">{u.email}</td>
-                <td className="px-4 py-2.5 whitespace-nowrap">{u.planId ? (u.plan ?? u.planId) : "Sin elegir"}</td>
-                <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">{u.createdAt ? date(u.createdAt) : dash}</td>
-                <td className="px-4 py-2.5 whitespace-nowrap">{u.signupSource === "qr" ? "QR" : dash}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{u.subjects}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{u.planCourses}</td>
-                <td className="px-4 py-2.5">{u.introSeen ? "Vistas" : dash}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <CareerPanels groups={groups} />
     </main>
   );
 }

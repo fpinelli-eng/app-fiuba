@@ -90,7 +90,7 @@ describe("toUsage", () => {
       active_30d: 50,
       users: 60,
       by_career: [
-        { name: "Ing. Industrial", users: 40, no_plan: false },
+        { id: "industrial", name: "Ing. Industrial", users: 40, active_7d: 12, no_plan: false },
         { name: "Sin plan", users: 5, no_plan: true },
       ],
       db_bytes: 1024,
@@ -99,7 +99,9 @@ describe("toUsage", () => {
       people: [ana],
     });
     expect(u.active24h).toBe(10);
-    expect(u.byCareer[1]).toEqual({ name: "Sin plan", users: 5, noPlan: true });
+    expect(u.byCareer[0]).toEqual({ id: "industrial", name: "Ing. Industrial", users: 40, active7d: 12, noPlan: false });
+    // Older admin_uso(): no id and no active count per career.
+    expect(u.byCareer[1]).toEqual({ id: null, name: "Sin plan", users: 5, active7d: null, noPlan: true });
     expect(u.dbLimitBytes).toBe(524288000);
     expect(u.reviewAuthors).toBe(7);
     expect(u.people).toEqual([
