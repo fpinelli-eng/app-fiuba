@@ -13,6 +13,7 @@ import type { Entry, OptionKey, PlanSubject } from "@/lib/plan/data";
 export function ConfirmCourses({
   initial,
   subjects,
+  outside = [],
   options,
   term,
   confirmed,
@@ -20,7 +21,13 @@ export function ConfirmCourses({
   onClose,
 }: {
   initial: Entry[];
+  /** What the map lets the student take: only these can be confirmed. */
   subjects: PlanSubject[];
+  /**
+   * Subjects of the offer they cannot take yet (added from "Toda la oferta" to compare times):
+   * left out of the confirmation, with a note.
+   */
+  outside?: PlanSubject[];
   options: Record<OptionKey, Entry[]>;
   term: string | null;
   /** Courses confirmed before (empty if never). */
@@ -46,6 +53,9 @@ export function ConfirmCourses({
     const subject = byCode.get(e.subject);
     return subject ? [{ entry: e, subject }] : [];
   });
+  // Entries (from option A or B) of subjects that cannot be confirmed: they are dropped on save.
+  const outsideByCode = new Map(outside.map((s) => [s.code, s]));
+  const leftOut = entries.flatMap((e) => outsideByCode.get(e.subject)?.name ?? []);
   const missing = rows.filter((r) => !r.subject.courses.some((c) => c.id === r.entry.course));
   const credits = rows.reduce((a, r) => a + (r.subject.credits ?? 0), 0);
   const left = subjects.filter((s) => !entries.some((e) => e.subject === s.code));
@@ -113,6 +123,13 @@ export function ConfirmCourses({
               </button>
             ))}
           </div>
+        )}
+
+        {leftOut.length > 0 && (
+          <p className="rounded-xl bg-butter px-3 py-2 text-[13px] leading-snug text-butter-ink">
+            Dejamos afuera {leftOut.join(", ")}: no {leftOut.length === 1 ? "la tenés habilitada" : "las tenés habilitadas"} en tu mapa. Si ya
+            {leftOut.length === 1 ? " la podés" : " las podés"} cursar, actualizá tu mapa y volvé.
+          </p>
         )}
 
         {rows.length === 0 ? (

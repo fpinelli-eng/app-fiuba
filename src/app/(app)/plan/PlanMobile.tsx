@@ -7,7 +7,8 @@ import { type ClassBlock, type WeekDay } from "@/lib/plan/options";
 import { ALL_DAYS, activityClassBlocks, activityKey, daysToShow, type PlanActivity } from "@/lib/plan/activities";
 import { firstDayToShow } from "@/lib/home/calendar";
 import type { Entry, OptionKey, PlanCourse, PlanSubject, SubjectGroup } from "@/lib/plan/data";
-import { Check, DAY_LONG, GROUP_TITLE, Rating, Warning, overlaps, type Color } from "./shared";
+import { ELIGIBILITY_LABEL, ELIGIBILITY_TAG, canAdd, type PlanFilter } from "@/lib/plan/offer";
+import { Check, DAY_LONG, EligibilityNote, EmptyList, FilterSwitch, GROUP_TITLE, Rating, Warning, overlaps, type Color } from "./shared";
 import { ACTIVITY_STYLE, ActivityList, AddActivityButton, hatchClass } from "./activities";
 
 // Plan del cuatrimestre en celular (menos de 768 px). No copia el escritorio: dos vistas,
@@ -35,12 +36,16 @@ export function PlanMobile({
   query,
   onQuery,
   groups,
+  filter,
+  filterCounts,
+  onFilter,
   plan,
   selected,
   colorOf,
   analysis,
   warnings,
   onPick,
+  onRemove,
   onClear,
   cursadaCount,
   onConfirm,
@@ -54,12 +59,18 @@ export function PlanMobile({
   query: string;
   onQuery: (q: string) => void;
   groups: { group: SubjectGroup; subjects: PlanSubject[] }[];
+  /** "Para cursar" or "Toda la oferta" (groups are already filtered). */
+  filter: PlanFilter;
+  filterCounts: Record<PlanFilter, number>;
+  onFilter: (f: PlanFilter) => void;
   plan: Entry[];
   selected: Selected[];
   colorOf: Map<string, Color>;
   analysis: PlanAnalysis;
   warnings: PlanWarning[];
   onPick: (subject: string, course: string) => void;
+  /** Takes the subject out of the option on screen (the check of the list). */
+  onRemove: (subject: string) => void;
   onClear: () => void;
   /** Subjects of the confirmed cursada (0 if not confirmed yet). */
   cursadaCount: number;
@@ -117,7 +128,18 @@ export function PlanMobile({
       </div>
 
       {view === "materias" ? (
-        <SubjectList query={query} onQuery={onQuery} groups={groups} plan={plan} colorOf={colorOf} onOpen={setSheet} />
+        <SubjectList
+          query={query}
+          onQuery={onQuery}
+          groups={groups}
+          filter={filter}
+          filterCounts={filterCounts}
+          onFilter={onFilter}
+          plan={plan}
+          colorOf={colorOf}
+          onOpen={setSheet}
+          onRemove={onRemove}
+        />
       ) : (
         <Week
           option={active}
@@ -186,19 +208,30 @@ function SubjectList({
   query,
   onQuery,
   groups,
+  filter,
+  filterCounts,
+  onFilter,
   plan,
   colorOf,
   onOpen,
+  onRemove,
 }: {
   query: string;
   onQuery: (q: string) => void;
   groups: { group: SubjectGroup; subjects: PlanSubject[] }[];
+  filter: PlanFilter;
+  filterCounts: Record<PlanFilter, number>;
+  onFilter: (f: PlanFilter) => void;
   plan: Entry[];
   colorOf: Map<string, Color>;
   onOpen: (code: string) => void;
+  onRemove: (code: string) => void;
 }) {
   return (
-    <section aria-label="Materias que podés cursar" className="flex flex-col">
+    <section aria-label={filter === "oferta" ? "Toda la oferta de tu plan" : "Materias que podés cursar"} className="flex flex-col">
+      <div className="mb-2">
+        <FilterSwitch filter={filter} counts={filterCounts} onChange={onFilter} large />
+      </div>
       <label htmlFor="buscar-materia-celular" className="sr-only">
         Buscar materia
       </label>
@@ -218,19 +251,27 @@ function SubjectList({
               const color = colorOf.get(subject.code);
               const chosen = subject.courses.find((c) => c.id === plan.find((e) => e.subject === subject.code)?.course);
               return (
-                <li key={subject.code}>
+                <li key={subject.code} className="flex items-stretch">
+                  {/* El círculo: con la materia en el plan, la saca; si no, abre sus cursos como el resto de la fila. */}
                   <button
-                    aria-haspopup="dialog"
-                    onClick={() => onOpen(subject.code)}
-                    className="flex min-h-14 w-full items-center gap-3 px-3.5 py-3 text-left active:bg-bg"
+                    onClick={() => (chosen ? onRemove(subject.code) : onOpen(subject.code))}
+                    aria-label={chosen ? `Quitar ${subject.name} del plan` : `Ver cursos de ${subject.name}`}
+                    aria-haspopup={chosen ? undefined : "dialog"}
+                    className="grid w-12 flex-none place-items-center pl-1 active:bg-bg"
                   >
                     <span
-                      className={`grid size-5 flex-none place-items-center rounded-full ${
+                      className={`grid size-[22px] place-items-center rounded-full ${
                         color ? `border-2 ${color.bg} ${color.border}` : "border-[1.5px] border-line-strong"
                       }`}
                     >
                       {color && <Check className={color.ink} />}
                     </span>
+                  </button>
+                  <button
+                    aria-haspopup="dialog"
+                    onClick={() => onOpen(subject.code)}
+                    className="flex min-h-14 min-w-0 flex-auto items-center gap-3 py-3 pr-3.5 pl-1 text-left active:bg-bg"
+                  >
                     <span className="min-w-0 flex-auto text-[14.5px] leading-tight font-semibold">
                       {subject.name}
                       <span className="mt-0.5 block truncate text-[13px] font-normal text-muted">
@@ -238,6 +279,7 @@ function SubjectList({
                           ? `En tu plan · ${chosen.label}${chosen.teacherList ? ` · ${chosen.teacherList}` : ""}`
                           : `${subject.courses.length} ${subject.courses.length === 1 ? "curso" : "cursos"}`}
                       </span>
+                      <EligibilityNote eligibility={subject.eligibility} />
                     </span>
                     {subject.credits !== null && (
                       <span className="text-xs font-medium whitespace-nowrap text-muted">{subject.credits} C</span>
@@ -252,7 +294,7 @@ function SubjectList({
           </ul>
         </div>
       ))}
-      {groups.length === 0 && <p className="px-1 pt-4 text-sm text-muted">No hay materias con ese nombre.</p>}
+      {groups.length === 0 && <EmptyList filter={filter} searching={!!query.trim()} onShowAll={() => onFilter("oferta")} />}
     </section>
   );
 }
@@ -309,6 +351,7 @@ function CourseSheet({
                 {subject.credits !== null && `${subject.credits} C · `}
                 {subject.courses.length} {subject.courses.length === 1 ? "curso" : "cursos"}
               </p>
+              <EligibilityNote eligibility={subject.eligibility} />
             </div>
             <button onClick={onClose} aria-label="Cerrar" className="-mt-1 -mr-2 grid size-10 flex-none place-items-center rounded-full text-muted">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
@@ -355,11 +398,18 @@ function CourseSheet({
                   <button
                     aria-pressed={isChosen}
                     onClick={() => onPick(course.id)}
-                    className={`mt-1 h-11 rounded-[10px] border text-sm font-semibold ${
+                    disabled={!isChosen && !chosen && !canAdd(subject.eligibility)}
+                    className={`mt-1 h-11 rounded-[10px] border text-sm font-semibold disabled:border-transparent disabled:bg-disabled disabled:text-disabled-ink ${
                       isChosen ? "border-line-strong bg-surface text-ink" : "border-accent bg-accent text-on-accent"
                     }`}
                   >
-                    {isChosen ? "Quitar del plan" : chosen ? "Cambiar a este curso" : "Agregar al plan"}
+                    {isChosen
+                      ? "Quitar del plan"
+                      : chosen
+                        ? "Cambiar a este curso"
+                        : canAdd(subject.eligibility)
+                          ? "Agregar al plan"
+                          : `${ELIGIBILITY_LABEL[subject.eligibility]}: no hace falta sumarla`}
                   </button>
                 </li>
               );
@@ -459,6 +509,14 @@ function Week({
         })}
       </div>
 
+      {selected
+        .filter((s) => s.subject.eligibility !== "ok")
+        .map((s) => (
+          <Warning key={s.subject.code} tone="transfer">
+            {s.subject.name}: {ELIGIBILITY_LABEL[s.subject.eligibility]?.toLowerCase()}. Te sirve para comparar horarios, pero no la vas a
+            poder confirmar como cursada.
+          </Warning>
+        ))}
       {warnings.length === 0 && <Warning tone="ok">Sin superposiciones ni traslados apurados entre sedes</Warning>}
       {dayWarnings.map((w) => (
         <Warning key={w.text} tone={w.kind}>
@@ -478,7 +536,14 @@ function Week({
               <li key={`${c.id}-${c.block.start}-${c.block.type}`} className="flex flex-col gap-2">
                 {gap >= 60 && <div className="text-center text-xs text-muted">Libre {formatHours(gap)} h</div>}
                 {c.course ? (
-                  <AgendaItem block={c.block} name={c.course.subject.name} course={c.course.course} color={c.course.color} clash={clash} />
+                  <AgendaItem
+                    block={c.block}
+                    name={c.course.subject.name}
+                    course={c.course.course}
+                    color={c.course.color}
+                    clash={clash}
+                    tag={ELIGIBILITY_TAG[c.course.subject.eligibility]}
+                  />
                 ) : (
                   <ActivityAgendaItem block={c.block} activity={c.activity} clash={clash} onEdit={() => onEditActivity(c.activity)} />
                 )}
@@ -562,12 +627,15 @@ function AgendaItem({
   course,
   color,
   clash,
+  tag,
 }: {
   block: ClassBlock;
   name: string;
   course: PlanCourse;
   color: Color;
   clash: boolean;
+  /** "Sin correlativas" on subjects the student cannot take yet. */
+  tag?: string | null;
 }) {
   const where = block.campus ?? (isVirtualRoom(block.room) ? "Virtual" : "Sede a confirmar");
   return (
@@ -585,8 +653,11 @@ function AgendaItem({
           {where}
           {block.room && !isVirtualRoom(block.room) && ` · ${block.room}`}
         </div>
-        {clash && (
-          <span className="mt-1 inline-block rounded-full bg-surface px-2 py-px text-[11px] font-semibold text-danger">Se superpone</span>
+        {(clash || tag) && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {tag && <span className="rounded-full bg-surface px-2 py-px text-[11px] font-semibold text-peach-ink">{tag}</span>}
+            {clash && <span className="rounded-full bg-surface px-2 py-px text-[11px] font-semibold text-danger">Se superpone</span>}
+          </div>
         )}
       </div>
     </div>
