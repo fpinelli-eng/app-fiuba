@@ -8,7 +8,7 @@ import { ALL_DAYS, activityClassBlocks, activityKey, daysToShow, type PlanActivi
 import { firstDayToShow } from "@/lib/home/calendar";
 import type { Entry, OptionKey, PlanCourse, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { ELIGIBILITY_LABEL, ELIGIBILITY_TAG, canAdd, type PlanFilter } from "@/lib/plan/offer";
-import { Check, DAY_LONG, EligibilityNote, EmptyList, FilterSwitch, GROUP_TITLE, Rating, Warning, overlaps, type Color } from "./shared";
+import { Check, DAY_LONG, EligibilityNote, EmptyList, FilterSwitch, GROUP_TITLE, PrintButton, Rating, Warning, overlaps, type Color } from "./shared";
 import { ACTIVITY_STYLE, ActivityList, AddActivityButton, hatchClass } from "./activities";
 
 // Plan del cuatrimestre en celular (menos de 768 px). No copia el escritorio: dos vistas,
@@ -52,6 +52,7 @@ export function PlanMobile({
   activities,
   onAddActivity,
   onEditActivity,
+  onPrint,
 }: {
   active: OptionKey;
   onOption: (k: OptionKey) => void;
@@ -80,6 +81,8 @@ export function PlanMobile({
   /** Absent while the table is not in the database yet: no "Agregar actividad". */
   onAddActivity?: () => void;
   onEditActivity: (a: PlanActivity) => void;
+  /** Opens the printable poster; absent while the option is empty. */
+  onPrint?: () => void;
 }) {
   const [view, setView] = useState<View>(() => (plan.length > 0 ? "semana" : "materias"));
   const [sheet, setSheet] = useState<string | null>(null);
@@ -151,6 +154,7 @@ export function PlanMobile({
           onClear={onClear}
           onAddActivity={onAddActivity}
           onEditActivity={onEditActivity}
+          onPrint={onPrint}
         />
       )}
 
@@ -437,6 +441,7 @@ function Week({
   onClear,
   onAddActivity,
   onEditActivity,
+  onPrint,
 }: {
   option: OptionKey;
   selected: Selected[];
@@ -447,6 +452,7 @@ function Week({
   onClear: () => void;
   onAddActivity?: () => void;
   onEditActivity: (a: PlanActivity) => void;
+  onPrint?: () => void;
 }) {
   const todayIndex = useTodayIndex();
   const [picked, setPicked] = useState<WeekDay | null>(null);
@@ -577,11 +583,14 @@ function Week({
           </div>
         ))}
 
-      {selected.length > 0 && (
-        <button onClick={onClear} className="h-10 self-start rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted">
-          Vaciar plan
-        </button>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {onPrint && <PrintButton onClick={onPrint} className="h-10" />}
+        {selected.length > 0 && (
+          <button onClick={onClear} className="h-10 rounded-[10px] border border-line bg-surface px-3.5 text-[13.5px] text-muted">
+            Vaciar plan
+          </button>
+        )}
+      </div>
     </section>
   );
 }
