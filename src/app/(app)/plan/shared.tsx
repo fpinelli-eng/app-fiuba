@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ClassBlock, WeekDay } from "@/lib/plan/options";
 import type { Score, SubjectGroup } from "@/lib/plan/data";
+import { ELIGIBILITY_LABEL, PLAN_FILTERS, type Eligibility, type PlanFilter } from "@/lib/plan/offer";
 
 // Piezas comunes del plan en escritorio (PlanBuilder) y en celular (PlanMobile).
 
@@ -78,5 +79,72 @@ export function Check({ size = 12, className }: { size?: number; className?: str
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
       <path d="M20 6L9 17l-5-5" />
     </svg>
+  );
+}
+
+const FILTER_LABEL: Record<PlanFilter, string> = { cursar: "Para cursar", oferta: "Toda la oferta" };
+
+/** "Para cursar" / "Toda la oferta" arriba de la lista de materias. */
+export function FilterSwitch({
+  filter,
+  counts,
+  onChange,
+  large,
+}: {
+  filter: PlanFilter;
+  counts: Record<PlanFilter, number>;
+  onChange: (f: PlanFilter) => void;
+  large?: boolean;
+}) {
+  return (
+    <div role="group" aria-label="Qué materias ver" className="grid grid-cols-2 gap-1 rounded-[10px] bg-bg p-1">
+      {PLAN_FILTERS.map((f) => (
+        <button
+          key={f}
+          aria-pressed={filter === f}
+          onClick={() => onChange(f)}
+          className={`rounded-lg ${large ? "h-10 text-sm" : "h-8 text-[13px]"} ${
+            filter === f ? "bg-surface font-semibold text-ink shadow-[0_1px_2px_var(--pop-shadow)]" : "text-muted hover:text-ink"
+          }`}
+        >
+          {FILTER_LABEL[f]} <span className="font-normal text-muted">· {counts[f]}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Lista vacía: sin resultados de búsqueda, o sin materias habilitadas en "Para cursar". */
+export function EmptyList({ filter, searching, onShowAll }: { filter: PlanFilter; searching: boolean; onShowAll: () => void }) {
+  return (
+    <div className="flex flex-col items-start gap-2 px-3 pt-4 text-sm text-muted">
+      <p>
+        {searching
+          ? filter === "cursar"
+            ? "No hay materias para cursar con ese nombre."
+            : "No hay materias con ese nombre en la oferta."
+          : "No tenés materias habilitadas en la oferta de este cuatrimestre."}
+      </p>
+      {filter === "cursar" && (
+        <button onClick={onShowAll} className="font-semibold text-accent underline underline-offset-2">
+          {searching ? "Buscar en toda la oferta" : "Ver toda la oferta"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** "Te faltan correlativas" / "Ya aprobada" debajo del nombre (nada si la puede cursar). */
+export function EligibilityNote({ eligibility }: { eligibility: Eligibility }) {
+  const label = ELIGIBILITY_LABEL[eligibility];
+  if (!label) return null;
+  return (
+    <span
+      className={`mt-1 inline-block rounded-full px-2 py-px text-[11px] font-semibold ${
+        eligibility === "missing" ? "bg-peach text-peach-ink" : "bg-blocked text-blocked-ink"
+      }`}
+    >
+      {label}
+    </span>
   );
 }

@@ -7,12 +7,12 @@ import type { Campus } from "@/lib/siu/parser";
 import { getMySubmission } from "@/lib/offer/data";
 import type { MySubmission } from "@/lib/offer/submission";
 import { fromRow, type ActivityRow, type PlanActivity } from "./activities";
-import { inPlan } from "./cursada";
 import { shortTeacherList, surname } from "./format";
+import { eligibilityOf, type Eligibility } from "./offer";
 import type { ClassBlock, CourseOption, WeekDay } from "./options";
 
-// Data of the semester plan (prototype 07-plan): this term's offer for the student's plan,
-// only the subjects they can take (or are taking), with review scores and the saved
+// Data of the semester plan (prototype 07-plan): this term's whole offer for the student's plan,
+// each subject marked with whether they can take it, with review scores and the saved
 // "Opción A / B". Server only.
 
 export type SubjectGroup = "obligatorias" | "electivas" | "otras";
@@ -36,6 +36,8 @@ export interface PlanSubject {
   name: string;
   credits: number | null;
   group: SubjectGroup;
+  /** "ok" for what the map lets the student take; the rest only shows in "Toda la oferta". */
+  eligibility: Eligibility;
   courses: PlanCourse[];
 }
 
@@ -168,18 +170,18 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
   if (choices.error) throw new Error(`plan_choices: ${choices.error.message}`);
   if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
 
-  // What the student can take: enabled by their map, or already taking it; plus what they already
-  // chose or confirmed this term, even if the map moved on ("Final pendiente" before the classes end).
+  // The whole offer of the plan ("Toda la oferta"), each subject marked with what the map says.
+  // Confirmed this term counts as takeable even if the map moved on ("Final pendiente" before the
+  // classes end). The Plan lists what is not "ok" only in "Toda la oferta" or while it is in A or B.
   const rowById = new Map(rows.map((o) => [o.id, o]));
-  const chosen = new Set<number>();
-  for (const c of [...choices.data, ...taken.data]) {
+  const confirmed = new Set<number>();
+  for (const c of taken.data) {
     const row = rowById.get(c.offering_id as number);
     const subjectId = row && subjectOf(row);
-    if (subjectId !== undefined) chosen.add(subjectId);
+    if (subjectId !== undefined) confirmed.add(subjectId);
   }
-  const available = map.subjects.filter(
-    (s) => !!GROUP_OF[s.kind] && inPlan(careerMap.displayState(progress, s.id, credits), chosen.has(s.id)),
-  );
+  const available = map.subjects.filter((s) => !!GROUP_OF[s.kind]);
+  const eligibility = (id: number) => eligibilityOf(careerMap.displayState(progress, id, credits), confirmed.has(id));
 
   const coursesBy = new Map<number, PlanCourse[]>();
   for (const o of rows) {
@@ -232,6 +234,7 @@ export async function getPlanData(userId: string, planId: string): Promise<PlanD
       name: s.name,
       credits: s.credits,
       group: GROUP_OF[s.kind]!,
+      eligibility: eligibility(s.id),
       courses: coursesBy.get(s.id)!.sort((x, y) => x.label.localeCompare(y.label, "es", { numeric: true })),
     }));
 

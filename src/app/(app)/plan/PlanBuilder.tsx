@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { analyzePlan } from "@/lib/plan/analyze";
 import { describeSchedule, formatHour, formatHours, isVirtualRoom } from "@/lib/plan/format";
 import { type ClassBlock } from "@/lib/plan/options";
@@ -16,12 +16,34 @@ import {
 } from "@/lib/plan/activities";
 import type { Entry, OptionKey, PlanCourse, PlanData, PlanSubject, SubjectGroup } from "@/lib/plan/data";
 import { enrolledEntries, startingEntries } from "@/lib/plan/cursada";
+import {
+  ELIGIBILITY_LABEL,
+  ELIGIBILITY_TAG,
+  canAdd,
+  canConfirm,
+  isPlanFilter,
+  listedSubjects,
+  type PlanFilter,
+} from "@/lib/plan/offer";
 import { confirmCourses, savePlanOption } from "./actions";
 import { ConfirmCourses } from "./ConfirmCourses";
 import { ACTIVITY_STYLE, ActivityDialog, ActivityList, AddActivityButton, hatchClass } from "./activities";
 import { OfferSubmit } from "./OfferSubmit";
 import { PlanMobile } from "./PlanMobile";
-import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, overlaps, type Color } from "./shared";
+import {
+  CAMPUS_SHORT,
+  Check,
+  DAY_LONG,
+  EligibilityNote,
+  EmptyList,
+  FilterSwitch,
+  GROUP_TITLE,
+  PALETTE,
+  Rating,
+  Warning,
+  overlaps,
+  type Color,
+} from "./shared";
 
 // Pantalla del plan del cuatrimestre (prototipo docs/diseno/prototipos/07-plan.html).
 // Cada cambio se guarda solo en la base (plan_choices), como en el mapa: las opciones A y B son
@@ -31,7 +53,40 @@ import { CAMPUS_SHORT, Check, DAY_LONG, GROUP_TITLE, PALETTE, Rating, Warning, o
 
 const HOUR_PX = 38;
 
-const removeAccents = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+// "Para cursar" o "Toda la oferta", recordado por dispositivo ("Para cursar" la primera vez).
+// localStorage puede no estar (modo privado, datos bloqueados): entonces vale mientras la página siga abierta.
+const FILTER_KEY = "plan-filtro";
+let filterMemory: PlanFilter | null = null;
+const filterListeners = new Set<() => void>();
+
+function readFilter(): PlanFilter {
+  if (filterMemory !== null) return filterMemory;
+  try {
+    const saved = localStorage.getItem(FILTER_KEY);
+    return isPlanFilter(saved) ? saved : "cursar";
+  } catch {
+    return "cursar";
+  }
+}
+
+function saveFilter(filter: PlanFilter) {
+  filterMemory = filter;
+  try {
+    localStorage.setItem(FILTER_KEY, filter);
+  } catch {
+    // Sin localStorage queda en memoria.
+  }
+  filterListeners.forEach((listener) => listener());
+}
+
+function subscribeFilter(listener: () => void) {
+  filterListeners.add(listener);
+  return () => {
+    filterListeners.delete(listener);
+  };
+}
+
+const usePlanFilter = () => useSyncExternalStore(subscribeFilter, readFilter, () => "cursar" as const);
 
 export function PlanBuilder({ data }: { data: PlanData }) {
   const [active, setActive] = useState<OptionKey>("A");
@@ -45,6 +100,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
   const [justConfirmed, setJustConfirmed] = useState(false);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
+  const filter = usePlanFilter();
   const [hover, setHover] = useState<Entry | null>(null);
   // Actividades propias (null: la tabla todavía no está en la base y no se muestran).
   const [activities, setActivities] = useState<PlanActivity[] | null>(data.activities);
@@ -82,6 +138,10 @@ export function PlanBuilder({ data }: { data: PlanData }) {
       .then((r) => setSaveState(r.error ? "error" : "saved"))
       .catch(() => setSaveState("error"));
   };
+  const remove = (subject: string) => {
+    setPlan(plan.filter((e) => e.subject !== subject));
+    setHover(null);
+  };
   const pick = (subject: string, course: string) => {
     const current = plan.find((e) => e.subject === subject);
     if (current?.course === course) setPlan(plan.filter((e) => e.subject !== subject));
@@ -90,6 +150,10 @@ export function PlanBuilder({ data }: { data: PlanData }) {
     setHover(null);
   };
   const cursada = enrolledEntries(enrolled, data.subjects);
+  // "Confirmar mi cursada" solo lleva lo que el mapa deja cursar: lo agregado desde "Toda la oferta"
+  // sin correlativas sirve para comparar horarios, pero no pasa al Inicio ni al mapa.
+  const confirmable = data.subjects.filter((s) => canConfirm(s.eligibility));
+  const notConfirmable = data.subjects.filter((s) => !canConfirm(s.eligibility));
   const openConfirm = () => {
     setJustConfirmed(false);
     setConfirming(startingEntries(cursada, plan));
@@ -125,9 +189,16 @@ export function PlanBuilder({ data }: { data: PlanData }) {
       text: `Traslado apurado el ${DAY_LONG[t.day]}: salís de ${t.from} a las ${formatHour(t.leaveAt)} hs y entrás en ${t.to} a las ${formatHour(t.arriveAt)} hs`,
     })),
   ];
+  // Materias del plan que el alumno todavía no puede cursar (agregadas desde "Toda la oferta").
+  const outside = selected.filter((s) => s.subject.eligibility !== "ok");
 
-  const q = removeAccents(query.trim());
-  const visible = data.subjects.filter((s) => !q || removeAccents(s.name).includes(q));
+  const q = query.trim();
+  const inOptions = new Set([...plans.A, ...plans.B].map((e) => e.subject));
+  const visible = listedSubjects(data.subjects, filter, query, inOptions);
+  const counts: Record<PlanFilter, number> = {
+    cursar: listedSubjects(data.subjects, "cursar", "", inOptions).length,
+    oferta: data.subjects.length,
+  };
   const groups = (Object.keys(GROUP_TITLE) as SubjectGroup[])
     .map((g) => ({ group: g, subjects: visible.filter((s) => s.group === g) }))
     .filter((g) => g.subjects.length > 0);
@@ -212,11 +283,14 @@ export function PlanBuilder({ data }: { data: PlanData }) {
 
       <div className="flex items-stretch gap-4">
         <aside
-          aria-label="Materias que podés cursar"
+          aria-labelledby="materias-titulo"
           className="flex h-[760px] flex-[0_0_390px] flex-col rounded-2xl border border-line bg-surface"
         >
-          <div className="flex flex-col gap-1.5 border-b border-line px-4 pt-4 pb-2.5">
-            <h2 className="text-[17px] font-semibold">Materias que podés cursar</h2>
+          <div className="flex flex-col gap-2 border-b border-line px-4 pt-4 pb-2.5">
+            <h2 id="materias-titulo" className="text-[17px] font-semibold">
+              {filter === "oferta" ? "Toda la oferta de tu plan" : "Materias que podés cursar"}
+            </h2>
+            <FilterSwitch filter={filter} counts={counts} onChange={saveFilter} />
             <label htmlFor="buscar-materia" className="sr-only">
               Buscar materia
             </label>
@@ -243,6 +317,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
                     color={colorOf.get(subject.code)}
                     open={open.has(subject.code) || !!q}
                     onToggle={() => toggleOpen(subject.code)}
+                    onRemove={() => remove(subject.code)}
                     onPick={(course) => pick(subject.code, course)}
                     onHover={(course) => setHover(course ? { subject: subject.code, course } : null)}
                     otherBlocks={selected.filter((s) => s.subject.code !== subject.code).flatMap((s) => s.course.blocks)}
@@ -250,7 +325,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
                 ))}
               </section>
             ))}
-            {groups.length === 0 && <p className="px-3 pt-4 text-sm text-muted">No hay materias con ese nombre.</p>}
+            {groups.length === 0 && <EmptyList filter={filter} searching={!!q} onShowAll={() => saveFilter("oferta")} />}
           </div>
         </aside>
 
@@ -259,6 +334,12 @@ export function PlanBuilder({ data }: { data: PlanData }) {
           className="flex min-w-0 flex-auto flex-col gap-3 rounded-2xl border border-line bg-surface px-[18px] py-4"
         >
           <div className="flex flex-col gap-1.5">
+            {outside.map((s) => (
+              <Warning key={s.subject.code} tone="transfer">
+                {s.subject.name}: {ELIGIBILITY_LABEL[s.subject.eligibility]?.toLowerCase()}. Te sirve para comparar horarios, pero no
+                la vas a poder confirmar como cursada.
+              </Warning>
+            ))}
             {selected.length + mine.length > 0 && warnings.length === 0 && (
               <Warning tone="ok">Sin superposiciones ni traslados apurados entre sedes</Warning>
             )}
@@ -272,7 +353,7 @@ export function PlanBuilder({ data }: { data: PlanData }) {
             selected={selected}
             activities={mine}
             onEditActivity={editActivity}
-            ghost={ghost ? { course: ghost, name: subjects.get(hover!.subject)!.name } : undefined}
+            ghost={ghost ? { course: ghost, name: subjects.get(hover!.subject)!.name, tag: ELIGIBILITY_TAG[subjects.get(hover!.subject)!.eligibility] } : undefined}
           />
           {analysis.asyncClasses.length > 0 && (
             <div className="flex flex-wrap items-center gap-2.5 border-t border-line pt-2.5">
@@ -305,12 +386,16 @@ export function PlanBuilder({ data }: { data: PlanData }) {
         query={query}
         onQuery={setQuery}
         groups={groups}
+        filter={filter}
+        filterCounts={counts}
         plan={plan}
         selected={selected}
         colorOf={colorOf}
         analysis={analysis}
         warnings={warnings}
+        onFilter={saveFilter}
         onPick={pick}
+        onRemove={remove}
         onClear={() => setPlan([])}
         cursadaCount={cursada.length}
         onConfirm={openConfirm}
@@ -333,7 +418,8 @@ export function PlanBuilder({ data }: { data: PlanData }) {
       {confirming && (
         <ConfirmCourses
           initial={confirming}
-          subjects={data.subjects}
+          subjects={confirmable}
+          outside={notConfirmable}
           options={plans}
           term={data.term}
           confirmed={cursada.map((e) => e.course)}
@@ -359,6 +445,7 @@ function SubjectRow({
   color,
   open,
   onToggle,
+  onRemove,
   onPick,
   onHover,
   otherBlocks,
@@ -368,6 +455,7 @@ function SubjectRow({
   color: Color | undefined;
   open: boolean;
   onToggle: () => void;
+  onRemove: () => void;
   onPick: (course: string) => void;
   onHover: (course: string | null) => void;
   otherBlocks: ClassBlock[];
@@ -376,36 +464,45 @@ function SubjectRow({
   const sub = chosenCourse
     ? `En tu plan · ${chosenCourse.label} · ${chosenCourse.teacherList}`
     : `${subject.courses.length} ${subject.courses.length === 1 ? "curso" : "cursos"}`;
+  const addable = canAdd(subject.eligibility);
 
   return (
     <div>
-      <button
-        aria-expanded={open}
-        onClick={onToggle}
-        className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left hover:bg-bg"
-      >
-        <span
-          className={`grid size-5 flex-none place-items-center rounded-full ${
-            color ? `border-2 ${color.bg} ${color.border}` : "border-[1.5px] border-line-strong"
-          }`}
+      <div className="flex items-center rounded-[10px] hover:bg-bg">
+        {/* El círculo: con la materia en el plan, la saca; si no, abre sus cursos como la flecha. */}
+        <button
+          onClick={chosenCourse ? onRemove : onToggle}
+          aria-label={chosenCourse ? `Quitar ${subject.name} del plan` : `Ver cursos de ${subject.name}`}
+          aria-expanded={chosenCourse ? undefined : open}
+          title={chosenCourse ? "Quitar del plan" : undefined}
+          className="group grid size-10 flex-none place-items-center rounded-[10px] pl-1"
         >
-          {color && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={color.ink}>
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
+          <span
+            className={`grid size-5 place-items-center rounded-full transition-colors ${
+              color ? `border-2 ${color.bg} ${color.border} group-hover:border-danger` : "border-[1.5px] border-line-strong group-hover:border-accent"
+            }`}
+          >
+            {color && <Check className={`${color.ink} group-hover:text-danger`} />}
+          </span>
+        </button>
+        <button
+          aria-expanded={open}
+          onClick={onToggle}
+          className="flex min-w-0 flex-auto items-center gap-2.5 py-2.5 pr-3 pl-1 text-left"
+        >
+          <span className="min-w-0 flex-auto text-[13.5px] leading-tight font-semibold">
+            {subject.name}
+            <span className="mt-px block text-xs font-normal text-muted">{sub}</span>
+            <EligibilityNote eligibility={subject.eligibility} />
+          </span>
+          {subject.credits !== null && (
+            <span className="text-[11px] font-medium whitespace-nowrap text-muted">{subject.credits} C</span>
           )}
-        </span>
-        <span className="min-w-0 flex-auto text-[13.5px] leading-tight font-semibold">
-          {subject.name}
-          <span className="mt-px block text-xs font-normal text-muted">{sub}</span>
-        </span>
-        {subject.credits !== null && (
-          <span className="text-[11px] font-medium whitespace-nowrap text-muted">{subject.credits} C</span>
-        )}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`flex-none text-muted transition-transform ${open ? "rotate-180" : ""}`}>
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`flex-none text-muted transition-transform ${open ? "rotate-180" : ""}`}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
 
       {open &&
         subject.courses.map((course) => {
@@ -447,7 +544,9 @@ function SubjectRow({
               <button
                 aria-pressed={isChosen}
                 onClick={() => onPick(course.id)}
-                className={`h-[30px] flex-none rounded-lg border px-3 text-[12.5px] font-semibold ${
+                disabled={!isChosen && !chosen && !addable}
+                title={!isChosen && !chosen && !addable ? `${ELIGIBILITY_LABEL[subject.eligibility]}: no hace falta sumarla` : undefined}
+                className={`h-[30px] flex-none rounded-lg border px-3 text-[12.5px] font-semibold disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled disabled:text-disabled-ink ${
                   isChosen
                     ? "border-line-strong bg-surface text-ink"
                     : "border-accent bg-accent text-on-accent"
@@ -472,6 +571,8 @@ type Item = {
   color?: Color;
   activity?: PlanActivity;
   ghost: boolean;
+  /** "Sin correlativas" on subjects the student cannot take yet. */
+  tag?: string | null;
 };
 type Placed = Item & { clash: boolean; lane: number };
 
@@ -487,9 +588,9 @@ function WeekGrid({
   selected: { subject: PlanSubject; course: PlanCourse; color: Color }[];
   activities: PlanActivity[];
   onEditActivity: (a: PlanActivity) => void;
-  ghost?: { course: PlanCourse; name: string };
+  ghost?: { course: PlanCourse; name: string; tag?: string | null };
 }) {
-  const courseItems = (course: PlanCourse, name: string, color: Color | undefined, isGhost: boolean) =>
+  const courseItems = (course: PlanCourse, name: string, color: Color | undefined, isGhost: boolean, tag?: string | null) =>
     course.blocks
       .filter((b) => !b.async)
       .map((block): Item => ({
@@ -499,16 +600,17 @@ function WeekGrid({
         detail: `${course.label.replace(" · práctica ", " ")} · ${where(block)}`,
         color,
         ghost: isGhost,
+        tag,
       }));
   const real: Item[] = [
-    ...selected.flatMap((s) => courseItems(s.course, s.subject.name, s.color, false)),
+    ...selected.flatMap((s) => courseItems(s.course, s.subject.name, s.color, false, ELIGIBILITY_TAG[s.subject.eligibility])),
     ...activities.flatMap((a) =>
       activityClassBlocks(a).map(
         (block): Item => ({ id: activityKey(a.id), block, name: a.name, detail: a.place ?? "Actividad", activity: a, ghost: false }),
       ),
     ),
   ];
-  const preview = ghost ? courseItems(ghost.course, ghost.name, undefined, true) : [];
+  const preview = ghost ? courseItems(ghost.course, ghost.name, undefined, true, ghost.tag) : [];
 
   const all = [...real, ...preview];
   const days = daysToShow(all.map((p) => p.block));
@@ -594,6 +696,9 @@ function CalendarBlock({
       : `${p.color!.bg} ${p.color!.ink} ${p.clash ? "border-2 border-danger" : `border ${p.color!.border}`}`;
   const content = (
     <>
+      {p.tag && (
+        <span className="mb-0.5 block w-fit max-w-full truncate rounded-full bg-surface px-1.5 text-[10.5px] font-semibold text-peach-ink">{p.tag}</span>
+      )}
       <div className="line-clamp-2 font-semibold">{p.name}</div>
       <div className="truncate opacity-90">{p.detail}</div>
       <div className="opacity-90">
