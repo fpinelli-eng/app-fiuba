@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: `Política de privacidad · ${APP_NAM
 
 // Política de privacidad (issue #8). Pública: Google la pide para publicar el login.
 // Si cambia qué datos se guardan o dónde, se actualiza este texto y la fecha.
-const UPDATED = "16 de noviembre de 2026";
+const UPDATED = "20 de noviembre de 2026";
 
 export default function PrivacidadPage() {
   const mail = (
@@ -57,6 +57,10 @@ export default function PrivacidadPage() {
           </li>
           <li>
             <b>En tu navegador:</b> una cookie para mantener tu sesión iniciada, otra que dura una hora para anotar como mucho una vez por hora que usaste la app, y tu preferencia de tema (claro u oscuro).
+          </li>
+          <li>
+            <b>Mientras tenés la app abierta:</b> para que los administradores vean cuántas personas la están usando en ese momento y de qué carrera, tu navegador avisa que está en
+            línea con un código al azar guardado en él, sin tu nombre, tu mail ni tu cuenta. No queda guardado: deja de contar cuando escondés o cerrás la pestaña.
           </li>
         </ul>
         <p>No hay publicidad ni herramientas de seguimiento de terceros. No vendemos ni compartimos tus datos.</p>

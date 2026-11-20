@@ -35,7 +35,8 @@ export interface Usage {
   active7d: number;
   active30d: number;
   users: number;
-  byCareer: { name: string; users: number; noPlan: boolean }[];
+  /** id and active7d are null if admin_uso() didn't send them (before 20261120180000) or for "Sin plan" (id). */
+  byCareer: { id: string | null; name: string; users: number; active7d: number | null; noPlan: boolean }[];
   dbBytes: number;
   dbLimitBytes: number;
   /** Students with at least one visible review (null: not sent, older admin_uso()). */
@@ -71,7 +72,13 @@ export function toUsage(r: Record<string, unknown>): Usage {
     active7d: num(r.active_7d),
     active30d: num(r.active_30d),
     users: num(r.users),
-    byCareer: list(r.by_career).map((c) => ({ name: str(c.name), users: num(c.users), noPlan: c.no_plan === true })),
+    byCareer: list(r.by_career).map((c) => ({
+      id: str(c.id) || null,
+      name: str(c.name),
+      users: num(c.users),
+      active7d: c.active_7d === undefined || c.active_7d === null ? null : num(c.active_7d),
+      noPlan: c.no_plan === true,
+    })),
     dbBytes: num(r.db_bytes),
     dbLimitBytes: num(r.db_limit_bytes) || 500 * 1024 * 1024,
     reviewAuthors: r.review_authors === undefined || r.review_authors === null ? null : num(r.review_authors),

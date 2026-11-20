@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/Header";
+import { OnlinePresence } from "@/components/OnlinePresence";
 import { WelcomeStories } from "@/components/WelcomeStories";
 import { getIntroSeen, getOfferNeed } from "@/lib/intro/data";
 import { countPendingReviews } from "@/lib/reviews/pending";
@@ -20,6 +21,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       {/* La primera vez se abren solas; después, desde Perfil → "Ver la bienvenida" o con ?bienvenida en la dirección. */}
       <WelcomeStories firstName={profile.firstName} open={!introSeen} needsOffer={offer.needsOffer} term={offer.term} />
       {children}
+      {/* "En línea ahora" de Administración → Usuarios: Realtime Presence, sin tocar la base. */}
+      <OnlinePresence planId={profile.planId!} />
       {/* Celular: lugar para la barra de pestañas fija de abajo (60 px + borde + zona segura del iPhone). */}
       <div aria-hidden="true" className="h-[calc(61px+env(safe-area-inset-bottom))] md:hidden print:hidden" />
     </>
