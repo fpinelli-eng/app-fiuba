@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getPlanCatalog } from "@/lib/admin/catalog";
+import { catalogTag, offerTermTag, TAG } from "@/lib/cache/keys";
+import { expireTags } from "@/lib/cache/shared";
 import { requireAdmin } from "@/lib/admin/data";
 import { offerPreviewProblem, offerTextProblem } from "@/lib/offer/check";
 import {
@@ -50,6 +52,7 @@ export async function setCurrentTerm(_prev: ActionState, formData: FormData): Pr
   const unset = await supabase.from("terms").update({ is_current: false }).eq("is_current", true).neq("id", id);
   if (unset.error) return { error: "No pudimos cambiar el cuatrimestre actual." };
   const set = await supabase.from("terms").update({ is_current: true }).eq("id", id);
+  expireTags(TAG.terms); // also after an error: the first update may have gone through
   if (set.error) return { error: "No pudimos cambiar el cuatrimestre actual." };
   revalidatePath("/admin");
   return ok;
@@ -182,6 +185,7 @@ export async function linkSiuSubject(_prev: ActionState, formData: FormData): Pr
     .from("subject_siu_codes")
     .upsert({ subject_id: subjectId, siu_code: siuCode }, { ignoreDuplicates: true });
   if (linked.error) return { error: "No pudimos guardar el emparejamiento." };
+  expireTags(catalogTag(planId));
 
   const saved = await refreshProcessed(planId, term.id, imp.data.raw_text as string, imp.data.parsed as ImportPreview | null);
   if (saved.error) return { error: "Guardamos el emparejamiento, pero no pudimos actualizar el resumen." };
@@ -374,6 +378,10 @@ async function publishPlan(planId: string, term: { id: string }, republish = fal
     .filter(([key]) => (republish ? !matchedCodes.has(key.split("|")[0]) : !draftKeys.has(key)))
     .map(([, id]) => id);
 
+  // The plan's SIU codes and the term's offer change (also when it fails halfway). A course can be
+  // offered to several plans: every plan's offer of the term is revalidated.
+  const expire = () => expireTags(catalogTag(planId), offerTermTag(term.id));
+
   try {
     // Remember which SIU code is which subject, for the next terms.
     const codes = await supabase
@@ -441,11 +449,14 @@ async function publishPlan(planId: string, term: { id: string }, republish = fal
     if (!replacing) {
       // First publication: leave no half-published offer behind (blocks go with their offerings).
       await supabase.from("offerings").delete().eq("term_id", term.id).eq("plan_id", planId);
+      expire();
       return { error: "No pudimos publicar la oferta. No quedó nada a medias: probá de nuevo." };
     }
+    expire();
     return { error: "No pudimos publicar todos los cambios. Probá de nuevo: lo que ya se actualizó queda bien." };
   }
 
+  expire();
   return ok;
 }
 
@@ -546,6 +557,7 @@ export async function addOfferSubjects(_prev: ActionState, formData: FormData): 
     .eq("plan_id", planId)
     .in("siu_subject_code", toAdd.map((u) => u.siuCode));
   if (shown.error) console.error("offerings", shown.error.message);
+  expireTags(catalogTag(planId), offerTermTag(term.id));
 
   const synced = await syncImport(planId, term.id);
   revalidateCatalog();
@@ -568,6 +580,7 @@ export async function removeOfferSubject(_prev: ActionState, formData: FormData)
     if (error.code === "P0002") return { error: "Esa materia no se agregó desde la oferta." };
     return { error: "No pudimos quitarla." };
   }
+  expireTags(catalogTag(planId), ...(term ? [offerTermTag(term.id)] : []));
   // Its courses leave the published offer (hidden, as any course that is no longer in the plan).
   const synced = term ? await syncImport(planId, term.id) : ok;
   revalidateCatalog();
@@ -676,8 +689,9 @@ export async function setOfferingVisible(_prev: ActionState, formData: FormData)
   const visible = formData.get("visible") === "true";
   if (!Number.isInteger(id) || id <= 0) return { error: "Curso inválido." };
   const supabase = await createClient();
-  const { error } = await supabase.from("offerings").update({ visible }).eq("id", id);
+  const { data, error } = await supabase.from("offerings").update({ visible }).eq("id", id).select("term_id").maybeSingle();
   if (error) return { error: "No pudimos cambiar el curso." };
+  if (data) expireTags(offerTermTag(data.term_id as string));
   revalidatePath("/admin");
   return ok;
 }

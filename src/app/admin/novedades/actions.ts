@@ -5,6 +5,8 @@ import { requireAdmin } from "@/lib/admin/data";
 import { getDatesToConfirm } from "@/lib/news/data";
 import { validateConfirmation, validateNews } from "@/lib/news/model";
 import { createClient } from "@/lib/supabase/server";
+import { TAG } from "@/lib/cache/keys";
+import { expireTags } from "@/lib/cache/shared";
 
 // Avisos of Novedades: publish, pin / unpin and delete. Every action checks that the caller
 // is an admin, and the database checks it again (RLS): only admins write news.
@@ -12,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 export type NewsState = { error: string | null; published: number };
 
 function refresh() {
+  expireTags(TAG.news, TAG.calendar);
   revalidatePath("/admin/novedades");
   revalidatePath("/novedades");
 }

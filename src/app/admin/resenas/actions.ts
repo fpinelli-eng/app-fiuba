@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/data";
+import { TAG } from "@/lib/cache/keys";
+import { expireTags } from "@/lib/cache/shared";
 
 // Moderation: only "Fijar" and "Eliminar" (hide, with undo). The database only lets admins
 // change pinned and hidden_at, and never the stars or the text.
@@ -32,6 +34,7 @@ export async function setReviewHidden(id: number, hidden: boolean): Promise<Mode
     .update({ hidden_at: hidden ? new Date().toISOString() : null })
     .eq("id", id);
   if (error) return { error: "No pudimos cambiar la reseña." };
+  expireTags(TAG.scores); // scores count only visible reviews
   revalidatePath("/admin/resenas");
   revalidatePath("/resenas", "layout");
   return { error: null };

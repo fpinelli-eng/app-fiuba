@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentTermRow, getSharedPlan } from "@/lib/cache/catalog";
 import { normalizeText, type Subject } from "@/lib/map/model";
 import { titleCase } from "@/lib/plan/format";
 import { campusQuery, withCampus } from "@/lib/campus/infer";
@@ -60,27 +61,23 @@ type Row = {
 const CAMPUS = new Set(["PC", "LH", "CU"]);
 
 /** null when there is no current term or the student did not enroll in anything this term. */
-export async function getHomeCourses(userId: string, subjects: Subject[]): Promise<HomeCourses | null> {
-  const supabase = await createClient();
-  const term = await supabase.from("terms").select("id, year, half").eq("is_current", true).maybeSingle();
-  if (term.error) throw new Error(`terms: ${term.error.message}`);
-  if (!term.data) return null;
+export async function getHomeCourses(userId: string, planId: string, subjects: Subject[]): Promise<HomeCourses | null> {
+  // Term and SIU codes come from the shared cache (src/lib/cache/); the student's courses do not.
+  const [term, plan] = await Promise.all([getCurrentTermRow(), getSharedPlan(planId)]);
+  if (!term) return null;
 
-  const [taken, codes] = await Promise.all([
-    supabase
-      .from("user_courses")
-      .select(
-        "offerings!inner(id, term_id, plan_id, siu_subject_code, siu_subject_name, course_number, practice, label, teachers, visible, offering_blocks(weekday, starts_at, ends_at, room, campus, is_async))",
-      )
-      .eq("user_id", userId)
-      .eq("offerings.term_id", term.data.id as string),
-    supabase.from("subject_siu_codes").select("subject_id, siu_code").in("subject_id", subjects.map((s) => s.id)),
-  ]);
+  const supabase = await createClient();
+  const taken = await supabase
+    .from("user_courses")
+    .select(
+      "offerings!inner(id, term_id, plan_id, siu_subject_code, siu_subject_name, course_number, practice, label, teachers, visible, offering_blocks(weekday, starts_at, ends_at, room, campus, is_async))",
+    )
+    .eq("user_id", userId)
+    .eq("offerings.term_id", term.id);
   if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
-  if (codes.error) throw new Error(`subject_siu_codes: ${codes.error.message}`);
 
   const byId = new Map(subjects.map((s) => [s.id, s]));
-  const byCode = new Map(codes.data.map((c) => [c.siu_code as string, byId.get(c.subject_id as number)]));
+  const byCode = new Map(plan.siuCodes.map((c) => [c.siu_code, byId.get(c.subject_id)]));
   const byName = new Map(subjects.map((s) => [normalizeText(s.name), s]));
 
   const courses = (taken.data as unknown as Row[])
@@ -112,5 +109,5 @@ export async function getHomeCourses(userId: string, subjects: Subject[]): Promi
     .sort((a, b) => a.subject.localeCompare(b.subject, "es"));
 
   if (!courses.length) return null;
-  return { term: `${term.data.half}C ${term.data.year}`, courses };
+  return { term: `${term.half}C ${term.year}`, courses };
 }

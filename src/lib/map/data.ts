@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { getSharedPlan } from "@/lib/cache/catalog";
 import { createClient } from "@/lib/supabase/server";
 import type { ExtraCredit, ExtraCreditKind, Requirement, Subject, SubjectKind, SubjectStatus } from "./model";
 
@@ -64,70 +66,53 @@ async function getExtras(userId: string): Promise<{ extraCredits: ExtraCredit[];
   };
 }
 
-// Everything the map needs for the student's plan, in one round of queries.
-export async function getMapData(userId: string, planId: string): Promise<MapData> {
+// Everything the map needs for the student's plan: the plan itself from the shared cache
+// (src/lib/cache/), the student's progress from the database. cache() dedupes within a request.
+export const getMapData = cache(async (userId: string, planId: string): Promise<MapData> => {
   const supabase = await createClient();
 
-  const [plan, subjects, requirements, userRequirements, areas, extras] = await Promise.all([
-    supabase.from("plans").select("id, year, credit_rules, careers(name)").eq("id", planId).single(),
-    supabase
-      .from("subjects")
-      .select("id, code, name, credits, kind, category, level, required_credits, requires_cbc, sort, area_id")
-      .eq("plan_id", planId)
-      .order("sort"),
-    supabase.from("plan_requirements").select("id, name, short_name").eq("plan_id", planId).order("sort"),
+  const [plan, userRequirements, extras] = await Promise.all([
+    getSharedPlan(planId),
     supabase.from("user_requirements").select("requirement_id").eq("user_id", userId),
-    supabase.from("subject_areas").select("id, name, sort").eq("plan_id", planId),
     getExtras(userId),
   ]);
-  if (plan.error) throw new Error(`plans: ${plan.error.message}`);
-  if (subjects.error) throw new Error(`subjects: ${subjects.error.message}`);
-  if (requirements.error) throw new Error(`plan_requirements: ${requirements.error.message}`);
   if (userRequirements.error) throw new Error(`user_requirements: ${userRequirements.error.message}`);
-  if (areas.error) throw new Error(`subject_areas: ${areas.error.message}`);
-  const areaById = new Map(areas.data.map((a) => [a.id as number, { name: a.name as string, sort: a.sort as number }]));
+  const areaById = new Map(plan.areas.map((a) => [a.id, { name: a.name, sort: a.sort }]));
 
-  const ids = subjects.data.map((s) => s.id as number);
-  const [prerequisites, userSubjects] = await Promise.all([
-    supabase.from("subject_prerequisites").select("subject_id, prerequisite_id").in("subject_id", ids),
-    getUserSubjects(userId, ids),
-  ]);
-  if (prerequisites.error) throw new Error(`subject_prerequisites: ${prerequisites.error.message}`);
+  const userSubjects = await getUserSubjects(userId, plan.subjects.map((s) => s.id));
 
   const prereqsOf = new Map<number, number[]>();
-  for (const p of prerequisites.data) {
-    const list = prereqsOf.get(p.subject_id as number) ?? [];
-    list.push(p.prerequisite_id as number);
-    prereqsOf.set(p.subject_id as number, list);
+  for (const p of plan.prerequisites) {
+    const list = prereqsOf.get(p.subject_id) ?? [];
+    list.push(p.prerequisite_id);
+    prereqsOf.set(p.subject_id, list);
   }
 
-  const career = plan.data.careers as unknown as { name: string } | { name: string }[] | null;
-  const careerName = Array.isArray(career) ? (career[0]?.name ?? "") : (career?.name ?? "");
-  const requirementIds = new Set(requirements.data.map((r) => r.id as number));
+  const requirementIds = new Set(plan.requirements.map((r) => r.id));
 
   return {
     planId,
-    careerName,
-    year: plan.data.year as number,
-    creditRules: plan.data.credit_rules,
-    subjects: subjects.data.map((s) => ({
-      id: s.id as number,
-      code: s.code as string,
-      name: s.name as string,
-      credits: s.credits as number,
+    careerName: plan.careerName,
+    year: plan.year,
+    creditRules: plan.creditRules,
+    subjects: plan.subjects.map((s) => ({
+      id: s.id,
+      code: s.code,
+      name: s.name,
+      credits: s.credits,
       kind: s.kind as SubjectKind,
-      category: s.category as string,
-      level: (s.level as number | null) ?? null,
-      requiredCredits: (s.required_credits as number | null) ?? null,
+      category: s.category,
+      level: s.level ?? null,
+      requiredCredits: s.required_credits ?? null,
       requiresCbc: s.requires_cbc === true,
-      prerequisites: prereqsOf.get(s.id as number) ?? [],
-      sort: s.sort as number,
-      area: s.area_id ? (areaById.get(s.area_id as number) ?? null) : null,
+      prerequisites: prereqsOf.get(s.id) ?? [],
+      sort: s.sort,
+      area: s.area_id ? (areaById.get(s.area_id) ?? null) : null,
     })),
-    requirements: requirements.data.map((r) => ({
-      id: r.id as number,
-      name: r.name as string,
-      shortName: r.short_name as string,
+    requirements: plan.requirements.map((r) => ({
+      id: r.id,
+      name: r.name,
+      shortName: r.short_name,
     })),
     lastChange: userSubjects.rows.reduce<string | null>((max, u) => {
       const t = u.updated_at;
@@ -148,4 +133,4 @@ export async function getMapData(userId: string, planId: string): Promise<MapDat
     failedFinals: extras.failedFinals,
     equivalenceReady: userSubjects.equivalenceReady,
   };
-}
+});

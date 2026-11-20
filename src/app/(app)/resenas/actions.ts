@@ -3,6 +3,8 @@
 import { commentProblem } from "@/lib/reviews/filter";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/session";
+import { TAG } from "@/lib/cache/keys";
+import { expireTags } from "@/lib/cache/shared";
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -24,6 +26,8 @@ export async function submitReview(offeringId: number, stars: number, comment: s
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_review", { p_offering_id: offeringId, p_stars: stars, p_comment: c.text || null });
   if (error) return { ok: false, error: "No pudimos guardar tu reseña. Probá de nuevo." };
+  // Course scores are cached for every plan that offers the course (src/lib/cache/).
+  expireTags(TAG.scores);
   return { ok: true };
 }
 
@@ -35,5 +39,7 @@ export async function reviewCourse(courseId: number, stars: number, comment: str
   const supabase = await createClient();
   const { error } = await supabase.rpc("review_course", { p_course_id: courseId, p_stars: stars, p_comment: c.text || null });
   if (error) return { ok: false, error: "No pudimos guardar tu reseña. Probá de nuevo." };
+  // Course scores are cached for every plan that offers the course (src/lib/cache/).
+  expireTags(TAG.scores);
   return { ok: true };
 }

@@ -1,3 +1,7 @@
+import { cache } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { SPEC } from "@/lib/cache/keys";
+import { sharedRead } from "@/lib/cache/shared";
 import { createClient } from "@/lib/supabase/server";
 import {
   addDays,
@@ -23,8 +27,8 @@ export interface CalendarInfo {
 }
 
 /** The latest loaded calendar: its name is the PDF's years, so the greatest one is the newest. */
-async function latestCalendar(): Promise<string | null> {
-  const supabase = await createClient();
+async function latestCalendar(db?: SupabaseClient): Promise<string | null> {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("academic_events")
     .select("calendar")
@@ -35,8 +39,8 @@ async function latestCalendar(): Promise<string | null> {
   return (data?.calendar as string | undefined) ?? null;
 }
 
-export async function getNews(): Promise<NewsItem[]> {
-  const supabase = await createClient();
+export async function getNews(db?: SupabaseClient): Promise<NewsItem[]> {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("news")
     .select("id, title, body, url, pinned, published_at")
@@ -57,8 +61,8 @@ export async function getNews(): Promise<NewsItem[]> {
 }
 
 /** The latest FIUBA news, newest first. */
-export async function getFiubaNews(limit = 12): Promise<FiubaNewsItem[]> {
-  const supabase = await createClient();
+export async function getFiubaNews(limit = 12, db?: SupabaseClient): Promise<FiubaNewsItem[]> {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("fiuba_news")
     .select("id, title, summary, url, image_url, published_at")
@@ -79,8 +83,8 @@ export async function getFiubaNews(limit = 12): Promise<FiubaNewsItem[]> {
 }
 
 /** The confirmed dates of a calendar (all of them: few rows, and a past one still hides its tentative row). */
-export async function getConfirmations(calendar: string): Promise<DateConfirmation[]> {
-  const supabase = await createClient();
+export async function getConfirmations(calendar: string, db?: SupabaseClient): Promise<DateConfirmation[]> {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase
     .from("academic_date_confirmations")
     .select("id, title, starts_on, ends_on, note, replaces")
@@ -100,8 +104,8 @@ export async function getConfirmations(calendar: string): Promise<DateConfirmati
 }
 
 /** The rows of a calendar that are not over on `today` and, with `until`, start by then. */
-async function getEvents(calendar: string, today: string, until: string | null): Promise<AcademicEvent[]> {
-  const supabase = await createClient();
+async function getEvents(calendar: string, today: string, until: string | null, db?: SupabaseClient): Promise<AcademicEvent[]> {
+  const supabase = db ?? (await createClient());
   let query = supabase.from("academic_events").select("id, title, starts_on, ends_on, sort").eq("calendar", calendar).gte("ends_on", today);
   if (until) query = query.lte("starts_on", until);
   const { data, error } = await query.order("starts_on").order("sort");
@@ -119,13 +123,20 @@ async function getEvents(calendar: string, today: string, until: string | null):
  * Data for /novedades: avisos, FIUBA news and the important dates of the latest calendar
  * (tentative, or confirmed by the Secretaría: importantDates()).
  */
-export async function getNewsPage(): Promise<{ today: string; news: NewsItem[]; fiuba: FiubaNewsItem[]; events: AcademicEvent[] }> {
+export const getNewsPage = cache(async (): Promise<{ today: string; news: NewsItem[]; fiuba: FiubaNewsItem[]; events: AcademicEvent[] }> => {
   const today = buenosAiresDate();
-  const [news, fiuba, calendar] = await Promise.all([getNews(), getFiubaNews(), latestCalendar()]);
-  if (!calendar) return { today, news, fiuba, events: [] };
-  const [events, confirmations] = await Promise.all([getEvents(calendar, today, addDays(today, LATER_DAYS)), getConfirmations(calendar)]);
-  return { today, news, fiuba, events: importantDates(events, confirmations) };
-}
+  // The same for every student: shared cache for the day (src/lib/cache/), revalidated when an
+  // admin publishes an aviso or confirms a date; FIUBA news (GitHub Actions) wait an hour at most.
+  return sharedRead(SPEC.newsPage(today), async (db) => {
+    const [news, fiuba, calendar] = await Promise.all([getNews(db), getFiubaNews(12, db), latestCalendar(db)]);
+    if (!calendar) return { today, news, fiuba, events: [] };
+    const [events, confirmations] = await Promise.all([
+      getEvents(calendar, today, addDays(today, LATER_DAYS), db),
+      getConfirmations(calendar, db),
+    ]);
+    return { today, news, fiuba, events: importantDates(events, confirmations) };
+  });
+});
 
 /** For the admin form: the important rows of the latest calendar that are not over, to confirm. */
 export async function getDatesToConfirm(): Promise<{ calendar: string | null; events: AcademicEvent[]; confirmations: DateConfirmation[] }> {

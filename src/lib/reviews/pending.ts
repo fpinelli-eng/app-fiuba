@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { getSharedPlan } from "@/lib/cache/catalog";
 import { createClient } from "@/lib/supabase/server";
 import { shortTeacherList, surname, titleCase } from "@/lib/plan/format";
 import { normalizeText } from "@/lib/map/model";
@@ -49,33 +51,42 @@ type Row = {
   } | null;
 };
 
-/** The latest term with reviews open for this student, with what is sent and what is missing. */
-export async function getReviewRound(userId: string, planId: string | null): Promise<ReviewRound | null> {
+// The student's courses and reviews, once per request: the layout (menu badge) and the page ask
+// for the same round. Per user: never in the shared cache.
+const studentReviewInputs = cache(async (userId: string) => {
   const supabase = await createClient();
-  const [taken, mine, subjects] = await Promise.all([
+  const [taken, mine] = await Promise.all([
     supabase
       .from("user_courses")
       .select("offering_id, offerings(id, course_id, term_id, siu_subject_name, label, teachers, terms(reviews_open_on))")
       .eq("user_id", userId),
     supabase.rpc("my_reviews"),
-    // The plan's names only make the titles nicer; the menu count skips them.
-    planId ? supabase.from("subjects").select("name").eq("plan_id", planId) : Promise.resolve({ data: [] as { name: string }[] }),
   ]);
   if (taken.error) throw new Error(`user_courses: ${taken.error.message}`);
   if (mine.error) throw new Error(`my_reviews: ${mine.error.message}`);
+  return { taken: taken.data as unknown as Row[], mine: mine.data };
+});
+
+/** The latest term with reviews open for this student, with what is sent and what is missing. */
+export async function getReviewRound(userId: string, planId: string | null): Promise<ReviewRound | null> {
+  const [{ taken, mine }, subjects] = await Promise.all([
+    studentReviewInputs(userId),
+    // The plan's names only make the titles nicer; the menu count skips them.
+    planId ? getSharedPlan(planId).then((p) => p.subjects) : Promise.resolve([] as { name: string }[]),
+  ]);
 
   const date = today();
-  const open = (taken.data as unknown as Row[])
+  const open = taken
     .map((r) => r.offerings)
     .filter((o): o is NonNullable<Row["offerings"]> => !!o && !!o.terms?.reviews_open_on && o.terms.reviews_open_on <= date);
   if (!open.length) return null;
 
   const termId = open.map((o) => o.term_id).sort().at(-1)!;
-  const names = new Map((subjects.data ?? []).map((s) => [normalizeText(s.name as string), s.name as string]));
+  const names = new Map(subjects.map((s) => [normalizeText(s.name), s.name]));
   // One review per student and course: a course already reviewed (in any term, or freely
   // from its page) counts as done.
   const sent = new Map(
-    ((mine.data ?? []) as { course_id: number; stars: number; comment: string | null }[]).map((r) => [r.course_id, r]),
+    ((mine ?? []) as { course_id: number; stars: number; comment: string | null }[]).map((r) => [r.course_id, r]),
   );
 
   // One task per course, even if the student marked a practice and its course.

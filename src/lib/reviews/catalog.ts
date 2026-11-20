@@ -6,6 +6,15 @@ import type { Campus } from "@/lib/siu/parser";
 import { normalizeText } from "@/lib/map/model";
 import { termLabel } from "./mine";
 import { courseStars, mixComments, type CourseStars, type StarCount } from "./merge";
+import {
+  getCurrentTermRow,
+  getOfferStarCounts,
+  getReviewSubjects,
+  getSharedPlan,
+  getTermOffer,
+  type OfferRow,
+  type StarCountRow,
+} from "@/lib/cache/catalog";
 import type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews } from "./types";
 
 export type { CourseDetail, CourseSummary, ReviewCatalog, Score, SubjectReviews };
@@ -44,22 +53,11 @@ const teacherList = (offerings: OfferingRow[]) =>
 
 /** Subjects of the plan that have courses (no CBC), and how to find them from an offering. */
 async function planSubjects(planId: string) {
-  const supabase = await createClient();
-  const { data: subjects, error } = await supabase
-    .from("subjects")
-    .select("id, name, credits, kind")
-    .eq("plan_id", planId)
-    .not("kind", "in", "(cbc,cbc_subject)")
-    .order("name");
-  if (error) throw new Error(`subjects: ${error.message}`);
-  const { data: codes, error: codesError } = await supabase
-    .from("subject_siu_codes")
-    .select("subject_id, siu_code")
-    .in("subject_id", subjects.map((s) => s.id as number));
-  if (codesError) throw new Error(`subject_siu_codes: ${codesError.message}`);
-
-  const byCode = new Map(codes.map((c) => [c.siu_code as string, c.subject_id as number]));
-  const byName = new Map(subjects.map((s) => [normalizeText(s.name as string), s.id as number]));
+  // Shared cache (src/lib/cache/): the same for every student of the plan.
+  const [subjects, plan] = await Promise.all([getReviewSubjects(planId), getSharedPlan(planId)]);
+  const subjectIds = new Set(subjects.map((s) => s.id));
+  const byCode = new Map(plan.siuCodes.filter((c) => subjectIds.has(c.subject_id)).map((c) => [c.siu_code, c.subject_id]));
+  const byName = new Map(subjects.map((s) => [normalizeText(s.name), s.id]));
   // The SIU code table is the source of truth; until the admin fills it, the subject name decides.
   const subjectOf = (o: Pick<OfferingRow, "siu_subject_code" | "siu_subject_name">) =>
     byCode.get(o.siu_subject_code) ?? byName.get(normalizeText(o.siu_subject_name));
@@ -77,8 +75,16 @@ export async function courseScores(courseIds: number[]): Promise<Map<number, Cou
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("course_star_counts", { course_ids: courseIds });
   if (error) throw new Error(`course_star_counts: ${error.message}`);
-  // One row per course: how many gave 1..5 stars (array position 0 = 1 star), for each source.
-  const rows = data as { course_id: number; app: number[] | null; dolly: number[] | null }[];
+  return starsFromCounts(data as StarCountRow[]);
+}
+
+/** Scores of the courses in the plan's offer of a term, from the shared cache (Reseñas search and Plan). */
+export async function offerScores(termId: string, planId: string): Promise<Map<number, CourseStars>> {
+  return starsFromCounts(await getOfferStarCounts(termId, planId));
+}
+
+// One row per course: how many gave 1..5 stars (array position 0 = 1 star), for each source.
+function starsFromCounts(rows: StarCountRow[]): Map<number, CourseStars> {
   return courseStars(
     rows.flatMap((r) =>
       (["app", "dolly"] as const).flatMap((source) =>
@@ -88,64 +94,36 @@ export async function courseScores(courseIds: number[]): Promise<Map<number, Cou
   );
 }
 
-async function schedules(offerings: OfferingRow[], planId: string) {
-  const supabase = await createClient();
+function schedules(offerings: OfferRow[], planId: string) {
   const out = new Map<number, ClassBlock[]>();
-  if (!offerings.length) return out;
-  const { data, error } = await supabase
-    .from("offering_blocks")
-    .select("offering_id, weekday, starts_at, ends_at, class_type, room, campus, is_async")
-    .in("offering_id", offerings.map((o) => o.id));
-  if (error) throw new Error(`offering_blocks: ${error.message}`);
-  const raw = new Map<number, (Omit<ClassBlock, "campus"> & { campus: CampusCode | null })[]>();
-  for (const b of data) {
-    const list = raw.get(b.offering_id as number) ?? [];
-    list.push({
-      day: DAYS[(b.weekday as number) - 1],
-      start: b.starts_at as number,
-      end: b.ends_at as number,
-      type: (b.class_type as string | null) ?? "",
-      room: (b.room as string | null) ?? null,
+  for (const o of offerings) {
+    if (!o.offering_blocks.length) continue;
+    const list: (Omit<ClassBlock, "campus"> & { campus: CampusCode | null })[] = o.offering_blocks.map((b) => ({
+      day: DAYS[b.weekday - 1],
+      start: b.starts_at,
+      end: b.ends_at,
+      type: b.class_type ?? "",
+      room: b.room ?? null,
       campus: (b.campus as CampusCode | null) ?? null,
       async: b.is_async === true,
-    });
-    raw.set(b.offering_id as number, list);
-  }
-  // The SIU leaves some classes without a campus: they are filled from the campus table (data/sedes/).
-  for (const o of offerings) {
-    const list = raw.get(o.id);
-    if (list) out.set(o.id, withCampus(list, campusQuery(planId, o)).map((b) => ({ ...b, campus: b.campus ? CAMPUS[b.campus] : null })));
+    }));
+    // The SIU leaves some classes without a campus: they are filled from the campus table (data/sedes/).
+    out.set(o.id, withCampus(list, campusQuery(planId, o)).map((b) => ({ ...b, campus: b.campus ? CAMPUS[b.campus] : null })));
   }
   return out;
 }
 
 export async function currentTerm(): Promise<{ id: string; label: string } | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("terms").select("id").eq("is_current", true).maybeSingle();
-  return data ? { id: data.id as string, label: termLabel(data.id as string) } : null;
+  const term = await getCurrentTermRow();
+  return term ? { id: term.id, label: termLabel(term.id) } : null;
 }
 
 /** Every subject of the plan (no CBC) with this term's courses and their scores. */
 export async function getReviewCatalog(planId: string): Promise<ReviewCatalog> {
-  const supabase = await createClient();
   const [{ subjects, subjectOf }, term] = await Promise.all([planSubjects(planId), currentTerm()]);
-
-  let offerings: OfferingRow[] = [];
-  if (term) {
-    const { data, error } = await supabase
-      .from("offerings")
-      .select("id, course_id, term_id, siu_subject_code, siu_subject_name, label, teachers")
-      .eq("plan_id", planId)
-      .eq("term_id", term.id)
-      .eq("visible", true);
-    if (error) throw new Error(`offerings: ${error.message}`);
-    offerings = data as OfferingRow[];
-  }
-
-  const [scoreOf, blocksOf] = await Promise.all([
-    courseScores([...new Set(offerings.map((o) => o.course_id))]),
-    schedules(offerings, planId),
-  ]);
+  const offerings: OfferRow[] = term ? await getTermOffer(term.id, planId) : [];
+  const scoreOf = term ? await offerScores(term.id, planId) : new Map<number, CourseStars>();
+  const blocksOf = schedules(offerings, planId);
 
   const coursesBySubject = new Map<number, Map<number, OfferingRow[]>>();
   for (const o of offerings) {
