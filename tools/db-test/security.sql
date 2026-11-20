@@ -220,8 +220,6 @@ select test.fails($$select public.admin_review_authors()$$, 'student counts the 
 select test.fails($$select public.admin_uso()$$, 'student reads the usage');
 select public.touch_last_seen();
 select test.ok((select last_seen_at from public.profiles) is not null, 'student marks her last visit');
-select test.fails('select 1 from public.usage_slots', 'student reads the usage slots');
-select test.fails($$insert into public.usage_slots values ('aaaaaaaa-0000-0000-0000-000000000001', now())$$, 'student writes a usage slot');
 select test.fails('update public.profiles set last_seen_at = null', 'student edits her last visit directly');
 update public.profiles set failed_finals = 3;
 select test.ok((select failed_finals from public.profiles) = 3, 'student sets her aplazos');
@@ -806,44 +804,50 @@ delete from public.exam_reminders where table_name = 'SALUD DEBIDA';
 delete from public.exam_tables where name = 'SALUD DEBIDA';
 delete from public.avisos_config;
 
--- Usage: touch_last_seen() records 5-minute slots, admin_uso() for Administración → Uso ----
+-- Usage: touch_last_seen() at most once per hour, admin_uso() for Administración → Usuarios ----
 
-select test.ok((select count(*) from public.usage_slots where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'touch_last_seen creates a usage slot');
+select test.ok(to_regclass('public.usage_slots') is null, 'usage_slots is gone');
+-- Seen 30 minutes ago: a new visit writes nothing.
+update public.profiles set last_seen_at = now() - interval '30 minutes' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
 select public.touch_last_seen();
 reset role;
-select test.ok((select count(*) from public.usage_slots where user_id = 'aaaaaaaa-0000-0000-0000-000000000001') = 1, 'one slot per student every 5 minutes');
--- A new slot deletes the ones older than 35 days.
-delete from public.usage_slots;
-insert into public.usage_slots values ('aaaaaaaa-0000-0000-0000-000000000001', now() - interval '40 days');
+select test.ok((select last_seen_at < now() - interval '29 minutes' from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
+  'touch_last_seen writes at most once per hour');
+-- Seen 2 hours ago: the visit is recorded.
+update public.profiles set last_seen_at = now() - interval '2 hours' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
 select public.touch_last_seen();
+select test.fails('select public.admin_uso()', 'a student reads the admin usage');
 reset role;
-select test.ok((select count(*) from public.usage_slots where slot < now() - interval '35 days') = 0, 'old usage slots are deleted');
-select test.ok((select count(*) from public.usage_slots) = 1, 'the new slot stays');
+select test.ok((select last_seen_at > now() - interval '1 minute' from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
+  'touch_last_seen writes again after an hour');
 
 set role anon;
 select test.fails('select public.admin_uso()', 'anon reads the usage');
-select test.fails('select 1 from public.usage_slots', 'anon reads the usage slots');
 select test.fails('select public.touch_last_seen()', 'anon records a visit');
 reset role;
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","email":"beto@fi.uba.ar"}', false);
-select test.ok((select public.admin_uso() ? 'online_now'), 'admin reads the usage');
-select test.fails('select 1 from public.usage_slots', 'admin reads the usage slots directly');
+select test.ok((select public.admin_uso() ? 'people'), 'admin reads the usage and the students');
 reset role;
 -- Still with the admin's claims (is_admin() reads auth.uid()).
 create table test.uso_run as select public.admin_uso() as j;
-select test.ok((select (j ->> 'online_now')::int >= 1 and (j ->> 'users')::int >= 2 and (j ->> 'active_24h')::int >= 1 from test.uso_run), 'usage: online and active counts');
-select test.ok((select (j -> 'peak_today' ->> 'users')::int = 1 and (j -> 'peak_7d' ->> 'users')::int = 1 from test.uso_run), 'usage: peak concurrency');
-select test.ok((select jsonb_array_length(j -> 'hourly') = 24 and jsonb_array_length(j -> 'daily') = 14 from test.uso_run), 'usage: 24 hours and 14 days');
-select test.ok((select (j -> 'daily' -> 13 ->> 'users')::int = 1 from test.uso_run), 'usage: today has one active student');
+select test.ok((select (j ->> 'users')::int >= 2 and (j ->> 'active_24h')::int >= 1 and (j ->> 'active_30d')::int >= (j ->> 'active_24h')::int from test.uso_run), 'usage: active counts');
+select test.ok((select not (j ?| array['online_now', 'peak_today', 'peak_7d', 'hourly', 'daily']) from test.uso_run), 'usage: no concurrency data any more');
 select test.ok((select sum((c ->> 'users')::int) = (j ->> 'users')::int from test.uso_run, jsonb_array_elements(j -> 'by_career') c group by j), 'usage: every user in one career row');
 select test.ok((select jsonb_array_length(j -> 'by_career') >= 13 from test.uso_run), 'usage: all careers');
-select test.ok((select (j ->> 'db_bytes')::bigint > 0 and (j ->> 'db_limit_bytes')::bigint = 524288000 and jsonb_array_length(j -> 'tables') = 5 from test.uso_run), 'usage: storage');
-select test.ok((select j::text !~* '@|aaaaaaaa|bbbbbbbb' from test.uso_run), 'usage: no mails, names or ids');
+select test.ok((select (j ->> 'db_bytes')::bigint > 0 and (j ->> 'db_limit_bytes')::bigint = 524288000 from test.uso_run), 'usage: storage');
+select test.ok((select jsonb_typeof(j -> 'review_authors') = 'number' from test.uso_run), 'usage: review authors total');
+select test.ok((select jsonb_array_length(j -> 'people') = (j ->> 'users')::int from test.uso_run), 'usage: one row per student');
+select test.ok((select p ->> 'plan' like '% 2023' from test.uso_run, jsonb_array_elements(j -> 'people') p where p ->> 'email' = 'ana@fi.uba.ar'),
+  'usage: the student with her plan');
+select test.ok((select (p ->> 'subjects')::int = 1 and p ->> 'signup_source' = 'qr' from test.uso_run, jsonb_array_elements(j -> 'people') p where p ->> 'email' = 'ana@fi.uba.ar'),
+  'usage: approved subjects and origin per student');
+select test.ok((select bool_and(not (p ?| array['last_seen_at', 'reviews', 'id', 'reminder_email'])) from test.uso_run, jsonb_array_elements(j -> 'people') p),
+  'usage: no last use, reviews per student, ids or reminder mails');
 drop table test.uso_run;
 
 -- Deleting the account keeps the review, without author ---------------------------
@@ -864,6 +868,5 @@ select test.ok((select count(*) from public.plan_choices) = 0, 'the plan is dele
 select test.ok((select count(*) from public.exam_reminders) = 0, 'exam reminders are deleted with the account');
 select test.ok((select count(*) from public.plan_activities) = 0, 'activities are deleted with the account');
 select test.ok((select count(*) from public.reminder_confirmations) = 0, 'reminder confirmations are deleted with the account');
-select test.ok((select count(*) from public.usage_slots) = 0, 'usage slots are deleted with the account');
 
 \echo 'All security checks passed.'

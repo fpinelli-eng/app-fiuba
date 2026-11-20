@@ -1,23 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
-import { SITE_URL, toDeployments, toUsage, type DeploymentsResult, type SiteCheck, type Usage } from "./usage";
+import { getCareers } from "@/lib/careers";
+import { getAdminUsers } from "./users";
+import { SITE_URL, toDeployments, toUsage, type AdminUser, type DeploymentsResult, type SiteCheck, type Usage } from "./usage";
 
-// Undefined function or table: the migration 20261118150000_admin_uso is not applied yet (Vercel
-// previews use the production database, which only gets it when the branch is merged).
-const NOT_YET = new Set(["42883", "PGRST202", "42P01", "PGRST205"]);
+// Undefined function: admin_uso() is not in the database (Vercel previews use the production database).
+const NOT_YET = new Set(["42883", "PGRST202"]);
 
 const TIMEOUT_MS = 3000;
 
-/** admin_uso() (null before the migration), how long the round trip took and when it was read. */
-export async function getUsage(): Promise<{ usage: Usage | null; dbMs: number; readAt: number }> {
+export interface AdminOverview {
+  /** Null if admin_uso() is not in the database yet. */
+  usage: Usage | null;
+  users: AdminUser[];
+  reviewAuthors: number | null;
+  /** How long admin_uso() took. */
+  dbMs: number;
+  readAt: number;
+}
+
+/**
+ * Administración → Usuarios in one database call: admin_uso() (20261119180000_menos_escrituras.sql)
+ * brings the counts, the storage, the students and the review authors. Until that migration is
+ * applied, admin_uso() has the older shape without the students: then admin_users(),
+ * admin_review_authors() and the careers are read as before.
+ */
+export async function getAdminOverview(): Promise<AdminOverview> {
   const supabase = await createClient();
   const start = performance.now();
   const { data, error } = await supabase.rpc("admin_uso");
   const dbMs = Math.round(performance.now() - start);
-  if (error) {
-    if (NOT_YET.has(error.code)) return { usage: null, dbMs, readAt: Date.now() };
-    throw new Error(`admin_uso: ${error.message}`);
-  }
-  return { usage: data && typeof data === "object" ? toUsage(data as Record<string, unknown>) : null, dbMs, readAt: Date.now() };
+  if (error && !NOT_YET.has(error.code)) throw new Error(`admin_uso: ${error.message}`);
+  const usage = !error && data && typeof data === "object" ? toUsage(data as Record<string, unknown>) : null;
+  if (usage?.people) return { usage, users: usage.people, reviewAuthors: usage.reviewAuthors, dbMs, readAt: Date.now() };
+
+  const [old, careers] = await Promise.all([getAdminUsers(), getCareers()]);
+  const planName = new Map(careers.flatMap((c) => c.plans.map((p) => [p.id, `${c.shortName} ${p.year}`] as const)));
+  const users = old.users.map((u) => ({ ...u, plan: u.planId ? (planName.get(u.planId) ?? null) : null }));
+  return { usage, users, reviewAuthors: old.reviewAuthors, dbMs, readAt: Date.now() };
 }
 
 /** A HEAD request to the public site, 3 s at most. */
