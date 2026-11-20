@@ -86,8 +86,9 @@ Qué revisa (los límites están en `SALUD_LIMITS`, al principio de `Salud.gs`):
 
 | Chequeo | Avisa si… |
 |---|---|
-| La base responde (`salud()`, migración `20261115130000_salud.sql`, con el mismo `TOKEN`) | da error: base caída, `TOKEN` o `SUPABASE_KEY` mal |
-| Fechas de examen del SIU (el workflow corre todas las mañanas) | la última lectura tiene más de 36 h: GitHub se salteó corridas o el SIU no responde |
+| La base responde (`salud()`, migración `20261115130000_salud.sql`, con el mismo `TOKEN`) | da error: base caída, `TOKEN` o `SUPABASE_KEY` mal. El aviso trae cómo reiniciarla |
+| La base está lenta (cuánto tarda `salud()` y, en `hourly`, la primera página de `avisos_pendientes()`) | alguna tarda más de 3 s (`SALUD_LIMITS.slowMs`; lo normal es menos de 1 s): dice cuánto tardó y cómo arreglarlo. Así se ve el caso de la base sin memoria, que responde a todo pero en 10–30 s. Este chequeo está solo en el mail y en `saludProbar`: Administración → Estado no lo muestra (lo mide el script, no la base) |
+| Fechas de examen del SIU (el workflow corre una vez por día, a las 06:13) | la última lectura tiene más de 36 h: GitHub se salteó la corrida de un día o el SIU no responde |
 | Noticias de la FIUBA (una vez por día) | la última copia tiene más de 48 h |
 | Mails de Recordarme | uno tenía que salir hace más de 3 h y sigue sin mandarse |
 | https://fiubi.com.ar y https://fiubi.com.ar/robots.txt | no responden 200 **dos veces seguidas** (una sola falla no avisa) |
@@ -112,6 +113,12 @@ Listo: desde la próxima hora corre solo.
 **Si llega "El calendario académico de la FIUBA cambió":** bajá el PDF nuevo de la página de la FIUBA y seguí [`data/calendario/README.md`](../../data/calendario/README.md): si cambiaron fechas, van en una migración nueva. Lo que recuerda está en la propiedad `SALUD_CALENDARIO` (la fecha de la última lectura y los nombres de los PDF); borrarla lo hace empezar de cero, sin mail.
 
 **El primer día puede llegar un aviso de "Las fechas de examen no se actualizan"** seguido de otro "todo volvió a andar": hasta que corra la sincronización del SIU con el código nuevo (la mañana siguiente a integrar el PR), la base solo sabe la última vez que *cambiaron* las fechas. Para evitarlo, hacé estos pasos después de esa corrida (en GitHub → Actions → "Fechas de examen del SIU" se ve si ya corrió). Lo que recuerda (qué avisó y cuántas veces falló la web) está en la propiedad `SALUD_STATE`; borrarla lo hace empezar de cero.
+
+**Si la base se cae o está lenta** (avisos "La base no responde" o "La base está lenta"; en la app, todo tarda o da error):
+
+1. **Reiniciarla:** Supabase → Project Settings → General → **Restart project**. Tarda unos minutos y suele resolverlo al momento (el 19/11/2026 la base del plan gratis se quedó sin memoria y estuvo 40 minutos con consultas de 10–30 s hasta que se reinició).
+2. **Ver por qué:** Supabase → Reports → **Database**: memoria y *swap*. Si la memoria está siempre al tope o el *swap* crece, va a volver a pasar.
+3. **A más largo plazo:** guardar en caché lo que la app lee más (hay un PR en curso) y, si no alcanza, pasar a Supabase Pro (más memoria).
 
 **Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. En **Activadores**, editá el de `hourly` y fijate que en **Configuración de notificaciones de errores** diga "Notificarme inmediatamente" (o "a diario"). Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos avisos de Google a tu cuenta.
 

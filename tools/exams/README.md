@@ -1,18 +1,20 @@
 # Fechas de examen del SIU, todos los días
 
-El workflow **"Fechas de examen del SIU"** (`.github/workflows/exams.yml`) copia dos veces por día (06:13 y 12:13 en Buenos Aires; GitHub suele atrasar las corridas programadas, sobre todo las de la hora en punto) las mesas de examen de cada plan desde la página pública "Fechas de examen" del SIU (`guaraniautogestion.fi.uba.ar/g3w/fecha_examen`, no pide sesión) a `exam_tables`, la tabla que muestra Finales. Hace lo mismo que **Publicar fechas** en Administración → Exámenes con el enlace del SIU, pero para todos los planes y solo cuando algo cambió.
+El workflow **"Fechas de examen del SIU"** (`.github/workflows/exams.yml`) copia una vez por día (06:13 en Buenos Aires; GitHub suele atrasar las corridas programadas, sobre todo las de la hora en punto) las mesas de examen de cada plan desde la página pública "Fechas de examen" del SIU (`guaraniautogestion.fi.uba.ar/g3w/fecha_examen`, no pide sesión) a `exam_tables`, la tabla que muestra Finales. Hace lo mismo que **Publicar fechas** en Administración → Exámenes con el enlace del SIU, pero para todos los planes y solo cuando algo cambió.
 
 ## Cómo funciona
 
-1. `current.sql` lee las mesas que hay hoy en la base (un JSON).
-2. `sync.mjs` baja, de a una y con pausas, la búsqueda de cada plan de `data/siu/exam-filters.json`, la lee con el mismo intérprete de la app (`parseSiuExamsHtml()`, `src/lib/siu/exams-html.ts`) y la compara con la base (`src/lib/exams/siu-sync.ts`, con pruebas).
-3. Si un plan cambió, `apply.sql` reemplaza todas sus mesas en una sola transacción y anota la carga en `exam_imports`. Los planes sin cambios no se tocan: correrlo dos veces da lo mismo. Con cambios o sin ellos, cada plan leído bien queda anotado en `exam_imports.checked_at` (`checkedSql()`): así el monitor (Administración → Estado y `tools/reminders/README.md`, "Monitor") se da cuenta si la sincronización deja de correr. `published_at` solo cambia cuando cambian las fechas.
+1. `current.sql` lee las mesas que hay hoy en la base, con su `id` (un JSON).
+2. `sync.mjs` baja, de a una y con pausas, la búsqueda de cada plan de `data/siu/exam-filters.json`, la lee con el mismo intérprete de la app (`parseSiuExamsHtml()`, `src/lib/siu/exams-html.ts`) y la compara con la base fila por fila (`planExamChanges()` en `src/lib/exams/siu-sync.ts`, con pruebas). Dos mesas son la misma si coinciden código de materia, nombre de la mesa, tipo y día (la misma clave con la que `exam_reminders` y `avisos_pendientes()` encuentran la mesa de un Recordarme).
+3. `apply.sql` escribe solo lo que cambió: **inserta** las mesas nuevas, **borra** las que el SIU ya no muestra y **actualiza en el lugar** las que cambiaron de hora, aula, inscripción, fecha de baja o docentes (la clave, el `id` y `created_at` no cambian, así que los Recordarme siguen apuntando a su mesa y releen los datos nuevos). Anota la carga en `exam_imports` de los planes con cambios. Antes de escribir comprueba que las mesas de cada plan sigan siendo las que leyó `current.sql`; si un administrador publicó ese plan a mano en el medio, no guarda nada y la corrida falla (la siguiente lo vuelve a intentar). Los planes sin cambios no se tocan: correrlo dos veces da lo mismo. Con cambios o sin ellos, cada plan leído bien queda anotado en `exam_imports.checked_at` (`checkedSql()`): así el monitor (Administración → Estado y `tools/reminders/README.md`, "Monitor") se da cuenta si la sincronización deja de correr. `published_at` solo cambia cuando cambian las fechas. Todo va en **una sola transacción** por corrida (`changesSql()`): si algo falla, la base queda como estaba.
+
+Antes se reemplazaban todas las mesas de un plan (100 a 360 filas borradas y otras tantas insertadas) apenas cambiaba una; ahora un día típico escribe unas pocas filas. Menos escrituras y una corrida por día en vez de dos le bajan la carga a la base del plan gratis de Supabase.
 
 Un plan **se saltea y conserva sus fechas** si el SIU no responde, devuelve cero mesas (una página de error o sin fechas publicadas nunca borra un plan) o muestra otra carrera u otro plan que el pedido. Si no se pudo leer **ningún** plan, el workflow falla y GitHub le manda un mail al dueño del repo: probablemente el SIU está caído o cambió su página.
 
-En el resumen de cada corrida (Actions → la corrida → Summary) hay una línea por plan: cuántas mesas tiene y cuántas son nuevas, se quitaron o cambiaron (hora, aula, inscripción, docentes). El repo es público: el log y el resumen muestran solo cantidades, nunca nombres.
+En el resumen de cada corrida (Actions → la corrida → Summary) hay una línea por plan: cuántas mesas tiene y cuántas son nuevas, se quitaron o cambiaron (hora, aula, inscripción, docentes), y arriba el total de filas escritas. El repo es público: el log y el resumen muestran solo cantidades, nunca nombres.
 
-Ojo: si un administrador publica fechas a mano, a la mañana siguiente el workflow las reemplaza por las del SIU (si el SIU devuelve mesas para ese plan).
+Ojo: si un administrador publica fechas a mano, a la mañana siguiente el workflow las lleva a las del SIU (si el SIU devuelve mesas para ese plan): agrega, borra y corrige las que difieran.
 
 ## Correrlo
 

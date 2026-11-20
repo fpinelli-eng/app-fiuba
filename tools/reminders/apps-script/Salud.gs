@@ -8,7 +8,11 @@
  * Every hour it checks:
  *   - the database answers salud() (migration 20261115130000_salud.sql, same TOKEN as the
  *     reminders): only counts and dates, never data of a student;
- *   - the SIU exam dates were read in the last SALUD_LIMITS.examHours (GitHub runs it every morning);
+ *   - the database answers fast: salud() (and, in hourly(), the first page of avisos_pendientes()
+ *     that Code.gs reads just before) within SALUD_LIMITS.slowMs. On the free plan the database
+ *     can run out of memory and swap: every query then takes 10–30 s without failing;
+ *   - the SIU exam dates were read in the last SALUD_LIMITS.examHours (GitHub runs it once a day,
+ *     every morning);
  *   - the FIUBA news were copied in the last SALUD_LIMITS.newsHours;
  *   - no "Recordarme" mail is due for more than SALUD_LIMITS.reminderHours (sending is broken);
  *   - https://fiubi.com.ar and its robots.txt answer 200 (alert after two failures in a row).
@@ -35,7 +39,9 @@ var SALUD_URLS = ['https://fiubi.com.ar', 'https://fiubi.com.ar/robots.txt'];
 var SALUD_PANEL = 'https://fiubi.com.ar/admin/estado';
 var SALUD_LOGO = 'https://fiubi.com.ar/brand/fiubi-logo-mail.png';
 var SALUD_LIMITS = {
-  examHours: 36,     // the sync runs every morning: this is more than one skipped run
+  examHours: 36,     // the sync runs once a day (06:13): 24 h plus GitHub's delays, and alerts
+                     // the evening of a day whose run did not happen
+  slowMs: 3000,      // a database call slower than this: "La base está lenta" (normal: under 1 s)
   newsHours: 48,     // once a day in the evening
   reminderHours: 3,  // the reminders go every hour from 08:00
   httpFailures: 2,   // in a row, so one slow answer does not wake anybody
@@ -43,7 +49,8 @@ var SALUD_LIMITS = {
   calendarHour: 9,   // the FIUBA calendar page is read once a day, from 09:00 in Buenos Aires
 };
 var SALUD_CALENDAR_PAGE = 'https://www.fi.uba.ar/estudiantes/calendario-academico';
-var SALUD_DB_CHECKS = ['examenes', 'noticias', 'recordatorios'];
+var SALUD_DB_CHECKS = ['lenta', 'examenes', 'noticias', 'recordatorios'];
+var SALUD_DB_FIX = 'Arreglo: Supabase → Project Settings → General → Restart project; si se repite, revisar Reports → Database (memoria/swap).';
 var SALUD_HOUR = 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------------------------
@@ -86,12 +93,16 @@ function saludCheck_(opts) {
     var prev = saludParseState_(props.getProperty('SALUD_STATE'));
     var data = null;
     var dataError = null;
+    var started = Date.now();
     try {
       data = rpc_('salud', {})[0] || null; // rpc_() and the TOKEN are those of Code.gs
       if (!data) dataError = 'respuesta vacía';
     } catch (e) {
       dataError = String(e && e.message || e);
     }
+    // How long the database took: salud() now and, inside hourly(), the reminders just before
+    // (AVISOS_ELAPSED_MS of Code.gs; null when saludProbar runs alone or the reminders failed).
+    var timing = { salud: Date.now() - started, avisos: typeof AVISOS_ELAPSED_MS === 'number' ? AVISOS_ELAPSED_MS : null };
     var http = SALUD_URLS.map(function (url) {
       try {
         var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true });
@@ -101,7 +112,7 @@ function saludCheck_(opts) {
       }
     });
     var now = Date.now();
-    var r = saludEvaluate_(prev, data, dataError, http, now);
+    var r = saludEvaluate_(prev, data, dataError, http, now, timing);
     r.recipients = saludRecipients_(props.getProperty('ALERT_TO'), saludOwner_());
     Logger.log('Monitor: ' + (r.problems.length ? r.problems.map(function (p) { return p.title; }).join('; ') : 'todo bien') + '.');
     if (dryRun) {
@@ -205,19 +216,43 @@ function saludHost_(url) {
   return url.replace(/^https?:\/\//, '');
 }
 
+/** "0,4 s", "12,3 s". */
+function saludSeconds_(ms) {
+  return (Math.max(0, ms) / 1000).toFixed(1).replace('.', ',') + ' s';
+}
+
+/**
+ * The latency check: { key: 'lenta', … }, or null without a time for salud().
+ * timing: { salud: ms, avisos: ms or null } (avisos: the first page of avisos_pendientes()).
+ */
+function saludLatency_(timing) {
+  if (!timing || typeof timing.salud !== 'number') return null;
+  var parts = [{ name: 'salud()', ms: timing.salud }];
+  if (typeof timing.avisos === 'number') parts.push({ name: 'avisos_pendientes()', ms: timing.avisos });
+  var worst = Math.max.apply(null, parts.map(function (p) { return p.ms; }));
+  var took = parts.map(function (p) { return p.name + ' tardó ' + saludSeconds_(p.ms); }).join(' y ');
+  var slow = worst > SALUD_LIMITS.slowMs;
+  return { key: 'lenta', title: slow ? 'La base está lenta' : 'Velocidad de la base', ok: !slow,
+    detail: slow
+      ? took + ' (el límite es ' + saludSeconds_(SALUD_LIMITS.slowMs) + '). ' + SALUD_DB_FIX
+      : took + '.' };
+}
+
 /**
  * Every check, with ok and a short detail (counts and ages only).
  * data: the row of salud(), or null with dataError. httpFails: url → failures in a row (already
- * counting this run); http: this run's answers.
+ * counting this run); http: this run's answers. timing: optional, see saludLatency_().
  */
-function saludChecks_(data, dataError, http, httpFails, now) {
+function saludChecks_(data, dataError, http, httpFails, now, timing) {
   var L = SALUD_LIMITS;
   var checks = [];
   if (dataError) {
     checks.push({ key: 'base', title: 'La base no responde', ok: false,
-      detail: 'El monitor no pudo leer el estado: ' + String(dataError).slice(0, 160) });
+      detail: 'El monitor no pudo leer el estado: ' + String(dataError).slice(0, 160) + '. ' + SALUD_DB_FIX });
   } else {
     checks.push({ key: 'base', title: 'Base de datos', ok: true, detail: 'Responde.' });
+    var latency = saludLatency_(timing);
+    if (latency) checks.push(latency);
     var exam = saludHours_(data.exam_sync_at, now);
     checks.push({ key: 'examenes', title: exam > L.examHours ? 'Las fechas de examen no se actualizan' : 'Fechas de examen del SIU',
       ok: exam <= L.examHours, detail: 'Última lectura del SIU: ' + saludAgo_(data.exam_sync_at, now) + '.' });
@@ -246,14 +281,15 @@ function saludChecks_(data, dataError, http, httpFails, now) {
  * The whole decision of one run: checks, problems, whether to mail and the next state.
  * Mails when the set of problems differs from the last mailed one (a new problem or a solved
  * one), at most SALUD_LIMITS.mailsPerDay a day. When the database does not answer, the checks
- * that need it keep what was last mailed (unknown is not solved).
+ * that need it keep what was last mailed (unknown is not solved). timing: how long the database
+ * took ({ salud, avisos } in ms, optional): slower than SALUD_LIMITS.slowMs is "La base está lenta".
  */
-function saludEvaluate_(prev, data, dataError, http, now) {
+function saludEvaluate_(prev, data, dataError, http, now, timing) {
   var httpFails = {};
   http.forEach(function (h) {
     httpFails[h.url] = h.code === 200 ? 0 : (prev.http[h.url] || 0) + 1;
   });
-  var checks = saludChecks_(data, dataError, http, httpFails, now);
+  var checks = saludChecks_(data, dataError, http, httpFails, now, timing);
   var problems = checks.filter(function (c) { return !c.ok; });
   if (dataError) {
     SALUD_DB_CHECKS.forEach(function (key) {

@@ -2,8 +2,8 @@
 # public "Fechas de examen" page into public.exam_tables, for Finales (tools/exams/README.md).
 # Once a day it reads the dates now in the database (tools/exams/current.sql), downloads and parses
 # each plan's search (tools/exams/sync.mjs, which uses src/lib/siu/ and src/lib/exams/siu-sync.ts)
-# and replaces only the plans whose dates changed (tools/exams/apply.sql), like "Publicar fechas" in
-# Administración. A plan whose page fails, comes empty or shows another career is skipped and keeps
+# and writes only the exam tables that changed: inserts the new ones, deletes the removed ones and
+# updates the changed ones in place (tools/exams/apply.sql), all in one transaction. A plan whose page fails, comes empty or shows another career is skipped and keeps
 # its dates. Only counts go to the log and the summary. If no plan can be read (the SIU is down or
 # changed its page), the job fails and GitHub emails the repository owner.
 # Needs one repository secret: SUPABASE_DB_PASSWORD (the same one as "Base de datos").
@@ -11,11 +11,11 @@ name: Fechas de examen del SIU
 
 on:
   schedule:
-    # Twice a day, at 06:13 and 12:13 in Buenos Aires (09:13 and 15:13 UTC). GitHub delays scheduled
-    # runs when it is busy, above all those on the hour: "0 9 * * *" ran between 12:25 and 14:15
-    # Buenos Aires time. A second run costs nothing (public repository) and changes nothing if the
-    # first one already copied the dates: only plans whose dates changed are replaced.
-    - cron: "13 9,15 * * *"
+    # Once a day, at 06:13 in Buenos Aires (09:13 UTC), off the hour: GitHub delays scheduled runs
+    # when it is busy, above all those on the hour ("0 9 * * *" ran between 12:25 and 14:15 Buenos
+    # Aires time). It used to run twice a day; once is enough and lowers the load on the free-plan
+    # database. The monitor (Salud.gs, SALUD_LIMITS.examHours = 36) alerts if a whole day is skipped.
+    - cron: "13 9 * * *"
   workflow_dispatch:
     inputs:
       dry_run:

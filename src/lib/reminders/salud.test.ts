@@ -45,7 +45,14 @@ interface Http {
   code: number | null;
 }
 interface SaludGs {
-  saludEvaluate_(prev: State, data: Data | null, dataError: string | null, http: Http[], now: number): Result;
+  saludEvaluate_(
+    prev: State,
+    data: Data | null,
+    dataError: string | null,
+    http: Http[],
+    now: number,
+    timing?: { salud: number; avisos: number | null },
+  ): Result;
   saludParseState_(raw: string | null): State;
   saludRecipients_(raw: string | null, fallback: string): string[];
   saludAge_(ms: number): string;
@@ -91,13 +98,14 @@ const up: Http[] = [
 const fresh = () => gs.saludParseState_(null);
 
 /** A Date whose "now" is fixed, for the code that reads the clock (the vm context has its own Date). */
-function fixedDate(now: number) {
+function fixedDate(now: number | (() => number)) {
+  const read = typeof now === "function" ? now : () => now;
   return class extends Date {
     constructor(...a: unknown[]) {
-      super(...((a.length ? a : [now]) as [number]));
+      super(...((a.length ? a : [read()]) as [number]));
     }
     static now() {
-      return now;
+      return read();
     }
   };
 }
@@ -163,10 +171,60 @@ describe("thresholds", () => {
     expect(r.problems[0].detail).toBe("4 por mandar; el más viejo tenía que salir hace 4 h.");
   });
 
-  it("the database not answering is one problem", () => {
+  it("the database not answering is one problem, with how to fix it", () => {
     const r = gs.saludEvaluate_(fresh(), null, "La base respondió 401 (¿TOKEN…?)", up, NOW);
     expect(keys(r)).toEqual(["base"]);
     expect(r.mail).toBe(true);
+    expect(r.problems[0].detail).toContain("El monitor no pudo leer el estado: La base respondió 401");
+    expect(r.problems[0].detail).toContain("Supabase → Project Settings → General → Restart project");
+    expect(r.problems[0].detail).toContain("Reports → Database (memoria/swap)");
+  });
+});
+
+describe("a slow database", () => {
+  const fast = { salud: 400, avisos: 800 };
+
+  it("answers under 3 s: fine, with the times in the log", () => {
+    const r = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, fast);
+    expect(r.problems).toEqual([]);
+    expect(r.checks.map((c) => c.key)).toEqual(["base", "lenta", "examenes", "noticias", "recordatorios", `web:${SITE}`, `web:${ROBOTS}`]);
+    expect(gs.saludLog_(r.checks)).toContain("✅ Velocidad de la base: salud() tardó 0,4 s y avisos_pendientes() tardó 0,8 s.");
+  });
+
+  it("salud() slower than 3 s is a problem that says how long it took and how to fix it", () => {
+    const r = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, { salud: 12_345, avisos: null });
+    expect(keys(r)).toEqual(["lenta"]);
+    expect(r.mail).toBe(true);
+    const p = r.problems[0];
+    expect(p.title).toBe("La base está lenta");
+    expect(p.detail).toContain("salud() tardó 12,3 s (el límite es 3,0 s).");
+    expect(p.detail).toContain("Supabase → Project Settings → General → Restart project; si se repite, revisar Reports → Database (memoria/swap).");
+    expect(gs.saludBuildMail_(r.problems, [], NOW).subject).toBe("FIUBI: La base está lenta");
+  });
+
+  it("the reminders call being slow is enough", () => {
+    const r = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, { salud: 500, avisos: 9_000 });
+    expect(keys(r)).toEqual(["lenta"]);
+    expect(r.problems[0].detail).toContain("avisos_pendientes() tardó 9,0 s");
+    expect(keys(gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, { salud: 3_000, avisos: null }))).toEqual([]);
+  });
+
+  it("mails once while slow, and again when it is fast again", () => {
+    const slow = { salud: 15_000, avisos: 20_000 };
+    const a = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, slow);
+    const b = gs.saludEvaluate_(a.state, healthy(), null, up, NOW + H, slow);
+    expect([a.mail, b.mail]).toEqual([true, false]);
+    // The database stops answering: "lenta" is not taken as solved.
+    const c = gs.saludEvaluate_(b.state, null, "La base respondió 500: statement timeout", up, NOW + 2 * H, { salud: 30_000, avisos: null });
+    expect(keys(c)).toEqual(["base", "lenta"]);
+    expect(c.resolved).toEqual([]);
+    const d = gs.saludEvaluate_(c.state, healthy(), null, up, NOW + 3 * H, fast);
+    expect(d.mail).toBe(true);
+    expect(d.resolved.map((p) => p.key).sort()).toEqual(["base", "lenta"]);
+  });
+
+  it("without a time (older callers) there is no speed check", () => {
+    expect(gs.saludEvaluate_(fresh(), healthy(), null, up, NOW).checks.map((c) => c.key)).not.toContain("lenta");
   });
 });
 
@@ -319,14 +377,18 @@ describe("the alert mail", () => {
 });
 
 describe("hourly(): the reminders, the confirmations and the monitor never stop each other", () => {
-  /** Mocked Google services. failDb: every database call fails. */
-  function services(opts: { failDb?: boolean; failSalud?: boolean }) {
+  /** Mocked Google services. failDb: every database call fails. slowDbMs: each database call takes this long. */
+  function services(opts: { failDb?: boolean; failSalud?: boolean; slowDbMs?: number }) {
     const calls: string[] = [];
     const props: Record<string, string> = { SUPABASE_KEY: "k", TOKEN: "t".repeat(40) };
-    const sent: { to: string; subject: string }[] = [];
-    const response = (code: number, body: unknown) => ({ getResponseCode: () => code, getContentText: () => JSON.stringify(body) });
+    const sent: { to: string; subject: string; body?: string }[] = [];
+    let clock = NOW;
+    const response = (code: number, body: unknown) => {
+      if (opts.slowDbMs) clock += opts.slowDbMs; // every mocked answer takes this long; the monitor times the database ones
+      return { getResponseCode: () => code, getContentText: () => JSON.stringify(body) };
+    };
     const globals = {
-      Date: fixedDate(NOW),
+      Date: fixedDate(() => clock),
       Logger: { log: () => undefined },
       LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => undefined }) },
       PropertiesService: {
@@ -404,6 +466,21 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
     expect(s.calls.filter((c) => c === "sheet")).toHaveLength(4); // two runs: the reminders tab and the panel
     // Not sent: nothing is recorded as notified, so the next run tries again.
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
+  });
+
+  it("a slow database alerts, with the times of salud() and avisos_pendientes()", () => {
+    const s = services({ slowDbMs: 12_000 });
+    load(s.globals).hourly();
+    expect(s.sent.map((m) => m.subject)).toEqual(["FIUBI: La base está lenta"]);
+    expect(s.sent[0].body).toContain("salud() tardó 12,0 s y avisos_pendientes() tardó 12,0 s (el límite es 3,0 s).");
+    expect(s.sent[0].body).toContain("Restart project");
+    expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({ lenta: "La base está lenta" });
+  });
+
+  it("a fast database does not alert", () => {
+    const s = services({ slowDbMs: 300 });
+    load(s.globals).hourly();
+    expect(s.sent).toEqual([]);
   });
 
   it("ALERT_TO decides who gets the alert", () => {
