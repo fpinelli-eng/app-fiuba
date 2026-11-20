@@ -276,6 +276,21 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Tocar cualquier otra parte de la pantalla cierra la ficha (antes solo la cruz o Escape, y
+  // parecía trabada). No la cierran la ficha misma, las materias (tocar otra cambia de ficha;
+  // tocar la misma la cierra con su propio clic), el panel de electivas ni la hoja del celular.
+  const hasSel = sel !== null;
+  useEffect(() => {
+    if (!hasSel) return;
+    const onDown = (e: PointerEvent) => {
+      const target = e.target as Element | null;
+      if (!target || target.closest("[data-map-keep], [role='dialog']")) return;
+      close();
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [hasSel]);
+
   // Geometría ----------------------------------------------------------------------
 
   const off = cbcOpen ? 0 : NODE_W - CBC_CLOSED_W;
@@ -552,7 +567,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         </div>
 
         {allElectives.length > 0 && (
-          <aside aria-label="Electivas" className="flex w-[276px] shrink-0 flex-col rounded-r-2xl border-l border-lavender-line bg-lavender-panel">
+          <aside aria-label="Electivas" data-map-keep className="flex w-[276px] shrink-0 flex-col rounded-r-2xl border-l border-lavender-line bg-lavender-panel">
             <div className="flex flex-col gap-2 border-b border-lavender-line px-4 pt-4 pb-2.5">
               <div className="flex items-baseline justify-between">
                 <h2 className="text-lg font-semibold">Electivas</h2>
@@ -635,7 +650,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         )}
 
         {selItem && selIsElective && (
-          <div className="absolute right-[288px] bottom-4 z-40">
+          <div data-map-keep className="absolute right-[288px] bottom-4 z-40">
             <SubjectCard
               item={selItem}
               progress={progress}
@@ -698,7 +713,7 @@ function MapNode(props: {
   const short =
     item.type === "requirement" ? (state === "approved" ? "Aprobada" : "Pendiente") : state === "final_pending" ? "Final" : "";
   return (
-    <div className="absolute transition-opacity" style={{ left: x, top: y, opacity, zIndex: selected ? 30 : 1 }}>
+    <div data-map-keep className="absolute transition-opacity" style={{ left: x, top: y, opacity, zIndex: selected ? 30 : 1 }}>
       <button
         type="button"
         aria-expanded={selected}
@@ -732,7 +747,7 @@ function Popover(props: { x: number; y: number; containerWidth: number; containe
   }, [y, containerHeight, children]);
   const left = x + NODE_W + 12 + 240 > containerWidth ? x - 252 : x + NODE_W + 12;
   return (
-    <div ref={ref} className="absolute z-40" style={{ left, top }}>
+    <div ref={ref} data-map-keep className="absolute z-40" style={{ left, top }}>
       {children}
     </div>
   );
