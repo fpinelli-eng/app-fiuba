@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ago } from "@/lib/admin/health";
-import { groupUsersByCareer } from "@/lib/admin/by-career";
+import { groupUsersByCareer, newToday } from "@/lib/admin/by-career";
 import type { CareerOption } from "@/lib/plans";
 import {
   buenosAiresDay,
@@ -21,6 +21,7 @@ import {
 } from "@/lib/admin/usage";
 import { CareerPanels } from "./CareerPanels";
 import { LiveOnline, type PresencePlan } from "./LiveOnline";
+import { SummaryTiles } from "./SummaryTiles";
 
 // Vercel's links that open the logged-in user's team and project ("[team]" and "[project]" are picked there).
 const VERCEL_USAGE = "https://vercel.com/d?to=%2F%5Bteam%5D%2F~%2Fusage&title=Uso";
@@ -79,14 +80,7 @@ export function UsersView({
         </p>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-5">
-        {stats.map(([label, n]) => (
-          <li key={label} className="rounded-2xl border border-line bg-surface p-3">
-            <div className="text-[13px] text-muted">{label}</div>
-            <div className="text-[26px] font-semibold tabular-nums">{typeof n === "number" ? n.toLocaleString("es-AR") : n}</div>
-          </li>
-        ))}
-      </ul>
+      <SummaryTiles stats={stats} newUsers={newToday(users, now)} />
       <p className="-mt-2 text-[13px] text-muted">
         “Activos” cuenta alumnos distintos que abrieron la app en ese lapso (se anota como mucho una vez por hora).
       </p>
@@ -145,7 +139,7 @@ export function UsersView({
         </div>
       </div>
 
-      <CareerPanels groups={groups} />
+      <CareerPanels groups={groups} now={now} />
     </main>
   );
 }

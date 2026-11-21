@@ -1,4 +1,4 @@
-import type { AdminUser, Usage } from "./usage";
+import { buenosAiresDay, type AdminUser, type Usage } from "./usage";
 
 // Administración → Usuarios: the students in one panel per career, and the search across panels.
 // Pure helpers, tested in by-career.test.ts. The grouping is done here, from the people admin_uso()
@@ -82,4 +82,16 @@ export function filterGroups(groups: readonly CareerGroup[], query: string): { g
   return groups
     .map((group) => ({ group, matches: q ? group.users.filter((u) => userMatches(u, q)) : group.users }))
     .filter((g) => g.matches.length > 0);
+}
+
+/** Signed up today, Buenos Aires day (the day of now, in that time zone). */
+export function isNewToday(u: Pick<AdminUser, "createdAt">, now: number): boolean {
+  const t = u.createdAt ? Date.parse(u.createdAt) : NaN;
+  if (Number.isNaN(t) || Number.isNaN(now)) return false;
+  return buenosAiresDay(u.createdAt) === buenosAiresDay(new Date(now).toISOString());
+}
+
+/** The students who signed up today, newest first. */
+export function newToday(users: readonly AdminUser[], now: number): AdminUser[] {
+  return users.filter((u) => isNewToday(u, now)).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
