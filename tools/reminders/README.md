@@ -87,7 +87,7 @@ Qué revisa (los límites están en `SALUD_LIMITS`, al principio de `Salud.gs`):
 | Chequeo | Avisa si… |
 |---|---|
 | La base responde (`salud()`, migración `20261115130000_salud.sql`, con el mismo `TOKEN`) | da error: base caída, `TOKEN` o `SUPABASE_KEY` mal. El aviso trae cómo reiniciarla |
-| La base está lenta (cuánto tarda `salud()` y, en `hourly`, la primera página de `avisos_pendientes()`) | alguna tarda más de 3 s (`SALUD_LIMITS.slowMs`; lo normal es menos de 1 s): dice cuánto tardó y cómo arreglarlo. Así se ve el caso de la base sin memoria, que responde a todo pero en 10–30 s. Lo mide el script: Administración → Estado lo muestra en el gráfico de latencia y en el historial (ver abajo) |
+| La base está lenta (cuánto tarda `salud()` y, en `hourly`, la primera página de `avisos_pendientes()`) | alguna tarda más de 3 s (`SALUD_LIMITS.slowMs`; lo normal es menos de 1 s): dice cuánto tardó y cómo arreglarlo. Así se ve el caso de la base sin memoria, que responde a todo pero en 10–30 s. Este chequeo está solo en el mail y en `saludProbar`: Administración → Estado no lo muestra (lo mide el script, no la base) |
 | Fechas de examen del SIU (el workflow corre una vez por día, a las 06:13) | la última lectura tiene más de 36 h: GitHub se salteó la corrida de un día o el SIU no responde |
 | Noticias de la FIUBA (una vez por día) | la última copia tiene más de 48 h |
 | Mails de Recordarme | uno tenía que salir hace más de 3 h y sigue sin mandarse |
@@ -95,18 +95,6 @@ Qué revisa (los límites están en `SALUD_LIMITS`, al principio de `Salud.gs`):
 | Calendario académico de la FIUBA (una vez por día, desde las 9: lee https://www.fi.uba.ar/estudiantes/calendario-academico) | cambiaron los PDF que enlaza la página (hoy, solo calendarios: uno nuevo, o el mismo subido de nuevo, que la FIUBA guarda con otro nombre). Manda **un** mail, "El calendario académico de la FIUBA cambió: revisá las fechas de FIUBI", con los PDF nuevos y los que ya no están; no hay mail de "se resolvió". La primera lectura solo guarda los nombres; si la página no responde o no tiene ningún PDF, no avisa y vuelve a probar a la hora siguiente |
 
 La base le devuelve solo cantidades y fechas (nunca mails ni nombres) y el mail tiene solo eso, con un botón a Administración → Estado. Cada llamada anota la hora en la base, así la página de Estado muestra "Último chequeo del monitor: hace X" y avisa ⚠️ "El monitor no está corriendo" si pasaron más de 2 horas.
-
-### Historial de caídas y latencia (Administración → Estado)
-
-Después de `salud()`, cada corrida hace **una** llamada más, `salud_registrar()` (migración `20261121120000_incidentes.sql`, mismo `TOKEN`), que deja:
-
-- **Latencia:** cuánto tardó la consulta más lenta de esa corrida. La base guarda las últimas 72 muestras (tres días) en una columna de `monitor_state`; Estado las muestra como barras, con la línea de 3 s.
-- **Incidentes** (`monitor_incidents`): base caída, base lenta, sitio caído u otro chequeo que falla (fechas del SIU, noticias, Recordarme). Se escriben **solo cuando algo cambia**: cuando empieza, cuando se pone más lento (la latencia máxima) y cuando termina. Estado lista los de los últimos 30 días, lo más nuevo primero, con fecha, duración, causa y latencia máxima; los que siguen abiertos, resaltados.
-- **Si la base no responde**, el script no puede escribir: guarda el incidente en `SALUD_STATE` con la hora en que lo vio primero y lo manda con su inicio y fin reales en la primera corrida en que la base vuelve a responder. Si `salud_registrar()` falla (por ejemplo, antes de aplicar la migración), también lo guarda y lo vuelve a mandar la hora siguiente; los avisos por mail siguen igual.
-
-Costo: en una hora normal, dos escrituras chiquitas en la misma fila (la hora del chequeo en `salud()` y la muestra de latencia), más una por incidente que empieza o termina. Solo kinds, títulos fijos, tiempos y códigos HTTP: nada de alumnos.
-
-**Lo que se pierde:** el monitor corre una vez por hora, así que una caída más corta, entre dos corridas, no queda anotada, y la hora de inicio puede ser hasta una hora más tarde que la real. Para verlas mejor se puede agregar un activador aparte de `saludCheck_` cada 15 minutos (la cuota de `UrlFetchApp` de una cuenta gratis es de 20.000 llamadas por día y cada corrida del monitor usa unas 4, o sea ~400 por día; también entra en los 90 minutos diarios de activadores). Ojo: con eso las 72 muestras serían 18 horas, no 3 días.
 
 ### Ponerlo en marcha (Tomás)
 
@@ -133,8 +121,6 @@ Listo: desde la próxima hora corre solo.
 3. **A más largo plazo:** guardar en caché lo que la app lee más (hay un PR en curso) y, si no alcanza, pasar a Supabase Pro (más memoria).
 
 **Si falla el script entero** (por ejemplo, Google cambió algo o se venció un permiso), Google manda el aviso de error a **avisosfiubi@gmail.com**, no a `ALERT_TO`. En **Activadores**, editá el de `hourly` y fijate que en **Configuración de notificaciones de errores** diga "Notificarme inmediatamente" (o "a diario"). Revisá esa casilla de vez en cuando o configurá en Gmail que reenvíe esos avisos de Google a tu cuenta.
-
-**Cuando se integra el historial de caídas** (PR de `20261121120000_incidentes.sql`): pegá de nuevo [`apps-script/Salud.gs`](apps-script/Salud.gs) como arriba (`Código.gs` no cambió, pegarlo de nuevo no molesta) y corré `saludProbar`: al final dice "Historial de Estado: latencia 0,4 s; ningún incidente para anotar.". Desde la próxima hora aparecen las barras en Administración → Estado.
 
 ### Lo que no ve
 
