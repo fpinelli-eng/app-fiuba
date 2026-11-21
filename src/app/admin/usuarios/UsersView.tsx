@@ -20,6 +20,7 @@ import {
   type Usage,
 } from "@/lib/admin/usage";
 import { CareerPanels } from "./CareerPanels";
+import { HourlyChart } from "./HourlyChart";
 import { LiveOnline, type PresencePlan } from "./LiveOnline";
 import { SummaryTiles } from "./SummaryTiles";
 
@@ -84,6 +85,12 @@ export function UsersView({
       <p className="-mt-2 text-[13px] text-muted">
         “Activos” cuenta alumnos distintos que abrieron la app en ese lapso (se anota como mucho una vez por hora).
       </p>
+
+      {usage?.byHour && (
+        <Card title="Personas que entraron por hora (aprox.)" id="por-hora">
+          <HourlyChart data={usage.byHour} />
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-[18px] md:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-[18px]">
