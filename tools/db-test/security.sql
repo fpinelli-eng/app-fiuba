@@ -846,8 +846,12 @@ select test.ok((select p ->> 'plan' like '% 2023' from test.uso_run, jsonb_array
   'usage: the student with her plan');
 select test.ok((select (p ->> 'subjects')::int = 1 and p ->> 'signup_source' = 'qr' from test.uso_run, jsonb_array_elements(j -> 'people') p where p ->> 'email' = 'ana@fi.uba.ar'),
   'usage: approved subjects and origin per student');
+select test.ok((select bool_and(p ? 'last_seen') from test.uso_run, jsonb_array_elements(j -> 'people') p), 'usage: last use for every student');
+select test.ok((select (p ->> 'last_seen')::timestamptz between now() - interval '1 minute' and now() + interval '1 minute'
+    from test.uso_run, jsonb_array_elements(j -> 'people') p where p ->> 'email' = 'ana@fi.uba.ar'),
+  'usage: last use is the exact time of her last visit');
 select test.ok((select bool_and(not (p ?| array['last_seen_at', 'reviews', 'id', 'reminder_email'])) from test.uso_run, jsonb_array_elements(j -> 'people') p),
-  'usage: no last use, reviews per student, ids or reminder mails');
+  'usage: no reviews per student, ids or reminder mails');
 drop table test.uso_run;
 
 -- Deleting the account keeps the review, without author ---------------------------
