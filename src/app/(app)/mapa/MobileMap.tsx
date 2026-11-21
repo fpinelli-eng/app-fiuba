@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { STATE_LABEL, normalizeText, subjectKey, type DisplayState, type GradeMark, type MapItem, type Subject } from "@/lib/map/model";
+import { STATE_LABEL, normalizeText, subjectKey, subjectsLabel, type DisplayState, type GradeMark, type MapItem, type Subject } from "@/lib/map/model";
 import { GradeMarkText, STATE_ICON_LABEL, STATE_STYLE, StateIcon } from "./icons";
 
 // Mapa en el celular (menos de 768 px): en vez de las columnas, una lista por cuatrimestre
@@ -33,6 +33,8 @@ interface Props {
   electiveCredits: number;
   electiveTarget: string | null;
   electiveTargetMax: number | null;
+  /** Approved electives (subjects), shown under the credits. */
+  electivesApproved: number;
   onPick: (key: string) => void;
 }
 
@@ -158,7 +160,7 @@ export function MobileMap(props: Props) {
 }
 
 function ElectivesList(props: Props & { q: string; row: (item: MapItem) => ReactNode }) {
-  const { electiveGroups: groups, items, stateOf, q, filter, onFilter, row, electiveCredits, electiveTarget, electiveTargetMax } = props;
+  const { electiveGroups: groups, items, stateOf, q, filter, onFilter, row, electiveCredits, electiveTarget, electiveTargetMax, electivesApproved } = props;
   const all = groups.flatMap((g) => g.items);
   const stateOfSubject = (s: Subject) => stateOf(items.get(subjectKey(s.id))!);
   const passes = (s: Subject) => (filter === "all" || stateOfSubject(s) === filter) && (!q || normalizeText(s.name).includes(q));
@@ -173,6 +175,9 @@ function ElectivesList(props: Props & { q: string; row: (item: MapItem) => React
             {electiveTarget && <> de {electiveTarget}</>} C
           </span>
         </div>
+        <p className="-mt-1.5 text-[13px] text-muted">
+          {subjectsLabel(electivesApproved)} {electivesApproved === 1 ? "aprobada" : "aprobadas"}
+        </p>
         {electiveTargetMax !== null && (
           <div className="h-2 overflow-hidden rounded-lg bg-surface" aria-hidden="true">
             <div className="h-2 bg-accent" style={{ width: `${Math.min(100, Math.round((electiveCredits / electiveTargetMax) * 100))}%` }} />

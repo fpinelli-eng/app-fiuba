@@ -4,7 +4,9 @@ import areasFile from "../../../data/planes/areas.json";
 import {
   CareerMap,
   approvedLabel,
+  careerPercent,
   electiveTarget,
+  subjectsLabel,
   formatAverage,
   gradeMark,
   gradeMarkShort,
@@ -117,6 +119,77 @@ describe("credits and average", () => {
     expect(map.electiveCredits(p)).toBe(elective.credits + 4);
     expect(map.approvedCredits(p, (s) => s.kind === "elective")).toBe(elective.credits);
     expect(sumExtraCredits([{ credits: 2 }, { credits: 4 }])).toBe(6);
+  });
+});
+
+describe("subject counts", () => {
+  const electives = subjects.filter((s) => s.kind === "elective");
+
+  it("counts the CBC subjects, the required ones and the TIF as obligatorias, not the CBC node or English", () => {
+    // Industrial 2023: 6 CBC subjects + 28 required + the Trabajo Integrador Final.
+    expect(map.subjectCounts(progress())).toEqual({ required: { done: 0, total: 35 }, electives: 0, approved: 0 });
+    const p = progress([...CBC, ["AMII", "approved", 8], ["FSP", "final_pending"], ["PII", "in_progress"]], [english.id]);
+    expect(map.subjectCounts(p)).toEqual({ required: { done: 7, total: 35 }, electives: 0, approved: 7 });
+  });
+
+  it("counts subjects approved by equivalence, like the credits", () => {
+    const p = progress([...CBC.slice(0, 2), ["AMII", "approved", "equiv"]]);
+    expect(map.subjectCounts(p).required.done).toBe(3);
+  });
+
+  it("counts approved electives apart, without a total, and ignores extra credits", () => {
+    const p: Progress = {
+      subjects: new Map([
+        [electives[0].id, { status: "approved", grade: 9 }],
+        [electives[1].id, { status: "approved", grade: null, equivalence: true }],
+        [electives[2].id, { status: "final_pending", grade: null }],
+        [id("AMII"), { status: "approved", grade: 7 }],
+      ]),
+      requirements: new Set(),
+      extraCredits: 8,
+    };
+    expect(map.subjectCounts(p)).toEqual({ required: { done: 1, total: 35 }, electives: 2, approved: 3 });
+  });
+
+  it("counts the final options (Tesis or Trabajo Profesional) as one slot", () => {
+    const base = subjects.filter((s) => s.kind !== "final_project");
+    const next = Math.max(...subjects.map((s) => s.id)) + 1;
+    const option = (n: number, name: string): Subject => ({ ...base[base.length - 1], id: next + n, code: `F${n}`, name, kind: "final_option", level: null });
+    const old = new CareerMap([...base, option(0, "Tesis"), option(1, "Trabajo Profesional")], []);
+    expect(old.subjectCounts(progress()).required.total).toBe(35);
+    const both: Progress = {
+      subjects: new Map([
+        [next, { status: "approved", grade: 9 }],
+        [next + 1, { status: "approved", grade: 8 }],
+      ]),
+      requirements: new Set(),
+    };
+    expect(old.subjectCounts(both).required.done).toBe(1);
+  });
+
+  it("writes 1 materia, n materias", () => {
+    expect(subjectsLabel(1)).toBe("1 materia");
+    expect(subjectsLabel(0)).toBe("0 materias");
+    expect(subjectsLabel(22)).toBe("22 materias");
+  });
+});
+
+describe("career percent", () => {
+  it("is the share of the total credits, rounded down", () => {
+    expect(careerPercent(148, 236)).toBe(62); // 62,7 %
+    expect(careerPercent(29, 100)).toBe(29); // not 28 by floating point
+    expect(careerPercent(0, 236)).toBe(0);
+  });
+
+  it("says 100 % only with the career complete", () => {
+    expect(careerPercent(235, 236)).toBe(99);
+    expect(careerPercent(236, 236)).toBe(100);
+    expect(careerPercent(250, 236)).toBe(100); // extra credits past the total
+  });
+
+  it("is null without a total", () => {
+    expect(careerPercent(148, null)).toBeNull();
+    expect(careerPercent(148, 0)).toBeNull();
   });
 });
 
