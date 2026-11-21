@@ -825,6 +825,48 @@ reset role;
 select test.ok((select last_seen_at > now() - interval '1 minute' from public.profiles where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
   'touch_last_seen writes again after an hour');
 
+-- People per hour (20261121170000_uso_por_hora.sql): usage_hours only through touch_last_seen() and admin_uso().
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select test.fails('select * from public.usage_hours', 'a student reads usage_hours');
+select test.fails($$insert into public.usage_hours (hour, users) values (date_trunc('hour', now()), 100)$$, 'a student writes usage_hours');
+reset role;
+set role anon;
+select test.fails('select * from public.usage_hours', 'anon reads usage_hours');
+reset role;
+-- A row 20 days old goes when a new hour row is created; the current hour starts empty.
+delete from public.usage_hours where hour >= now() - interval '2 hours';
+insert into public.usage_hours (hour, users) values (date_trunc('hour', now() - interval '20 days', 'America/Argentina/Buenos_Aires'), 7);
+create table test.hours_before as select coalesce(sum(users), 0)::int as n from public.usage_hours where hour >= now() - interval '2 hours';
+-- Last write 2 hours ago: the visit counts once in the current hour.
+update public.profiles set last_seen_at = now() - interval '2 hours' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select public.touch_last_seen();
+reset role;
+select test.ok((select coalesce(sum(users), 0) from public.usage_hours where hour >= now() - interval '2 hours') = (select n + 1 from test.hours_before),
+  'touch_last_seen counts the visit in its hour');
+select test.ok((select users >= 1 from public.usage_hours where hour = date_trunc('hour', now(), 'America/Argentina/Buenos_Aires')),
+  'the visit is in the current Buenos Aires hour');
+select test.ok((select count(*) from public.usage_hours where hour < now() - interval '15 days') = 0, 'hours older than 15 days are deleted');
+-- Again within the hour: no new count.
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select public.touch_last_seen();
+select public.touch_last_seen();
+reset role;
+select test.ok((select coalesce(sum(users), 0) from public.usage_hours where hour >= now() - interval '2 hours') = (select n + 1 from test.hours_before),
+  'touch_last_seen counts a student at most once per hour');
+-- Last write more than an hour ago: counts again.
+update public.profiles set last_seen_at = now() - interval '61 minutes' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"aaaaaaaa-0000-0000-0000-000000000001","email":"ana@fi.uba.ar"}', false);
+select public.touch_last_seen();
+reset role;
+select test.ok((select coalesce(sum(users), 0) from public.usage_hours where hour >= now() - interval '2 hours') = (select n + 2 from test.hours_before),
+  'touch_last_seen counts again after an hour');
+drop table test.hours_before;
+
 set role anon;
 select test.fails('select public.admin_uso()', 'anon reads the usage');
 select test.fails('select public.touch_last_seen()', 'anon records a visit');
@@ -852,6 +894,13 @@ select test.ok((select (p ->> 'last_seen')::timestamptz between now() - interval
   'usage: last use is the exact time of her last visit');
 select test.ok((select bool_and(not (p ?| array['last_seen_at', 'reviews', 'id', 'reminder_email'])) from test.uso_run, jsonb_array_elements(j -> 'people') p),
   'usage: no reviews per student, ids or reminder mails');
+select test.ok((select jsonb_array_length(j -> 'by_hour' -> 'hours') = 24 and jsonb_array_length(j -> 'by_hour' -> 'days') = 14 from test.uso_run),
+  'usage: 24 hours and 14 days of people per hour');
+select test.ok((select (h ->> 'users')::int >= 2 from test.uso_run, jsonb_array_elements(j -> 'by_hour' -> 'hours') with ordinality as e(h, i) where i = 24),
+  'usage: the current hour last, with its visits');
+select test.ok((select (d ->> 'peak')::int >= 2 and (d ->> 'total')::int >= (d ->> 'peak')::int
+    from test.uso_run, jsonb_array_elements(j -> 'by_hour' -> 'days') with ordinality as e(d, i) where i = 14),
+  'usage: today last, with its busiest hour');
 drop table test.uso_run;
 
 -- Deleting the account keeps the review, without author ---------------------------

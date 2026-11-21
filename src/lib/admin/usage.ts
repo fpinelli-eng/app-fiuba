@@ -2,6 +2,8 @@
 // read with one call to admin_uso() (migration 20261119180000_menos_escrituras.sql) when the page loads.
 // Pure helpers (formatting and shaping the jsonb), tested in usage.test.ts.
 
+import { toByHour, type ByHour } from "./by-hour";
+
 const TZ = "America/Argentina/Buenos_Aires";
 
 /** The public site, checked with a HEAD request on each visit to the page. */
@@ -48,6 +50,8 @@ export interface Usage {
   reviewAuthors: number | null;
   /** The students, newest first (null: not sent, older admin_uso(); read them with admin_users()). */
   people: AdminUser[] | null;
+  /** People who came in each hour, approximate (null: not sent, admin_uso() before 20261121170000). */
+  byHour: ByHour | null;
 }
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0)) || 0;
@@ -92,6 +96,7 @@ export function toUsage(r: Record<string, unknown>): Usage {
     dbLimitBytes: num(r.db_limit_bytes) || 500 * 1024 * 1024,
     reviewAuthors: r.review_authors === undefined || r.review_authors === null ? null : num(r.review_authors),
     people: Array.isArray(r.people) ? list(r.people).map(toAdminUser) : null,
+    byHour: toByHour(r.by_hour),
   };
 }
 
