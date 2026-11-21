@@ -76,7 +76,7 @@ export default async function PerfilPage() {
             <h2 className="text-[19px] font-semibold">Administración</h2>
             <div className="mt-0.5 text-sm text-muted">Oferta del cuatrimestre por plan</div>
           </div>
-          <Link href="/admin" className="inline-flex h-10 items-center rounded-[10px] bg-accent px-4 text-sm font-semibold text-on-accent">
+          <Link href="/admin/usuarios" className="inline-flex h-10 items-center rounded-[10px] bg-accent px-4 text-sm font-semibold text-on-accent">
             Abrir
           </Link>
         </Card>
