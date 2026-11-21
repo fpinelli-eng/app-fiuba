@@ -17,6 +17,8 @@ import {
   requirementKey,
   subjectKey,
   totalCredits,
+  careerPercent,
+  subjectsLabel,
   type DisplayState,
   type GradeMark,
   type MapItem,
@@ -127,6 +129,8 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   }, [items, map, progress, credits]);
   const stateOf = useCallback((item: MapItem): DisplayState => states.get(item.key) ?? "blocked", [states]);
   const gradeOf = (item: MapItem): GradeMark => (item.type === "subject" ? gradeMark(progress.subjects.get(item.subject.id)) : null);
+  const counts = map.subjectCounts(progress);
+  const percentDone = careerPercent(credits, total);
 
   const selItem = sel ? (items.get(sel) ?? null) : null;
   const selSubject = selItem?.type === "subject" ? selItem.subject : null;
@@ -328,8 +332,13 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
           <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">{firstLoad ? "Cargá tus materias" : "Mapa de la carrera"}</h1>
           <div className="text-muted">
             {data.careerName} · Plan {data.year} · <span className="font-semibold text-ink">{credits}</span>
-            {total !== null && <> de {total}</>} C · Promedio{" "}
+            {total !== null && <> de {total}</>} C{percentDone !== null && <> · {percentDone} %</>} · Promedio{" "}
             <span className="font-semibold text-ink">{formatAverage(map.average(progress))}</span>
+          </div>
+          <div className="text-sm text-muted">
+            <span className="font-semibold text-ink">{subjectsLabel(counts.approved)}</span>{" "}
+            {counts.approved === 1 ? "aprobada" : "aprobadas"}: {counts.required.done} de {counts.required.total} obligatorias
+            {counts.electives > 0 && <> y {counts.electives} {counts.electives === 1 ? "electiva" : "electivas"}</>}
           </div>
         </div>
         <div className="flex w-full items-end gap-2.5 md:w-auto">
@@ -414,6 +423,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         electiveCredits={eCredits}
         electiveTarget={eTarget}
         electiveTargetMax={eTargetMax}
+        electivesApproved={counts.electives}
         onPick={select}
       />
 
@@ -576,6 +586,9 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                   {eTarget && <> de {eTarget}</>} C
                 </span>
               </div>
+              <p className="-mt-1.5 text-xs text-muted">
+                {subjectsLabel(counts.electives)} {counts.electives === 1 ? "aprobada" : "aprobadas"}
+              </p>
               {eTargetMax !== null && (
                 <div className="h-2 overflow-hidden rounded-lg bg-surface" aria-hidden="true">
                   <div className="h-2 bg-accent" style={{ width: `${Math.min(100, Math.round((eCredits / eTargetMax) * 100))}%` }} />

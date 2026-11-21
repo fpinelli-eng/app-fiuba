@@ -170,6 +170,28 @@ export class CareerMap {
     return this.approvedCredits(progress, (s) => s.kind === "elective") + (progress.extraCredits ?? 0);
   }
 
+  /**
+   * How many subjects are approved (status approved, by equivalence too: the same rule as the credits).
+   * Obligatorias, out of their total: each CBC subject (not the node that groups them), each required
+   * subject and the final work, which counts once: each mandatory final project (TIF), or a single slot
+   * for the final options (Tesis or Trabajo Profesional, whichever is approved). Electives (orientation
+   * subjects included, as in the electives panel) have no total in subjects: they are chosen by credits.
+   * Requirements (English test) and extra credits are not subjects and stay out.
+   */
+  subjectCounts(progress: Progress): { required: { done: number; total: number }; electives: number; approved: number } {
+    const approved = (s: Subject) => progress.subjects.get(s.id)?.status === "approved";
+    const of = (kinds: SubjectKind[]) => this.subjects.filter((s) => kinds.includes(s.kind));
+    const fixed = of(["cbc_subject", "required", "final_project"]);
+    const options = of(["final_option"]);
+    const optionSlot = options.length > 0 && !this.subjects.some((s) => s.kind === "final_project") ? 1 : 0;
+    const required = {
+      done: fixed.filter(approved).length + Math.min(optionSlot, options.filter(approved).length),
+      total: fixed.length + optionSlot,
+    };
+    const electives = of(["elective", "orientation"]).filter(approved).length;
+    return { required, electives, approved: required.done + electives };
+  }
+
   /** Average of approved grades, CBC included; subjects approved by equivalence stay out. null if there are none. */
   average(progress: Progress): number | null {
     let sum = 0;
@@ -342,6 +364,19 @@ export function totalCredits(rules: unknown): number | null {
   const t = (rules as { total?: unknown } | null)?.total;
   return typeof t === "number" ? t : null;
 }
+
+/**
+ * Share of the career done, 0–100, from the approved credits and the plan total (the same numbers the
+ * header shows). Rounded down, so it says 100 % only with the career complete. null without a total.
+ */
+export function careerPercent(credits: number, total: number | null): number | null {
+  if (total === null || !(total > 0)) return null;
+  // credits * 100 first: (29 / 100) * 100 is 28.999… in floating point.
+  return Math.min(100, Math.max(0, Math.floor((credits * 100) / total)));
+}
+
+/** 1 → "1 materia", 4 → "4 materias". */
+export const subjectsLabel = (n: number) => `${n} ${n === 1 ? "materia" : "materias"}`;
 
 /** Search without accents or case: "logistica" finds "Logística". */
 export function normalizeText(text: string): string {
