@@ -29,6 +29,7 @@ import {
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
+import { CBC_CLOSED_W, mapGeometry } from "@/lib/map/layout";
 import { CloseIcon, GradeMarkText, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
 import { ExtrasDialog } from "./ExtrasDialog";
 import { HistoryImport } from "./HistoryImport";
@@ -38,12 +39,13 @@ import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 // Cada cambio se guarda en la base apenas se toca; si falla, se vuelve atrás y se avisa.
 // Desde md (768 px) se ven las columnas; en el celular, MobileMap (lista por cuatrimestre y hoja de la materia).
 
-const COL = 122;
-const NODE_W = 112;
+// El ancho de las materias se adapta al lugar disponible (src/lib/map/layout.ts); el alto queda fijo.
 const NODE_H = 92;
 const ROW = 100;
 const TOP = 34;
-const CBC_CLOSED_W = 64;
+const MAP_PAD_X = 24; // px-3 del contenedor que se desplaza
+// Al plegar o abrir las electivas (o el CBC), las columnas se reacomodan con una transición corta.
+const MOVE = "transition-[left,width,opacity] duration-200 ease-out motion-reduce:transition-opacity";
 
 type ButtonState = SubjectStatus | "none";
 
@@ -105,6 +107,29 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [failedFinals, setFailedFinals] = useState(data.failedFinals);
   const [extrasOpen, setExtrasOpen] = useState(false);
   const [siuOpen, setSiuOpen] = useState(false);
+  // Ancho útil del mapa en escritorio. Sin medir (servidor y primer render) vale null y se usa el
+  // tamaño mínimo; las transiciones se activan recién después de la primera medida, así no se ve
+  // a las columnas estirarse al cargar.
+  const mapScrollRef = useRef<HTMLDivElement>(null);
+  const [mapAvailable, setMapAvailable] = useState<number | null>(null);
+  const [mapAnimate, setMapAnimate] = useState(false);
+  useLayoutEffect(() => {
+    const el = mapScrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let frame = 0;
+    const measure = () => {
+      const w = el.clientWidth - MAP_PAD_X;
+      if (w <= 0) return; // oculto (celular)
+      setMapAvailable((prev) => (prev === w ? prev : w));
+      if (!frame) frame = requestAnimationFrame(() => (frame = requestAnimationFrame(() => setMapAnimate(true))));
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, []);
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
@@ -334,13 +359,13 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
 
   // Geometría ----------------------------------------------------------------------
 
-  const off = cbcOpen ? 0 : NODE_W - CBC_CLOSED_W;
+  const { nodeW, col, off, width } = mapGeometry(mapAvailable, terms.length, cbcOpen);
+  const move = mapAnimate ? MOVE : "transition-opacity";
   const rows = Math.max(1, cbc.length, ...terms.map((t) => t.items.length));
   const height = TOP + rows * ROW - 2;
-  const width = (terms.length + 1) * COL - 10 - off;
   const positions = new Map<string, { x: number; y: number }>();
   if (cbcOpen) cbc.forEach((it, r) => positions.set(it.key, { x: 0, y: TOP + r * ROW }));
-  terms.forEach((t, j) => t.items.forEach((it, r) => positions.set(it.key, { x: (j + 1) * COL - off, y: TOP + r * ROW })));
+  terms.forEach((t, j) => t.items.forEach((it, r) => positions.set(it.key, { x: (j + 1) * col - off, y: TOP + r * ROW })));
 
   const cbcKeys = new Set(cbc.map((i) => i.key));
   const cbcRelated = !firstLoad && [...related.needs].some((k) => cbcKeys.has(k));
@@ -559,22 +584,22 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       >
         {/* Solo se desplaza a lo ancho: si también pudiera a lo alto (la barra horizontal de Windows le come
             ~15 px), la rueda del mouse sobre el mapa movería esos píxeles en vez de bajar la página. */}
-        <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-3 py-4">
+        <div ref={mapScrollRef} className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-3 py-4">
           <div className="relative" style={{ width, height }}>
             {/* Columnas */}
-            <div className="absolute top-0 bottom-0 rounded-xl bg-map-cbc-col" style={{ left: 0, width: cbcOpen ? NODE_W + 5 : CBC_CLOSED_W + 5 }} />
+            <div className={`absolute top-0 bottom-0 rounded-xl bg-map-cbc-col ${move}`} style={{ left: 0, width: cbcOpen ? nodeW + 5 : CBC_CLOSED_W + 5 }} />
             {terms.map((t, j) => (
               <div
                 key={t.level}
-                className={`absolute top-0 bottom-0 rounded-xl ${j % 2 ? "bg-map-col-alt" : "bg-surface"}`}
-                style={{ left: (j + 1) * COL - 5 - off, width: COL }}
+                className={`absolute top-0 bottom-0 rounded-xl ${move} ${j % 2 ? "bg-map-col-alt" : "bg-surface"}`}
+                style={{ left: (j + 1) * col - 5 - off, width: col }}
               />
             ))}
             {terms.map((t, j) => (
               <div
                 key={t.level}
-                className="absolute top-1.5 text-center text-xs font-semibold text-muted"
-                style={{ left: (j + 1) * COL - off, width: NODE_W }}
+                className={`absolute top-1.5 text-center text-xs font-semibold text-muted ${move}`}
+                style={{ left: (j + 1) * col - off, width: nodeW }}
               >
                 {t.level}.º cuatr.
               </div>
@@ -588,7 +613,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                 aria-expanded="true"
                 title="Compactar el CBC en un solo módulo"
                 className="absolute top-0.5 left-0 flex h-[26px] items-center justify-center gap-1 rounded-[7px] text-xs font-semibold text-mint-ink"
-                style={{ width: NODE_W }}
+                style={{ width: nodeW }}
               >
                 CBC
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -630,6 +655,8 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                   grade={gradeOf(item)}
                   x={pos.x}
                   y={pos.y}
+                  width={nodeW}
+                  move={move}
                   opacity={opacity}
                   outline={outline}
                   selected={isSel}
@@ -639,7 +666,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             })}
 
             {selItem && selPos && !selIsElective && (
-              <Popover x={selPos.x} y={selPos.y} containerWidth={width} containerHeight={height}>
+              <Popover x={selPos.x} y={selPos.y} nodeW={nodeW} containerWidth={width} containerHeight={height}>
                 <SubjectCard
                   item={selItem}
                   progress={progress}
@@ -841,24 +868,26 @@ function MapNode(props: {
   grade: GradeMark;
   x: number;
   y: number;
+  width: number;
+  move: string;
   opacity: number;
   outline: string;
   selected: boolean;
   onPick: () => void;
 }) {
-  const { item, state, grade, x, y, opacity, outline, selected, onPick } = props;
+  const { item, state, grade, x, y, width, move, opacity, outline, selected, onPick } = props;
   const name = item.type === "subject" ? item.subject.name : item.requirement.name;
   const short =
     item.type === "requirement" ? (state === "approved" ? "Aprobada" : "Pendiente") : state === "final_pending" ? "Final" : "";
   return (
-    <div data-map-keep className="absolute transition-opacity" style={{ left: x, top: y, opacity, zIndex: selected ? 30 : 1 }}>
+    <div data-map-keep className={`absolute ${move}`} style={{ left: x, top: y, opacity, zIndex: selected ? 30 : 1 }}>
       <button
         type="button"
         aria-expanded={selected}
         aria-label={`${name}: ${STATE_ICON_LABEL(state, grade)}`}
         onClick={onPick}
-        className={`flex flex-col justify-between rounded-[10px] px-2 py-[7px] text-left ${STATE_STYLE[state]} ${selected ? "shadow-[0_0_0_3px_var(--accent),0_8px_20px_var(--pop-shadow)]" : outline}`}
-        style={{ width: NODE_W, height: NODE_H }}
+        className={`flex flex-col justify-between rounded-[10px] px-2 py-[7px] text-left ${move} ${STATE_STYLE[state]} ${selected ? "shadow-[0_0_0_3px_var(--accent),0_8px_20px_var(--pop-shadow)]" : outline}`}
+        style={{ width, height: NODE_H }}
       >
         <span className="line-clamp-3 text-xs leading-[1.2] font-semibold break-words hyphens-auto">{name}</span>
         <span className="flex w-full items-center justify-between text-[11px]">
@@ -875,15 +904,15 @@ function MapNode(props: {
 }
 
 /** Ficha flotante al lado de la materia; se corre para no salirse del mapa. */
-function Popover(props: { x: number; y: number; containerWidth: number; containerHeight: number; children: ReactNode }) {
-  const { x, y, containerWidth, containerHeight, children } = props;
+function Popover(props: { x: number; y: number; nodeW: number; containerWidth: number; containerHeight: number; children: ReactNode }) {
+  const { x, y, nodeW, containerWidth, containerHeight, children } = props;
   const ref = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(y);
   useLayoutEffect(() => {
     const h = ref.current?.offsetHeight ?? 0;
     setTop(Math.max(6, Math.min(y, containerHeight - h - 6)));
   }, [y, containerHeight, children]);
-  const left = x + NODE_W + 12 + 240 > containerWidth ? x - 252 : x + NODE_W + 12;
+  const left = x + nodeW + 12 + 240 > containerWidth ? x - 252 : x + nodeW + 12;
   return (
     <div ref={ref} data-map-keep className="absolute z-40" style={{ left, top }}>
       {children}
