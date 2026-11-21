@@ -32,6 +32,7 @@ import type { MapData } from "@/lib/map/data";
 import { CBC_CLOSED_W, mapGeometry } from "@/lib/map/layout";
 import { CloseIcon, GradeMarkText, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
 import { ExtrasDialog } from "./ExtrasDialog";
+import { HistoryImport } from "./HistoryImport";
 import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 
 // Mapa de la carrera (prototipo 06-mapa) y primera carga de materias (prototipo 03-primera-carga).
@@ -105,6 +106,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [extras, setExtras] = useState(data.progress.extraCredits);
   const [failedFinals, setFailedFinals] = useState(data.failedFinals);
   const [extrasOpen, setExtrasOpen] = useState(false);
+  const [siuOpen, setSiuOpen] = useState(false);
   // Ancho útil del mapa en escritorio. Sin medir (servidor y primer render) vale null y se usa el
   // tamaño mínimo; las transiciones se activan recién después de la primera medida, así no se ve
   // a las columnas estirarse al cargar.
@@ -430,6 +432,15 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
               Carga rápida
             </Link>
           )}
+          {!firstLoad && (
+            <button
+              type="button"
+              onClick={() => setSiuOpen(true)}
+              className="hidden h-[42px] shrink-0 items-center rounded-[10px] border border-line-strong bg-surface px-[18px] text-[15px] font-semibold md:inline-flex"
+            >
+              Cargar desde el SIU (PDF)
+            </button>
+          )}
           {firstLoad && (
             <Link
               href="/"
@@ -441,7 +452,53 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         </div>
       </div>
 
+      {firstLoad ? (
+        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 md:flex-row md:items-center md:justify-between">
+          <p className="text-[15px]">
+            <span className="font-semibold">¿Ya cursaste materias?</span> Subí tu Historia académica del SIU y las cargamos todas de una.
+          </p>
+          <button
+            type="button"
+            onClick={() => setSiuOpen(true)}
+            className="inline-flex h-[42px] shrink-0 items-center justify-center rounded-[10px] border border-line-strong bg-surface px-[18px] text-[15px] font-semibold"
+          >
+            Cargar desde el SIU (PDF)
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setSiuOpen(true)}
+          className="inline-flex h-10 items-center justify-center rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] font-semibold md:hidden"
+        >
+          Cargar desde el SIU (PDF)
+        </button>
+      )}
+
       <Legend />
+
+      {siuOpen && (
+        <HistoryImport
+          supabase={supabase}
+          userId={userId}
+          careerName={data.careerName}
+          subjects={map.subjects}
+          siuCodes={data.siuCodes}
+          current={progress.subjects}
+          canEquivalence={canEquivalence}
+          failedFinals={failedFinals}
+          onImported={(changes, failed) => {
+            setProgress((p) => {
+              const subjects = new Map(p.subjects);
+              for (const c of changes) subjects.set(c.subjectId, c.next);
+              return { ...p, subjects };
+            });
+            if (failed !== null) setFailedFinals(failed);
+            refreshSoon();
+          }}
+          onClose={() => setSiuOpen(false)}
+        />
+      )}
 
       {extrasOpen && (
         <ExtrasDialog
