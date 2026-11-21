@@ -27,6 +27,11 @@ export interface AdminUser {
   planCourses: number;
   /** How they arrived before signing up ("qr": the printed QR), or null if unknown. */
   signupSource: string | null;
+  /**
+   * Last use of the app (profiles.last_seen_at, recorded at most hourly, or else the last sign-in),
+   * or null if unknown or admin_uso() didn't send it (before 20261121150000).
+   */
+  lastSeen: string | null;
 }
 
 export interface Usage {
@@ -49,7 +54,10 @@ const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0)) || 0;
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 const list = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
 
-/** A row of admin_uso().people or of admin_users() as AdminUser (extra fields, like last_seen_at, are ignored). */
+/**
+ * A row of admin_uso().people or of admin_users() as AdminUser. Extra fields are ignored, like the
+ * last_seen_at of admin_users(), which is rounded to the day: only the exact last_seen of admin_uso() is read.
+ */
 export function toAdminUser(u: Record<string, unknown>): AdminUser {
   return {
     fullName: str(u.full_name),
@@ -61,6 +69,7 @@ export function toAdminUser(u: Record<string, unknown>): AdminUser {
     subjects: num(u.subjects),
     planCourses: num(u.plan_courses),
     signupSource: str(u.signup_source) || null,
+    lastSeen: str(u.last_seen) || null,
   };
 }
 
@@ -123,7 +132,27 @@ export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 }
 
-const WEEKDAY = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+/** "2026-11-19T03:05:00Z" → "19/11/2026 00:05" (Buenos Aires, always the full date: never "hoy" or "ayer"); null → "—". */
+export function dateTimeLabel(iso: string | null): string {
+  const d = iso ? new Date(iso) : null;
+  if (!d || Number.isNaN(d.getTime())) return "—";
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: TZ,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(d)
+      .map((p) => [p.type, p.value]),
+  );
+  return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}`;
+}
+
+const WEEKDAY =["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
 
 /** "2026-11-17" → "mar 17/11". */
 export function dayLabel(day: string): string {

@@ -13,6 +13,7 @@ function user(fullName: string, planId: string | null, plan: string | null = nul
     subjects: 0,
     planCourses: 0,
     signupSource: null,
+    lastSeen: null,
   };
 }
 

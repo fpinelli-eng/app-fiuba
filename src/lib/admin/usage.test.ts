@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  dateTimeLabel,
   dayLabel,
   deploymentState,
   formatBytes,
@@ -79,6 +80,14 @@ const ana = {
   subjects: 3,
   plan_courses: 2,
   signup_source: "qr",
+  last_seen: "2026-11-19T21:07:42.123+00:00",
+};
+
+/** A row of admin_users() or of admin_uso() before 20261121150000: no last_seen. */
+const older = (): Record<string, unknown> => {
+  const row: Record<string, unknown> = { ...ana };
+  delete row.last_seen;
+  return row;
 };
 
 describe("toUsage", () => {
@@ -115,6 +124,7 @@ describe("toUsage", () => {
         subjects: 3,
         planCourses: 2,
         signupSource: "qr",
+        lastSeen: "2026-11-19T21:07:42.123+00:00",
       },
     ]);
   });
@@ -147,13 +157,41 @@ describe("toUsage", () => {
 });
 
 describe("toAdminUser", () => {
-  it("reads a row of admin_users() too, without the last use", () => {
-    const u = toAdminUser({ ...ana, plan: undefined, subjects: "3", plan_id: null, signup_source: null, last_seen_at: "2026-11-19T03:00:00+00:00" });
+  it("reads a row of admin_users() too, ignoring its last_seen_at rounded to the day", () => {
+    const u = toAdminUser({ ...older(), plan: undefined, subjects: "3", plan_id: null, signup_source: null, last_seen_at: "2026-11-19T03:00:00+00:00" });
     expect(u.subjects).toBe(3);
     expect(u.planId).toBeNull();
     expect(u.plan).toBeNull();
     expect(u.signupSource).toBeNull();
+    expect(u.lastSeen).toBeNull();
     expect(Object.keys(u)).not.toContain("lastSeenAt");
+  });
+
+  it("reads the last use of admin_uso(), or null before the migration or when unknown", () => {
+    expect(toAdminUser(ana).lastSeen).toBe("2026-11-19T21:07:42.123+00:00");
+    expect(toAdminUser({ ...ana, last_seen: null }).lastSeen).toBeNull();
+    expect(toAdminUser(older()).lastSeen).toBeNull();
+  });
+});
+
+describe("dateTimeLabel", () => {
+  it("is the exact date and time in Buenos Aires, dd/mm/aaaa HH:MM", () => {
+    expect(dateTimeLabel("2026-11-19T21:07:42.123+00:00")).toBe("19/11/2026 18:07");
+    // After midnight UTC it is still the previous day in Buenos Aires (UTC−3).
+    expect(dateTimeLabel("2026-11-20T02:30:00Z")).toBe("19/11/2026 23:30");
+    expect(dateTimeLabel("2026-01-05T03:04:00Z")).toBe("05/01/2026 00:04");
+  });
+
+  it("never uses relative words, even for right now", () => {
+    const label = dateTimeLabel(new Date().toISOString());
+    expect(label).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/);
+    expect(label).not.toMatch(/hoy|ayer|hace/i);
+  });
+
+  it("shows a dash when unknown", () => {
+    expect(dateTimeLabel(null)).toBe("—");
+    expect(dateTimeLabel("")).toBe("—");
+    expect(dateTimeLabel("no es una fecha")).toBe("—");
   });
 });
 

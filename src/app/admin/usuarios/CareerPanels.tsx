@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { buenosAiresDay, type AdminUser } from "@/lib/admin/usage";
+import { buenosAiresDay, dateTimeLabel, type AdminUser } from "@/lib/admin/usage";
 import { filterGroups, isNewToday, type CareerGroup } from "@/lib/admin/by-career";
 
 const secondary =
@@ -163,6 +163,7 @@ function UsersTable({ users, now }: { users: AdminUser[]; now: number }) {
           <th className="px-4 py-2.5 font-semibold">Mail</th>
           <th className="px-4 py-2.5 font-semibold">Carrera</th>
           <th className="px-4 py-2.5 font-semibold">Alta</th>
+          <th className="px-4 py-2.5 font-semibold">Último uso</th>
           <th className="px-4 py-2.5 font-semibold">Origen</th>
           <th className="px-4 py-2.5 text-right font-semibold">Aprobadas</th>
           <th className="px-4 py-2.5 text-right font-semibold">Plan</th>
@@ -181,6 +182,9 @@ function UsersTable({ users, now }: { users: AdminUser[]; now: number }) {
             <td className="px-4 py-2.5 whitespace-nowrap">{u.email}</td>
             <td className="px-4 py-2.5 whitespace-nowrap">{u.planId ? (u.plan ?? u.planId) : "Sin elegir"}</td>
             <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">{u.createdAt ? date(u.createdAt) : dash}</td>
+            <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">
+              {u.lastSeen ? <time dateTime={u.lastSeen}>{dateTimeLabel(u.lastSeen)}</time> : dash}
+            </td>
             <td className="px-4 py-2.5 whitespace-nowrap">{u.signupSource === "qr" ? "QR" : dash}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{u.subjects}</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{u.planCourses}</td>
