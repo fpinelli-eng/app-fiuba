@@ -26,6 +26,8 @@ export interface MapData {
   equivalenceReady: boolean;
   /** Failed finals (aplazos) the student entered. Not used by the average yet. */
   failedFinals: number;
+  /** SIU codes of the plan's subjects (subject_siu_codes), for "Cargar desde el SIU (PDF)". */
+  siuCodes: { subjectId: number; code: string }[];
 }
 
 // Undefined table or column: the migration 20261107140000_extra_credits is not applied yet. Vercel
@@ -131,6 +133,7 @@ export const getMapData = cache(async (userId: string, planId: string): Promise<
       extraCredits: extras.extraCredits,
     },
     failedFinals: extras.failedFinals,
+    siuCodes: plan.siuCodes.map((c) => ({ subjectId: c.subject_id, code: c.siu_code })),
     equivalenceReady: userSubjects.equivalenceReady,
   };
 });
