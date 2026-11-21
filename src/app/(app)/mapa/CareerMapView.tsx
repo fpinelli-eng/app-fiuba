@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   CareerMap,
@@ -53,7 +53,42 @@ interface Props {
   firstLoad: boolean;
 }
 
+// Panel de electivas abierto o plegado, recordado por dispositivo (abierto la primera vez).
+// Sin localStorage (modo privado) vale mientras la página siga abierta.
+const ELECTIVES_KEY = "mapa-electivas";
+let electivesMemory: boolean | null = null;
+const electivesListeners = new Set<() => void>();
+
+function readElectivesOpen(): boolean {
+  if (electivesMemory !== null) return electivesMemory;
+  try {
+    return localStorage.getItem(ELECTIVES_KEY) !== "cerrado";
+  } catch {
+    return true;
+  }
+}
+
+function saveElectivesOpen(open: boolean) {
+  electivesMemory = open;
+  try {
+    localStorage.setItem(ELECTIVES_KEY, open ? "abierto" : "cerrado");
+  } catch {
+    // Sin localStorage queda en memoria.
+  }
+  electivesListeners.forEach((listener) => listener());
+}
+
+function subscribeElectives(listener: () => void) {
+  electivesListeners.add(listener);
+  return () => {
+    electivesListeners.delete(listener);
+  };
+}
+
+const useElectivesOpen = () => useSyncExternalStore(subscribeElectives, readElectivesOpen, () => true);
+
 export function CareerMapView({ userId, data, firstLoad }: Props) {
+  const electivesOpen = useElectivesOpen();
   const map = useMemo(() => new CareerMap(data.subjects, data.requirements), [data]);
   const [progress, setProgress] = useState<Progress>(() => progressFrom(data.progress));
   // "Por equivalencia" solo cuando la base ya tiene la columna (las vistas previas usan la de producción).
@@ -576,15 +611,48 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
           </div>
         </div>
 
-        {allElectives.length > 0 && (
-          <aside aria-label="Electivas" data-map-keep className="flex w-[276px] shrink-0 flex-col rounded-r-2xl border-l border-lavender-line bg-lavender-panel">
+        {allElectives.length > 0 && !electivesOpen && (
+          <aside aria-label="Electivas" data-map-keep className="flex w-[56px] shrink-0 flex-col rounded-r-2xl border-l border-lavender-line bg-lavender-panel">
+            <button
+              type="button"
+              aria-expanded={false}
+              aria-controls="panel-electivas"
+              onClick={() => saveElectivesOpen(true)}
+              className="flex flex-auto flex-col items-center gap-3 rounded-r-2xl px-1 pt-4 pb-4 text-lavender-ink hover:bg-lavender"
+            >
+              <span aria-hidden="true" className="text-base leading-none">‹</span>
+              <span className="text-[15px] font-semibold [writing-mode:vertical-rl] rotate-180">Electivas</span>
+              <span className="text-[11px] font-semibold whitespace-nowrap">
+                {eCredits}
+                {eTarget && <>/{eTarget}</>} C
+              </span>
+              <span className="sr-only">Mostrar el panel de electivas</span>
+            </button>
+          </aside>
+        )}
+
+        {allElectives.length > 0 && electivesOpen && (
+          <aside id="panel-electivas" aria-label="Electivas" data-map-keep className="flex w-[276px] shrink-0 flex-col rounded-r-2xl border-l border-lavender-line bg-lavender-panel">
             <div className="flex flex-col gap-2 border-b border-lavender-line px-4 pt-4 pb-2.5">
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-2">
                 <h2 className="text-lg font-semibold">Electivas</h2>
-                <span className="text-[13px] font-semibold">
+                <span className="ml-auto text-[13px] font-semibold">
                   {eCredits}
                   {eTarget && <> de {eTarget}</>} C
                 </span>
+                <button
+                  type="button"
+                  aria-expanded={true}
+                  aria-controls="panel-electivas"
+                  aria-label="Plegar el panel de electivas"
+                  onClick={() => {
+                    if (selIsElective) close();
+                    saveElectivesOpen(false);
+                  }}
+                  className="-mr-1.5 grid size-7 place-items-center self-center rounded-md text-base leading-none text-muted hover:bg-lavender hover:text-lavender-ink"
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
               </div>
               <p className="-mt-1.5 text-xs text-muted">
                 {subjectsLabel(counts.electives)} {counts.electives === 1 ? "aprobada" : "aprobadas"}
