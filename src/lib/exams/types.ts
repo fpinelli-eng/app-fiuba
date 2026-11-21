@@ -104,14 +104,25 @@ export function formatEnrollMoment(moment: string): string {
 }
 
 /**
- * Finales search: the subjects whose name or SIU code contain every word of the query, in any order,
- * ignoring accents and case ("analisis ii", "TC010"). An empty query keeps them all.
+ * Finales search: every word of the query, in any order, ignoring accents and case, has to be in the
+ * subject (name or SIU code: "analisis ii", "TC010") or in an exam table (its name or teachers:
+ * "marensi", "fisica surace"). Words that only match tables keep just those tables of the subject.
+ * An empty query keeps them all.
  */
-export function searchSubjects<T extends Pick<ExamSubjectView, "name" | "code">>(subjects: T[], query: string): T[] {
+export function searchSubjects<T extends Pick<ExamSubjectView, "name" | "code"> & { tables?: Pick<ExamTableView, "name" | "teachers">[] }>(
+  subjects: T[],
+  query: string,
+): T[] {
   const words = normalizeText(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return subjects;
-  return subjects.filter((s) => {
-    const text = normalizeText(`${s.name} ${s.code}`);
-    return words.every((w) => text.includes(w));
+  return subjects.flatMap((s) => {
+    const subjectText = normalizeText(`${s.name} ${s.code}`);
+    const rest = words.filter((w) => !subjectText.includes(w));
+    if (rest.length === 0) return [s];
+    const tables = (s.tables ?? []).filter((t) => {
+      const text = normalizeText(`${t.name} ${t.teachers ?? ""}`);
+      return rest.every((w) => text.includes(w));
+    });
+    return tables.length ? [{ ...s, tables }] : [];
   });
 }
