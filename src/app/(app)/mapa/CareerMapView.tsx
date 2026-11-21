@@ -29,7 +29,7 @@ import {
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
-import { CBC_CLOSED_W, mapGeometry } from "@/lib/map/layout";
+import { CBC_CLOSED_W, MAP_TOP, mapGeometry, rowGeometry } from "@/lib/map/layout";
 import { CloseIcon, GradeMarkText, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
 import { ExtrasDialog } from "./ExtrasDialog";
 import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
@@ -38,13 +38,14 @@ import { BottomSheet, MobileMap, type Filter } from "./MobileMap";
 // Cada cambio se guarda en la base apenas se toca; si falla, se vuelve atrás y se avisa.
 // Desde md (768 px) se ven las columnas; en el celular, MobileMap (lista por cuatrimestre y hoja de la materia).
 
-// El ancho de las materias se adapta al lugar disponible (src/lib/map/layout.ts); el alto queda fijo.
-const NODE_H = 92;
-const ROW = 100;
-const TOP = 34;
+// El ancho y el alto de las materias se adaptan al lugar disponible (src/lib/map/layout.ts), para que
+// el mapa entero entre en la pantalla sin bajar.
+const TOP = MAP_TOP;
 const MAP_PAD_X = 24; // px-3 del contenedor que se desplaza
+const MAP_PAD_Y = 34; // py-4 + borde de la sección
+const MAP_BOTTOM = 16; // md:pb-4 de la página
 // Al plegar o abrir las electivas (o el CBC), las columnas se reacomodan con una transición corta.
-const MOVE = "transition-[left,width,opacity] duration-200 ease-out motion-reduce:transition-opacity";
+const MOVE = "transition-[left,top,width,height,opacity] duration-200 ease-out motion-reduce:transition-opacity";
 
 type ButtonState = SubjectStatus | "none";
 
@@ -105,11 +106,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [extras, setExtras] = useState(data.progress.extraCredits);
   const [failedFinals, setFailedFinals] = useState(data.failedFinals);
   const [extrasOpen, setExtrasOpen] = useState(false);
-  // Ancho útil del mapa en escritorio. Sin medir (servidor y primer render) vale null y se usa el
-  // tamaño mínimo; las transiciones se activan recién después de la primera medida, así no se ve
-  // a las columnas estirarse al cargar.
+  // Lugar útil del mapa en escritorio: el ancho del contenedor y el alto que queda de la pantalla
+  // debajo del encabezado. Sin medir (servidor y primer render) vale null y se usa el tamaño de
+  // siempre; las transiciones se activan recién después de la primera medida, así no se ve a las
+  // columnas estirarse al cargar.
   const mapScrollRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const [mapAvailable, setMapAvailable] = useState<number | null>(null);
+  const [mapAvailableH, setMapAvailableH] = useState<number | null>(null);
   const [mapAnimate, setMapAnimate] = useState(false);
   useLayoutEffect(() => {
     const el = mapScrollRef.current;
@@ -118,13 +122,21 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     const measure = () => {
       const w = el.clientWidth - MAP_PAD_X;
       if (w <= 0) return; // oculto (celular)
+      const section = el.parentElement!;
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      const h = Math.floor(window.innerHeight - top - MAP_BOTTOM - MAP_PAD_Y);
       setMapAvailable((prev) => (prev === w ? prev : w));
+      setMapAvailableH((prev) => (prev === h ? prev : h));
       if (!frame) frame = requestAnimationFrame(() => (frame = requestAnimationFrame(() => setMapAnimate(true))));
     };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    // El encabezado puede cambiar de alto (se acomoda en dos líneas, aparece un aviso): cambia la página.
+    if (mainRef.current) ro.observe(mainRef.current);
+    window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
+      window.removeEventListener("resize", measure);
       cancelAnimationFrame(frame);
     };
   }, []);
@@ -357,13 +369,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
 
   // Geometría ----------------------------------------------------------------------
 
-  const { nodeW, col, off, width } = mapGeometry(mapAvailable, terms.length, cbcOpen);
+  const rows = Math.max(1, cbcOpen ? cbc.length : 0, ...terms.map((t) => t.items.length));
+  const { nodeH, row, height, scale, compact } = rowGeometry(mapAvailableH, rows);
+  // Escalado (solo si ni el alto mínimo entra): el ancho se calcula para el mapa sin escalar.
+  const { nodeW, col, off, width } = mapGeometry(mapAvailable === null ? null : mapAvailable / scale, terms.length, cbcOpen);
   const move = mapAnimate ? MOVE : "transition-opacity";
-  const rows = Math.max(1, cbc.length, ...terms.map((t) => t.items.length));
-  const height = TOP + rows * ROW - 2;
   const positions = new Map<string, { x: number; y: number }>();
-  if (cbcOpen) cbc.forEach((it, r) => positions.set(it.key, { x: 0, y: TOP + r * ROW }));
-  terms.forEach((t, j) => t.items.forEach((it, r) => positions.set(it.key, { x: (j + 1) * col - off, y: TOP + r * ROW })));
+  if (cbcOpen) cbc.forEach((it, r) => positions.set(it.key, { x: 0, y: TOP + r * row }));
+  terms.forEach((t, j) => t.items.forEach((it, r) => positions.set(it.key, { x: (j + 1) * col - off, y: TOP + r * row })));
 
   const cbcKeys = new Set(cbc.map((i) => i.key));
   const cbcRelated = !firstLoad && [...related.needs].some((k) => cbcKeys.has(k));
@@ -386,19 +399,23 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const count = (f: Filter) => allElectives.filter((s) => f === "all" || states.get(subjectKey(s.id)) === f).length;
 
   return (
-    <main className="flex flex-col gap-4 px-4 pt-5 pb-24 md:px-6 md:pt-[26px] md:pb-10">
+    <main ref={mainRef} className="flex flex-col gap-4 px-4 pt-5 pb-24 md:gap-3 md:px-6 md:pt-4 md:pb-4">
+      {/* En escritorio el encabezado es compacto, así el mapa entero entra en la pantalla. */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[32px]">{firstLoad ? "Cargá tus materias" : "Mapa de la carrera"}</h1>
-          <div className="text-muted">
-            {data.careerName} · Plan {data.year} · <span className="font-semibold text-ink">{credits}</span>
-            {total !== null && <> de {total}</>} C{percentDone !== null && <> · {percentDone} %</>} · Promedio{" "}
-            <span className="font-semibold text-ink">{formatAverage(map.average(progress))}</span>
-          </div>
-          <div className="text-sm text-muted">
-            <span className="font-semibold text-ink">{subjectsLabel(counts.approved)}</span>{" "}
-            {counts.approved === 1 ? "aprobada" : "aprobadas"}: {counts.required.done} de {counts.required.total} obligatorias
-            {counts.electives > 0 && <> y {counts.electives} {counts.electives === 1 ? "electiva" : "electivas"}</>}
+          <h1 className="text-[26px] font-semibold tracking-[-0.01em] md:text-[28px] md:leading-tight">{firstLoad ? "Cargá tus materias" : "Mapa de la carrera"}</h1>
+          <div className="md:flex md:flex-wrap md:gap-x-1.5 md:text-sm">
+            <div className="text-muted">
+              {data.careerName} · Plan {data.year} · <span className="font-semibold text-ink">{credits}</span>
+              {total !== null && <> de {total}</>} C{percentDone !== null && <> · {percentDone} %</>} · Promedio{" "}
+              <span className="font-semibold text-ink">{formatAverage(map.average(progress))}</span>
+            </div>
+            <span aria-hidden="true" className="hidden text-muted md:inline">·</span>
+            <div className="text-sm text-muted">
+              <span className="font-semibold text-ink">{subjectsLabel(counts.approved)}</span>{" "}
+              {counts.approved === 1 ? "aprobada" : "aprobadas"}: {counts.required.done} de {counts.required.total} obligatorias
+              {counts.electives > 0 && <> y {counts.electives} {counts.electives === 1 ? "electiva" : "electivas"}</>}
+            </div>
           </div>
         </div>
         <div className="flex w-full items-end gap-2.5 md:w-auto">
@@ -523,12 +540,14 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       <section
         aria-label="Plan de estudios"
         className="relative hidden rounded-2xl md:flex border border-line bg-surface"
-        style={{ height: height + 32 + 2 /* py-4 + border */ }}
+        style={{ height: Math.ceil(height * scale) + MAP_PAD_Y }}
       >
         {/* Solo se desplaza a lo ancho: si también pudiera a lo alto (la barra horizontal de Windows le come
             ~15 px), la rueda del mouse sobre el mapa movería esos píxeles en vez de bajar la página. */}
         <div ref={mapScrollRef} className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-3 py-4">
-          <div className="relative" style={{ width, height }}>
+          {/* Si ni el alto mínimo entra, el mapa entero se escala con zoom (que también achica el lugar
+              que ocupa), nunca por debajo de MIN_SCALE. */}
+          <div className="relative" style={{ width, height, zoom: scale < 1 ? scale : undefined }}>
             {/* Columnas */}
             <div className={`absolute top-0 bottom-0 rounded-xl bg-map-cbc-col ${move}`} style={{ left: 0, width: cbcOpen ? nodeW + 5 : CBC_CLOSED_W + 5 }} />
             {terms.map((t, j) => (
@@ -571,7 +590,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                 aria-expanded="false"
                 aria-label={`CBC compactado, ${cbc.length} materias. Tocá para ver las materias`}
                 className={`absolute left-0 flex flex-col items-center justify-center gap-3.5 rounded-[10px] px-1 py-2.5 text-center transition-opacity ${STATE_STYLE[cbcState]} ${cbcRelated ? "outline-2 outline-offset-2 outline-accent" : ""}`}
-                style={{ top: TOP, width: CBC_CLOSED_W, height: rows * ROW - 8, opacity: sel && !cbcRelated && !firstLoad ? 0.3 : 1 }}
+                style={{ top: TOP, width: CBC_CLOSED_W, height: rows * row - 8, opacity: sel && !cbcRelated && !firstLoad ? 0.3 : 1 }}
               >
                 <span className="text-sm font-semibold">CBC</span>
                 <span className="text-[11px] leading-tight">{cbcComplete ? "Completo" : `${map.cbcApprovedCount(progress)} de ${cbc.length}`}</span>
@@ -599,6 +618,8 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
                   x={pos.x}
                   y={pos.y}
                   width={nodeW}
+                  height={nodeH}
+                  compact={compact}
                   move={move}
                   opacity={opacity}
                   outline={outline}
@@ -812,13 +833,16 @@ function MapNode(props: {
   x: number;
   y: number;
   width: number;
+  height: number;
+  /** Materia baja: el nombre en dos líneas y menos relleno. */
+  compact: boolean;
   move: string;
   opacity: number;
   outline: string;
   selected: boolean;
   onPick: () => void;
 }) {
-  const { item, state, grade, x, y, width, move, opacity, outline, selected, onPick } = props;
+  const { item, state, grade, x, y, width, height, compact, move, opacity, outline, selected, onPick } = props;
   const name = item.type === "subject" ? item.subject.name : item.requirement.name;
   const short =
     item.type === "requirement" ? (state === "approved" ? "Aprobada" : "Pendiente") : state === "final_pending" ? "Final" : "";
@@ -829,10 +853,10 @@ function MapNode(props: {
         aria-expanded={selected}
         aria-label={`${name}: ${STATE_ICON_LABEL(state, grade)}`}
         onClick={onPick}
-        className={`flex flex-col justify-between rounded-[10px] px-2 py-[7px] text-left ${move} ${STATE_STYLE[state]} ${selected ? "shadow-[0_0_0_3px_var(--accent),0_8px_20px_var(--pop-shadow)]" : outline}`}
-        style={{ width, height: NODE_H }}
+        className={`flex flex-col justify-between rounded-[10px] px-2 text-left ${compact ? "py-[5px]" : "py-[7px]"} ${move} ${STATE_STYLE[state]} ${selected ? "shadow-[0_0_0_3px_var(--accent),0_8px_20px_var(--pop-shadow)]" : outline}`}
+        style={{ width, height }}
       >
-        <span className="line-clamp-3 text-xs leading-[1.2] font-semibold break-words hyphens-auto">{name}</span>
+        <span className={`${compact ? "line-clamp-2" : "line-clamp-3"} text-xs leading-[1.2] font-semibold break-words hyphens-auto`}>{name}</span>
         <span className="flex w-full items-center justify-between text-[11px]">
           <span className="flex items-center gap-1 font-medium">
             <StateIcon state={state} />
