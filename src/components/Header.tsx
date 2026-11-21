@@ -79,7 +79,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
           })}
           {/* Solo para administradores: entrada directa a Administración. */}
           {isAdmin && (
-            <Link href="/admin" className="relative py-2 text-muted hover:text-ink">
+            <Link href="/admin/usuarios" className="relative py-2 text-muted hover:text-ink">
               Admin
             </Link>
           )}
@@ -88,7 +88,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
         <div className="flex items-center gap-2.5">
           {isAdmin && (
             <Link
-              href="/admin"
+              href="/admin/usuarios"
               className="flex h-10 items-center rounded-full border border-line bg-surface px-3 text-[13px] font-semibold text-muted md:hidden"
             >
               Admin
