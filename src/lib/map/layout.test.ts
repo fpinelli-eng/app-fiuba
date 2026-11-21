@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { CBC_CLOSED_W, COL_GAP, MAX_NODE_W, MIN_NODE_W, mapGeometry, nodeWidthFor } from "./layout";
+import {
+  CBC_CLOSED_W,
+  COL_GAP,
+  MAP_TOP,
+  MAX_NODE_H,
+  MAX_NODE_W,
+  MIN_NODE_H,
+  MIN_NODE_W,
+  MIN_SCALE,
+  mapGeometry,
+  mapHeightFor,
+  nodeWidthFor,
+  rowGapFor,
+  rowGeometry,
+} from "./layout";
 
 describe("nodeWidthFor", () => {
   it("usa el mínimo sin medida (primer render y servidor)", () => {
@@ -58,5 +72,53 @@ describe("mapGeometry", () => {
   it("la primera columna arranca pegada al CBC compactado", () => {
     const g = mapGeometry(1500, 10, false);
     expect(g.col - g.off).toBe(CBC_CLOSED_W + COL_GAP);
+  });
+});
+
+describe("rowGeometry", () => {
+  it("sin medida usa el tamaño de siempre", () => {
+    expect(rowGeometry(null, 6)).toEqual({ nodeH: 92, row: 100, height: MAP_TOP + 600 - 2, scale: 1, compact: false });
+  });
+
+  it("con lugar de sobra no pasa del máximo", () => {
+    const g = rowGeometry(2000, 6);
+    expect(g.nodeH).toBe(MAX_NODE_H);
+    expect(g.row).toBe(100);
+  });
+
+  it("achica las materias para que todas las filas entren", () => {
+    for (const available of [450, 500, 560, 620]) {
+      const g = rowGeometry(available, 6);
+      expect(g.scale).toBe(1);
+      expect(g.height).toBeLessThanOrEqual(available);
+      expect(g.nodeH).toBeGreaterThanOrEqual(MIN_NODE_H);
+      expect(g.nodeH).toBeLessThanOrEqual(MAX_NODE_H);
+      // Usa el lugar: una materia un píxel más alta ya no entraría.
+      const next = g.nodeH + 1;
+      if (next <= MAX_NODE_H) expect(mapHeightFor(6, next + rowGapFor(next))).toBeGreaterThan(available);
+    }
+  });
+
+  it("marca compactas las materias bajas", () => {
+    expect(rowGeometry(450, 6).compact).toBe(true);
+    expect(rowGeometry(620, 6).compact).toBe(false);
+  });
+
+  it("si ni el mínimo entra, escala el mapa entero", () => {
+    const min = mapHeightFor(8, MIN_NODE_H + rowGapFor(MIN_NODE_H));
+    const g = rowGeometry(min * 0.9, 8);
+    expect(g.nodeH).toBe(MIN_NODE_H);
+    expect(g.scale).toBeGreaterThanOrEqual(0.89);
+    expect(g.scale).toBeLessThan(1);
+    expect(g.height * g.scale).toBeLessThanOrEqual(min * 0.9);
+  });
+
+  it("no escala por debajo del mínimo legible (ahí se baja la página)", () => {
+    expect(rowGeometry(200, 10).scale).toBe(MIN_SCALE);
+  });
+
+  it("la separación entre filas es proporcional, con un mínimo", () => {
+    expect(rowGapFor(92)).toBe(8);
+    expect(rowGapFor(MIN_NODE_H)).toBe(5);
   });
 });
