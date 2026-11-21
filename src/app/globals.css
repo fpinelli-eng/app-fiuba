@@ -53,6 +53,13 @@
   --mint-line: #bfe3d1;
   --butter-line: #f2dca6;
   --sky-line: #b9d9f0;
+  /* Mapa: los estados de las materias, más saturados que los pasteles del resto de la app. */
+  --map-approved: #bfe6d2;
+  --map-approved-line: #6fbf98;
+  --map-final: #ffe0a0;
+  --map-final-line: #e2ad45;
+  --map-progress: #bcdcf6;
+  --map-progress-line: #6aa9dc;
   --lavender-line: #d6e0f7;
   --map-cbc-col: #f3f7fc;
   --map-col-alt: #f9fafc;
@@ -125,6 +132,12 @@
   --mint-line: #2f5a48;
   --butter-line: #5c4d2b;
   --sky-line: #2f5470;
+  --map-approved: #234f3e;
+  --map-approved-line: #3f8f6e;
+  --map-final: #4c3f1e;
+  --map-final-line: #9a7c34;
+  --map-progress: #1f4866;
+  --map-progress-line: #4a86b4;
   --lavender-line: #2c3a5c;
   --map-cbc-col: #181c27;
   --map-col-alt: #171b26;
@@ -183,6 +196,12 @@
   --color-mint-line: var(--mint-line);
   --color-butter-line: var(--butter-line);
   --color-sky-line: var(--sky-line);
+  --color-map-approved: var(--map-approved);
+  --color-map-approved-line: var(--map-approved-line);
+  --color-map-final: var(--map-final);
+  --color-map-final-line: var(--map-final-line);
+  --color-map-progress: var(--map-progress);
+  --color-map-progress-line: var(--map-progress-line);
   --color-lavender-line: var(--lavender-line);
   --color-map-cbc-col: var(--map-cbc-col);
   --color-map-col-alt: var(--map-col-alt);
