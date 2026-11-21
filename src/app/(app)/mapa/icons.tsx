@@ -73,9 +73,9 @@ export function CloseIcon() {
 
 /** Colores de cada estado: fondo, borde y texto (tokens de globals.css). */
 export const STATE_STYLE: Record<DisplayState, string> = {
-  approved: "bg-mint border border-mint-line text-mint-ink",
-  final_pending: "bg-butter border border-butter-line text-butter-ink",
-  in_progress: "bg-sky border border-sky-line text-sky-ink",
+  approved: "bg-map-approved border border-map-approved-line text-mint-ink",
+  final_pending: "bg-map-final border border-map-final-line text-butter-ink",
+  in_progress: "bg-map-progress border border-map-progress-line text-sky-ink",
   enabled: "bg-surface border-[1.5px] border-enabled-line text-ink",
   blocked: "bg-blocked border border-dashed border-blocked-line text-blocked-ink",
 };
