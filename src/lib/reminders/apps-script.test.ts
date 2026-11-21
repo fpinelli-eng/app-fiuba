@@ -21,6 +21,7 @@ interface CodeGs {
   firstName_(name: string | null): string;
   dueRows_(rows: Row[]): Row[];
   sheetValues_(rows: Row[]): string[][];
+  examsDispatchDue_(hour: number, today: string, lastDay: string | null): boolean;
   buildSendAlert_(failed: { row: Row; error: string }[], noQuota: number): Mail;
   panelValues_(rows: Row[], today: string, capacity: number, leftToday: number, failures?: Record<string, { error: string; at: string }>, hour?: number): { lines: (string | number)[][]; bold: number[]; warn: number[]; ok: number[] };
   deadline_(moment: string): string;
@@ -481,5 +482,14 @@ describe("today's mails in the panel and the alert to the admins", () => {
     expect(mail.text).toContain("quedan 12 recordatorios");
     expect(gs.buildSendAlert_([], 3).subject).toBe("FIUBI · Recordarme: se terminó el cupo del día");
     expect(gs.buildSendAlert_([{ row: row({ subject_name: "<b>x</b>" }), error: "e" }], 0).html).not.toContain("<b>x</b>");
+  });
+});
+
+describe("examsDispatchDue_ (exam dates started from the sheet)", () => {
+  it("once a day, from 06:00", () => {
+    expect(gs.examsDispatchDue_(5, "2026-11-21", null)).toBe(false);
+    expect(gs.examsDispatchDue_(6, "2026-11-21", null)).toBe(true);
+    expect(gs.examsDispatchDue_(9, "2026-11-21", "2026-11-20")).toBe(true);
+    expect(gs.examsDispatchDue_(9, "2026-11-21", "2026-11-21")).toBe(false);
   });
 });

@@ -30,8 +30,12 @@
  *   SUPABASE_KEY  the publishable key of the app (sb_publishable_…, in Vercel / .env.local)
  *   TOKEN         created by createToken(); the database only keeps its SHA-256
  *   SUPABASE_URL  optional, defaults to the project's address
+ *   GITHUB_TOKEN  optional: a GitHub token (classic, scope public_repo) of a collaborator. With it,
+ *                 hourly() starts the "Fechas de examen del SIU" workflow once a day from 06:00
+ *                 (GitHub's own schedule is delayed for hours or skipped). See examsDispatch_().
  *
- * Functions to run by hand (Run ▸): sendTestMail, createToken, syncSheet, installTriggers.
+ * Functions to run by hand (Run ▸): sendTestMail, createToken, syncSheet, installTriggers,
+ * probarFechasExamen.
  * The ones ending in "_" are internal. The pure ones (no Google services) are tested in the repo
  * (src/lib/reminders/apps-script.test.ts), which also regenerates preview.html.
  */
@@ -162,7 +166,55 @@ function hourly() {
     Logger.log('Monitor: ' + e);
     failure = failure || e;
   }
+  try {
+    examsDispatch_();
+  } catch (e) {
+    Logger.log('Fechas de examen: ' + e); // never fails the run: the mails matter more
+  }
   if (failure) throw failure;
+}
+
+var EXAMS_REPO = 'fpinelli-eng/app-fiuba';
+var EXAMS_WORKFLOW = 'exams.yml';
+var EXAMS_FROM_HOUR = 6;
+
+/** Whether today's exam-date run still has to be started (pure: tested in the repo). */
+function examsDispatchDue_(hour, today, lastDay) {
+  return hour >= EXAMS_FROM_HOUR && lastDay !== today;
+}
+
+/**
+ * Once a day, from 06:00 Buenos Aires, asks GitHub to run the "Fechas de examen del SIU" workflow
+ * (workflow_dispatch, the same as "Run workflow" by hand). GitHub's own schedule (cron) is delayed
+ * for hours or skipped on free accounts. Only with GITHUB_TOKEN set; remembers the day in EXAMS_DAY.
+ * A second run on the same day is harmless: it only writes what changed.
+ */
+function examsDispatch_(force) {
+  var props = PropertiesService.getScriptProperties();
+  var token = props.getProperty('GITHUB_TOKEN');
+  if (!token) return;
+  var today = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd');
+  var hour = Number(Utilities.formatDate(new Date(), TIME_ZONE, 'H'));
+  if (!force && !examsDispatchDue_(hour, today, props.getProperty('EXAMS_DAY'))) return;
+  var res = UrlFetchApp.fetch('https://api.github.com/repos/' + EXAMS_REPO + '/actions/workflows/' + EXAMS_WORKFLOW + '/dispatches', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    payload: JSON.stringify({ ref: 'main' }),
+    muteHttpExceptions: true,
+  });
+  var code = res.getResponseCode();
+  if (code !== 204) {
+    // 401: token wrong or expired; 403/404: no access to the repository. Tries again next hour.
+    throw new Error('GitHub no aceptó el pedido (HTTP ' + code + '). ¿GITHUB_TOKEN vencido o sin permiso public_repo?');
+  }
+  props.setProperty('EXAMS_DAY', today);
+  Logger.log('Fechas de examen: pedido a GitHub enviado.');
+}
+
+/** Run by hand to check the token: starts the exam-date workflow now. */
+function probarFechasExamen() {
+  examsDispatch_(true);
 }
 
 /** Same as the trigger: mails what is due now (from 08:00) and refreshes the sheet. */
