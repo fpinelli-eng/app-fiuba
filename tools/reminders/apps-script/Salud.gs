@@ -22,6 +22,13 @@
  * missing, the account running the script). What it remembers is in the Script Property
  * SALUD_STATE (delete it to start over).
  *
+ * It also leaves a record for Administración → Estado, with one more call per run,
+ * salud_registrar() (migration 20261121120000_incidentes.sql): how long the database took (one
+ * sample per hour, the database keeps the last 72) and the incidents (database down, database slow,
+ * site down, another check failing) only when one starts, gets slower or ends. While the database
+ * does not answer it can't write: the incident waits in SALUD_STATE (with the hour the monitor first
+ * saw it) and goes with its real start and end in the first run where the database answers.
+ *
  * Once a day (from SALUD_LIMITS.calendarHour) it also reads the FIUBA academic calendar page
  * (SALUD_CALENDAR_PAGE) and the names of the PDFs it links. When they differ from the
  * last ones seen (Script Property SALUD_CALENDARIO), it mails once "El calendario académico de la
@@ -52,6 +59,10 @@ var SALUD_CALENDAR_PAGE = 'https://www.fi.uba.ar/estudiantes/calendario-academic
 var SALUD_DB_CHECKS = ['lenta', 'examenes', 'noticias', 'recordatorios'];
 var SALUD_DB_FIX = 'Arreglo: Supabase → Project Settings → General → Restart project; si se repite, revisar Reports → Database (memoria/swap).';
 var SALUD_HOUR = 60 * 60 * 1000;
+// Incident kind (monitor_incidents.kind) of each check; the two web checks are one incident.
+var SALUD_INCIDENT_KINDS = { base: 'db_down', lenta: 'db_slow', web: 'site_down', examenes: 'other', noticias: 'other', recordatorios: 'other' };
+var SALUD_SITE_TITLE = 'fiubi.com.ar no anda';
+var SALUD_INCIDENTS_MAX = 20; // salud_registrar() takes at most 20 at once
 
 // ---------------------------------------------------------------------------------------------
 // Functions to run by hand
@@ -64,6 +75,10 @@ function saludProbar() {
   Logger.log(saludLog_(r.checks) + '\n\n' + (r.mail
     ? 'En una corrida normal mandaría un mail a ' + r.recipients.join(', ') + '.'
     : 'En una corrida normal no mandaría mail (nada cambió desde el último aviso).') +
+    '\n\nHistorial de Estado: ' + (r.sampleMs === null ? 'sin muestra de latencia' : 'latencia ' + saludSeconds_(r.sampleMs)) +
+    (r.incidentRows.length
+      ? '; anotaría ' + r.incidentRows.map(function (i) { return i.title + (i.ended_at ? ' (terminó)' : ' (sigue)'); }).join(', ') + '.'
+      : '; ningún incidente para anotar.') +
     '\n\nCalendario académico de la FIUBA: ' + r.calendar.log +
     (r.calendar.mail ? ' En una corrida normal avisaría por mail.' : ''));
 }
@@ -118,6 +133,16 @@ function saludCheck_(opts) {
     if (dryRun) {
       r.calendar = saludCalendarCheck_(props, r.recipients, now, true);
       return r;
+    }
+    if (!dataError) {
+      // The record for Administración → Estado. If it fails (or the migration is not applied yet),
+      // the incidents stay in SALUD_STATE and go in the next run; the alerts go on as usual.
+      try {
+        rpc_('salud_registrar', { p_ms: r.sampleMs, p_incidents: r.incidentRows });
+        r.state.incidents = saludIncidentsSent_(r.state.incidents);
+      } catch (e) {
+        Logger.log('Monitor: no se pudo anotar el historial (' + String(e && e.message || e).slice(0, 200) + ').');
+      }
     }
     if (r.mail) {
       try {
@@ -184,6 +209,7 @@ function saludParseState_(raw) {
     notified: s.notified && typeof s.notified === 'object' ? s.notified : {}, // key → title, last mailed
     day: typeof s.day === 'string' ? s.day : '',
     mails: typeof s.mails === 'number' ? s.mails : 0,
+    incidents: s.incidents && typeof s.incidents === 'object' ? s.incidents : {}, // key → incident, see saludIncidents_()
   };
 }
 
@@ -232,7 +258,7 @@ function saludLatency_(timing) {
   var worst = Math.max.apply(null, parts.map(function (p) { return p.ms; }));
   var took = parts.map(function (p) { return p.name + ' tardó ' + saludSeconds_(p.ms); }).join(' y ');
   var slow = worst > SALUD_LIMITS.slowMs;
-  return { key: 'lenta', title: slow ? 'La base está lenta' : 'Velocidad de la base', ok: !slow,
+  return { key: 'lenta', title: slow ? 'La base está lenta' : 'Velocidad de la base', ok: !slow, ms: worst, took: took + '.',
     detail: slow
       ? took + ' (el límite es ' + saludSeconds_(SALUD_LIMITS.slowMs) + '). ' + SALUD_DB_FIX
       : took + '.' };
@@ -305,13 +331,109 @@ function saludEvaluate_(prev, data, dataError, http, now, timing) {
   var day = saludDay_(now);
   var mails = prev.day === day ? prev.mails : 0;
   var mail = changed && mails < SALUD_LIMITS.mailsPerDay;
+  var latency = checks.filter(function (c) { return c.key === 'lenta'; })[0];
+  var incidents = saludIncidents_(prev.incidents, checks, dataError, httpFails, now, timing);
   return {
     checks: checks,
     problems: problems,
     resolved: resolved,
     mail: mail,
-    state: { http: httpFails, notified: mail ? current : prev.notified, day: day, mails: mail ? mails + 1 : mails },
+    // For salud_registrar(): this run's latency sample (null: no time, or the database did not
+    // answer) and the incidents that started, changed or ended and are not written yet.
+    sampleMs: latency ? Math.round(latency.ms) : null,
+    incidentRows: saludIncidentRows_(incidents),
+    state: { http: httpFails, notified: mail ? current : prev.notified, day: day, mails: mail ? mails + 1 : mails, incidents: incidents },
   };
+}
+
+/**
+ * The incidents for Administración → Estado (monitor_incidents), from this run's checks.
+ * prev and the result: key → { kind, title, detail, started, ended, maxMs, dirty } (started and
+ * ended: ISO; ended null while it goes on; dirty: not written yet). Keys: the check keys, with the
+ * two web checks as one 'web'. An incident opens when its check fails, gets dirty again only when
+ * it gets slower (maxMs) and closes when the check is fine. While the database does not answer, the
+ * checks that need it are unknown: their incidents stay as they were. The start is when the monitor
+ * first saw it (the web one: its first failure of the streak), so up to an hour after it began.
+ */
+function saludIncidents_(prev, checks, dataError, httpFails, now, timing) {
+  var nowIso = new Date(now).toISOString();
+  var seen = {};
+  checks.forEach(function (c) {
+    if (c.ok) return;
+    var web = c.key.indexOf('web:') === 0;
+    var key = web ? 'web' : c.key;
+    if (seen[key] || !SALUD_INCIDENT_KINDS[key]) return;
+    var info = { kind: SALUD_INCIDENT_KINDS[key], title: web ? SALUD_SITE_TITLE : c.title, detail: c.detail, maxMs: null, started: nowIso };
+    if (key === 'base') {
+      info.detail = 'El monitor no pudo leer el estado: ' + String(dataError).slice(0, 160);
+      info.maxMs = timing && typeof timing.salud === 'number' ? Math.round(timing.salud) : null;
+    } else if (key === 'lenta') {
+      info.detail = c.took;
+      info.maxMs = Math.round(c.ms);
+    } else if (web) {
+      var fails = Math.max.apply(null, Object.keys(httpFails).map(function (u) { return httpFails[u]; }).concat([1]));
+      info.started = new Date(now - (fails - 1) * SALUD_HOUR).toISOString();
+    }
+    seen[key] = info;
+  });
+
+  var next = {};
+  Object.keys(prev || {}).forEach(function (key) {
+    var p = prev[key];
+    if (!p || typeof p !== 'object' || typeof p.started !== 'string') return;
+    var unknown = dataError && SALUD_DB_CHECKS.indexOf(key) >= 0;
+    var copy = { kind: p.kind, title: p.title, detail: p.detail || null, started: p.started, ended: p.ended || null,
+      maxMs: typeof p.maxMs === 'number' ? p.maxMs : null, dirty: !!p.dirty };
+    var outKey = key;
+    if (!copy.ended && !unknown) {
+      var cur = seen[key];
+      if (!cur) {
+        // Solved. Until it is written it waits under a key of its own, so the same check failing
+        // again opens a new incident.
+        copy.ended = nowIso;
+        copy.dirty = true;
+        outKey = key + '@' + copy.started;
+      } else if (typeof cur.maxMs === 'number' && (copy.maxMs === null || cur.maxMs > copy.maxMs)) {
+        copy.maxMs = cur.maxMs; // slower than ever in this incident
+        copy.detail = cur.detail;
+        copy.dirty = true;
+      }
+    }
+    next[outKey] = copy;
+  });
+  Object.keys(seen).forEach(function (key) {
+    if (next[key]) return;
+    var s = seen[key];
+    next[key] = { kind: s.kind, title: s.title, detail: s.detail, started: s.started, ended: null, maxMs: s.maxMs, dirty: true };
+  });
+
+  // Never more than salud_registrar() takes: the oldest ended ones that never got written go first.
+  var keys = Object.keys(next).sort(function (a, b) { return next[b].started < next[a].started ? -1 : 1; });
+  var out = {};
+  keys.slice(0, SALUD_INCIDENTS_MAX).forEach(function (k) { out[k] = next[k]; });
+  return out;
+}
+
+/** The incidents not written yet, as salud_registrar() takes them (oldest first). */
+function saludIncidentRows_(incidents) {
+  return Object.keys(incidents).map(function (k) { return incidents[k]; })
+    .filter(function (i) { return i.dirty; })
+    .sort(function (a, b) { return a.started < b.started ? -1 : a.started > b.started ? 1 : 0; })
+    .map(function (i) {
+      return { kind: i.kind, title: i.title, detail: i.detail ? String(i.detail).slice(0, 300) : null,
+        started_at: i.started, ended_at: i.ended, max_ms: i.maxMs };
+    });
+}
+
+/** After salud_registrar() wrote them: the ended ones are forgotten, the open ones are clean. */
+function saludIncidentsSent_(incidents) {
+  var out = {};
+  Object.keys(incidents).forEach(function (k) {
+    var i = incidents[k];
+    if (i.ended) return;
+    out[k] = { kind: i.kind, title: i.title, detail: i.detail, started: i.started, ended: null, maxMs: i.maxMs, dirty: false };
+  });
+  return out;
 }
 
 /** Addresses from ALERT_TO (comma-separated); the fallback when there is none valid. */

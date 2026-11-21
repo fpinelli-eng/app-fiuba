@@ -14,17 +14,37 @@ interface Check {
   ok: boolean;
   detail: string;
 }
+interface Incident {
+  kind: string;
+  title: string;
+  detail: string | null;
+  started: string;
+  ended: string | null;
+  maxMs: number | null;
+  dirty: boolean;
+}
+interface IncidentRow {
+  kind: string;
+  title: string;
+  detail: string | null;
+  started_at: string;
+  ended_at: string | null;
+  max_ms: number | null;
+}
 interface State {
   http: Record<string, number>;
   notified: Record<string, string>;
   day: string;
   mails: number;
+  incidents: Record<string, Incident>;
 }
 interface Result {
   checks: Check[];
   problems: Check[];
   resolved: { key: string; title: string }[];
   mail: boolean;
+  sampleMs: number | null;
+  incidentRows: IncidentRow[];
   state: State;
 }
 type Data = Record<string, string | number | null>;
@@ -54,6 +74,7 @@ interface SaludGs {
     timing?: { salud: number; avisos: number | null },
   ): Result;
   saludParseState_(raw: string | null): State;
+  saludIncidentsSent_(incidents: Record<string, Incident>): Record<string, Incident>;
   saludRecipients_(raw: string | null, fallback: string): string[];
   saludAge_(ms: number): string;
   saludBuildMail_(problems: Check[], resolved: { key: string; title: string }[], now: number): { subject: string; text: string; html: string };
@@ -329,7 +350,7 @@ describe("mails only when the problems change", () => {
 
 describe("state and recipients", () => {
   it("a broken or missing state starts empty", () => {
-    expect(gs.saludParseState_("{nope")).toEqual({ http: {}, notified: {}, day: "", mails: 0 });
+    expect(gs.saludParseState_("{nope")).toEqual({ http: {}, notified: {}, day: "", mails: 0, incidents: {} });
     expect(gs.saludParseState_(JSON.stringify({ http: { [SITE]: 1 }, mails: 2, day: "2026-11-20" })).http[SITE]).toBe(1);
   });
 
@@ -415,6 +436,10 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
             calls.push("confirm");
             return opts.failDb ? response(500, "down") : response(200, []);
           }
+          if (url.includes("/rpc/salud_registrar")) {
+            calls.push("registrar");
+            return opts.failDb ? response(500, "down") : response(200, 0);
+          }
           if (url.includes("/rpc/salud")) {
             calls.push("salud");
             if (opts.failDb) return response(500, "down");
@@ -436,7 +461,7 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
   it("all fine: reminders, then the monitor; no alert", () => {
     const s = services({});
     load(s.globals).hourly();
-    expect(s.calls).toEqual(["avisos", "sheet", "sheet", "confirm", "salud", "web", "web", "calendario"]);
+    expect(s.calls).toEqual(["avisos", "sheet", "sheet", "confirm", "salud", "web", "web", "registrar", "calendario"]);
     expect(s.sent).toEqual([]);
     expect(JSON.parse(s.props.SALUD_STATE).notified).toEqual({});
     expect(JSON.parse(s.props.SALUD_CALENDARIO)).toEqual({ day: "2026-11-20", files: [PDF_2025, PDF_2026] });
@@ -488,6 +513,146 @@ describe("hourly(): the reminders, the confirmations and the monitor never stop 
     s.props.ALERT_TO = "ana@fi.uba.ar, beto@fi.uba.ar";
     expect(() => load(s.globals).hourly()).toThrow();
     expect(s.sent[0].to).toBe("ana@fi.uba.ar,beto@fi.uba.ar");
+  });
+});
+
+describe("history for Administración → Estado: latency and incidents, written only when they change", () => {
+  const fast = { salud: 400, avisos: 800 };
+  const iso = (t: number) => new Date(t).toISOString();
+
+  it("every run has a latency sample (the slowest call); nothing else when all is fine", () => {
+    const r = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, fast);
+    expect(r.sampleMs).toBe(800);
+    expect(r.incidentRows).toEqual([]);
+    expect(gs.saludEvaluate_(fresh(), healthy(), null, up, NOW).sampleMs).toBeNull();
+    expect(gs.saludEvaluate_(fresh(), null, "timeout", up, NOW, { salud: 30_000, avisos: null }).sampleMs).toBeNull();
+  });
+
+  it("a slow database: opens, gets worse, stays quiet, ends", () => {
+    const a = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, { salud: 5_000, avisos: null });
+    expect(a.incidentRows).toEqual([
+      { kind: "db_slow", title: "La base está lenta", detail: "salud() tardó 5,0 s.", started_at: iso(NOW), ended_at: null, max_ms: 5_000 },
+    ]);
+    const b = gs.saludEvaluate_({ ...a.state, incidents: gs.saludIncidentsSent_(a.state.incidents) }, healthy(), null, up, NOW + H, { salud: 12_000, avisos: null });
+    expect(b.incidentRows.map((i) => [i.started_at, i.max_ms, i.ended_at])).toEqual([[iso(NOW), 12_000, null]]);
+    const sent = { ...b.state, incidents: gs.saludIncidentsSent_(b.state.incidents) };
+    const c = gs.saludEvaluate_(sent, healthy(), null, up, NOW + 2 * H, { salud: 7_000, avisos: null });
+    expect(c.incidentRows).toEqual([]); // still slow, not slower: nothing to write
+    const d = gs.saludEvaluate_({ ...c.state, incidents: gs.saludIncidentsSent_(c.state.incidents) }, healthy(), null, up, NOW + 3 * H, fast);
+    expect(d.incidentRows.map((i) => [i.kind, i.started_at, i.ended_at, i.max_ms])).toEqual([["db_slow", iso(NOW), iso(NOW + 3 * H), 12_000]]);
+    expect(gs.saludIncidentsSent_(d.state.incidents)).toEqual({});
+  });
+
+  it("the database down: kept in the state, written with its real start and end when it answers", () => {
+    const a = gs.saludEvaluate_(fresh(), healthy(), null, up, NOW, { salud: 6_000, avisos: null });
+    const s0 = { ...a.state, incidents: gs.saludIncidentsSent_(a.state.incidents) };
+    const b = gs.saludEvaluate_(s0, null, "La base respondió 503: upstream timeout", up, NOW + H, { salud: 30_000, avisos: null });
+    const c = gs.saludEvaluate_(b.state, null, "La base respondió 503: upstream timeout", up, NOW + 2 * H, { salud: 31_000, avisos: null });
+    // Unknown while down: the slow incident is not closed.
+    expect(c.state.incidents.lenta.ended).toBeNull();
+    const d = gs.saludEvaluate_(c.state, healthy(), null, up, NOW + 3 * H, fast);
+    const rows = d.incidentRows.map((i) => [i.kind, i.started_at, i.ended_at, i.max_ms]);
+    expect(rows).toEqual([
+      ["db_slow", iso(NOW), iso(NOW + 3 * H), 6_000],
+      ["db_down", iso(NOW + H), iso(NOW + 3 * H), 31_000],
+    ]);
+    expect(d.incidentRows[1].detail).toBe("El monitor no pudo leer el estado: La base respondió 503: upstream timeout");
+  });
+
+  it("the site down: one incident for both addresses, from its first failure", () => {
+    const down: Http[] = [
+      { url: SITE, code: 502 },
+      { url: ROBOTS, code: null },
+    ];
+    const a = gs.saludEvaluate_(fresh(), healthy(), null, down, NOW, fast);
+    expect(a.incidentRows).toEqual([]); // one failure is not a problem yet
+    const b = gs.saludEvaluate_(a.state, healthy(), null, down, NOW + H, fast);
+    expect(b.incidentRows).toEqual([
+      { kind: "site_down", title: "fiubi.com.ar no anda", detail: "Falló 2 veces seguidas (respondió 502).", started_at: iso(NOW), ended_at: null, max_ms: null },
+    ]);
+    const c = gs.saludEvaluate_({ ...b.state, incidents: gs.saludIncidentsSent_(b.state.incidents) }, healthy(), null, up, NOW + 2 * H, fast);
+    expect(c.incidentRows.map((i) => [i.kind, i.ended_at])).toEqual([["site_down", iso(NOW + 2 * H)]]);
+  });
+
+  it("an ended incident not written yet and a new one of the same check are two incidents", () => {
+    const a = gs.saludEvaluate_(fresh(), healthy({ news_fetched_at: ago(60) }), null, up, NOW, fast);
+    const b = gs.saludEvaluate_(a.state, healthy(), null, up, NOW + H, fast);
+    const c = gs.saludEvaluate_(b.state, healthy({ news_fetched_at: ago(60) }), null, up, NOW + 2 * H, fast);
+    expect(c.incidentRows.map((i) => [i.kind, i.started_at, i.ended_at])).toEqual([
+      ["other", iso(NOW), iso(NOW + H)],
+      ["other", iso(NOW + 2 * H), null],
+    ]);
+  });
+
+  it("never more than 20 waiting", () => {
+    let s = fresh();
+    for (let i = 0; i < 30; i++) s = gs.saludEvaluate_(s, healthy({ news_fetched_at: i % 2 ? ago(10) : ago(60) }), null, up, NOW + i * H, fast).state;
+    expect(Object.keys(s.incidents).length).toBeLessThanOrEqual(20);
+  });
+
+  /** saludCheck_() with mocked services: the database down or answering, and salud_registrar() working or not. */
+  function monitor(props: Record<string, string>, opts: { now: number; dbDown?: boolean; registrarFails?: boolean; saludMs?: number }) {
+    const written: { p_ms: number | null; p_incidents: IncidentRow[] }[] = [];
+    let clock = opts.now;
+    const response = (code: number, body: unknown) => ({ getResponseCode: () => code, getContentText: () => JSON.stringify(body) });
+    const g = load({
+      Date: fixedDate(() => clock),
+      Logger: { log: () => undefined },
+      LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => undefined }) },
+      PropertiesService: {
+        getScriptProperties: () => ({ getProperty: (k: string) => props[k] ?? null, setProperty: (k: string, v: string) => (props[k] = v) }),
+      },
+      Session: { getEffectiveUser: () => ({ getEmail: () => "avisos@example.com" }), getActiveUser: () => ({ getEmail: () => "" }) },
+      MailApp: { sendEmail: () => undefined },
+      UrlFetchApp: {
+        fetch: (url: string, o: { payload?: string }) => {
+          if (url.includes("/rpc/salud_registrar")) {
+            if (opts.registrarFails) return response(404, { code: "PGRST202" });
+            const args = JSON.parse(o.payload ?? "{}");
+            expect(args.p_token).toBe("t".repeat(40));
+            written.push({ p_ms: args.p_ms, p_incidents: args.p_incidents });
+            return response(200, args.p_incidents.length);
+          }
+          if (url.includes("/rpc/salud")) {
+            if (opts.dbDown) return response(503, "upstream timeout");
+            clock += opts.saludMs ?? 300;
+            const t = new Date(opts.now).toISOString();
+            return response(200, [{ exam_sync_at: t, news_fetched_at: t, reminders_due: 0 }]);
+          }
+          if (url === CALENDAR) return { getResponseCode: () => 200, getContentText: () => calendarPage(PDF_2026) };
+          return response(200, "ok");
+        },
+      },
+    });
+    g.saludCheck_();
+    return written;
+  }
+
+  it("saludCheck_: one salud_registrar() per run while the database answers; the outage goes once it is back", () => {
+    const props: Record<string, string> = { SUPABASE_KEY: "k", TOKEN: "t".repeat(40) };
+    expect(monitor(props, { now: NOW })).toEqual([{ p_ms: 300, p_incidents: [] }]);
+    expect(monitor(props, { now: NOW + H, dbDown: true })).toEqual([]);
+    expect(monitor(props, { now: NOW + 2 * H, dbDown: true })).toEqual([]);
+    const back = monitor(props, { now: NOW + 3 * H, saludMs: 4_000 });
+    expect(back).toHaveLength(1);
+    expect(back[0].p_ms).toBe(4_000);
+    expect(back[0].p_incidents.map((i) => [i.kind, i.started_at, i.ended_at])).toEqual([
+      ["db_down", iso(NOW + H), iso(NOW + 3 * H + 4_000)], // "now" is read after salud() answered
+      ["db_slow", iso(NOW + 3 * H + 4_000), null],
+    ]);
+    // Written: only the open slow incident is remembered, clean.
+    expect(Object.values(JSON.parse(props.SALUD_STATE).incidents)).toEqual([
+      { kind: "db_slow", title: "La base está lenta", detail: "salud() tardó 4,0 s.", started: iso(NOW + 3 * H + 4_000), ended: null, maxMs: 4_000, dirty: false },
+    ]);
+    expect(monitor(props, { now: NOW + 4 * H, saludMs: 3_500 })).toEqual([{ p_ms: 3_500, p_incidents: [] }]);
+  });
+
+  it("saludCheck_: salud_registrar() failing (migration not applied yet) keeps the incidents for the next run", () => {
+    const props: Record<string, string> = { SUPABASE_KEY: "k", TOKEN: "t".repeat(40) };
+    monitor(props, { now: NOW, dbDown: true });
+    expect(monitor(props, { now: NOW + H, registrarFails: true })).toEqual([]);
+    const next = monitor(props, { now: NOW + 2 * H });
+    expect(next[0].p_incidents.map((i) => [i.kind, i.started_at, i.ended_at])).toEqual([["db_down", iso(NOW), iso(NOW + H + 300)]]);
   });
 });
 

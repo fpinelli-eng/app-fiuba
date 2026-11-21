@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterGroups, groupUsersByCareer, normalizeSearch, NO_CAREER_KEY, userMatches } from "./by-career";
+import { filterGroups, groupUsersByCareer, isNewToday, newToday, normalizeSearch, NO_CAREER_KEY, userMatches } from "./by-career";
 import type { AdminUser, Usage } from "./usage";
 
 function user(fullName: string, planId: string | null, plan: string | null = null): AdminUser {
@@ -88,5 +88,33 @@ describe("search", () => {
     ]);
     expect(filterGroups(groups, "  ")).toHaveLength(3);
     expect(filterGroups(groups, "zzz")).toEqual([]);
+  });
+});
+
+describe("new today (Buenos Aires day)", () => {
+  // 20/11 at 12:00 in Buenos Aires (UTC-3).
+  const NOW = Date.parse("2026-11-20T15:00:00Z");
+  const at = (createdAt: string) => ({ ...user("Ana", null), createdAt });
+
+  it("the day starts at 00:00 in Buenos Aires, not in UTC", () => {
+    expect(isNewToday(at("2026-11-20T03:00:00Z"), NOW)).toBe(true); // 00:00 of 20/11
+    expect(isNewToday(at("2026-11-20T02:59:59Z"), NOW)).toBe(false); // 23:59 of 19/11, already 20/11 in UTC
+    expect(isNewToday(at("2026-11-20T14:59:00+00:00"), NOW)).toBe(true);
+    expect(isNewToday(at(""), NOW)).toBe(false);
+  });
+
+  it("late at night the UTC day already changed, Buenos Aires not yet", () => {
+    const night = Date.parse("2026-11-21T02:30:00Z"); // 23:30 of 20/11 in Buenos Aires
+    expect(isNewToday(at("2026-11-20T10:00:00Z"), night)).toBe(true);
+    expect(isNewToday(at("2026-11-21T03:10:00Z"), Date.parse("2026-11-21T03:20:00Z"))).toBe(true);
+    expect(isNewToday(at("2026-11-20T10:00:00Z"), Date.parse("2026-11-21T03:20:00Z"))).toBe(false);
+  });
+
+  it("lists only today, newest first", () => {
+    const list = newToday([at("2026-11-20T04:00:00Z"), at("2026-11-19T20:00:00Z"), { ...at("2026-11-20T14:00:00Z"), fullName: "Beto" }], NOW);
+    expect(list.map((u) => [u.fullName, u.createdAt])).toEqual([
+      ["Beto", "2026-11-20T14:00:00Z"],
+      ["Ana", "2026-11-20T04:00:00Z"],
+    ]);
   });
 });

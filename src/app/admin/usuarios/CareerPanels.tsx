@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { buenosAiresDay, type AdminUser } from "@/lib/admin/usage";
-import { filterGroups, type CareerGroup } from "@/lib/admin/by-career";
+import { filterGroups, isNewToday, type CareerGroup } from "@/lib/admin/by-career";
 
 const secondary =
   "h-10 whitespace-nowrap rounded-[10px] border border-line-strong bg-surface px-4 text-sm font-semibold text-ink hover:bg-line/40 disabled:cursor-not-allowed disabled:text-disabled-ink";
@@ -10,9 +10,10 @@ const dash = "—";
 
 /**
  * The students in one collapsible panel per career (grouped in src/lib/admin/by-career.ts). All
- * start closed; the search filters across panels and opens the ones with matches.
+ * start closed; the search filters across panels and opens the ones with matches. Students who signed
+ * up today (Buenos Aires day; now: the database clock) get a "Nuevo" badge and count in "+N hoy".
  */
-export function CareerPanels({ groups }: { groups: CareerGroup[] }) {
+export function CareerPanels({ groups, now }: { groups: CareerGroup[]; now: number }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const searchId = useId();
@@ -81,6 +82,7 @@ export function CareerPanels({ groups }: { groups: CareerGroup[] }) {
               group={group}
               matches={matches}
               searching={searching}
+              now={now}
               open={open.has(group.key)}
               onToggle={() => toggle(group.key)}
             />
@@ -95,18 +97,21 @@ function Panel({
   group,
   matches,
   searching,
+  now,
   open,
   onToggle,
 }: {
   group: CareerGroup;
   matches: AdminUser[];
   searching: boolean;
+  now: number;
   open: boolean;
   onToggle: () => void;
 }) {
   const bodyId = useId();
   const total = group.users.length;
   const n = (v: number) => v.toLocaleString("es-AR");
+  const today = group.users.filter((u) => isNewToday(u, now)).length;
   return (
     <li className="overflow-hidden rounded-2xl border border-line bg-surface">
       <h3>
@@ -124,7 +129,12 @@ function Panel({
           >
             <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className={`mr-auto font-semibold ${group.noPlan ? "text-muted" : ""}`}>{group.name}</span>
+          <span className="mr-auto flex flex-wrap items-center gap-2">
+            <span className={`font-semibold ${group.noPlan ? "text-muted" : ""}`}>{group.name}</span>
+            {today > 0 && (
+              <span className="rounded-full bg-mint px-2 py-[2px] text-xs font-semibold text-mint-ink tabular-nums">+{n(today)} hoy</span>
+            )}
+          </span>
           <span className="text-sm text-muted tabular-nums">
             {searching && (
               <>
@@ -137,13 +147,13 @@ function Panel({
         </button>
       </h3>
       <div id={bodyId} hidden={!open} className="overflow-x-auto border-t border-line">
-        {open && <UsersTable users={matches} />}
+        {open && <UsersTable users={matches} now={now} />}
       </div>
     </li>
   );
 }
 
-function UsersTable({ users }: { users: AdminUser[] }) {
+function UsersTable({ users, now }: { users: AdminUser[]; now: number }) {
   const date = (iso: string) => buenosAiresDay(iso).split("-").reverse().join("/");
   return (
     <table className="w-full text-left text-sm">
@@ -162,7 +172,12 @@ function UsersTable({ users }: { users: AdminUser[] }) {
       <tbody>
         {users.map((u) => (
           <tr key={u.email} className="border-b border-line last:border-b-0">
-            <td className="px-4 py-2.5 font-semibold whitespace-nowrap">{u.fullName || dash}</td>
+            <td className="px-4 py-2.5 font-semibold whitespace-nowrap">
+              {u.fullName || dash}
+              {isNewToday(u, now) && (
+                <span className="ml-2 rounded-full bg-mint px-2 py-[2px] align-[1px] text-xs font-semibold text-mint-ink">Nuevo</span>
+              )}
+            </td>
             <td className="px-4 py-2.5 whitespace-nowrap">{u.email}</td>
             <td className="px-4 py-2.5 whitespace-nowrap">{u.planId ? (u.plan ?? u.planId) : "Sin elegir"}</td>
             <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">{u.createdAt ? date(u.createdAt) : dash}</td>
