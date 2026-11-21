@@ -19,6 +19,26 @@ describe("searchSubjects", () => {
     expect(names("ÁLGEBRA")).toEqual(["Álgebra Lineal"]);
   });
 
+  it("matches teachers and table names, keeping only those tables", () => {
+    const withTables = [
+      {
+        name: "Higiene y Seguridad",
+        code: "TC003",
+        tables: [
+          { name: "01 MARENSI", teachers: "MARENSI PATRICIO HECTOR (Profesor/a)" },
+          { name: "MESA 02", teachers: "RIZZO ELISABETH AMALIA (Profesor/a Adjunto/a)" },
+        ],
+      },
+      { name: "Física II", code: "CB003", tables: [{ name: "MESA 01", teachers: "SURACE PABLO (Profesor/a)" }] },
+    ];
+    const found = (q: string) => searchSubjects(withTables, q).map((s) => [s.name, s.tables.length]);
+    expect(found("marensi")).toEqual([["Higiene y Seguridad", 1]]);
+    expect(found("rizzo higiene")).toEqual([["Higiene y Seguridad", 1]]);
+    expect(found("higiene")).toEqual([["Higiene y Seguridad", 2]]);
+    expect(found("surace")).toEqual([["Física II", 1]]);
+    expect(found("marensi fisica")).toEqual([]);
+  });
+
   it("matches every word in any order", () => {
     expect(names("ii analisis")).toEqual(["Análisis Matemático II"]);
     expect(names("analisis lineal")).toEqual([]);

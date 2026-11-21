@@ -324,7 +324,7 @@ export function FinalsView({
                 }}
                 autoComplete="off"
                 enterKeyHint="search"
-                placeholder="Buscá cualquier materia"
+                placeholder="Buscá materia o profesor"
                 className="h-[50px] w-full rounded-xl border border-line-strong bg-surface pr-12 pl-[46px] text-base text-ink [&::-webkit-search-cancel-button]:appearance-none"
               />
               {query && (
