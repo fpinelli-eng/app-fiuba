@@ -13,14 +13,7 @@ import {
   nodeWidthFor,
   rowGapFor,
   rowGeometry,
-  ZOOM_MAX,
-  ZOOM_MIN,
-  ZOOM_STEP,
-  clampZoom,
   shouldRefit,
-  stepZoom,
-  wheelZoom,
-  zoomScrollFor,
 } from "./layout";
 
 describe("nodeWidthFor", () => {
@@ -131,70 +124,19 @@ describe("rowGeometry", () => {
   });
 });
 
-describe("zoom libre", () => {
-  it("acota el zoom y redondea a centésimos", () => {
-    expect(clampZoom(1)).toBe(1);
-    expect(clampZoom(0.1)).toBe(ZOOM_MIN);
-    expect(clampZoom(9)).toBe(ZOOM_MAX);
-    expect(clampZoom(1.23456)).toBe(1.23);
-    expect(clampZoom(Number.NaN)).toBe(1);
+describe("shouldRefit", () => {
+  it("la primera medida siempre ajusta", () => {
+    expect(shouldRefit(null, 1)).toBe(true);
+    expect(shouldRefit(null, 1.25)).toBe(true);
   });
-
-  it("los botones avanzan de a un paso y se alinean a múltiplos", () => {
-    expect(stepZoom(1, 1)).toBe(1.1);
-    expect(stepZoom(1, -1)).toBe(0.9);
-    expect(stepZoom(1.1, 1)).toBe(1.2);
-    expect(stepZoom(0.7, -1)).toBe(0.6);
-    expect(stepZoom(1.23, 1)).toBe(1.3);
-    expect(stepZoom(1.23, -1)).toBe(1.2);
-    expect(stepZoom(ZOOM_MAX, 1)).toBe(ZOOM_MAX);
-    expect(stepZoom(ZOOM_MIN, -1)).toBe(ZOOM_MIN);
-    expect(ZOOM_STEP).toBe(0.1);
+  it("el zoom del navegador (cambia el DPR) no reajusta", () => {
+    expect(shouldRefit(1, 1.25)).toBe(false);
+    expect(shouldRefit(1, 1.5)).toBe(false);
+    expect(shouldRefit(1, 0.9)).toBe(false);
   });
-
-  it("Ctrl + rueda: hacia arriba acerca, hacia abajo aleja, con tope por muesca", () => {
-    expect(wheelZoom(1, -100)).toBe(1.15);
-    expect(wheelZoom(1, 100)).toBe(0.87);
-    expect(wheelZoom(1, -3)).toBe(1.03); // pellizco del panel táctil: pasos chicos
-    expect(wheelZoom(1, 0)).toBe(1);
-    expect(wheelZoom(1, -3, 1)).toBe(1.15); // en líneas
-    expect(wheelZoom(1.95, -100)).toBe(ZOOM_MAX);
-  });
-
-  it("al cambiar la escala, el punto bajo el cursor queda quieto", () => {
-    // Cursor a 300 px del borde, sin desplazamiento ni relleno: de 1× a 2× hay que correrse 300 px.
-    expect(zoomScrollFor(0, 300, 0, 1, 2)).toBe(300);
-    // Con relleno de 12 px y ya desplazado.
-    const s = zoomScrollFor(100, 250, 12, 1.2, 1.5);
-    const before = (100 + 250 - 12) / 1.2;
-    const after = (s + 250 - 12) / 1.5;
-    expect(Math.abs(after - before)).toBeLessThan(1);
-    // Alejar cerca del borde no deja un desplazamiento negativo.
-    expect(zoomScrollFor(0, 300, 0, 2, 1)).toBe(0);
-    expect(zoomScrollFor(50, 10, 0, 0, 1)).toBe(50);
-  });
-
-  describe("shouldRefit", () => {
-    const fit = { dpr: 1, width: 1920, height: 1000 };
-    it("la primera medida siempre ajusta", () => {
-      expect(shouldRefit(null, fit, false)).toBe(true);
-      expect(shouldRefit(null, fit, true)).toBe(true);
-    });
-    it("el zoom del navegador (cambia el DPR) no reajusta", () => {
-      expect(shouldRefit(fit, { dpr: 1.25, width: 1536, height: 800 }, false)).toBe(false);
-      expect(shouldRefit(fit, { dpr: 0.9, width: 2133, height: 1111 }, false)).toBe(false);
-      // Aunque llegue otro evento al mismo DPR del navegador ampliado.
-      expect(shouldRefit(fit, { dpr: 1.25, width: 1536, height: 800 }, false)).toBe(false);
-    });
-    it("al volver al DPR del ajuste, reajusta", () => {
-      expect(shouldRefit(fit, { ...fit }, false)).toBe(true);
-    });
-    it("cambiar el tamaño de la ventana reajusta, salvo con zoom manual", () => {
-      expect(shouldRefit(fit, { dpr: 1, width: 1366, height: 768 }, false)).toBe(true);
-      expect(shouldRefit(fit, { dpr: 1, width: 1366, height: 768 }, true)).toBe(false);
-    });
-    it("un cambio dentro de la página (mismo viewport) reajusta siempre", () => {
-      expect(shouldRefit(fit, { ...fit }, true)).toBe(true);
-    });
+  it("con el mismo DPR (ventana nueva, electivas plegadas) reajusta", () => {
+    expect(shouldRefit(1, 1)).toBe(true);
+    expect(shouldRefit(1.25, 1.25)).toBe(true);
+    expect(shouldRefit(1, 1.0004)).toBe(true);
   });
 });

@@ -105,77 +105,18 @@ export function rowGeometry(available: number | null, rows: number): MapRows {
   return { ...min, scale: Math.floor(scale * 1000) / 1000 };
 }
 
-// Zoom libre ----------------------------------------------------------------------------
-// La primera vista es la ajustada (todo en la pantalla). Después el estudiante puede acercar o
-// alejar el mapa con los botones, Ctrl/⌘ + rueda o pellizcando el panel táctil. El zoom es
-// relativo a la vista ajustada: 1 (100 %) = todo en la pantalla.
-
-/** Zoom mínimo y máximo, relativos a la vista ajustada. */
-export const ZOOM_MIN = 0.6;
-export const ZOOM_MAX = 2;
-/** Paso de los botones "−" y "+". */
-export const ZOOM_STEP = 0.1;
-
-/** Acota el zoom entre ZOOM_MIN y ZOOM_MAX, redondeado a centésimos (sin medida válida, 1). */
-export function clampZoom(zoom: number): number {
-  if (!Number.isFinite(zoom)) return 1;
-  return Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom)) * 100) / 100;
-}
-
-/** Zoom después de "+" (dir 1) o "−" (dir -1): el siguiente múltiplo de ZOOM_STEP. */
-export function stepZoom(zoom: number, dir: 1 | -1): number {
-  const z = clampZoom(zoom);
-  const steps = z / ZOOM_STEP;
-  // Ya en un múltiplo (con tolerancia por los decimales): un paso entero; si no, al múltiplo más cercano en esa dirección.
-  const near = Math.round(steps);
-  const base = Math.abs(steps - near) < 1e-6 ? near + dir : dir > 0 ? Math.ceil(steps) : Math.floor(steps);
-  return clampZoom(base * ZOOM_STEP);
-}
+// Zoom del navegador ------------------------------------------------------------------
+// La primera vista es la ajustada (todo en la pantalla). Para ver el mapa más grande se usa el zoom
+// del navegador (Ctrl + / Ctrl −, Ctrl + rueda, pellizco): ahí no se reajusta y la página se desplaza.
 
 /**
- * Zoom después de un evento de rueda con Ctrl/⌘ (o un pellizco del panel táctil, que el navegador
- * manda como rueda con Ctrl). Proporcional al desplazamiento, con un tope por evento para que una
- * rueda de mouse (±100 px por muesca) avance de a un paso cómodo.
+ * ¿Se vuelve a ajustar el mapa a la pantalla? `fitDpr` es el devicePixelRatio del último ajuste
+ * (null: nunca se ajustó) y `dpr`, el de ahora.
+ * - Cambió devicePixelRatio: es el zoom del navegador (Ctrl + / Ctrl −). No se pelea: el mapa queda
+ *   del tamaño que tenía (crece con el zoom) y la página se desplaza.
+ * - Mismo DPR: cambió el tamaño de la ventana o algo dentro de la página (se plegaron las electivas,
+ *   el encabezado pasó a dos líneas): se reajusta.
  */
-export function wheelZoom(zoom: number, deltaY: number, deltaMode = 0): number {
-  if (!Number.isFinite(deltaY) || deltaY === 0) return clampZoom(zoom);
-  const px = deltaMode === 1 ? deltaY * 16 : deltaMode === 2 ? deltaY * 400 : deltaY;
-  const factor = Math.min(1.15, Math.max(1 / 1.15, Math.exp(-px * 0.01)));
-  return clampZoom(zoom * factor);
-}
-
-/**
- * Desplazamiento (en un eje) que deja quieto, después de cambiar la escala, el punto del mapa que
- * estaba bajo `point` (posición del cursor dentro del contenedor visible). `pad` es el relleno del
- * contenedor antes del mapa escalado; `from` y `to`, la escala efectiva antes y después.
- */
-export function zoomScrollFor(scroll: number, point: number, pad: number, from: number, to: number): number {
-  if (!(from > 0) || !(to > 0)) return Math.max(0, scroll);
-  const content = (scroll + point - pad) / from;
-  return Math.max(0, Math.round(content * to + pad - point));
-}
-
-/** Lo que importa del viewport para decidir si reajustar el mapa. */
-export interface ViewportSample {
-  /** window.devicePixelRatio: cambia con el zoom del navegador (Ctrl + / Ctrl −). */
-  dpr: number;
-  /** window.innerWidth e innerHeight (px CSS). */
-  width: number;
-  height: number;
-}
-
-/**
- * ¿Se vuelve a ajustar el mapa a la pantalla? `fit` es el viewport del último ajuste (null: nunca).
- * - Cambió devicePixelRatio: es el zoom del navegador. No se pelea: el mapa queda del tamaño que
- *   tenía y la página crece y se desplaza.
- * - Cambió el tamaño de la ventana (mismo DPR): se reajusta, salvo que el estudiante haya elegido
- *   un zoom a mano.
- * - Mismo viewport: cambió algo dentro de la página (se plegaron las electivas, el encabezado pasó
- *   a dos líneas): se reajusta siempre.
- */
-export function shouldRefit(fit: ViewportSample | null, now: ViewportSample, manualZoom: boolean): boolean {
-  if (fit === null) return true;
-  if (Math.abs(now.dpr - fit.dpr) > 0.001) return false;
-  if (now.width !== fit.width || now.height !== fit.height) return !manualZoom;
-  return true;
+export function shouldRefit(fitDpr: number | null, dpr: number): boolean {
+  return fitDpr === null || Math.abs(dpr - fitDpr) <= 0.001;
 }
