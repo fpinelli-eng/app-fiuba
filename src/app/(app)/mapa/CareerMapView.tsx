@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   CareerMap,
@@ -29,7 +29,20 @@ import {
   type SubjectStatus,
 } from "@/lib/map/model";
 import type { MapData } from "@/lib/map/data";
-import { CBC_CLOSED_W, MAP_TOP, mapGeometry, rowGeometry } from "@/lib/map/layout";
+import {
+  CBC_CLOSED_W,
+  MAP_TOP,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  clampZoom,
+  mapGeometry,
+  rowGeometry,
+  shouldRefit,
+  stepZoom,
+  wheelZoom,
+  zoomScrollFor,
+  type ViewportSample,
+} from "@/lib/map/layout";
 import { CloseIcon, GradeMarkText, STATE_ICON_LABEL, StateIcon, STATE_STYLE } from "./icons";
 import { ExtrasDialog } from "./ExtrasDialog";
 import { HistoryImport } from "./HistoryImport";
@@ -45,10 +58,15 @@ const TOP = MAP_TOP;
 const MAP_PAD_X = 24; // px-3 del contenedor que se desplaza
 const MAP_PAD_Y = 34; // py-4 + borde de la sección
 const MAP_BOTTOM = 16; // md:pb-4 de la página
+const MAP_INNER_X = 12; // px-3: relleno antes del mapa escalado
+const MAP_INNER_Y = 16; // py-4
+// Lo que se puede mover el mouse (o el dedo) sin que deje de ser un clic: más es arrastrar el mapa.
+const DRAG_SLOP = 5;
 // Al plegar o abrir las electivas (o el CBC), las columnas se reacomodan con una transición corta.
 const MOVE = "transition-[left,top,width,height,opacity] duration-200 ease-out motion-reduce:transition-opacity";
 
 type ButtonState = SubjectStatus | "none";
+type RefitMode = "auto" | "layout" | "force";
 
 interface Props {
   userId: string;
@@ -91,6 +109,26 @@ function subscribeElectives(listener: () => void) {
 
 const useElectivesOpen = () => useSyncExternalStore(subscribeElectives, readElectivesOpen, () => true);
 
+// Zoom del mapa elegido a mano (null: la vista ajustada, todo en la pantalla), relativo a esa vista.
+// Solo en memoria: sigue al ir y volver entre secciones, pero cada visita (abrir o recargar la
+// página) arranca con el mapa entero en la pantalla.
+let zoomMemory: number | null = null;
+const zoomListeners = new Set<() => void>();
+
+function setManualZoom(zoom: number | null) {
+  zoomMemory = zoom === null || Math.abs(zoom - 1) < 0.005 ? null : clampZoom(zoom);
+  zoomListeners.forEach((listener) => listener());
+}
+
+function subscribeZoom(listener: () => void) {
+  zoomListeners.add(listener);
+  return () => {
+    zoomListeners.delete(listener);
+  };
+}
+
+const useManualZoom = () => useSyncExternalStore(subscribeZoom, () => zoomMemory, () => null);
+
 export function CareerMapView({ userId, data, firstLoad }: Props) {
   const electivesOpen = useElectivesOpen();
   const map = useMemo(() => new CareerMap(data.subjects, data.requirements), [data]);
@@ -117,31 +155,152 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   const [mapAvailable, setMapAvailable] = useState<number | null>(null);
   const [mapAvailableH, setMapAvailableH] = useState<number | null>(null);
   const [mapAnimate, setMapAnimate] = useState(false);
+  const manualZoom = useManualZoom();
+  // Alto de la ventana en el último ajuste: tope del mapa ampliado (así se lo recorre dentro de la tarjeta).
+  const [fitViewH, setFitViewH] = useState<number | null>(null);
+  // Alto de la barra de desplazamiento horizontal del mapa (Windows, ~15 px; 0 si no hay o se superpone):
+  // se suma a la tarjeta para que no tape la última fila (por ejemplo, con el zoom del navegador).
+  const [scrollbarH, setScrollbarH] = useState(0);
+  // Viewport del último ajuste: con él se distingue el zoom del navegador (cambia devicePixelRatio,
+  // y ahí no se reajusta: la página crece y se desplaza) de un cambio real de tamaño de la ventana.
+  const fitRef = useRef<ViewportSample | null>(null);
+  // "auto": por un cambio de tamaño (ver shouldRefit); "layout": cambió algo dentro de la página (se
+  // plegaron las electivas), se reajusta salvo con el zoom del navegador; "force": "Ajustar a la pantalla".
+  const refitRef = useRef<(mode: RefitMode) => void>(() => {});
   useLayoutEffect(() => {
     const el = mapScrollRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     let frame = 0;
-    const measure = () => {
+    const measure = (mode: RefitMode) => {
       const w = el.clientWidth - MAP_PAD_X;
       if (w <= 0) return; // oculto (celular)
-      const section = el.parentElement!;
+      const bar = Math.max(0, el.offsetHeight - el.clientHeight);
+      setScrollbarH((prev) => (prev === bar ? prev : bar));
+      const now: ViewportSample = { dpr: window.devicePixelRatio || 1, width: window.innerWidth, height: window.innerHeight };
+      const fit = fitRef.current;
+      const sample = mode === "layout" && fit ? { ...now, width: fit.width, height: fit.height } : now;
+      if (mode !== "force" && !shouldRefit(fit, sample, zoomMemory !== null)) return;
+      fitRef.current = now;
+      const section = el.closest("section")!;
       const top = section.getBoundingClientRect().top + window.scrollY;
       const h = Math.floor(window.innerHeight - top - MAP_BOTTOM - MAP_PAD_Y);
       setMapAvailable((prev) => (prev === w ? prev : w));
       setMapAvailableH((prev) => (prev === h ? prev : h));
+      setFitViewH((prev) => (prev === now.height ? prev : now.height));
       if (!frame) frame = requestAnimationFrame(() => (frame = requestAnimationFrame(() => setMapAnimate(true))));
     };
-    const ro = new ResizeObserver(measure);
+    refitRef.current = measure;
+    const onChange = () => measure("auto");
+    const ro = new ResizeObserver(onChange);
     ro.observe(el);
     // El encabezado puede cambiar de alto (se acomoda en dos líneas, aparece un aviso): cambia la página.
     if (mainRef.current) ro.observe(mainRef.current);
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", onChange);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", onChange);
       cancelAnimationFrame(frame);
     };
   }, []);
+  // Plegar o abrir las electivas cambia el ancho del mapa: se reacomoda también con zoom manual.
+  useLayoutEffect(() => refitRef.current("layout"), [electivesOpen]);
+
+  // Zoom y arrastre ------------------------------------------------------------------
+  // El zoom actual en un ref, para los eventos seguidos de la rueda (antes de que se vuelva a dibujar).
+  const zoomState = useRef({ zoom: 1, scale: 1 });
+  const pendingScroll = useRef<{ left: number; top: number } | null>(null);
+  /** Cambia el zoom dejando quieto el punto del mapa bajo `point` (por defecto, el centro). */
+  const zoomAt = useCallback((next: number, point?: { x: number; y: number }) => {
+    const el = mapScrollRef.current;
+    if (!el) return;
+    const { zoom: from, scale: s } = zoomState.current;
+    const to = clampZoom(next);
+    if (to === from) return;
+    const x = point?.x ?? el.clientWidth / 2;
+    const y = point?.y ?? el.clientHeight / 2;
+    pendingScroll.current = {
+      left: zoomScrollFor(el.scrollLeft, x, MAP_INNER_X, s * from, s * to),
+      top: zoomScrollFor(el.scrollTop, y, MAP_INNER_Y, s * from, s * to),
+    };
+    zoomState.current = { zoom: to, scale: s };
+    setManualZoom(to);
+    // De vuelta en 100 %: si mientras tanto cambió la ventana, se reajusta (el zoom del navegador, no).
+    if (zoomMemory === null) refitRef.current("auto");
+  }, []);
+  const fitToScreen = () => {
+    pendingScroll.current = { left: 0, top: 0 };
+    zoomState.current = { ...zoomState.current, zoom: 1 };
+    setManualZoom(null);
+    refitRef.current("force");
+  };
+
+  // Ctrl/⌘ + rueda y el pellizco del panel táctil (que llega como rueda con Ctrl; en Safari, como
+  // gesto) acercan el mapa alrededor del cursor. Solo sobre el mapa: en el resto de la página sigue
+  // el zoom del navegador. La rueda sola desplaza como siempre.
+  useEffect(() => {
+    const el = mapScrollRef.current;
+    if (!el) return;
+    const pointIn = (clientX: number, clientY: number) => {
+      const r = el.getBoundingClientRect();
+      return { x: clientX - r.left, y: clientY - r.top };
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      zoomAt(wheelZoom(zoomState.current.zoom, e.deltaY, e.deltaMode), pointIn(e.clientX, e.clientY));
+    };
+    type Gesture = Event & { scale?: number; clientX?: number; clientY?: number };
+    let gestureFrom = 1;
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      gestureFrom = zoomState.current.zoom;
+    };
+    const onGestureChange = (e: Gesture) => {
+      e.preventDefault();
+      if (typeof e.scale !== "number") return;
+      const point = typeof e.clientX === "number" && typeof e.clientY === "number" ? pointIn(e.clientX, e.clientY) : undefined;
+      zoomAt(gestureFrom * e.scale, point);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("gesturestart", onGestureStart);
+    el.addEventListener("gesturechange", onGestureChange);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("gesturestart", onGestureStart);
+      el.removeEventListener("gesturechange", onGestureChange);
+    };
+  }, [zoomAt]);
+
+  // Arrastrar con el mouse sobre el fondo del mapa (no sobre las materias ni los botones) lo desplaza.
+  const drag = useRef<{ id: number; x: number; y: number; left: number; top: number; moved: boolean } | null>(null);
+  const onMapPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    if (el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1) return;
+    if ((e.target as Element).closest("button, a, input, [role='dialog'], [data-map-keep]")) return;
+    e.preventDefault(); // sin seleccionar texto mientras se arrastra
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop, moved: false };
+  };
+  const onMapPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (!d.moved) {
+      if (Math.hypot(dx, dy) <= DRAG_SLOP) return;
+      d.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      e.currentTarget.classList.add("cursor-grabbing");
+    }
+    e.currentTarget.scrollLeft = d.left - dx;
+    e.currentTarget.scrollTop = d.top - dy;
+  };
+  const onMapPointerEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!drag.current || drag.current.id !== e.pointerId) return;
+    drag.current = null;
+    e.currentTarget.classList.remove("cursor-grabbing");
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  };
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
@@ -357,16 +516,30 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   // Tocar cualquier otra parte de la pantalla cierra la ficha (antes solo la cruz o Escape, y
   // parecía trabada). No la cierran la ficha misma, las materias (tocar otra cambia de ficha;
   // tocar la misma la cierra con su propio clic), el panel de electivas ni la hoja del celular.
+  // Se cierra al soltar, y solo si fue un clic: arrastrar el mapa ampliado no cuenta como tocar afuera.
   const hasSel = sel !== null;
   useEffect(() => {
     if (!hasSel) return;
+    let down: { x: number; y: number } | null = null;
     const onDown = (e: PointerEvent) => {
       const target = e.target as Element | null;
-      if (!target || target.closest("[data-map-keep], [role='dialog']")) return;
-      close();
+      down = !target || target.closest("[data-map-keep], [role='dialog']") ? null : { x: e.clientX, y: e.clientY };
+    };
+    const onUp = (e: PointerEvent) => {
+      if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) <= DRAG_SLOP) close();
+      down = null;
+    };
+    const onCancel = () => {
+      down = null;
     };
     document.addEventListener("pointerdown", onDown);
-    return () => document.removeEventListener("pointerdown", onDown);
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onCancel);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onCancel);
+    };
   }, [hasSel]);
 
   // Geometría ----------------------------------------------------------------------
@@ -376,6 +549,23 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
   // Escalado (solo si ni el alto mínimo entra): el ancho se calcula para el mapa sin escalar.
   const { nodeW, col, off, width } = mapGeometry(mapAvailable === null ? null : mapAvailable / scale, terms.length, cbcOpen);
   const move = mapAnimate ? MOVE : "transition-opacity";
+  // Zoom libre: la vista ajustada (scale) por el zoom elegido a mano.
+  const zoom = manualZoom ?? 1;
+  const mapZoom = scale * zoom;
+  const fitCardH = Math.ceil(height * scale) + MAP_PAD_Y;
+  const zoomCardH = Math.ceil(height * mapZoom) + MAP_PAD_Y + scrollbarH;
+  // Ampliado, la tarjeta crece hasta el alto de la ventana y adentro se recorre en los dos sentidos.
+  const cardH = zoom <= 1 ? zoomCardH : Math.min(zoomCardH, Math.max(fitCardH, (fitViewH ?? 0) - 2 * MAP_BOTTOM));
+  useLayoutEffect(() => {
+    zoomState.current = { zoom, scale };
+    // Después de cambiar el zoom, el desplazamiento que deja quieto el punto bajo el cursor.
+    const target = pendingScroll.current;
+    const el = mapScrollRef.current;
+    if (!target || !el) return;
+    pendingScroll.current = null;
+    el.scrollLeft = target.left;
+    el.scrollTop = target.top;
+  }, [zoom, scale]);
   const positions = new Map<string, { x: number; y: number }>();
   if (cbcOpen) cbc.forEach((it, r) => positions.set(it.key, { x: 0, y: TOP + r * row }));
   terms.forEach((t, j) => t.items.forEach((it, r) => positions.set(it.key, { x: (j + 1) * col - off, y: TOP + r * row })));
@@ -492,7 +682,12 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
         </button>
       )}
 
-      <Legend />
+      {/* En escritorio, el zoom del mapa va a la derecha de las referencias, sobre la esquina de la tarjeta
+          (flotando sobre el mapa taparía materias). */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Legend />
+        <ZoomControl zoom={zoom} onZoom={(dir) => zoomAt(stepZoom(zoom, dir))} onFit={fitToScreen} />
+      </div>
 
       {siuOpen && (
         <HistoryImport
@@ -597,14 +792,22 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
       <section
         aria-label="Plan de estudios"
         className="relative hidden rounded-2xl md:flex border border-line bg-surface"
-        style={{ height: Math.ceil(height * scale) + MAP_PAD_Y }}
+        style={{ height: cardH }}
       >
-        {/* Solo se desplaza a lo ancho: si también pudiera a lo alto (la barra horizontal de Windows le come
-            ~15 px), la rueda del mouse sobre el mapa movería esos píxeles en vez de bajar la página. */}
-        <div ref={mapScrollRef} className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden px-3 py-4">
-          {/* Si ni el alto mínimo entra, el mapa entero se escala con zoom (que también achica el lugar
-              que ocupa), nunca por debajo de MIN_SCALE. */}
-          <div className="relative" style={{ width, height, zoom: scale < 1 ? scale : undefined }}>
+        {/* En la vista ajustada solo se desplaza a lo ancho: si también pudiera a lo alto (la barra horizontal
+            de Windows le come ~15 px), la rueda del mouse sobre el mapa movería esos píxeles en vez de bajar
+            la página. Ampliado, se recorre en los dos sentidos (rueda, barras o arrastrando el fondo). */}
+        <div
+          ref={mapScrollRef}
+          onPointerDown={onMapPointerDown}
+          onPointerMove={onMapPointerMove}
+          onPointerUp={onMapPointerEnd}
+          onPointerCancel={onMapPointerEnd}
+          className={`min-w-0 flex-1 overflow-x-auto px-3 py-4 ${zoom > 1 ? "cursor-grab overflow-y-auto" : "overflow-y-hidden"}`}
+        >
+          {/* El mapa se escala con zoom (que también cambia el lugar que ocupa): la vista ajustada (si ni el
+              alto mínimo entra, nunca por debajo de MIN_SCALE) por el zoom elegido a mano. */}
+          <div className="relative" style={{ width, height, zoom: mapZoom !== 1 ? mapZoom : undefined }}>
             {/* Columnas */}
             <div className={`absolute top-0 bottom-0 rounded-xl bg-map-cbc-col ${move}`} style={{ left: 0, width: cbcOpen ? nodeW + 5 : CBC_CLOSED_W + 5 }} />
             {terms.map((t, j) => (
@@ -687,7 +890,7 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
             })}
 
             {selItem && selPos && !selIsElective && (
-              <Popover x={selPos.x} y={selPos.y} nodeW={nodeW} containerWidth={width} containerHeight={height}>
+              <Popover x={selPos.x} y={selPos.y} nodeW={nodeW} containerWidth={width} containerHeight={height} reveal={zoom > 1}>
                 <SubjectCard
                   item={selItem}
                   progress={progress}
@@ -927,15 +1130,64 @@ function MapNode(props: {
   );
 }
 
+/**
+ * Zoom del mapa (escritorio): "−", el porcentaje (100 % = todo en la pantalla), "+" y volver a la
+ * vista ajustada. No pasa del alto de las referencias, así la primera vista no cambia.
+ */
+function ZoomControl(props: { zoom: number; onZoom: (dir: 1 | -1) => void; onFit: () => void }) {
+  const { zoom, onZoom, onFit } = props;
+  const step = "grid size-6 place-items-center rounded-full text-base leading-none hover:bg-bg disabled:opacity-40 disabled:hover:bg-transparent";
+  const percent = `${Math.round(zoom * 100)} %`;
+  return (
+    <div
+      role="group"
+      aria-label="Zoom del mapa"
+      data-map-keep
+      className="hidden h-7 items-center gap-0.5 rounded-full border border-line bg-surface px-0.5 text-ink md:flex"
+    >
+      <button type="button" aria-label="Alejar el mapa" title="Alejar (Ctrl + rueda)" disabled={zoom <= ZOOM_MIN} onClick={() => onZoom(-1)} className={step}>
+        <span aria-hidden="true">−</span>
+      </button>
+      <output aria-live="polite" aria-label={`Zoom ${percent}`} className="w-11 text-center text-xs font-semibold tabular-nums">
+        {percent}
+      </output>
+      <button type="button" aria-label="Acercar el mapa" title="Acercar (Ctrl + rueda)" disabled={zoom >= ZOOM_MAX} onClick={() => onZoom(1)} className={step}>
+        <span aria-hidden="true">+</span>
+      </button>
+      <span aria-hidden="true" className="mx-0.5 h-4 border-l border-line" />
+      <button
+        type="button"
+        disabled={zoom === 1}
+        onClick={onFit}
+        className="h-6 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap hover:bg-bg disabled:text-muted disabled:hover:bg-transparent"
+      >
+        Ajustar a la pantalla
+      </button>
+    </div>
+  );
+}
+
 /** Ficha flotante al lado de la materia; se corre para no salirse del mapa. */
-function Popover(props: { x: number; y: number; nodeW: number; containerWidth: number; containerHeight: number; children: ReactNode }) {
-  const { x, y, nodeW, containerWidth, containerHeight, children } = props;
+function Popover(props: {
+  x: number;
+  y: number;
+  nodeW: number;
+  containerWidth: number;
+  containerHeight: number;
+  /** Mapa ampliado: si la ficha queda fuera de la vista, se desplaza lo justo para mostrarla. */
+  reveal: boolean;
+  children: ReactNode;
+}) {
+  const { x, y, nodeW, containerWidth, containerHeight, reveal, children } = props;
   const ref = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(y);
   useLayoutEffect(() => {
     const h = ref.current?.offsetHeight ?? 0;
     setTop(Math.max(6, Math.min(y, containerHeight - h - 6)));
   }, [y, containerHeight, children]);
+  useEffect(() => {
+    if (reveal) ref.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [reveal, x, y]);
   const left = x + nodeW + 12 + 240 > containerWidth ? x - 252 : x + nodeW + 12;
   return (
     <div ref={ref} data-map-keep className="absolute z-40" style={{ left, top }}>
