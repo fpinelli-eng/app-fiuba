@@ -18,10 +18,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },
   experimental: {
-    // Las secciones del menú se precargan enteras (prefetch del Header) y se reusan hasta 10 min.
-    // No llegan a vencer: el Header las renueva cada 4 min, y guardar algo las refresca al
-    // instante (router.refresh / revalidatePath).
-    staleTimes: { static: 600 },
+    // Una sección precargada al pasar el mouse o apoyar el dedo (Header.tsx) sirve por 60 s. Corto a
+    // propósito: el mapa ya no refresca las otras secciones al guardar, así que una precarga vieja
+    // podría mostrar datos de antes de un cambio.
+    staleTimes: { static: 60 },
   },
 };
 

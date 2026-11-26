@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -163,28 +162,11 @@ export function CareerMapView({ userId, data, firstLoad }: Props) {
     };
   }, []);
   const supabase = useMemo(() => createClient(), []);
-  const router = useRouter();
 
-  // Las otras secciones (Inicio, Plan) quedan precargadas con los datos de antes del cambio:
-  // después de guardar, se pide refrescarlas. Se agrupan los cambios seguidos en un solo pedido.
-  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const refreshSoon = useCallback(() => {
-    if (refreshTimer.current) clearTimeout(refreshTimer.current);
-    refreshTimer.current = setTimeout(() => {
-      refreshTimer.current = null;
-      router.refresh();
-    }, 800);
-  }, [router]);
-  useEffect(
-    () => () => {
-      // Si se va del mapa con un refresco pendiente, se hace ya.
-      if (refreshTimer.current) {
-        clearTimeout(refreshTimer.current);
-        router.refresh();
-      }
-    },
-    [router],
-  );
+  // Las otras secciones (Inicio, Plan) ya no quedan precargadas con datos (ver Header.tsx): se arman
+  // de nuevo al entrar, así que guardar en el mapa no tiene que refrescar nada. Antes cada pausa al
+  // cargar el mapa volvía a armar en el servidor todas las secciones, y eso gastaba CPU de Vercel.
+  const refreshSoon = useCallback(() => {}, []);
 
   // Cálculos ------------------------------------------------------------------
 
