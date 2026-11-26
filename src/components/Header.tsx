@@ -10,12 +10,13 @@ import { Avatar } from "@/components/Avatar";
 import { NavIcon } from "@/components/icons";
 import type { Profile } from "@/lib/auth";
 
-// Las secciones del menú quedan precargadas (prefetch de los links) y vencen a los 10 minutos
-// (next.config.ts). Antes se renovaban solas cada 4 minutos con la pestaña a la vista: con muchos
-// alumnos con la web abierta eran cientos de consultas por minuto a la base sin que nadie tocara
-// nada (el 19/11 la base se quedó sin memoria). Ahora solo se renuevan al volver a la pestaña
-// después de un rato (por si algo cambió desde otro dispositivo); si vencieron, el link carga
-// la sección al tocarlo, como cualquier página.
+// Las secciones del menú NO se precargan al abrir la página: cada precarga es una función de Vercel
+// que arma la sección entera, y con todas las secciones precargadas en cada visita (y otra vez después
+// de cada cambio guardado) el plan gratis se quedaba sin horas de CPU (noviembre de 2026: 3 h 52 min de
+// 4 h en 30 días). Ahora se precarga solo la sección que el alumno está por tocar: al pasar el mouse,
+// al apoyar el dedo o al llegar con el teclado (`intent` abajo), y mientras tanto se ve el esqueleto
+// de loading.tsx. Al volver a la pestaña después de un rato se refresca la sección abierta, por si
+// algo cambió desde otro dispositivo.
 const RENEW_AFTER_AWAY_MS = 10 * 60 * 1000;
 
 function useFreshPrefetches() {
@@ -39,7 +40,13 @@ function useFreshPrefetches() {
 // Novedades como ícono y avatar) y las secciones principales pasan a la barra de pestañas de abajo.
 export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profile: Profile; pendingReviews?: number; isAdmin?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
   useFreshPrefetches();
+  // Precarga la sección solo cuando el alumno muestra intención de ir (ver el comentario de arriba).
+  const intent = (href: string) => {
+    const go = () => router.prefetch(href);
+    return { prefetch: false, onPointerEnter: go, onTouchStart: go, onFocus: go } as const;
+  };
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
   const badge = (href: string) => (href === "/resenas" ? pendingReviews : 0);
@@ -47,7 +54,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
   return (
     <>
       <header className="flex min-h-[56px] print:hidden items-center justify-between gap-3 bg-header px-4 md:min-h-[72px] md:gap-6 md:px-8">
-        <Link href="/" className="-my-1.5 py-1.5">
+        <Link href="/" {...intent("/")} className="-my-1.5 py-1.5">
           <Logo className="h-[15px] md:h-[16px]" />
         </Link>
 
@@ -58,9 +65,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
               <Link
                 key={item.href}
                 href={item.href}
-                // Precarga la sección entera (con sus datos), así el clic la muestra al instante.
-                // Lo que se guarda en el mapa, el plan o las reseñas refresca estas precargas.
-                prefetch
+                {...intent(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={`relative py-2 ${active ? "font-semibold text-ink" : "text-muted hover:text-ink"}`}
               >
@@ -101,7 +106,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch
+                {...intent(item.href)}
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
                 className={`flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 md:hidden ${
@@ -124,7 +129,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
           <div className="hidden md:contents">
             <ThemeToggle />
           </div>
-          <Link href="/perfil" aria-label="Mi perfil" className="rounded-full">
+          <Link href="/perfil" {...intent("/perfil")} aria-label="Mi perfil" className="rounded-full">
             <Avatar profile={profile} size={40} />
           </Link>
         </div>
@@ -143,7 +148,7 @@ export function Header({ profile, pendingReviews = 0, isAdmin = false }: { profi
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch
+                {...intent(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={`flex flex-col items-center justify-center gap-0.5 text-[11px] leading-tight ${
                   active ? "font-semibold text-ink" : "text-muted"

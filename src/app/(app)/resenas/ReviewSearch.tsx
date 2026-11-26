@@ -121,6 +121,8 @@ export function ReviewSearch({ subjects, planLabel, pending }: Props) {
                   <Link
                     key={c.courseId}
                     href={`/resenas/curso/${c.courseId}`}
+                    // Sin precarga: la lista tiene decenas de cursos y cada uno era una función de Vercel.
+                    prefetch={false}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-bg md:gap-4 md:px-[22px] md:py-2.5"
                   >
                     <div className="min-w-0 flex-auto">
