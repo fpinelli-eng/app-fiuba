@@ -1,6 +1,6 @@
 # Recordatorios de finales ("Recordarme")
 
-En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Por cada mesa le llega un mail a su cuenta @fi.uba.ar (o al otro mail que elija en Recordarme) cuando abre la inscripción (decisión de Francisco en #114, confirmada por Tomás: sin mail del último día). El diálogo solo ofrece mesas con la inscripción por abrir.
+En Finales, el alumno toca **Recordarme**, tilda las mesas que quiere y toca **Aceptar**. Se guardan en `exam_reminders` (migración `20261113150000_exam_reminders.sql`). Le llega un mail a su cuenta @fi.uba.ar (o al otro mail que elija en Recordarme) cuando abre la inscripción. Es **un mail por alumno**: si ese día le abren varias inscripciones, van todas juntas ("Abrió la inscripción a 3 de tus finales"), incluidas las que abren más tarde ese mismo día ("Abre hoy a las 18:00"), así nunca recibe dos mails el mismo día (`mailGroups_()` en `Code.gs`) (decisión de Francisco en #114, confirmada por Tomás: sin mail del último día). El diálogo solo ofrece mesas con la inscripción por abrir.
 
 Los mails salen de la cuenta de Google del proyecto, **avisosfiubi@gmail.com**, con un Apps Script pegado en una planilla de esa cuenta. No depende de GitHub Actions.
 
@@ -10,7 +10,7 @@ Una vez por hora, el script (`apps-script/Code.gs`, función `hourly`):
 
 1. Le pregunta a la base qué recordatorios hay y a cuáles les toca el mail ahora (`avisos_pendientes()`, migración `20261114120000_avisos_rpc.sql`). La base vuelve a leer cada mesa en `exam_tables` por materia, nombre, tipo y fecha (la sincronización diaria del SIU cambia los ids): si el SIU movió la inscripción, usa las fechas nuevas. De paso borra los recordatorios de exámenes que ya pasaron.
 2. Desde las 8 de la mañana manda los mails que tocan y, después de **cada** mail, lo marca en la base (`avisos_marcar_enviado()`). La base no lo vuelve a ofrecer nunca, aunque alguien toque la planilla.
-3. Reescribe la pestaña **Recordatorios** de la planilla con todos los recordatorios: es solo una copia para mirar. Editarla no cambia nada. También reescribe la pestaña **Panel**: cuántos mails tocan cada día contra el límite diario (290 con Brevo, unos 100 con Gmail), cuáles se atrasan y si alguno no llegaría antes del cierre de la inscripción. Arriba lista los **mails de hoy**, uno por uno, con su estado: enviado, pendiente, sin cupo o falló, con el motivo. Si un mail falla, o se termina el cupo del día con mails por mandar, el script avisa por mail a `ALERT_TO`, una sola vez por mail y por día. Si lo que falla es Brevo, el aviso sale por Gmail.
+3. Reescribe la pestaña **Recordatorios** de la planilla con todos los recordatorios: es solo una copia para mirar. Editarla no cambia nada. También reescribe la pestaña **Panel**: cuántos mails tocan cada día (uno por alumno) contra el límite diario (290 con Brevo, unos 100 con Gmail), cuáles se atrasan y si alguno no llegaría antes del cierre de la inscripción. Arriba lista los **mails de hoy**, uno por uno, con su estado: enviado, pendiente, sin cupo o falló, con el motivo. Si un mail falla, o se termina el cupo del día con mails por mandar, el script avisa por mail a `ALERT_TO`, una sola vez por mail y por día. Si lo que falla es Brevo, el aviso sale por Gmail.
 
 Reglas (están en la base, con pruebas en `tools/db-test/security.sql`):
 
@@ -148,4 +148,4 @@ Los mails de avisosfiubi@gmail.com a cuentas @fi.uba.ar suelen caer en Spam. Si 
 - `BREVO_SENDER` (opcional) cambia el remitente; tiene que ser de un dominio verificado en Brevo.
 - Plan gratis: 300 mails por día. El script cuenta hasta 290 por día (`BREVO_SENT_<fecha>` en las propiedades) y deja el resto para la corrida siguiente. Lleva "Sent with Brevo" al pie.
 - Si Brevo rechaza un mail, ese mail no se marca como enviado y se reintenta en la próxima corrida.
-- Para probar: cargá la clave y ejecutá **sendTestMail** (o **sendTestConfirmMail**). Llega desde avisos@fiubi.com.ar.
+- Para probar: cargá la clave y ejecutá **sendTestMail** (un final), **sendTestDigestMail** (varios finales en un mail) o **sendTestConfirmMail**. Llega desde avisos@fiubi.com.ar.
