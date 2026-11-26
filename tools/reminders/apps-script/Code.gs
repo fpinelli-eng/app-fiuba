@@ -4,7 +4,9 @@
  * This file is pasted into the Apps Script of a Google Sheet of avisosfiubi@gmail.com
  * (Extensions → Apps Script). Step-by-step guide: tools/reminders/README.md in the repo.
  *
- * One mail per reminder, when the enrollment opens. Every hour, hourly():
+ * One mail per student, when the enrollment opens: every reminder of that student due now goes in the
+ * same mail, and so do their reminders whose enrollment opens later the same day ("Abre hoy a las
+ * 18:00"), so a student never gets two mails for one day (mailGroups_()). Every hour, hourly():
  *   1. asks the database which reminders exist and whose mail is due now
  *      (avisos_pendientes(), migration 20261114120000_avisos_rpc.sql; it also deletes the
  *      reminders whose exam already happened);
@@ -34,7 +36,7 @@
  *                 hourly() starts the "Fechas de examen del SIU" workflow once a day from 06:00
  *                 (GitHub's own schedule is delayed for hours or skipped). See examsDispatch_().
  *
- * Functions to run by hand (Run ▸): sendTestMail, createToken, syncSheet, installTriggers,
+ * Functions to run by hand (Run ▸): sendTestMail, sendTestDigestMail, createToken, syncSheet, installTriggers,
  * probarFechasExamen.
  * The ones ending in "_" are internal. The pure ones (no Google services) are tested in the repo
  * (src/lib/reminders/apps-script.test.ts), which also regenerates preview.html.
@@ -149,7 +151,7 @@ function hourly() {
       }
       writeSheet_(rows);
       panelSafe_(rows);
-      Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Quedan para la próxima: ' + result.left + '.');
+      Logger.log('Recordatorios: ' + rows.length + '. Mails enviados: ' + result.sent + '. Mails que quedan para la próxima: ' + result.left + '.');
     });
   } catch (e) {
     failure = e;
@@ -238,6 +240,14 @@ function sendTestMail() {
   var mail = buildMail_(sampleRow_());
   deliverMail_({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
   Logger.log('Listo: se mandó un mail de prueba a ' + to + '.');
+}
+
+/** Sends the mail of several finals (one opens later today) with sample data to the account running the script. */
+function sendTestDigestMail() {
+  var to = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail();
+  var mail = buildRemindersMail_(sampleDigestItems_());
+  deliverMail_({ to: to, subject: '[Prueba] ' + mail.subject, body: mail.text, htmlBody: mail.html, name: 'FIUBI' });
+  Logger.log('Listo: se mandó un mail de prueba con varios finales a ' + to + '.');
 }
 
 /** Sends the confirmation mail with sample data to the account running the script. Touches nothing else. */
@@ -370,43 +380,60 @@ function fetchReminders_() {
   throw new Error('Demasiados recordatorios: más de ' + all.length + '.');
 }
 
-/** Sends the due mails, within the daily quota of the account. Returns counts. */
+/**
+ * Sends the due mails, one per student (mailGroups_()), within the daily quota of the account.
+ * Returns counts: sent and left are mails; noQuota is reminders still due when the quota ran out.
+ */
 function sendRows_(rows) {
-  var due = dueRows_(rows);
+  if (!dueRows_(rows).length) return { sent: 0, left: 0, failed: [], noQuota: 0 };
+  var now = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
+  var groups = mailGroups_(rows, now);
   var sent = 0;
   var failed = [];
   var noQuota = 0;
-  if (!due.length) return { sent: 0, left: 0, failed: failed, noQuota: 0 };
+  if (!groups.length) return { sent: 0, left: 0, failed: failed, noQuota: 0 };
   // First check that marking works (reminder 0 does not exist: it answers false). If it did not,
   // the same students would get the same mail every hour.
   rpc_('avisos_marcar_enviado', { p_reminder_id: 0 });
   var failures = loadFailures_();
-  for (var i = 0; i < due.length; i++) {
+  for (var i = 0; i < groups.length; i++) {
     if (mailQuota_() < 1) {
-      noQuota = due.length - i; // the rest go next time (tomorrow, if the daily limit is spent)
+      // The rest go next time (tomorrow, if the daily limit is spent).
+      for (var k = i; k < groups.length; k++) noQuota += groups[k].items.length;
       break;
     }
-    var row = due[i];
-    var mail = buildMail_(row);
-    if (!sendMail_(row.email, mail)) {
+    var group = groups[i];
+    var mail = buildRemindersMail_(group.items);
+    if (!sendMail_(group.email, mail)) {
       // A rejected address never blocks the others. It stays due, so it is tried again next hour;
       // the admins hear about it only the first time each day.
-      if (!failures[row.reminder_id]) failed.push({ row: row, error: lastMailError_ });
-      failures[row.reminder_id] = { error: lastMailError_, at: Utilities.formatDate(new Date(), TIME_ZONE, 'HH:mm') };
+      group.items.forEach(function (it) {
+        var id = it.row.reminder_id;
+        if (!failures[id]) failed.push({ row: it.row, error: lastMailError_ });
+        failures[id] = { error: lastMailError_, at: Utilities.formatDate(new Date(), TIME_ZONE, 'HH:mm') };
+      });
       saveFailures_(failures);
       continue;
     }
-    if (failures[row.reminder_id]) {
-      delete failures[row.reminder_id];
-      saveFailures_(failures);
-    }
-    // Right after each mail. If marking fails, stop here: at most this one could go twice.
-    rpc_('avisos_marcar_enviado', { p_reminder_id: row.reminder_id });
-    row.sent_at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
-    row.due = false;
+    var cleared = false;
+    group.items.forEach(function (it) {
+      if (failures[it.row.reminder_id]) {
+        delete failures[it.row.reminder_id];
+        cleared = true;
+      }
+    });
+    if (cleared) saveFailures_(failures);
+    // Right after the mail, every reminder in it (also the ones that open later today: they were
+    // announced). If marking fails, stop here: at most this mail could go twice.
+    var at = Utilities.formatDate(new Date(), TIME_ZONE, 'yyyy-MM-dd HH:mm');
+    group.items.forEach(function (it) {
+      rpc_('avisos_marcar_enviado', { p_reminder_id: it.row.reminder_id });
+      it.row.sent_at = at;
+      it.row.due = false;
+    });
     sent++;
   }
-  return { sent: sent, left: due.length - sent, failed: failed, noQuota: noQuota };
+  return { sent: sent, left: groups.length - sent, failed: failed, noQuota: noQuota };
 }
 
 function todayKey_(prefix) {
@@ -563,6 +590,47 @@ function dueRows_(rows) {
   });
 }
 
+/**
+ * The mails to send now, one per address: its due reminders plus that student's reminders whose
+ * enrollment opens later today (later: true; still unsent, announced as "Abre hoy a las …").
+ * now: 'YYYY-MM-DD HH:MM', Buenos Aires. Inside a mail, the ones that close first go first, and the
+ * mails whose first reminder closes soonest go first (they matter most when the quota runs out).
+ */
+function mailGroups_(rows, now) {
+  var today = now.slice(0, 10);
+  var byEmail = {};
+  var order = [];
+  dueRows_(rows).forEach(function (r) {
+    var key = String(r.email).toLowerCase();
+    if (!byEmail[key]) {
+      byEmail[key] = { email: r.email, items: [] };
+      order.push(key);
+    }
+    byEmail[key].items.push({ row: r, later: false });
+  });
+  rows.forEach(function (r) {
+    var group = byEmail[String(r.email || '').toLowerCase()];
+    if (!group || r.due === true || r.sent_at || r.aviso !== today) return;
+    if (!r.enroll_from || !r.enroll_to || String(r.enroll_from) <= now || String(r.enroll_to) <= now) return;
+    group.items.push({ row: r, later: true });
+  });
+  // Closes first, then the exam first, then by name (with accents: "Álgebra" before "Física").
+  var compare = function (a, b) {
+    var x = String(a.row.enroll_to || '9999') + ' ' + String(a.row.exam_date || '');
+    var y = String(b.row.enroll_to || '9999') + ' ' + String(b.row.exam_date || '');
+    if (x !== y) return x < y ? -1 : 1;
+    return String(a.row.subject_name || '').localeCompare(String(b.row.subject_name || ''), 'es');
+  };
+  var groups = order.map(function (key) {
+    var g = byEmail[key];
+    g.items.sort(compare);
+    return g;
+  });
+  return groups.sort(function (a, b) {
+    return compare(a.items[0], b.items[0]);
+  });
+}
+
 /** Confirmations to send: a plain address and at least one mesa. */
 function confirmRows_(rows) {
   return rows.filter(function (r) {
@@ -606,9 +674,10 @@ function lastSendDay_(enrollTo) {
 
 /**
  * The "Panel" tab: how many reminder mails each day needs, against the daily limit. One mail per
- * reminder on its aviso day; what does not fit waits for the next day (those that close first go
- * first), and those whose enrollment closes before their turn are lost. Today uses what is left of
- * today's quota. Returns the lines and which ones to paint (0-based).
+ * student and day (mailGroups_() puts all of a student's reminders of a day in one mail); what does
+ * not fit waits for the next day (those that close first go first), and those whose enrollment closes
+ * before their turn are lost. Today uses what is left of today's quota. Returns the lines and which
+ * ones to paint (0-based).
  */
 function panelValues_(rows, today, capacity, leftToday, failures, hour) {
   failures = failures || {};
@@ -629,8 +698,15 @@ function panelValues_(rows, today, capacity, leftToday, failures, hour) {
     var last = lastSendDay_(String(r.enroll_to));
     if (last < today) return; // its enrollment already closed
     var day = r.aviso < today ? today : r.aviso; // overdue: it goes as soon as possible
-    (byDay[day] = byDay[day] || []).push(last);
-    pending++;
+    // One mail per student and day: it goes while the first of its enrollments to close is open.
+    var mails = (byDay[day] = byDay[day] || {});
+    var key = String(r.email).toLowerCase();
+    if (mails[key] === undefined) pending++;
+    mails[key] = mails[key] === undefined || last < mails[key] ? last : mails[key];
+  });
+  Object.keys(byDay).forEach(function (d) {
+    var mails = byDay[d];
+    byDay[d] = Object.keys(mails).map(function (k) { return mails[k]; });
   });
 
   var days = Object.keys(byDay).sort();
@@ -713,6 +789,7 @@ function panelValues_(rows, today, capacity, leftToday, failures, hour) {
   }
   if (!any) lines.push(['Todavía no se mandó ninguno.']);
   lines.push([]);
+  lines.push(['Un mail por alumno y día: si a un alumno le abren varias inscripciones el mismo día, van todas en un mail.']);
   lines.push(['Cuenta solo los recordatorios. Las confirmaciones ("Activaste tus recordatorios") usan el mismo límite.']);
   return { lines: lines, bold: bold, warn: warn, ok: ok };
 }
@@ -839,30 +916,66 @@ function capitalize_(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/**
- * The mail of one reminder: the enrollment opened.
- * Email-safe HTML (tables and inline styles, 560 px, light) plus a plain-text version.
- */
+/** The mail of one reminder: the enrollment opened. */
 function buildMail_(r) {
-  var subject = 'Abrió la inscripción al final de ' + r.subject_name;
-  var band = 'Abrió la inscripción';
-  var lead = 'Ya te podés anotar en el SIU.';
+  return buildRemindersMail_([{ row: r, later: false }]);
+}
+
+/** Examen, Mesa and Inscripción of one reminder in the mail. */
+function reminderDetails_(it) {
+  var r = it.row;
   var time = timeRange_(r.start_time, r.end_time);
   var exam = capitalize_(longDay_(r.exam_date)) + (time ? ', ' + time : '');
-  var until = r.enroll_to ? 'Te podés anotar hasta ' + deadline_(r.enroll_to) + '.' : 'Revisá la fecha de cierre en el SIU.';
-  var details = [['Examen', exam], ['Mesa', tableLabel_(r)], ['Inscripción', until]];
+  var enroll;
+  if (it.later) {
+    enroll = 'Abre hoy a las ' + String(r.enroll_from).slice(11, 16) + (r.enroll_to ? ' y cierra ' + deadline_(r.enroll_to) + '.' : '.');
+  } else {
+    enroll = r.enroll_to ? 'Te podés anotar hasta ' + deadline_(r.enroll_to) + '.' : 'Revisá la fecha de cierre en el SIU.';
+  }
+  return [['Examen', exam], ['Mesa', tableLabel_(r)], ['Inscripción', enroll]];
+}
+
+/**
+ * The reminders mail of one student: one or more finals whose enrollment opened (or opens later
+ * today). items: [{row, later}], as mailGroups_() gives them. With one final it reads "Final de …";
+ * with several, "3 de tus finales" and one block per final.
+ * Email-safe HTML (tables and inline styles, 560 px, light) plus a plain-text version.
+ */
+function buildRemindersMail_(items) {
+  var one = items.length === 1;
+  var n = items.length;
+  var anyLater = items.some(function (it) { return it.later; });
+  var first = items[0].row;
+  var subject = one
+    ? 'Abrió la inscripción al final de ' + first.subject_name
+    : (anyLater ? 'Hoy abre la inscripción a ' : 'Abrió la inscripción a ') + n + ' de tus finales';
+  var band = 'Abrió la inscripción';
+  var lead = 'Ya te podés anotar en el SIU.';
+  var kicker = one ? 'Final de' : 'Inscripción a';
+  var title = one ? first.subject_name : n + ' de tus finales';
+  var blocks = items.map(function (it) { return { name: it.row.subject_name, details: reminderDetails_(it) }; });
+  var preheader = one
+    ? lead + ' ' + blocks[0].details[2][1]
+    : lead + ' ' + items.map(function (it) { return it.row.subject_name; }).join(', ') + '.';
   var footer = [
-    'Te llega porque pediste un recordatorio en FIUBI. Para dejar de recibirlo, sacalo en Finales → Recordarme.',
+    one
+      ? 'Te llega porque pediste un recordatorio en FIUBI. Para dejar de recibirlo, sacalo en Finales → Recordarme.'
+      : 'Te llega porque pediste recordatorios en FIUBI. Para dejar de recibirlos, sacalos en Finales → Recordarme.',
     'Hecho por estudiantes, no es un sitio oficial de la universidad.',
   ];
 
-  var text = [
-    band.toUpperCase(),
-    '',
-    'Final de ' + r.subject_name,
-    lead,
-    '',
-  ].concat(details.map(function (d) { return d[0] + ': ' + d[1]; })).concat([
+  var text = [band.toUpperCase(), ''];
+  if (one) {
+    text.push('Final de ' + first.subject_name, lead, '');
+    blocks[0].details.forEach(function (d) { text.push(d[0] + ': ' + d[1]); });
+  } else {
+    text.push(title, lead);
+    blocks.forEach(function (b) {
+      text.push('', 'Final de ' + b.name);
+      b.details.forEach(function (d) { text.push(d[0] + ': ' + d[1]); });
+    });
+  }
+  text = text.concat([
     '',
     'Anotarme en el SIU: ' + LINKS.siu,
     'Ver mis finales en FIUBI: ' + LINKS.finales,
@@ -872,13 +985,23 @@ function buildMail_(r) {
 
   var c = { band: '#dff2e9', bandInk: '#245c48', bandLine: '#bfe3d1' }; // mint, as the app
   var font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-  var detailRows = details.map(function (d, i) {
-    var border = i < details.length - 1 ? 'border-bottom:1px solid #e6e9f0;' : '';
-    return '<tr>' +
-      '<td style="padding:12px 16px;' + border + 'font-family:' + font + ';font-size:13px;line-height:20px;color:#5e667a;width:96px;vertical-align:top;">' + escape_(d[0]) + '</td>' +
-      '<td style="padding:12px 16px 12px 0;' + border + 'font-family:' + font + ';font-size:15px;line-height:22px;color:#1f2537;font-weight:600;vertical-align:top;">' + escape_(d[1]) + '</td>' +
-      '</tr>';
-  }).join('');
+  var card = function (details) {
+    var detailRows = details.map(function (d, i) {
+      var border = i < details.length - 1 ? 'border-bottom:1px solid #e6e9f0;' : '';
+      return '<tr>' +
+        '<td style="padding:12px 16px;' + border + 'font-family:' + font + ';font-size:13px;line-height:20px;color:#5e667a;width:96px;vertical-align:top;">' + escape_(d[0]) + '</td>' +
+        '<td style="padding:12px 16px 12px 0;' + border + 'font-family:' + font + ';font-size:15px;line-height:22px;color:#1f2537;font-weight:600;vertical-align:top;">' + escape_(d[1]) + '</td>' +
+        '</tr>';
+    }).join('');
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f7fa;border:1px solid #e6e9f0;border-radius:12px;border-collapse:separate;">' +
+      detailRows + '</table>';
+  };
+  var body = one
+    ? '<tr><td style="padding:0 28px 24px 28px;">' + card(blocks[0].details) + '</td></tr>'
+    : blocks.map(function (b) {
+      return '<tr><td style="padding:0 28px 8px 28px;font-family:' + font + ';font-size:18px;line-height:24px;font-weight:700;color:#1f2537;">' + escape_(b.name) + '</td></tr>' +
+        '<tr><td style="padding:0 28px 20px 28px;">' + card(b.details) + '</td></tr>';
+    }).join('') + '<tr><td style="padding:0 0 4px 0;"></td></tr>';
 
   var html =
     '<!doctype html><html lang="es"><head><meta charset="utf-8">' +
@@ -887,7 +1010,7 @@ function buildMail_(r) {
     '<title>' + escape_(subject) + '</title></head>' +
     '<body style="margin:0;padding:0;background-color:#f6f7fa;">' +
     // Preview line in the inbox, hidden in the mail.
-    '<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">' + escape_(lead + ' ' + until) + '</div>' +
+    '<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">' + escape_(preheader) + '</div>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f7fa;">' +
     '<tr><td align="center" style="padding:24px 12px;">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background-color:#ffffff;border:1px solid #e6e9f0;border-radius:16px;border-collapse:separate;">' +
@@ -898,14 +1021,12 @@ function buildMail_(r) {
     // Colored band
     '<tr><td style="background-color:' + c.band + ';border-top:1px solid ' + c.bandLine + ';border-bottom:1px solid ' + c.bandLine + ';padding:12px 28px;font-family:' + font + ';font-size:14px;line-height:20px;font-weight:700;color:' + c.bandInk + ';">' +
     escape_(band) + '</td></tr>' +
-    // Subject
-    '<tr><td style="padding:24px 28px 4px 28px;font-family:' + font + ';font-size:13px;line-height:18px;color:#5e667a;">Final de</td></tr>' +
-    '<tr><td style="padding:0 28px 8px 28px;font-family:' + font + ';font-size:26px;line-height:32px;font-weight:700;color:#1f2537;">' + escape_(r.subject_name) + '</td></tr>' +
+    // Title
+    '<tr><td style="padding:24px 28px 4px 28px;font-family:' + font + ';font-size:13px;line-height:18px;color:#5e667a;">' + escape_(kicker) + '</td></tr>' +
+    '<tr><td style="padding:0 28px 8px 28px;font-family:' + font + ';font-size:26px;line-height:32px;font-weight:700;color:#1f2537;">' + escape_(title) + '</td></tr>' +
     '<tr><td style="padding:0 28px 20px 28px;font-family:' + font + ';font-size:15px;line-height:22px;color:#3b4357;">' + escape_(lead) + '</td></tr>' +
-    // Details card
-    '<tr><td style="padding:0 28px 24px 28px;">' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f7fa;border:1px solid #e6e9f0;border-radius:12px;border-collapse:separate;">' +
-    detailRows + '</table></td></tr>' +
+    // Details: one card per final
+    body +
     // Button
     '<tr><td style="padding:0 28px 12px 28px;">' +
     '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
@@ -1019,6 +1140,22 @@ function buildConfirmMail_(r) {
 /** Sample data for sendTestConfirmMail() and preview.html. */
 function sampleConfirmRow_() {
   return { email: 'alumno@fi.uba.ar', first_name: 'ANA', mesas: 3 };
+}
+
+/** Sample data for preview.html: a student whose enrollments open the same day (one later today). */
+function sampleDigestItems_() {
+  var base = sampleRow_();
+  var row = function (over) {
+    var r = {};
+    Object.keys(base).forEach(function (k) { r[k] = base[k]; });
+    Object.keys(over).forEach(function (k) { r[k] = over[k]; });
+    return r;
+  };
+  return [
+    { row: row({}), later: false },
+    { row: row({ reminder_id: 1, subject_name: 'Física II', table_name: 'MESA 02', exam_date: '2026-12-10', start_time: '09:00', end_time: '12:00', enroll_to: '2026-12-08 00:00' }), later: false },
+    { row: row({ reminder_id: 2, subject_name: 'Probabilidad y Estadística', kind: 'Libre', exam_date: '2026-12-11', start_time: '14:00', end_time: '17:00', enroll_from: '2026-11-30 18:00', enroll_to: '2026-12-09 23:59' }), later: true },
+  ];
 }
 
 /** Sample data for sendTestMail() and preview.html. */

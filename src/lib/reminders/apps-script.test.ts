@@ -14,6 +14,8 @@ interface Mail {
 type Row = Record<string, string | number | boolean | null>;
 interface CodeGs {
   buildMail_(r: Row): Mail;
+  buildRemindersMail_(items: { row: Row; later: boolean }[]): Mail;
+  mailGroups_(rows: Row[], now: string): { email: string; items: { row: Row; later: boolean }[] }[];
   buildConfirmMail_(r: Row): Mail;
   confirmRows_(rows: Row[]): Row[];
   handlePost_(body: unknown, token: string | null, pass: () => { sent: number; left: number } | null): Record<string, unknown>;
@@ -121,6 +123,71 @@ describe("dueRows_", () => {
   });
 });
 
+describe("one mail per student", () => {
+  const now = "2026-11-30 08:05";
+  const ids = (g: { items: { row: Row; later: boolean }[] }) => g.items.map((it) => [it.row.reminder_id, it.later]);
+
+  it("groups a student's due reminders, adds the ones that open later today and orders by closing", () => {
+    const rows = [
+      row({ reminder_id: 1, due: true, enroll_to: "2026-12-07 14:00" }),
+      row({ reminder_id: 2, due: true, enroll_to: "2026-12-05 23:59" }),
+      row({ reminder_id: 3, enroll_from: "2026-11-30 18:00", enroll_to: "2026-12-09 23:59" }), // later today
+      row({ reminder_id: 4, aviso: "2026-12-01", enroll_from: "2026-12-01 00:00" }), // tomorrow: its own mail
+      row({ reminder_id: 5, sent_at: "2026-11-29 08:04", enroll_from: "2026-11-30 18:00" }), // already sent
+      row({ reminder_id: 6, due: true, email: "ANA@fi.uba.ar", enroll_to: "2026-12-10 14:00" }), // same address
+      row({ reminder_id: 7, due: true, email: "beto@fi.uba.ar", enroll_to: "2026-12-04 14:00" }),
+      row({ reminder_id: 8, email: "caro@fi.uba.ar", enroll_from: "2026-11-30 18:00" }), // only later: no mail now
+    ];
+    const groups = gs.mailGroups_(rows, now);
+    expect(groups.map((g) => g.email)).toEqual(["beto@fi.uba.ar", "ana@fi.uba.ar"]); // closes first goes first
+    expect(ids(groups[1])).toEqual([[2, false], [1, false], [3, true], [6, false]]);
+  });
+
+  it("leaves out what opened earlier but is not due, and what already closed", () => {
+    const rows = [
+      row({ reminder_id: 1, due: true }),
+      row({ reminder_id: 2, enroll_from: "2026-11-30 00:00" }), // open now but not due (created after it opened)
+      row({ reminder_id: 3, enroll_from: "2026-11-30 18:00", enroll_to: "2026-11-30 08:00" }),
+    ];
+    expect(ids(gs.mailGroups_(rows, now)[0])).toEqual([[1, false]]);
+  });
+
+  it("one final: the same mail as buildMail_", () => {
+    expect(gs.buildRemindersMail_([{ row: row(), later: false }])).toEqual(gs.buildMail_(row()));
+  });
+
+  it("several finals: one block each, and the ones that open later say when", () => {
+    const m = gs.buildRemindersMail_([
+      { row: row(), later: false },
+      { row: row({ reminder_id: 2, subject_name: "Física II", table_name: "MESA 02", enroll_to: "2026-12-08 00:00" }), later: false },
+      { row: row({ reminder_id: 3, subject_name: "Química", kind: "Libre", enroll_from: "2026-11-30 18:00", enroll_to: "2026-12-09 23:59" }), later: true },
+    ]);
+    expect(m.subject).toBe("Hoy abre la inscripción a 3 de tus finales");
+    expect(m.text).toContain("3 de tus finales\nYa te podés anotar en el SIU.");
+    expect(m.text).toContain("Final de Álgebra Lineal\nExamen: Miércoles 9/12, de 17:00 a 20:00\nMesa: MESA 01\nInscripción: Te podés anotar hasta el lunes 7/12 a las 14:00.");
+    expect(m.text).toContain("Final de Física II");
+    expect(m.text).toContain("Inscripción: Te podés anotar hasta el lunes 7/12 a las 23:59.");
+    expect(m.text).toContain("Mesa: MESA 01 (Libre)\nInscripción: Abre hoy a las 18:00 y cierra el miércoles 9/12 a las 23:59.");
+    expect(m.text).toContain("sacalos en Finales → Recordarme");
+    expect(m.html).toContain("Física II");
+    expect(m.html).toContain("Álgebra Lineal, Física II, Química.");
+    const opened = gs.buildRemindersMail_([{ row: row(), later: false }, { row: row({ subject_name: "Física II" }), later: false }]);
+    expect(opened.subject).toBe("Abrió la inscripción a 2 de tus finales");
+    expect(gs.buildRemindersMail_([{ row: row(), later: false }, { row: row({ subject_name: "<b>x</b>" }), later: false }]).html).not.toContain("<b>x</b>");
+  });
+
+  it("the panel counts one mail per student and day", () => {
+    const rows = [
+      row({ reminder_id: 1 }),
+      row({ reminder_id: 2, subject_name: "Física II", enroll_to: "2026-12-03 14:00" }),
+      row({ reminder_id: 3, email: "beto@fi.uba.ar" }),
+    ];
+    const { lines } = gs.panelValues_(rows, "2026-11-20", 290, 290);
+    expect(lines.find((l) => l[0] === "Mails por mandar")?.[1]).toBe(2);
+    expect(lines.find((l) => l[0] === "lunes 30/11")?.slice(1)).toEqual([2, 0, 2, 2, 0, "OK"]);
+  });
+});
+
 describe("sheetValues_", () => {
   it("has the Spanish headers and one text row per reminder", () => {
     const values = gs.sheetValues_([row({ kind: "Libre", sent_at: "2026-11-30 14:05" })]);
@@ -183,6 +250,37 @@ describe("sendRows_ (Google services faked)", () => {
     ]);
     expect({ ...result }).toEqual({ sent: 2, left: 1, failed: [], noQuota: 1 });
     expect(rows.map((r) => r.sent_at)).toEqual(["2026-11-30 14:05", null, "2026-11-30 14:05", null]);
+  });
+
+  it("one mail for a student's finals, all of them marked; the quota counts mails", () => {
+    const g = loadCodeGs() as CodeGs & Record<string, unknown>;
+    const log: string[] = [];
+    let quota = 1;
+    g.MailApp = {
+      getRemainingDailyQuota: () => quota,
+      sendEmail: (m: { to: string; subject: string }) => {
+        quota--;
+        log.push(`mail ${m.to}: ${m.subject}`);
+      },
+    };
+    g.Utilities = { formatDate: (_d: Date, _tz: string, f: string) => (f === "HH:mm" ? "08:05" : "2026-11-30 08:05") };
+    g.rpc_ = (name: string, args: { p_reminder_id: number }) => log.push(`${name} ${args.p_reminder_id}`);
+    const rows = [
+      row({ reminder_id: 1, due: true }),
+      row({ reminder_id: 2, due: true, subject_name: "Física II" }),
+      row({ reminder_id: 3, enroll_from: "2026-11-30 18:00", subject_name: "Química" }),
+      row({ reminder_id: 4, due: true, email: "beto@fi.uba.ar", enroll_to: "2026-12-08 14:00" }),
+    ];
+    const result = (g as unknown as { sendRows_(r: Row[]): object }).sendRows_(rows);
+    expect(log).toEqual([
+      "avisos_marcar_enviado 0",
+      "mail ana@fi.uba.ar: Hoy abre la inscripción a 3 de tus finales",
+      "avisos_marcar_enviado 1",
+      "avisos_marcar_enviado 2",
+      "avisos_marcar_enviado 3",
+    ]);
+    expect({ ...result }).toEqual({ sent: 1, left: 1, failed: [], noQuota: 1 });
+    expect(rows.map((r) => r.sent_at)).toEqual(["2026-11-30 08:05", "2026-11-30 08:05", "2026-11-30 08:05", null]);
   });
 
   it("does nothing when no mail is due", () => {
@@ -415,7 +513,8 @@ describe("deliverMail_ through Brevo", () => {
 
 describe("panelValues_ (Panel tab)", () => {
   const find = (lines: (string | number)[][], label: string) => lines.find((l) => l[0] === label);
-  const many = (n: number, over: Row) => Array.from({ length: n }, (_, i) => row({ reminder_id: i + 1, ...over }));
+  // One student each: the panel counts one mail per student and day.
+  const many = (n: number, over: Row) => Array.from({ length: n }, (_, i) => row({ reminder_id: i + 1, email: `alumno${i + 1}@fi.uba.ar`, ...over }));
 
   it("says it fits when every day is under the limit", () => {
     const { lines } = gs.panelValues_(many(3, {}), "2026-11-20", 290, 290);

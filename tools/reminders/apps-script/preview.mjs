@@ -1,5 +1,6 @@
-// Writes preview.html: the mails of Code.gs (buildMail_(), the reminder, and buildConfirmMail_(), the
-// confirmation) with sample data, to open in a browser. Run after changing a mail:
+// Writes preview.html: the mails of Code.gs (buildMail_(), the reminder of one final;
+// buildRemindersMail_(), several finals of one student; and buildConfirmMail_(), the confirmation)
+// with sample data, to open in a browser. Run after changing a mail:
 //
 //   node tools/reminders/apps-script/preview.mjs
 //
@@ -22,7 +23,7 @@ const escapeAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 const escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function previewHtml(gs = loadCodeGs()) {
-  const mails = [gs.buildMail_(gs.sampleRow_()), gs.buildConfirmMail_(gs.sampleConfirmRow_())];
+  const mails = [gs.buildMail_(gs.sampleRow_()), gs.buildRemindersMail_(gs.sampleDigestItems_()), gs.buildConfirmMail_(gs.sampleConfirmRow_())];
   const sections = mails
     .map(
       (m) =>
@@ -44,7 +45,7 @@ h1{font-size:18px;margin:0 auto 16px;max-width:1200px}
 main{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;max-width:1200px;margin:0 auto}
 section{flex:1 1 320px;min-width:0;max-width:600px}
 .subject{font-size:14px;margin:0 0 8px}
-iframe{width:100%;height:760px;border:1px solid #cfd4de;border-radius:8px;background:#fff}
+iframe{width:100%;height:1180px;border:1px solid #cfd4de;border-radius:8px;background:#fff}
 pre{white-space:pre-wrap;font-size:13px;background:#fff;padding:12px;border-radius:8px}
 </style>
 </head>
